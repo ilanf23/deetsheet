@@ -1,9 +1,48 @@
 import { useState } from "react";
-import { Search, Plus, Menu, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Search, Menu, X, List, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { categories, topics } from "@/data/seedData";
+
+const TocContent = () => {
+  const topicsByCategory = categories.map((cat) => ({
+    ...cat,
+    topics: topics.filter((t) => t.categoryName === cat.name),
+  }));
+
+  return (
+    <>
+      <div className="p-3 border-b">
+        <h3 className="font-semibold text-sm">Table of Contents</h3>
+      </div>
+      <div className="p-2">
+        {topicsByCategory.map((cat) => (
+          <div key={cat.id} className="mb-2 last:mb-0">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1.5">
+              {cat.name}
+            </p>
+            {cat.topics.map((topic) => (
+              <button
+                key={topic.id}
+                className="flex items-center justify-between w-full rounded-md px-2 py-1.5 text-sm hover:bg-muted transition-colors text-left"
+              >
+                <span>{topic.name}</span>
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  {topic.postCount} <ChevronRight className="h-3 w-3" />
+                </span>
+              </button>
+            ))}
+          </div>
+        ))}
+      </div>
+    </>
+  );
+};
 
 const DeetHeader = () => {
+  const navigate = useNavigate();
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -12,17 +51,22 @@ const DeetHeader = () => {
     <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
         {/* Logo */}
-        <a href="/" className="flex items-center gap-2 shrink-0">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <span className="text-lg font-bold text-primary-foreground font-heading">D</span>
-          </div>
-          <span className="text-xl font-bold font-heading text-foreground hidden sm:block">
-            DeetSheet
-          </span>
+        <a href="/" className="flex items-center shrink-0">
+          <img src="/logo.png" alt="DeetSheet" className="h-[144px] mt-5" />
         </a>
 
-        {/* Desktop search */}
-        <div className="hidden md:flex flex-1 max-w-md mx-4">
+        {/* TOC + Desktop search */}
+        <div className="hidden md:flex flex-1 max-w-md mx-4 items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground" title="Table of Contents">
+                <List className="h-5 w-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-80 max-h-[70vh] overflow-y-auto p-0">
+              <TocContent />
+            </PopoverContent>
+          </Popover>
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -36,14 +80,7 @@ const DeetHeader = () => {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-1">
-          <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-            About
-          </Button>
-          <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-            <Plus className="h-4 w-4" />
-            Create Post
-          </Button>
-          <Button size="sm" className="ml-2 bg-primary text-primary-foreground hover:bg-primary/90">
+          <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => navigate("/signup")}>
             Sign Up
           </Button>
           <Button variant="outline" size="sm">
@@ -53,6 +90,16 @@ const DeetHeader = () => {
 
         {/* Mobile buttons */}
         <div className="flex md:hidden items-center gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" title="Table of Contents">
+                <List className="h-5 w-5" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-72 max-h-[60vh] overflow-y-auto p-0">
+              <TocContent />
+            </PopoverContent>
+          </Popover>
           <Button variant="ghost" size="icon" onClick={() => setSearchOpen(!searchOpen)}>
             <Search className="h-5 w-5" />
           </Button>
@@ -81,12 +128,8 @@ const DeetHeader = () => {
       {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t p-4 flex flex-col gap-2 bg-card">
-          <Button variant="ghost" className="justify-start text-muted-foreground">About</Button>
-          <Button variant="ghost" className="justify-start gap-2 text-muted-foreground">
-            <Plus className="h-4 w-4" /> Create Post
-          </Button>
-          <div className="flex gap-2 mt-2">
-            <Button className="flex-1 bg-primary text-primary-foreground">Sign Up</Button>
+          <div className="flex gap-2">
+            <Button className="flex-1 bg-primary text-primary-foreground" onClick={() => { navigate("/signup"); setMobileMenuOpen(false); }}>Sign Up</Button>
             <Button variant="outline" className="flex-1">Log In</Button>
           </div>
         </div>

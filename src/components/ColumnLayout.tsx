@@ -1,49 +1,75 @@
+import { useState, useMemo } from "react";
 import PostCard from "@/components/PostCard";
-import TopicCard from "@/components/TopicCard";
-import { getRecentPosts, getPopularPosts, topics } from "@/data/seedData";
-import { Clock, TrendingUp, Hash } from "lucide-react";
+import PopularTopicSection from "@/components/PopularTopicSection";
+import SubjectsSidebar from "@/components/SubjectsSidebar";
+import { getRecentPosts, topics } from "@/data/seedData";
 
-const ColumnHeader = ({ icon: Icon, title }: { icon: React.ElementType; title: string }) => (
-  <div className="flex items-center gap-2 mb-4 px-1">
-    <Icon className="h-4 w-4 text-primary" />
-    <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{title}</h2>
-  </div>
-);
+const recentFilters = [
+  { label: "Today", hours: 24 },
+  { label: "Yesterday", hours: 48 },
+  { label: "2 days ago", hours: 72 },
+  { label: "3 days ago", hours: 96 },
+  { label: "Week ago", hours: 168 },
+];
 
 const ColumnLayout = () => {
+  const [filterHours, setFilterHours] = useState(24);
   const recentPosts = getRecentPosts();
-  const popularPosts = getPopularPosts();
+  const filteredPosts = useMemo(() => {
+    const cutoff = new Date(Date.now() - filterHours * 3600000);
+    return recentPosts.filter((p) => p.createdAt >= cutoff);
+  }, [recentPosts, filterHours]);
+  const popularTopics = topics.filter((t) =>
+    ["Parent", "Waiter", "Chicago", "Cancer", "College", "Love", "Doctor", "1980s", "New York City", "iPhone", "Married", "20s", "McDonald's"].includes(t.name)
+  );
 
   return (
-    <div className="container mx-auto px-4 pb-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {/* Column 1 — Recently Added */}
-        <div className="space-y-3">
-          <ColumnHeader icon={Clock} title="Recently Added" />
-          <div className="space-y-3 lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto scrollbar-thin lg:pr-2">
-            {recentPosts.map((post) => (
+    <div className="container mx-auto px-4 mt-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1.5fr_280px] gap-10">
+        {/* Left — Recently Added */}
+        <div>
+          <div className="flex items-center justify-between mb-4 px-1">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Recently Added</h2>
+            <select
+              className="text-xs border rounded px-2 py-1 bg-background text-muted-foreground"
+              value={filterHours}
+              onChange={(e) => setFilterHours(Number(e.target.value))}
+            >
+              {recentFilters.map((f) => (
+                <option key={f.hours} value={f.hours}>
+                  {f.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-3 lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto scrollbar-thin lg:pr-2">
+            {filteredPosts.map((post) => (
               <PostCard key={post.id} post={post} />
             ))}
           </div>
         </div>
 
-        {/* Column 2 — Most Popular */}
-        <div className="space-y-3">
-          <ColumnHeader icon={TrendingUp} title="Most Popular" />
-          <div className="space-y-3 lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto scrollbar-thin lg:pr-2">
-            {popularPosts.map((post) => (
-              <PostCard key={`pop-${post.id}`} post={post} />
+        {/* Middle — Most Popular */}
+        <div>
+          <div className="flex items-center justify-between mb-4 px-1">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Most Popular</h2>
+            <select className="text-xs border rounded px-2 py-1 bg-background text-muted-foreground">
+              <option>This Year</option>
+              <option>All Time</option>
+              <option>This Month</option>
+            </select>
+          </div>
+          <div className="space-y-4 lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto scrollbar-thin lg:pr-2">
+            {popularTopics.map((topic) => (
+              <PopularTopicSection key={topic.id} topic={topic} />
             ))}
           </div>
         </div>
 
-        {/* Column 3 — Topics */}
-        <div className="space-y-3">
-          <ColumnHeader icon={Hash} title="Explore Topics" />
-          <div className="space-y-3 lg:max-h-[calc(100vh-220px)] lg:overflow-y-auto scrollbar-thin lg:pr-2">
-            {topics.map((topic) => (
-              <TopicCard key={topic.id} topic={topic} />
-            ))}
+        {/* Right — Subjects */}
+        <div className="hidden lg:block">
+          <div className="lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto scrollbar-thin lg:pr-2">
+            <SubjectsSidebar />
           </div>
         </div>
       </div>

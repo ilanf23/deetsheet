@@ -8,9 +8,7 @@ const Index = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <DeetHeader />
       <main className="flex-1">
-        <div className="container mx-auto">
-          <HeroBanner />
-        </div>
+        <HeroBanner />
         <ColumnLayout />
       </main>
       <DeetFooter />
