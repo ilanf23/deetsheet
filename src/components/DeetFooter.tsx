@@ -4,10 +4,7 @@ const DeetFooter = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
-              <span className="text-sm font-bold text-primary-foreground font-heading">D</span>
-            </div>
-            <span className="font-semibold font-heading text-foreground">DeetSheet</span>
+            <img src="/logo.png" alt="DeetSheet" className="h-24" />
           </div>
           <nav className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
             <a href="#" className="hover:text-foreground transition">About</a>

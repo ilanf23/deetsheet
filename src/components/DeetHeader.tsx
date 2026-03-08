@@ -8,6 +8,7 @@ import { categories, topics } from "@/data/seedData";
 import { useAuth } from "@/contexts/AuthContext";
 
 const TocContent = () => {
+  const navigate = useNavigate();
   const topicsByCategory = categories.map((cat) => ({
     ...cat,
     topics: topics.filter((t) => t.categoryName === cat.name),
@@ -28,6 +29,7 @@ const TocContent = () => {
               <button
                 key={topic.id}
                 className="flex items-center justify-between w-full rounded-md px-2 py-1.5 text-sm hover:bg-muted transition-colors text-left"
+                onClick={() => navigate(`/topic/${encodeURIComponent(topic.name)}`)}
               >
                 <span>{topic.name}</span>
                 <span className="flex items-center gap-1 text-xs text-muted-foreground">

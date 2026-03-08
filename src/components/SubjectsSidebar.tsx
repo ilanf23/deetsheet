@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,13 +26,13 @@ const SubjectsSidebar = () => {
               <AccordionContent>
                 <div className="flex flex-wrap gap-x-3 gap-y-1">
                   {catTopics.map((topic) => (
-                    <a
+                    <Link
                       key={topic.id}
-                      href="#"
+                      to={`/topic/${encodeURIComponent(topic.name)}`}
                       className="text-sm text-primary hover:underline"
                     >
                       {topic.name}
-                    </a>
+                    </Link>
                   ))}
                 </div>
               </AccordionContent>

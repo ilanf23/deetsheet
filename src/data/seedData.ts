@@ -1,3 +1,14 @@
+export interface Comment {
+  id: string;
+  postId: string;
+  parentCommentId: string | null;
+  username: string;
+  content: string;
+  createdAt: Date;
+  agreeCount: number;
+  heartCount: number;
+}
+
 export interface Post {
   id: string;
   topicName: string;
@@ -249,3 +260,64 @@ export const getPostsByTopic = (topicName: string): Post[] =>
 
 export const getSubtitle = (topicName: string): string =>
   `What are the most important details of being a ${topicName}?`;
+
+export const getTopicByName = (name: string): Topic | undefined =>
+  topics.find((t) => t.name === name);
+
+export const comments: Comment[] = [
+  // Waiter post "Some customers don't tip" (id: "3")
+  { id: "c1", postId: "3", parentCommentId: null, username: "former_server", content: "This is the hardest part of the job honestly. You give your best service and still get stiffed.", createdAt: hoursAgo(1.5), agreeCount: 24, heartCount: 8 },
+  { id: "c2", postId: "3", parentCommentId: null, username: "tip_advocate", content: "Restaurants should just pay a living wage instead of relying on tips.", createdAt: hoursAgo(1.8), agreeCount: 45, heartCount: 12 },
+  { id: "c3", postId: "3", parentCommentId: "c1", username: "server_life", content: "Exactly. You learn to not take it personally after a while.", createdAt: hoursAgo(1.2), agreeCount: 11, heartCount: 3 },
+  { id: "c4", postId: "3", parentCommentId: "c2", username: "econ_nerd", content: "The tipping system is an American anomaly. Most countries pay servers properly.", createdAt: hoursAgo(1.0), agreeCount: 32, heartCount: 5 },
+  { id: "c5", postId: "3", parentCommentId: "c4", username: "tip_advocate", content: "Agreed. But until that changes, please tip your servers.", createdAt: hoursAgo(0.8), agreeCount: 18, heartCount: 7 },
+
+  // Waiter post "Memorize the menu" (id: "11")
+  { id: "c6", postId: "11", parentCommentId: null, username: "new_hire", content: "I took photos of every page and studied them like flashcards.", createdAt: hoursAgo(0.3), agreeCount: 15, heartCount: 6 },
+  { id: "c7", postId: "11", parentCommentId: null, username: "chef_mike", content: "As a chef, I love when servers actually know the ingredients. Helps with allergy questions.", createdAt: hoursAgo(0.4), agreeCount: 22, heartCount: 9 },
+
+  // Parent post "Keep dangerous chemicals out of reach" (id: "1")
+  { id: "c8", postId: "1", parentCommentId: null, username: "pediatric_nurse", content: "We see so many preventable poisoning cases. Cabinet locks are cheap and save lives.", createdAt: hoursAgo(0.8), agreeCount: 56, heartCount: 20 },
+  { id: "c9", postId: "1", parentCommentId: null, username: "new_dad", content: "Don't forget about laundry pods. They look like candy to toddlers.", createdAt: hoursAgo(0.6), agreeCount: 38, heartCount: 14 },
+  { id: "c10", postId: "1", parentCommentId: "c8", username: "sarah_m", content: "Thank you for sharing this. What brand of cabinet locks do you recommend?", createdAt: hoursAgo(0.5), agreeCount: 8, heartCount: 2 },
+  { id: "c11", postId: "1", parentCommentId: "c10", username: "pediatric_nurse", content: "Magnetic locks are the best — kids can't figure them out and they're invisible.", createdAt: hoursAgo(0.4), agreeCount: 12, heartCount: 5 },
+
+  // Parent post "Read to your kids every single night" (id: "18")
+  { id: "c12", postId: "18", parentCommentId: null, username: "teacher_ann", content: "The kids who are read to at home are SO far ahead in literacy. It really shows.", createdAt: hoursAgo(0.1), agreeCount: 41, heartCount: 15 },
+  { id: "c13", postId: "18", parentCommentId: null, username: "tired_parent", content: "Even when you're exhausted, even just 5 minutes makes a difference.", createdAt: hoursAgo(0.15), agreeCount: 29, heartCount: 11 },
+
+  // College post "Office hours are the most underused resource" (id: "6")
+  { id: "c14", postId: "6", parentCommentId: null, username: "prof_smith", content: "As a professor, I can confirm. I sit in my office hours alone most weeks. Come talk to us!", createdAt: hoursAgo(5), agreeCount: 67, heartCount: 23 },
+  { id: "c15", postId: "6", parentCommentId: "c14", username: "shy_student", content: "I always felt like I was bothering professors. This makes me feel better about going.", createdAt: hoursAgo(4.5), agreeCount: 34, heartCount: 10 },
+  { id: "c16", postId: "6", parentCommentId: "c14", username: "grad_2024", content: "Going to office hours is how I got my research position. Professors remember you.", createdAt: hoursAgo(4), agreeCount: 45, heartCount: 16 },
+
+  // College post "Sleep matters more than cramming" (id: "13")
+  { id: "c17", postId: "13", parentCommentId: null, username: "neuroscience_major", content: "Your brain consolidates memories during sleep. All-nighters literally work against you.", createdAt: hoursAgo(2), agreeCount: 52, heartCount: 18 },
+
+  // Chicago post "Deep dish pizza is everywhere" (id: "4")
+  { id: "c18", postId: "4", parentCommentId: null, username: "pizza_snob", content: "Hot take: tavern-style thin crust is the real Chicago pizza. Deep dish is for tourists.", createdAt: hoursAgo(3), agreeCount: 38, heartCount: 7 },
+  { id: "c19", postId: "4", parentCommentId: "c18", username: "chi_town", content: "Both are great! But yeah, locals eat way more tavern-style.", createdAt: hoursAgo(2.5), agreeCount: 25, heartCount: 9 },
+  { id: "c20", postId: "4", parentCommentId: null, username: "tourist_2024", content: "Lou Malnati's changed my life. I order it shipped to my house now.", createdAt: hoursAgo(3.5), agreeCount: 19, heartCount: 12 },
+
+  // Chicago post "Winter is brutal" (id: "20p")
+  { id: "c21", postId: "20p", parentCommentId: null, username: "snowbird", content: "The wind chill is the real enemy. -30 feels like another planet.", createdAt: hoursAgo(5), agreeCount: 33, heartCount: 4 },
+
+  // Cancer post "Early detection saves lives" (id: "5")
+  { id: "c22", postId: "5", parentCommentId: null, username: "survivor_5yr", content: "Caught mine at stage 1 because of a routine screening. I'm alive because of it.", createdAt: hoursAgo(4), agreeCount: 89, heartCount: 45 },
+  { id: "c23", postId: "5", parentCommentId: "c22", username: "dr_hope", content: "Stories like yours are why we push for regular screenings. So glad you're here.", createdAt: hoursAgo(3.5), agreeCount: 56, heartCount: 30 },
+
+  // McDonald's post "Ice cream machine is always broken" (id: "162")
+  { id: "c24", postId: "162", parentCommentId: null, username: "mcworker", content: "It's not broken, it's in a 4-hour cleaning cycle. But we're told to just say it's broken.", createdAt: hoursAgo(9), agreeCount: 78, heartCount: 22 },
+  { id: "c25", postId: "162", parentCommentId: "c24", username: "mcflurry_denied", content: "This is the insider info I needed. So there IS hope if I time it right?", createdAt: hoursAgo(8.5), agreeCount: 41, heartCount: 15 },
+  { id: "c26", postId: "162", parentCommentId: "c25", username: "mcworker", content: "Go between 2-5pm. That's usually the sweet spot.", createdAt: hoursAgo(8), agreeCount: 55, heartCount: 19 },
+];
+
+export const getCommentsByPost = (postId: string): Comment[] =>
+  comments
+    .filter((c) => c.postId === postId && c.parentCommentId === null)
+    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+
+export const getReplies = (commentId: string): Comment[] =>
+  comments
+    .filter((c) => c.parentCommentId === commentId)
+    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());

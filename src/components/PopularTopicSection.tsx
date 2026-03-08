@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Star, ThumbsUp } from "lucide-react";
 import { Topic, getPostsByTopic, getSubtitle, getAverageRating } from "@/data/seedData";
 
@@ -11,7 +12,9 @@ const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
   return (
     <div className="border rounded-xl bg-card p-4 space-y-3">
       <div>
-        <h3 className="text-lg font-bold text-card-foreground font-heading">{topic.name}</h3>
+        <Link to={`/topic/${encodeURIComponent(topic.name)}`} className="hover:underline">
+          <h3 className="text-lg font-bold text-card-foreground font-heading">{topic.name}</h3>
+        </Link>
         <p className="text-xs text-muted-foreground">{getSubtitle(topic.name)}</p>
       </div>
 
