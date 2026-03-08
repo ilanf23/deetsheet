@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { categories, topics } from "@/data/seedData";
+import { useAuth } from "@/contexts/AuthContext";
 
 const TocContent = () => {
   const topicsByCategory = categories.map((cat) => ({
@@ -43,19 +44,20 @@ const TocContent = () => {
 
 const DeetHeader = () => {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const username = user?.user_metadata?.username || user?.email?.split("@")[0] || "User";
+
   return (
     <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
       <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
-        {/* Logo */}
         <a href="/" className="flex items-center shrink-0">
           <img src="/logo.png" alt="DeetSheet" className="h-[144px] mt-5" />
         </a>
 
-        {/* TOC + Desktop search */}
         <div className="hidden md:flex flex-1 max-w-md mx-4 items-center gap-2">
           <Popover>
             <PopoverTrigger asChild>
@@ -78,17 +80,21 @@ const DeetHeader = () => {
           </div>
         </div>
 
-        {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-1">
-          <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => navigate("/signup")}>
-            Sign Up
-          </Button>
-          <Button variant="outline" size="sm">
-            Log In
-          </Button>
+          {user ? (
+            <>
+              <span className="text-sm text-muted-foreground mr-2">{username}</span>
+              <Button variant="outline" size="sm" onClick={() => navigate("/profile")}>Profile</Button>
+              <Button variant="ghost" size="sm" onClick={() => signOut()}>Sign Out</Button>
+            </>
+          ) : (
+            <>
+              <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => navigate("/signup")}>Sign Up</Button>
+              <Button variant="outline" size="sm" onClick={() => navigate("/login")}>Log In</Button>
+            </>
+          )}
         </nav>
 
-        {/* Mobile buttons */}
         <div className="flex md:hidden items-center gap-2">
           <Popover>
             <PopoverTrigger asChild>
@@ -109,29 +115,31 @@ const DeetHeader = () => {
         </div>
       </div>
 
-      {/* Mobile search */}
       {searchOpen && (
         <div className="md:hidden border-t p-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search topics or posts..."
-              className="pl-10 bg-muted border-0"
-              autoFocus
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <Input placeholder="Search topics or posts..." className="pl-10 bg-muted border-0" autoFocus value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
           </div>
         </div>
       )}
 
-      {/* Mobile menu */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t p-4 flex flex-col gap-2 bg-card">
-          <div className="flex gap-2">
-            <Button className="flex-1 bg-primary text-primary-foreground" onClick={() => { navigate("/signup"); setMobileMenuOpen(false); }}>Sign Up</Button>
-            <Button variant="outline" className="flex-1">Log In</Button>
-          </div>
+          {user ? (
+            <div className="flex flex-col gap-2">
+              <span className="text-sm text-muted-foreground">Signed in as {username}</span>
+              <div className="flex gap-2">
+                <Button className="flex-1" onClick={() => { navigate("/profile"); setMobileMenuOpen(false); }}>Profile</Button>
+                <Button variant="outline" className="flex-1" onClick={() => { signOut(); setMobileMenuOpen(false); }}>Sign Out</Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Button className="flex-1 bg-primary text-primary-foreground" onClick={() => { navigate("/signup"); setMobileMenuOpen(false); }}>Sign Up</Button>
+              <Button variant="outline" className="flex-1" onClick={() => { navigate("/login"); setMobileMenuOpen(false); }}>Log In</Button>
+            </div>
+          )}
         </div>
       )}
     </header>
