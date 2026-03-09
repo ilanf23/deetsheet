@@ -604,8 +604,8 @@ const Profile = () => {
               </div>
 
               <div className="flex justify-center">
-                <Button type="submit" className="px-8">
-                  Save Profile
+                <Button type="submit" className="px-8" disabled={saving}>
+                  {saving ? "Saving..." : "Save Profile"}
                 </Button>
               </div>
             </form>
