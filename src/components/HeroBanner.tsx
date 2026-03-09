@@ -49,7 +49,7 @@ const HeroBanner = () => {
           }`}
         />
       ))}
-      <div className="absolute inset-0 bg-blue-900/60" />
+      <div className="absolute inset-0 bg-black/40" />
       {slides.map((slide, i) => (
         <div
           key={i}
@@ -57,7 +57,7 @@ const HeroBanner = () => {
             i === current ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
-          <p className="text-yellow-400 font-bold text-sm md:text-base tracking-widest uppercase mb-2">
+          <p className="text-green-400 font-bold text-sm md:text-base tracking-widest uppercase mb-2">
             {slide.tagline}
           </p>
           <h1 className="text-white font-extrabold text-2xl md:text-4xl lg:text-5xl max-w-3xl leading-tight mb-4">

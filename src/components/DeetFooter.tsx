@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 const DeetFooter = () => {
   return (
     <footer className="border-t bg-card">
@@ -8,7 +10,7 @@ const DeetFooter = () => {
           </div>
           <nav className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
             <a href="#" className="hover:text-foreground transition">About</a>
-            <a href="#" className="hover:text-foreground transition">FAQ</a>
+            <Link to="/faq" className="hover:text-foreground transition">FAQ</Link>
             <a href="#" className="hover:text-foreground transition">Contact</a>
             <a href="#" className="hover:text-foreground transition">Terms</a>
             <a href="#" className="hover:text-foreground transition">Privacy</a>

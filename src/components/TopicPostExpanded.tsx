@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
-import { ThumbsUp, CheckCircle, MessageSquare, Heart, Flag, Send, ChevronDown, ChevronRight, Star } from "lucide-react";
+import { ThumbsUp, CheckCircle, MessageSquare, Heart, Flag, Send, ChevronDown, ChevronRight, Star, Lock } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Post, getAverageRating, getTimeAgo, getCommentsByPost } from "@/data/seedData";
 import CommentItem from "@/components/CommentItem";
 import StarRatingBar from "@/components/StarRatingBar";
@@ -12,9 +13,10 @@ interface TopicPostExpandedProps {
   rank: number;
   isExpanded: boolean;
   onToggleExpand: () => void;
+  isAuthenticated: boolean;
 }
 
-const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand }: TopicPostExpandedProps) => {
+const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthenticated }: TopicPostExpandedProps) => {
   const avg = getAverageRating(post);
   const [userRating, setUserRating] = useState<number | null>(null);
   const [showRatingBar, setShowRatingBar] = useState(false);
@@ -42,6 +44,27 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand }: TopicPost
         </span>
         <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
       </button>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="border rounded-xl bg-card p-5 space-y-4">
+        <button onClick={onToggleExpand} className="flex items-start gap-3 w-full text-left">
+          <span className="text-xl font-bold text-primary w-8 shrink-0 text-right">{rank}.</span>
+          <h3 className="flex-1 text-base font-bold text-card-foreground leading-snug">{displayTitle}</h3>
+          <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
+        </button>
+        <div className="px-11 py-4 text-center">
+          <Lock className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">
+            <Link to="/signup" className="text-primary underline">Sign up</Link>
+            {" "}or{" "}
+            <Link to="/login" className="text-primary underline">log in</Link>
+            {" "}to view this content.
+          </p>
+        </div>
+      </div>
     );
   }
 

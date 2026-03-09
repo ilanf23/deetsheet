@@ -5,10 +5,12 @@ import DeetFooter from "@/components/DeetFooter";
 import TopicPostExpanded from "@/components/TopicPostExpanded";
 import TopicRecommendations from "@/components/TopicRecommendations";
 import AddPostBar from "@/components/AddPostBar";
+import { useAuth } from "@/contexts/AuthContext";
 import { getTopicByName, getPostsByTopic, getSubtitle } from "@/data/seedData";
 
 const TopicPage = () => {
   const { topicName } = useParams<{ topicName: string }>();
+  const { user, loading } = useAuth();
   const topic = topicName ? getTopicByName(topicName) : undefined;
   const [posts, setPosts] = useState(() => topicName ? getPostsByTopic(topicName) : []);
   const [expandedId, setExpandedId] = useState<string | null>(posts[0]?.id ?? null);
@@ -51,10 +53,11 @@ const TopicPage = () => {
                     rank={i + 1}
                     isExpanded={expandedId === post.id}
                     onToggleExpand={() => setExpandedId(expandedId === post.id ? null : post.id)}
+                    isAuthenticated={!loading && !!user}
                   />
                 ))}
               </div>
-              {topic && (
+              {!loading && !!user && topic && (
                 <AddPostBar
                   topicName={topic.name}
                   categoryName={topic.categoryName}

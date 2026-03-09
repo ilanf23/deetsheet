@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MessageSquare } from "lucide-react";
 import { Post, getTimeAgo } from "@/data/seedData";
@@ -9,13 +10,40 @@ interface PostCardProps {
 
 const PostCard = ({ post }: PostCardProps) => {
   const navigate = useNavigate();
+  const [expanded, setExpanded] = useState(false);
+  const [isClamped, setIsClamped] = useState(false);
+  const contentRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    const el = contentRef.current;
+    if (el) {
+      setIsClamped(el.scrollHeight > el.clientHeight);
+    }
+  }, [post.content]);
+
   return (
     <div
       className="group rounded-xl border bg-card p-4 hover:shadow-md transition-all duration-200 cursor-pointer"
       onClick={() => navigate(`/topic/${encodeURIComponent(post.topicName)}`)}
     >
       <h3 className="font-bold text-card-foreground font-heading mb-1">{post.topicName}</h3>
-      <p className="text-sm text-card-foreground leading-relaxed mb-3">{post.content}</p>
+      <p
+        ref={contentRef}
+        className={`text-sm text-card-foreground leading-relaxed mb-1 ${expanded ? "" : "line-clamp-3"}`}
+      >
+        {post.content}
+      </p>
+      {isClamped && (
+        <button
+          className="text-xs text-muted-foreground underline mb-2"
+          onClick={(e) => {
+            e.stopPropagation();
+            setExpanded((prev) => !prev);
+          }}
+        >
+          {expanded ? "Show less" : "Show more"}
+        </button>
+      )}
 
       {post.imageUrl && (
         <img
