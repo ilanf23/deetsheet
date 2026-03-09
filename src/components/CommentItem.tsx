@@ -24,7 +24,10 @@ const CommentItem = ({ comment, depth = 0 }: CommentItemProps) => {
             <span className="font-semibold text-card-foreground">@{comment.username}</span>
             <span className="text-xs text-muted-foreground">{getTimeAgo(comment.createdAt)}</span>
           </div>
-          <p className="text-sm text-card-foreground mt-1">{comment.content}</p>
+          <div
+            className="prose prose-sm max-w-none text-card-foreground mt-1"
+            dangerouslySetInnerHTML={{ __html: comment.content }}
+          />
           <div className="flex items-center gap-4 mt-2">
             <button
               onClick={() => setAgreed(!agreed)}

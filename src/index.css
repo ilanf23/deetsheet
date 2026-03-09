@@ -95,6 +95,22 @@
   }
 }
 
+/* Tiptap editor styles */
+.ProseMirror {
+  outline: none;
+}
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: hsl(var(--muted-foreground));
+  pointer-events: none;
+  height: 0;
+}
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1.25rem;
+}
+
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;

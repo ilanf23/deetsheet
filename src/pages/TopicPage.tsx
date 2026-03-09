@@ -29,7 +29,7 @@ const TopicPage = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <DeetHeader />
       <main className="flex-1">
-        <div className="container mx-auto px-4 mt-10">
+        <div className="container mx-auto px-4 mt-10 mb-20">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-10">
             {/* Main — Topic posts */}
             <div>

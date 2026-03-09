@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { ThumbsUp, CheckCircle, MessageSquare, Heart, Flag, Send, ChevronDown, ChevronRight, Star } from "lucide-react";
 import { Post, getAverageRating, getTimeAgo, getCommentsByPost } from "@/data/seedData";
 import CommentItem from "@/components/CommentItem";
 import StarRatingBar from "@/components/StarRatingBar";
+import RichTextEditor from "@/components/RichTextEditor";
+import type { Editor } from "@tiptap/react";
 
 interface TopicPostExpandedProps {
   post: Post;
@@ -20,6 +22,7 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand }: TopicPost
   const [hearted, setHearted] = useState(false);
   const [flagged, setFlagged] = useState(false);
   const [commentText, setCommentText] = useState("");
+  const editorInstanceRef = useRef<Editor | null>(null);
   const topLevelComments = getCommentsByPost(post.id);
 
   if (!isExpanded) {
@@ -110,15 +113,17 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand }: TopicPost
 
       {/* Comment input */}
       <div className="px-11 flex gap-2">
-        <textarea
+        <RichTextEditor
           placeholder="Add a comment..."
-          value={commentText}
-          onChange={(e) => setCommentText(e.target.value)}
-          className="flex-1 text-sm border rounded-lg p-2 bg-background resize-none min-h-[60px]"
+          onUpdate={(html) => setCommentText(html)}
+          editorRef={(editor) => { editorInstanceRef.current = editor; }}
         />
         <button
           className="self-end p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
-          onClick={() => setCommentText("")}
+          onClick={() => {
+            setCommentText("");
+            editorInstanceRef.current?.commands.clearContent();
+          }}
         >
           <Send className="h-4 w-4" />
         </button>
