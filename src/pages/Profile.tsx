@@ -157,7 +157,6 @@ const Profile = () => {
                           <SelectContent>
                             <SelectItem value="person">Person</SelectItem>
                             <SelectItem value="business">Business</SelectItem>
-                            <SelectItem value="organization">Organization</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -178,10 +177,13 @@ const Profile = () => {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="male">Male</SelectItem>
                             <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female-gay">Female Gay</SelectItem>
+                            <SelectItem value="male-gay">Male Gay</SelectItem>
+                            <SelectItem value="female-bi">Female Bi</SelectItem>
+                            <SelectItem value="male-bi">Male Bi</SelectItem>
                             <SelectItem value="other">Other</SelectItem>
-                            <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -337,12 +339,12 @@ const Profile = () => {
                         <SelectValue placeholder="Select level..." />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="grade-school">Grade School</SelectItem>
                         <SelectItem value="high-school">High School</SelectItem>
-                        <SelectItem value="some-college">Some College</SelectItem>
-                        <SelectItem value="bachelors">Bachelor's</SelectItem>
-                        <SelectItem value="masters">Master's</SelectItem>
+                        <SelectItem value="trade-school">Trade School</SelectItem>
+                        <SelectItem value="bachelors">Bachelors</SelectItem>
+                        <SelectItem value="masters">Masters</SelectItem>
                         <SelectItem value="doctorate">Doctorate</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -447,8 +449,9 @@ const Profile = () => {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="daily">Daily</SelectItem>
                             <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="daily">Daily</SelectItem>
+                            <SelectItem value="bi-weekly">Bi-Weekly</SelectItem>
                             <SelectItem value="monthly">Monthly</SelectItem>
                           </SelectContent>
                         </Select>
