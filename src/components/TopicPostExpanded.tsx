@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { ThumbsUp, CheckCircle, MessageSquare, Heart, Flag, Send, ChevronDown, ChevronRight, Star, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import { Post, getAverageRating, getTimeAgo, getCommentsByPost } from "@/data/seedData";
 import CommentItem from "@/components/CommentItem";
 import StarRatingBar from "@/components/StarRatingBar";
@@ -55,14 +56,34 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
           <h3 className="flex-1 text-base font-bold text-card-foreground leading-snug">{displayTitle}</h3>
           <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
         </button>
-        <div className="px-11 py-4 text-center">
-          <Lock className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">
-            <Link to="/signup" className="text-primary underline">Sign up</Link>
-            {" "}or{" "}
-            <Link to="/login" className="text-primary underline">log in</Link>
-            {" "}to view this content.
+
+        {/* Content tease with fade */}
+        {post.content && (
+          <div className="px-11">
+            <div
+              className="max-h-[4.5rem] overflow-hidden text-sm text-card-foreground/90 leading-relaxed whitespace-pre-line"
+              style={{ maskImage: 'linear-gradient(to bottom, black 40%, transparent)', WebkitMaskImage: 'linear-gradient(to bottom, black 40%, transparent)' }}
+            >
+              {post.content}
+            </div>
+          </div>
+        )}
+
+        {/* Sign-in CTA */}
+        <div className="mx-11 rounded-lg bg-accent/50 border border-primary/10 px-6 py-5 text-center space-y-3">
+          <Lock className="h-5 w-5 text-primary mx-auto" />
+          <p className="text-sm font-semibold text-card-foreground">Want the full deet?</p>
+          <p className="text-xs text-muted-foreground">
+            Create a free account to unlock all content, ratings, and comments.
           </p>
+          <div className="flex items-center justify-center gap-3 pt-1">
+            <Button asChild>
+              <Link to="/signup">Sign Up Free</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/login">Log In</Link>
+            </Button>
+          </div>
         </div>
       </div>
     );
