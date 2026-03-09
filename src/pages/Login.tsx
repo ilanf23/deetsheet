@@ -31,10 +31,14 @@ const Login = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    const { error } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: `${window.location.origin}/profile`,
     });
-    if (error) toast.error("Google sign-in failed");
+    if (result?.error) {
+      toast.error("Google sign-in failed");
+    } else if (!result?.redirected) {
+      navigate("/profile");
+    }
   };
 
   return (
