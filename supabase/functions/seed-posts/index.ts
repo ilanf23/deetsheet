@@ -1191,13 +1191,7 @@ Deno.serve(async (req) => {
         totalComments += commentBatch.length;
       }
 
-      // Update comment counts on posts in batches
-      console.log("Updating comment counts...");
-      const countEntries = Object.entries(postCommentCounts);
-      for (let i = 0; i < countEntries.length; i++) {
-        const [postId, count] = countEntries[i];
-        await supabase.from("posts").update({ comment_count: count }).eq("id", postId);
-      }
+      // Skip individual comment_count updates for speed - will do via separate SQL
 
       console.log(`Comments done: ${totalComments}`);
     } // end comments mode
