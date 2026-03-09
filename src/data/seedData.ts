@@ -13,7 +13,7 @@ export interface Post {
   id: string;
   topicName: string;
   categoryName: string;
-  title: string;
+  title?: string;
   content: string;
   username: string;
   ratingScore: number;
