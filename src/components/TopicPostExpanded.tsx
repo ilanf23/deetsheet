@@ -25,6 +25,8 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand }: TopicPost
   const editorInstanceRef = useRef<Editor | null>(null);
   const topLevelComments = getCommentsByPost(post.id);
 
+  const displayTitle = post.title || post.content;
+
   if (!isExpanded) {
     return (
       <button
@@ -32,7 +34,7 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand }: TopicPost
         className="w-full flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors text-left"
       >
         <span className="text-lg font-bold text-primary w-8 shrink-0 text-right">{rank}.</span>
-        <span className="flex-1 text-sm text-card-foreground truncate">{post.content}</span>
+        <span className="flex-1 text-sm text-card-foreground truncate">{displayTitle}</span>
         <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
           <Star className="h-3 w-3 text-secondary fill-secondary" />
           {avg}
@@ -47,9 +49,18 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand }: TopicPost
       {/* Header */}
       <button onClick={onToggleExpand} className="flex items-start gap-3 w-full text-left">
         <span className="text-xl font-bold text-primary w-8 shrink-0 text-right">{rank}.</span>
-        <h3 className="flex-1 text-base font-bold text-card-foreground leading-snug">{post.content}</h3>
+        <h3 className="flex-1 text-base font-bold text-card-foreground leading-snug">{displayTitle}</h3>
         <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
       </button>
+
+      {/* Long-form content body */}
+      {post.title && post.content && (
+        <div className="px-11">
+          <div className="prose prose-sm max-w-none text-card-foreground/90 leading-relaxed whitespace-pre-line">
+            {post.content}
+          </div>
+        </div>
+      )}
 
       {/* Rating box */}
       <div className="px-11 space-y-3">
