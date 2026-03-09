@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,6 +28,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -57,6 +59,8 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const Profile = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
   const [bio, setBio] = useState("");
   const [education, setEducation] = useState("");
   const [highSchool, setHighSchool] = useState("");
@@ -92,16 +96,106 @@ const Profile = () => {
     },
   });
 
-  const onSubmit = () => {
-    toast({
-      title: "Profile saved!",
-      description: "Your preferences have been updated.",
-    });
+  // Load profile from DB
+  useEffect(() => {
+    if (!user) { setLoading(false); return; }
+    const load = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+      if (data) {
+        form.reset({
+          name: (data as any).name || "",
+          entityType: (data as any).entity_type || "",
+          sex: (data as any).sex || "",
+          birthMonth: (data as any).birth_month || "",
+          birthDay: (data as any).birth_day || "",
+          birthYear: (data as any).birth_year || "",
+          city: (data as any).city || "",
+          state: (data as any).state || "",
+          country: (data as any).country || "",
+        });
+        setBio(data.bio || "");
+        setEducation((data as any).education || "");
+        setHighSchool((data as any).high_school || "");
+        setCollege((data as any).college || "");
+        setDegree((data as any).degree || "");
+        setMajor((data as any).major || "");
+        setJob((data as any).job || "");
+        setFavoriteMovie((data as any).favorite_movie || "");
+        setReading((data as any).reading || "");
+        setCityBorn((data as any).city_born || "");
+        setEmailFrequency((data as any).email_frequency || "weekly");
+        setPrefs({
+          emailOnMessage: (data as any).email_on_message ?? true,
+          emailOnComment: (data as any).email_on_comment ?? true,
+          emailOnFollow: (data as any).email_on_follow ?? true,
+          emailOnPostEdit: (data as any).email_on_post_edit ?? true,
+          emailTopPosts: (data as any).email_top_posts ?? false,
+        });
+      }
+      setLoading(false);
+    };
+    load();
+  }, [user]);
+
+  const onSubmit = async (values: ProfileFormValues) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        bio,
+        name: values.name,
+        entity_type: values.entityType,
+        sex: values.sex,
+        birth_month: values.birthMonth,
+        birth_day: values.birthDay,
+        birth_year: values.birthYear,
+        city: values.city,
+        state: values.state,
+        country: values.country,
+        city_born: cityBorn,
+        education,
+        high_school: highSchool,
+        college,
+        degree,
+        major,
+        job,
+        favorite_movie: favoriteMovie,
+        reading,
+        email_on_message: prefs.emailOnMessage,
+        email_on_comment: prefs.emailOnComment,
+        email_on_follow: prefs.emailOnFollow,
+        email_on_post_edit: prefs.emailOnPostEdit,
+        email_top_posts: prefs.emailTopPosts,
+        email_frequency: emailFrequency,
+      } as any)
+      .eq("id", user.id);
+
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Profile saved!", description: "Your preferences have been updated." });
+    }
   };
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 100 }, (_, i) => String(currentYear - i));
   const days = Array.from({ length: 31 }, (_, i) => String(i + 1));
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <DeetHeader />
+        <main className="flex-1 flex items-center justify-center">
+          <p className="text-muted-foreground">Loading profile…</p>
+        </main>
+        <DeetFooter />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -417,7 +511,7 @@ const Profile = () => {
                           onCheckedChange={(v) => setPrefs((p) => ({ ...p, emailOnComment: !!v }))}
                           className="mt-0.5"
                         />
-                        <span className="text-sm">Email me a email when someone comments on my posting.</span>
+                        <span className="text-sm">Send me an email when someone comments on my posting.</span>
                       </label>
                       <label className="flex items-start gap-2 cursor-pointer">
                         <Checkbox
@@ -425,7 +519,7 @@ const Profile = () => {
                           onCheckedChange={(v) => setPrefs((p) => ({ ...p, emailOnFollow: !!v }))}
                           className="mt-0.5"
                         />
-                        <span className="text-sm">Email me a email when someone follows me.</span>
+                        <span className="text-sm">Send me an email when someone follows me.</span>
                       </label>
                       <label className="flex items-start gap-2 cursor-pointer">
                         <Checkbox
@@ -433,7 +527,7 @@ const Profile = () => {
                           onCheckedChange={(v) => setPrefs((p) => ({ ...p, emailOnPostEdit: !!v }))}
                           className="mt-0.5"
                         />
-                        <span className="text-sm">Send me a email when my post has been moved or edited.</span>
+                        <span className="text-sm">Send me an email when my post has been moved or edited.</span>
                       </label>
                       <div className="flex items-start gap-2">
                         <label className="flex items-start gap-2 cursor-pointer">
@@ -442,15 +536,15 @@ const Profile = () => {
                             onCheckedChange={(v) => setPrefs((p) => ({ ...p, emailTopPosts: !!v }))}
                             className="mt-0.5"
                           />
-                          <span className="text-sm">Send me email a highlighting some of our top posts.</span>
+                          <span className="text-sm">Send me emails highlighting some of our top posts.</span>
                         </label>
                         <Select value={emailFrequency} onValueChange={setEmailFrequency}>
                           <SelectTrigger className="w-28 h-8 text-xs shrink-0">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="weekly">Weekly</SelectItem>
                             <SelectItem value="daily">Daily</SelectItem>
+                            <SelectItem value="weekly">Weekly</SelectItem>
                             <SelectItem value="bi-weekly">Bi-Weekly</SelectItem>
                             <SelectItem value="monthly">Monthly</SelectItem>
                           </SelectContent>

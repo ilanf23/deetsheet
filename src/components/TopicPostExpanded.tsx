@@ -4,7 +4,6 @@ import { Post, getAverageRating, getTimeAgo, getCommentsByPost } from "@/data/se
 import CommentItem from "@/components/CommentItem";
 import StarRatingBar from "@/components/StarRatingBar";
 import RichTextEditor from "@/components/RichTextEditor";
-import PostActionMenu from "@/components/PostActionMenu";
 import type { Editor } from "@tiptap/react";
 
 interface TopicPostExpandedProps {
@@ -86,9 +85,8 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand }: TopicPost
       </div>
 
       {/* Meta info */}
-      <div className="px-11 flex items-center gap-1 text-xs text-muted-foreground">
-        <span>@{post.username} · Posted {getTimeAgo(post.createdAt)} · {post.commentCount} comments</span>
-        <PostActionMenu />
+      <div className="px-11 text-xs text-muted-foreground">
+        @{post.username} · Posted {getTimeAgo(post.createdAt)} · {post.commentCount} comments · Share · ...
       </div>
 
       {/* Interaction icons */}

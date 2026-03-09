@@ -313,22 +313,6 @@ export const comments: Comment[] = [
   { id: "c26", postId: "162", parentCommentId: "c25", username: "mcworker", content: "Go between 2-5pm. That's usually the sweet spot.", createdAt: hoursAgo(8), agreeCount: 55, heartCount: 19 },
 ];
 
-export const addPost = (topicName: string, categoryName: string, content: string, username: string): Post => {
-  const newPost: Post = {
-    id: `user-${Date.now()}`,
-    topicName,
-    categoryName,
-    content,
-    username,
-    ratingScore: 0,
-    ratingCount: 0,
-    commentCount: 0,
-    createdAt: new Date(),
-  };
-  posts.push(newPost);
-  return newPost;
-};
-
 export const getCommentsByPost = (postId: string): Comment[] =>
   comments
     .filter((c) => c.postId === postId && c.parentCommentId === null)

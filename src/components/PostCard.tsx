@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Share2 } from "lucide-react";
 import { Post, getTimeAgo } from "@/data/seedData";
-import PostActionMenu from "@/components/PostActionMenu";
 
 interface PostCardProps {
   post: Post;
@@ -32,7 +31,9 @@ const PostCard = ({ post }: PostCardProps) => {
             <MessageSquare className="h-3.5 w-3.5" />
             {post.commentCount}
           </span>
-          <PostActionMenu />
+          <button className="hover:text-foreground transition">
+            <Share2 className="h-3.5 w-3.5" />
+          </button>
         </div>
       </div>
     </div>
