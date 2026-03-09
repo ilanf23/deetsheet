@@ -91,22 +91,94 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          birth_day: string | null
+          birth_month: string | null
+          birth_year: string | null
+          city: string | null
+          city_born: string | null
+          college: string | null
+          country: string | null
           created_at: string
+          degree: string | null
+          education: string | null
+          email_frequency: string | null
+          email_on_comment: boolean | null
+          email_on_follow: boolean | null
+          email_on_message: boolean | null
+          email_on_post_edit: boolean | null
+          email_top_posts: boolean | null
+          entity_type: string | null
+          favorite_movie: string | null
+          high_school: string | null
           id: string
+          job: string | null
+          major: string | null
+          name: string | null
+          reading: string | null
+          sex: string | null
+          state: string | null
           username: string | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          birth_day?: string | null
+          birth_month?: string | null
+          birth_year?: string | null
+          city?: string | null
+          city_born?: string | null
+          college?: string | null
+          country?: string | null
           created_at?: string
+          degree?: string | null
+          education?: string | null
+          email_frequency?: string | null
+          email_on_comment?: boolean | null
+          email_on_follow?: boolean | null
+          email_on_message?: boolean | null
+          email_on_post_edit?: boolean | null
+          email_top_posts?: boolean | null
+          entity_type?: string | null
+          favorite_movie?: string | null
+          high_school?: string | null
           id: string
+          job?: string | null
+          major?: string | null
+          name?: string | null
+          reading?: string | null
+          sex?: string | null
+          state?: string | null
           username?: string | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          birth_day?: string | null
+          birth_month?: string | null
+          birth_year?: string | null
+          city?: string | null
+          city_born?: string | null
+          college?: string | null
+          country?: string | null
           created_at?: string
+          degree?: string | null
+          education?: string | null
+          email_frequency?: string | null
+          email_on_comment?: boolean | null
+          email_on_follow?: boolean | null
+          email_on_message?: boolean | null
+          email_on_post_edit?: boolean | null
+          email_top_posts?: boolean | null
+          entity_type?: string | null
+          favorite_movie?: string | null
+          high_school?: string | null
           id?: string
+          job?: string | null
+          major?: string | null
+          name?: string | null
+          reading?: string | null
+          sex?: string | null
+          state?: string | null
           username?: string | null
         }
         Relationships: []
