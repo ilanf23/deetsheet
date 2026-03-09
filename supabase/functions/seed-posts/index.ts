@@ -1005,6 +1005,7 @@ Deno.serve(async (req) => {
     await supabase.from("posts").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
     let totalInserted = 0;
+    const allInsertedPosts: { id: string; topic_name: string; author_id: string }[] = [];
 
     for (const topic of topics!) {
       const topicData = topicPosts[topic.name] || getGenericContents(topic.name);
@@ -1015,7 +1016,6 @@ Deno.serve(async (req) => {
         const contentIndex = (rank - 1) % topicData.contents.length;
         const userIndex = (rank - 1) % userIds.length;
 
-        // Add rank variation to title if we cycle
         const cycleNum = Math.floor((rank - 1) / topicData.titles.length);
         let title = topicData.titles[titleIndex];
         if (cycleNum > 0) {
@@ -1045,17 +1045,131 @@ Deno.serve(async (req) => {
       // Insert in batches of 50
       for (let i = 0; i < posts.length; i += 50) {
         const batch = posts.slice(i, i + 50);
-        const { error: insertError } = await supabase.from("posts").insert(batch);
+        const { data: inserted, error: insertError } = await supabase
+          .from("posts")
+          .insert(batch)
+          .select("id, author_id");
         if (insertError) {
           console.error(`Error inserting batch for ${topic.name}:`, insertError);
           throw insertError;
         }
         totalInserted += batch.length;
+        if (inserted) {
+          for (const p of inserted) {
+            allInsertedPosts.push({ id: p.id, topic_name: topic.name, author_id: p.author_id });
+          }
+        }
       }
     }
 
+    // ===== COMMENT SEEDING PHASE =====
+    console.log(`Seeding comments for ${allInsertedPosts.length} posts...`);
+
+    const topicCommentTemplates: Record<string, string[]> = {
+      Parent: [
+        "This resonates deeply. We went through something similar with our toddler and the biggest lesson was patience. It's easy to read advice online and think 'that sounds simple,' but executing it at 3 AM when you haven't slept in two days is a completely different story. What finally worked for us was lowering our expectations and accepting that progress isn't linear. Some weeks our kid would sleep perfectly, then teething would hit and we'd be back to square one. The key is not to see setbacks as failures but as normal parts of development. Also — and I can't stress this enough — tag-team with your partner. One person doing all the heavy lifting leads to resentment fast. We started doing alternating nights where one parent was 'on duty' and the other could sleep without guilt. It saved our marriage honestly.",
+        "I wish more parents talked about this openly. There's so much judgment in parenting communities that people are afraid to share what actually works for fear of being called a bad parent. My experience: every family is different and what works for one kid might be terrible for another. We have two children and they required completely opposite approaches for almost everything — sleep, food, discipline, all of it. The advice I'd give any new parent is to collect strategies like tools in a toolbox. Read widely, listen to experienced parents, but ultimately trust your instincts about YOUR child. You know them better than any book or blog does. And give yourself grace. The fact that you're even thinking about how to be a better parent means you're already doing a good job.",
+        "Adding my two cents from the other side of this — my kids are now teenagers and I can tell you that the things I stressed about when they were little (screen time, organic food, the perfect preschool) mattered way less than I thought. What actually mattered: showing up consistently, apologizing when I was wrong, and making sure they knew our home was a safe place to feel any emotion. My daughter recently told me that the thing she remembers most from childhood isn't any activity or vacation — it's that I always sat with her when she was upset without trying to fix it immediately. Just being present. That broke me in the best way. So if you're in the trenches right now, I promise it gets easier, and the love you're pouring in right now is building something beautiful even when it doesn't feel like it.",
+        "The financial aspect is something nobody prepares you for adequately. Beyond the obvious costs like diapers and food, there are the hidden expenses that add up: birthday party gifts for every classmate, school supplies lists that somehow cost $200, the activity fees, the equipment, the specialized clothing they outgrow in three months. We sat down and tracked every kid-related expense for a year and it was genuinely shocking — about 40% more than we had budgeted. What helped: we started a kids-specific budget category, bought secondhand aggressively (Facebook Marketplace and consignment shops are goldmines), and learned to say no to the pressure to enroll in every enrichment activity. Your kids don't need to do travel soccer, piano lessons, AND art class simultaneously. Pick one or two and let them have unstructured time.",
+        "Something that transformed our parenting was family meetings. Every Sunday evening, we sit down — even with our 5-year-old — and talk about the week ahead. What's happening at school, any worries, things people are looking forward to. We also do 'roses and thorns' — each person shares one good thing and one hard thing from the past week. It sounds corny but it's created a culture of communication in our house that pays dividends daily. The kids bring up issues proactively now instead of bottling them up. And they've learned that problems are normal things that we solve together, not catastrophes to panic about. Start this early if you can — it's harder to introduce with older kids who aren't used to sharing."
+      ],
+      Waiter: [
+        "Ten years in the industry and this is spot on. The thing I'd add is that server burnout is real and it sneaks up on you. You're making decent money, the schedule is flexible, and the social aspect is fun — but one day you realize you haven't had a Friday night off in three years, your feet hurt constantly, and you've been self-medicating with shift drinks. The servers who last long-term are the ones who treat this like a real career: they invest in continuing education (wine certifications, sommelier training, management courses), they save and invest their cash tips instead of spending them that night, and they set boundaries about scheduling. I eventually moved into management and then consulting, but the skills I learned on the floor — reading people, multitasking under pressure, sales — are genuinely transferable to any client-facing role.",
+        "The upselling piece is so important and most servers do it wrong. They recite specials like a grocery list, which is boring and forgettable. The technique that actually works: personal recommendation with a story. Instead of 'our specials tonight are the salmon and the short rib,' try 'I had the short rib during staff meal yesterday and honestly it was one of the best things I've eaten here — the braising makes it fall apart and the bone marrow butter is ridiculous.' People buy from enthusiasm, not information. Same with wine — don't just recommend by the glass, say 'if you're getting the steak, there's this Argentine Malbec that our sommelier paired with it and it's genuinely a perfect match.' You've just turned a $9 glass into a $45 bottle recommendation and you did it by being helpful, not pushy.",
+        "Can we talk about the mental health side of this job? The combination of irregular sleep, irregular eating, constant social performance, and income instability takes a real toll. I've seen so many talented servers burn out or develop substance issues because the industry normalizes unhealthy coping mechanisms. After-shift drinks become nightly drinks become daily drinks. The adrenaline of a busy shift becomes the only thing that makes you feel alive, and your days off feel empty. If this sounds familiar, please talk to someone. Many restaurants now have employee assistance programs. And if you're a manager reading this: create a culture where your staff can be honest about struggling. Check in with your people. The cost of a supportive environment is nothing compared to constant turnover.",
+        "The technology shift in restaurants is something I have complicated feelings about. QR code menus, tablet ordering, automatic tip suggestions — they all reduce the human interaction that makes dining out special. Yes, they improve efficiency. Yes, they reduce labor costs. But the tables where I connect with guests, read their mood, surprise them with a perfect recommendation they didn't know they wanted — those are the tables that leave 30% tips and become regulars. Technology can't replicate genuine hospitality. The restaurants that thrive long-term will be the ones that use technology to handle the administrative burden while freeing servers to do what we do best: make people feel welcome and cared for.",
+        "Here's something for newer servers: learn the kitchen. Spend time talking to the cooks, understand how dishes are prepared, know the allergen risks, understand timing. When a table asks 'can you make this without garlic?' you should know instantly whether that's possible or if garlic is in the base sauce and it's a no-go. When someone asks how long their entrée will take, you should be able to read the ticket board and give an honest answer. This knowledge makes you better at your job and earns respect from the kitchen staff. The server-kitchen relationship is often adversarial, but the best restaurants are the ones where front-of-house and back-of-house operate as one team. Buy the kitchen a round of drinks sometimes. They work harder than anyone in the building."
+      ],
+      Chicago: [
+        "Been here fifteen years and the neighborhood advice is crucial. Chicago is really a city of neighborhoods and picking the wrong one for your lifestyle can make you hate a city you'd otherwise love. If you're in your twenties and want nightlife: Wicker Park, Logan Square, or Lincoln Park. If you want quiet and family-friendly: Beverly, Edison Park, or North Center. If you want diversity and amazing food: Albany Park, Uptown, or Rogers Park. If you want hip and artsy: Pilsen or Bridgeport. Each neighborhood has its own personality, and moving between them feels like moving to a different city. Spend a full weekend in any neighborhood before signing a lease — walk around Saturday morning AND Friday night to see both sides.",
+        "The winter survival guide needs more emphasis because people truly underestimate it. I'm from Minnesota so I thought I could handle it, but Chicago winter is different because of the wind. The wind chill regularly makes it feel like -30°F and it cuts through anything that isn't properly layered. My system: merino wool base layer (not cotton — cotton kills), fleece or down mid-layer, windproof outer shell. For your face: a balaclava or neck gaiter is essential, not optional. For your hands: mittens over gloves always. And here's what nobody mentions: your phone battery dies fast in extreme cold. Keep it in an inner pocket close to your body heat. Plan your routes to minimize time in the wind. Walk on the south side of east-west streets when the wind is from the north. These small strategies make the difference between surviving winter and being miserable.",
+        "The food scene here genuinely rivals any city in the world and it's criminal how underrated it is. Everyone fixates on deep dish (which, for the record, is a special occasion food — Chicagoans eat thin crust for everyday pizza). But the real treasures: the taquerias along 26th Street in Little Village where a $3 taco is better than anything you'll get in most cities for $15. The Korean restaurants on Lawrence Ave. The Bosnian food in the far north. The soul food on the South Side — check out Virtue in Hyde Park or Lem's BBQ for rib tips that will change your understanding of barbecue. And Chicago's fine dining scene competes with NYC at literally half the price. A tasting menu at Smyth or Oriole is world-class and a fraction of what you'd pay at comparable restaurants in Manhattan.",
+        "Public transit advice from someone who's been CTA-dependent for a decade: the system is genuinely good by American standards but has real limitations. The L covers the north side extremely well but south and west side coverage is spotty. Express buses during rush hour are often faster than trains. The Metra commuter rail is excellent if you're going between downtown and specific suburbs. Get the Transit app — it aggregates CTA, Metra, and Pace bus data better than the CTA's own app. For biking: Divvy (bike share) is fantastic April through October, and the lakefront trail is one of the great urban bike paths in America. But know that winter biking here requires studded tires and a death wish. Most people go CTA-only November through March.",
+        "The cost of living conversation is nuanced. Yes, Chicago is cheaper than NYC, SF, or LA. But it's not cheap. A one-bedroom in a desirable neighborhood runs $1,400-2,000. Property taxes are infamously high. The sales tax is over 10%. That said, the value proposition is strong: you get genuine big-city amenities — world-class museums (many with free days), incredible parks, diverse food, professional sports, vibrant arts scene — at a price point where you can actually save money and have a life. I moved here from San Francisco and my quality of life improved dramatically even though my salary dropped 15%. I have a larger apartment, I eat out regularly, I go to shows, and I still save more than I did in the Bay Area."
+      ],
+      Cancer: [
+        "Going through treatment right now and this is exactly what I needed to read. The thing about accepting help was the hardest for me. I've always been the strong one, the person everyone else leans on. Having to let people bring me meals, drive me to appointments, and see me at my worst felt like losing a core part of my identity. My therapist helped me reframe it: accepting help isn't weakness — it's giving the people who love you a way to show that love when they feel helpless. They WANT to do something. Letting them cook or clean or drive gives them purpose during a time when everyone feels powerless. I started keeping a list on my fridge of specific tasks people could do, and it made it easier for both sides. 'I need someone to pick up my prescription Tuesday' is more actionable than 'let me know if you need anything.'",
+        "The scanxiety piece needs its own dedicated discussion because it never fully goes away, even years after treatment ends. I'm five years out and I still get knots in my stomach for a week before every scan. What's helped: acknowledging the anxiety instead of fighting it. Telling myself 'of course you're anxious, this is scary' instead of 'stop being dramatic, you're fine.' Planning something enjoyable immediately after the scan as a reward. And having a support person who just sits with you — not someone who tries to reassure you with 'I'm sure it'll be fine,' but someone who says 'this is hard and I'm here regardless of the results.' Also, talk to your oncologist about scan anxiety specifically. Some prescribe short-term anti-anxiety medication for scan days and there's no shame in using it.",
+        "I'm a caregiver (my wife was diagnosed 18 months ago) and the section about caregivers mattering too hit me hard. Nobody asks how the caregiver is doing. The focus is entirely on the patient, which it should be, but caregivers are drowning silently. I manage her medications, drive to every appointment, handle insurance paperwork, coordinate family communication, maintain the household, work full-time, AND try to be emotionally supportive 24/7. I haven't had a full night's sleep in months and I can't express frustration because 'at least I'm not the one with cancer.' The caregiver support groups helped enormously. Being in a room with people who understand that you can simultaneously be grateful your spouse is alive AND exhausted and resentful of the situation — that duality that nobody else gets — is profoundly validating.",
+        "Nutrition during treatment is something I researched extensively and here's what I landed on: forget the miracle cancer-fighting diets you see online. The goal during chemo is simply to eat enough to maintain weight and energy. Your taste buds will change — things you loved will taste metallic or wrong. Eat whatever sounds good, whenever you can. For me, that was plain rice, popsicles, and scrambled eggs for weeks. My oncology dietitian was way more useful than any book. She suggested ginger tea for nausea (it works), protein shakes for days I couldn't eat solid food, and small frequent meals instead of three big ones. Stay hydrated above all else — dehydration makes every side effect worse. And don't let anyone guilt you about eating 'clean' during treatment. Keeping calories in your body is the priority.",
+        "The financial toxicity of cancer is a term that oncologists are finally starting to use and it needs more attention. Even with good insurance, my out-of-pocket costs exceeded $15,000 in the first year. Parking at the cancer center alone was $25 per visit, three times a week. The medications that insurance 'covered' still had $500 copays. I had to reduce my work hours, so income dropped while expenses skyrocketed. What saved us: the hospital's financial counselor connected us to three different assistance programs I never knew existed. One covered copays for my specific drug. Another provided gas cards for transportation to treatment. A third offered a grant for living expenses. Ask your cancer center about financial navigation services — most major centers have them and they can find money you didn't know was available."
+      ],
+    };
+
+    // Generic comment templates for topics without specific ones
+    function getGenericComments(topicName: string): string[] {
+      return [
+        `This is such an important perspective on ${topicName}. I've been dealing with this for years and what I've found is that the conventional advice only gets you about 70% of the way there. The remaining 30% comes from personal experience and adaptation. What worked for me was starting with the standard approach and then systematically adjusting based on what I observed in my own situation. Everyone's circumstances are different, so the cookie-cutter advice from most guides will need modification. The key is to keep a journal or notes about what you're trying and what results you're seeing. Over time, patterns emerge that are unique to your situation and those patterns become your real guide. I spent six months refining my approach this way and the difference was night and day compared to just following generic recommendations.`,
+        `I respectfully disagree with part of this, and I think the nuance matters. While the overall direction is right, there's a middle ground that gets overlooked in these discussions. In my experience, the extreme positions on either side of this topic both have merit, but the practical reality is somewhere in between. When I first started exploring ${topicName}, I went all-in on one approach and it backfired. Then I swung to the opposite extreme and that didn't work either. What finally clicked was taking elements from both philosophies and creating a hybrid approach that fit my specific circumstances. I think we do a disservice to newcomers when we present things as black-and-white because real life is messy and complicated. The best advice acknowledges that complexity instead of pretending there's one right answer.`,
+        `Thank you for writing this out so thoroughly. I've shared this with three friends who are all dealing with ${topicName} in different ways and every one of them found it valuable. The part about the mental and emotional side really resonated — most resources focus entirely on the practical steps and ignore the psychological component, which in my experience is actually the harder part to navigate. I went through a period where I knew exactly what I should be doing but couldn't bring myself to do it because of fear, doubt, and overthinking. What broke the cycle was finding a mentor who had been through the same thing and could normalize the emotional roller coaster. Having someone say 'yeah, that's completely normal and here's how I got through it' was more helpful than any how-to guide I'd read.`,
+        `Coming at this from a slightly different angle — I think the timing aspect doesn't get discussed enough. When you encounter ${topicName} matters enormously in terms of how you process it and what strategies work. If you're dealing with this early in your journey, the approach is fundamentally different than if you've been at it for years. I made the mistake of applying advanced strategies when I was still a beginner, which led to frustration and self-doubt. Conversely, once I had more experience, the beginner-level advice felt patronizing and unhelpful. The missing piece in most discussions about ${topicName} is a clear framework for where you are in your journey and what's appropriate for that stage. Not everyone is starting from zero, but not everyone is advanced either, and the advice should reflect that spectrum.`,
+        `What I appreciate most about this discussion is the honesty. Too many forums and communities around ${topicName} are echo chambers where everyone agrees with the prevailing wisdom and dissent is discouraged. The reality is that this is a complex topic with legitimate debate and multiple valid approaches. I've tried three different strategies over the past two years and all of them had merits and drawbacks. The first one was faster but less sustainable. The second was thorough but incredibly time-consuming. The third was a good compromise but required resources not everyone has access to. What I ultimately settled on was a seasonal rotation: I use different approaches at different times based on my energy level, available time, and current priorities. This flexible framework has been far more effective than rigidly committing to any single method.`,
+      ];
+    }
+
+    let totalComments = 0;
+    const commentBatch: { post_id: string; author_id: string; content: string; created_at: string }[] = [];
+    const postCommentCounts: Record<string, number> = {};
+
+    for (const post of allInsertedPosts) {
+      const commentTemplates = topicCommentTemplates[post.topic_name] || getGenericComments(post.topic_name);
+      // 3-5 comments per post
+      const numComments = 3 + (Math.abs(hashString(post.id)) % 3);
+
+      for (let c = 0; c < numComments; c++) {
+        // Pick a user different from the post author
+        let commentUserIndex = (Math.abs(hashString(post.id + c.toString())) % userIds.length);
+        if (userIds[commentUserIndex] === post.author_id) {
+          commentUserIndex = (commentUserIndex + 1) % userIds.length;
+        }
+
+        const templateIndex = c % commentTemplates.length;
+        // Spread timestamps over the last 3 weeks
+        const daysAgo = Math.abs(hashString(post.id + c.toString() + "t")) % 21;
+        const hoursAgo = Math.abs(hashString(post.id + c.toString() + "h")) % 24;
+        const commentDate = new Date();
+        commentDate.setDate(commentDate.getDate() - daysAgo);
+        commentDate.setHours(commentDate.getHours() - hoursAgo);
+
+        commentBatch.push({
+          post_id: post.id,
+          author_id: userIds[commentUserIndex],
+          content: commentTemplates[templateIndex],
+          created_at: commentDate.toISOString(),
+        });
+
+        postCommentCounts[post.id] = (postCommentCounts[post.id] || 0) + 1;
+      }
+
+      // Insert in batches of 50
+      if (commentBatch.length >= 50) {
+        const batch = commentBatch.splice(0, 50);
+        const { error: commentError } = await supabase.from("comments").insert(batch);
+        if (commentError) {
+          console.error("Error inserting comments:", commentError);
+          throw commentError;
+        }
+        totalComments += batch.length;
+      }
+    }
+
+    // Insert remaining comments
+    if (commentBatch.length > 0) {
+      const { error: commentError } = await supabase.from("comments").insert(commentBatch);
+      if (commentError) throw commentError;
+      totalComments += commentBatch.length;
+    }
+
+    // Update comment counts on posts
+    console.log("Updating comment counts...");
+    for (const [postId, count] of Object.entries(postCommentCounts)) {
+      await supabase.from("posts").update({ comment_count: count }).eq("id", postId);
+    }
+
+    console.log(`Done! ${totalInserted} posts, ${totalComments} comments`);
+
     return new Response(
-      JSON.stringify({ success: true, totalInserted }),
+      JSON.stringify({ success: true, totalInserted, totalComments }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
