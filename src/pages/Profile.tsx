@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { User, Pencil, GraduationCap, Eye, Calendar } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
 import { Button } from "@/components/ui/button";
@@ -57,6 +60,8 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const Profile = () => {
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [bio, setBio] = useState("");
   const [education, setEducation] = useState("");
   const [highSchool, setHighSchool] = useState("");
@@ -68,6 +73,7 @@ const Profile = () => {
   const [reading, setReading] = useState("");
   const [cityBorn, setCityBorn] = useState("");
   const [emailFrequency, setEmailFrequency] = useState("weekly");
+  const [saving, setSaving] = useState(false);
 
   const [prefs, setPrefs] = useState({
     emailOnMessage: true,
@@ -92,11 +98,102 @@ const Profile = () => {
     },
   });
 
-  const onSubmit = () => {
-    toast({
-      title: "Profile saved!",
-      description: "Your preferences have been updated.",
-    });
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/login");
+    }
+  }, [authLoading, user, navigate]);
+
+  // Load existing profile data
+  useEffect(() => {
+    if (!user) return;
+    const loadProfile = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+      if (data) {
+        form.reset({
+          name: data.name || user.user_metadata?.full_name || "",
+          entityType: data.entity_type || "",
+          sex: data.sex || "",
+          birthMonth: data.birth_month || "",
+          birthDay: data.birth_day || "",
+          birthYear: data.birth_year || "",
+          city: data.city || "",
+          state: data.state || "",
+          country: data.country || "",
+        });
+        setBio(data.bio || "");
+        setEducation(data.education || "");
+        setHighSchool(data.high_school || "");
+        setCollege(data.college || "");
+        setDegree(data.degree || "");
+        setMajor(data.major || "");
+        setJob(data.job || "");
+        setFavoriteMovie(data.favorite_movie || "");
+        setReading(data.reading || "");
+        setCityBorn(data.city_born || "");
+        setEmailFrequency(data.email_frequency || "weekly");
+        setPrefs({
+          emailOnMessage: data.email_on_message ?? true,
+          emailOnComment: data.email_on_comment ?? true,
+          emailOnFollow: data.email_on_follow ?? true,
+          emailOnPostEdit: data.email_on_post_edit ?? true,
+          emailTopPosts: data.email_top_posts ?? false,
+        });
+      } else {
+        // Pre-fill name from Google metadata if available
+        const googleName = user.user_metadata?.full_name || user.user_metadata?.name || "";
+        if (googleName) {
+          form.setValue("name", googleName);
+        }
+      }
+    };
+    loadProfile();
+  }, [user]);
+
+  const onSubmit = async (values: ProfileFormValues) => {
+    if (!user) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({
+        id: user.id,
+        name: values.name,
+        entity_type: values.entityType,
+        sex: values.sex,
+        birth_month: values.birthMonth,
+        birth_day: values.birthDay,
+        birth_year: values.birthYear,
+        city: values.city,
+        state: values.state,
+        country: values.country,
+        bio,
+        education,
+        high_school: highSchool,
+        college,
+        degree,
+        major,
+        job,
+        favorite_movie: favoriteMovie,
+        reading,
+        city_born: cityBorn,
+        email_frequency: emailFrequency,
+        email_on_message: prefs.emailOnMessage,
+        email_on_comment: prefs.emailOnComment,
+        email_on_follow: prefs.emailOnFollow,
+        email_on_post_edit: prefs.emailOnPostEdit,
+        email_top_posts: prefs.emailTopPosts,
+      });
+    setSaving(false);
+    if (error) {
+      toast({ title: "Error saving profile", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Profile saved!", description: "Your preferences have been updated." });
+    }
   };
 
   const currentYear = new Date().getFullYear();
@@ -507,8 +604,8 @@ const Profile = () => {
               </div>
 
               <div className="flex justify-center">
-                <Button type="submit" className="px-8">
-                  Save Profile
+                <Button type="submit" className="px-8" disabled={saving}>
+                  {saving ? "Saving..." : "Save Profile"}
                 </Button>
               </div>
             </form>
