@@ -991,6 +991,9 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const body = await req.json().catch(() => ({}));
+    const mode = body.mode || "all"; // "posts", "comments", or "all"
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
@@ -1010,13 +1013,14 @@ Deno.serve(async (req) => {
 
     const userIds = profiles!.map((p: { id: string }) => p.id);
 
-    // Clear existing data
-    await supabase.from("votes").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-    await supabase.from("comments").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-    await supabase.from("posts").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-
     let totalInserted = 0;
-    const allInsertedPosts: { id: string; topic_name: string; author_id: string }[] = [];
+    let totalComments = 0;
+
+    if (mode === "posts" || mode === "all") {
+      // Clear existing data
+      await supabase.from("votes").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await supabase.from("comments").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      await supabase.from("posts").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 
     for (const topic of topics!) {
       const topicData = topicPosts[topic.name] || getGenericContents(topic.name);
