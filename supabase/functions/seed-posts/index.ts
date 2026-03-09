@@ -1060,20 +1060,15 @@ Deno.serve(async (req) => {
       // Insert in batches of 50
       for (let i = 0; i < posts.length; i += 50) {
         const batch = posts.slice(i, i + 50);
-        const { data: inserted, error: insertError } = await supabase
+        const { error: insertError } = await supabase
           .from("posts")
-          .insert(batch)
-          .select("id, author_id");
+          .insert(batch);
         if (insertError) {
           console.error(`Error inserting batch for ${topic.name}:`, insertError);
           throw insertError;
         }
         totalInserted += batch.length;
-        if (inserted) {
-          for (const p of inserted) {
-            allInsertedPosts.push({ id: p.id, topic_name: topic.name, author_id: p.author_id });
-          }
-        }
+      }
       }
     } // end posts mode
 
