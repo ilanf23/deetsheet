@@ -1075,27 +1075,27 @@ Deno.serve(async (req) => {
     } // end posts mode
 
     if (mode === "comments" || mode === "all") {
-      // Delete existing comments
-      await supabase.from("comments").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      // Only delete all comments on first batch (offset 0)
+      if (topicOffset === 0) {
+        await supabase.from("comments").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+      }
 
-      // Fetch all posts with their topic names
+      // Process only a slice of topics
+      const topicSlice = topics!.slice(topicOffset, topicOffset + topicLimit);
+      console.log(`Processing topics ${topicOffset} to ${topicOffset + topicSlice.length} of ${topics!.length}`);
+
       const allPosts: { id: string; topic_name: string; author_id: string }[] = [];
-      for (const topic of topics!) {
-        let from = 0;
-        const pageSize = 1000;
-        while (true) {
-          const { data: postsPage, error: postsError } = await supabase
-            .from("posts")
-            .select("id, author_id")
-            .eq("topic_id", topic.id)
-            .range(from, from + pageSize - 1);
-          if (postsError) throw postsError;
-          if (!postsPage || postsPage.length === 0) break;
+      for (const topic of topicSlice) {
+        const { data: postsPage, error: postsError } = await supabase
+          .from("posts")
+          .select("id, author_id")
+          .eq("topic_id", topic.id)
+          .limit(1000);
+        if (postsError) throw postsError;
+        if (postsPage) {
           for (const p of postsPage) {
             allPosts.push({ id: p.id, topic_name: topic.name, author_id: p.author_id });
           }
-          if (postsPage.length < pageSize) break;
-          from += pageSize;
         }
       }
 
