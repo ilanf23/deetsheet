@@ -993,6 +993,8 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const mode = body.mode || "all"; // "posts", "comments", or "all"
+    const topicOffset = body.topicOffset || 0; // for batched comment seeding
+    const topicLimit = body.topicLimit || 5; // process N topics at a time for comments
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
