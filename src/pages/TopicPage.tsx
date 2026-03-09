@@ -4,13 +4,18 @@ import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
 import TopicPostExpanded from "@/components/TopicPostExpanded";
 import TopicRecommendations from "@/components/TopicRecommendations";
+import AddPostBar from "@/components/AddPostBar";
 import { getTopicByName, getPostsByTopic, getSubtitle } from "@/data/seedData";
 
 const TopicPage = () => {
   const { topicName } = useParams<{ topicName: string }>();
   const topic = topicName ? getTopicByName(topicName) : undefined;
-  const posts = topicName ? getPostsByTopic(topicName) : [];
+  const [posts, setPosts] = useState(() => topicName ? getPostsByTopic(topicName) : []);
   const [expandedId, setExpandedId] = useState<string | null>(posts[0]?.id ?? null);
+
+  const refreshPosts = () => {
+    if (topicName) setPosts(getPostsByTopic(topicName));
+  };
 
   if (!topic) {
     return (
@@ -49,6 +54,13 @@ const TopicPage = () => {
                   />
                 ))}
               </div>
+              {topic && (
+                <AddPostBar
+                  topicName={topic.name}
+                  categoryName={topic.categoryName}
+                  onPostAdded={refreshPosts}
+                />
+              )}
             </div>
 
             {/* Right — Recommendations */}
