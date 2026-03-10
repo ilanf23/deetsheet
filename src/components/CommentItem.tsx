@@ -34,6 +34,7 @@ const CommentItem = ({ comment, depth = 0 }: CommentItemProps) => {
       content: replyText,
       createdAt: new Date(),
       agreeCount: 0,
+      disagreeCount: 0,
       heartCount: 0,
     };
 
@@ -72,7 +73,7 @@ const CommentItem = ({ comment, depth = 0 }: CommentItemProps) => {
               className={`flex items-center gap-1 text-xs transition-colors ${disagreed ? "text-destructive" : "text-muted-foreground hover:text-foreground"}`}
             >
               <ThumbsDown className="h-3.5 w-3.5" />
-              {(disagreed ? 1 : 0)}
+              {comment.disagreeCount + (disagreed ? 1 : 0)}
             </button>
             {depth < maxDepth && (
               <button
