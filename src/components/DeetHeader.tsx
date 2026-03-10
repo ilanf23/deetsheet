@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Menu, X, List, ChevronRight, User } from "lucide-react";
+import { Search, Menu, X, List, ChevronRight, User, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
 import { categories, topics } from "@/data/seedData";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useAdminMode } from "@/hooks/useAdminMode";
 
 const TocContent = () => {
   const navigate = useNavigate();
