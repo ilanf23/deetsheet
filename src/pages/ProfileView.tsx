@@ -553,11 +553,6 @@ const ProfileView = () => {
                                 >
                                   {topic.name}
                                 </a>
-                                {topic.category_name && (
-                                  <Badge variant="secondary" className="text-xs font-normal">
-                                    {topic.category_name}
-                                  </Badge>
-                                )}
                               </div>
                               {topic.description && (
                                 <p className="text-sm text-muted-foreground line-clamp-2">
