@@ -18,12 +18,13 @@ export function useAdminAuth() {
 
     const checkAdmin = async () => {
       const { data } = await supabase
-        .from("profiles")
-        .select("is_admin")
-        .eq("id", user.id)
-        .single();
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
 
-      setIsAdmin(data?.is_admin ?? false);
+      setIsAdmin(!!data);
       setIsLoading(false);
     };
 
