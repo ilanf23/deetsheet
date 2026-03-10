@@ -49,6 +49,7 @@ const TocContent = () => {
 };
 
 const DeetHeader = () => {
+  const navigate = useNavigate();
   const { user, signOut, avatarUrl } = useAuth();
   const { isAdmin } = useAdminAuth();
   const { adminModeActive, toggleAdminMode } = useAdminMode();
