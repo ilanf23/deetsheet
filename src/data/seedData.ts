@@ -6,6 +6,7 @@ export interface Comment {
   content: string;
   createdAt: Date;
   agreeCount: number;
+  disagreeCount: number;
   heartCount: number;
 }
 
