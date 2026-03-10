@@ -37,6 +37,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <AdminModeProvider>
+          <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
