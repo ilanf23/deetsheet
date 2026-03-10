@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Menu, X, List, ChevronRight } from "lucide-react";
+import { Search, Menu, X, List, ChevronRight, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { categories, topics } from "@/data/seedData";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const TocContent = () => {
   const navigate = useNavigate();
@@ -50,6 +52,23 @@ const DeetHeader = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("avatar_url")
+      .eq("id", user.id)
+      .single()
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("Failed to fetch avatar URL:", error);
+          return;
+        }
+        if (data?.avatar_url) setAvatarUrl(data.avatar_url);
+      });
+  }, [user]);
 
   const username = user?.user_metadata?.username || user?.email?.split("@")[0] || "User";
 
@@ -85,7 +104,15 @@ const DeetHeader = () => {
         <nav className="hidden md:flex items-center gap-1">
           {user ? (
             <>
-              <span className="text-sm text-muted-foreground mr-2">{username}</span>
+              <button onClick={() => navigate("/profile")} className="flex items-center gap-2 mr-2 hover:opacity-80 transition-opacity">
+                <Avatar className="h-7 w-7">
+                  {avatarUrl && <AvatarImage src={avatarUrl} alt={username} />}
+                  <AvatarFallback className="text-xs bg-muted">
+                    <User className="h-3.5 w-3.5" />
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-sm text-muted-foreground">{username}</span>
+              </button>
               <Button variant="outline" size="sm" onClick={() => navigate("/profile")}>Profile</Button>
               <Button variant="ghost" size="sm" onClick={() => signOut()}>Sign Out</Button>
             </>

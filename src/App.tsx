@@ -7,7 +7,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
-import Profile from "./pages/Profile";
+import ProfileView from "./pages/ProfileView";
+import ProfileEdit from "./pages/ProfileEdit";
 import AuthCallback from "./pages/AuthCallback";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -17,6 +18,13 @@ import Contact from "./pages/Contact";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
+import AdminRouteGuard from "./components/admin/AdminRouteGuard";
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminPosts from "./pages/admin/AdminPosts";
+import AdminComments from "./pages/admin/AdminComments";
+import AdminTopics from "./pages/admin/AdminTopics";
 
 const queryClient = new QueryClient();
 
@@ -31,7 +39,9 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile" element={<ProfileView />} />
+            <Route path="/profile/:userId" element={<ProfileView />} />
+            <Route path="/profile/edit" element={<ProfileEdit />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
@@ -40,6 +50,13 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/admin" element={<AdminRouteGuard><AdminLayout /></AdminRouteGuard>}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="posts" element={<AdminPosts />} />
+              <Route path="comments" element={<AdminComments />} />
+              <Route path="topics" element={<AdminTopics />} />
+            </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
