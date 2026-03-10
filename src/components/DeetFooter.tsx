@@ -14,7 +14,7 @@ const DeetFooter = () => {
             <img src="/logo.png" alt="DeetSheet" className="h-24" />
           </div>
           <nav className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
-            <a href="#" className="hover:text-foreground transition">About</a>
+            <Link to="/about" className="hover:text-foreground transition">About</Link>
             <Link to="/faq" className="hover:text-foreground transition">FAQ</Link>
             <Link to="/contact" className="hover:text-foreground transition">Contact</Link>
             <Link to="/terms" className="hover:text-foreground transition">Terms</Link>
