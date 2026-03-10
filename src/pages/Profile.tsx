@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { User, Pencil, GraduationCap, Eye, Calendar, Loader2 } from "lucide-react";
+import { User, Pencil, GraduationCap, Eye, Calendar, Loader2, FileText } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import DeetHeader from "@/components/DeetHeader";
@@ -30,6 +30,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import UserPostsList from "@/components/UserPostsList";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -568,6 +569,17 @@ const Profile = () => {
                 </Button>
               </div>
             </form>
+
+            {/* My Posts Section */}
+            {user && (
+              <div className="mt-10 space-y-4">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  <h2 className="font-heading font-semibold text-xl">My Posts</h2>
+                </div>
+                <UserPostsList userId={user.id} />
+              </div>
+            )}
           </Form>
         </div>
       </main>
