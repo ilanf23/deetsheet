@@ -107,12 +107,10 @@ export type Database = {
           email_on_message: boolean | null
           email_on_post_edit: boolean | null
           email_top_posts: boolean | null
-          email: string | null
           entity_type: string | null
           favorite_movie: string | null
           high_school: string | null
           id: string
-          is_admin: boolean
           job: string | null
           major: string | null
           name: string | null
@@ -134,7 +132,6 @@ export type Database = {
           created_at?: string
           degree?: string | null
           education?: string | null
-          email?: string | null
           email_frequency?: string | null
           email_on_comment?: boolean | null
           email_on_follow?: boolean | null
@@ -145,7 +142,6 @@ export type Database = {
           favorite_movie?: string | null
           high_school?: string | null
           id: string
-          is_admin?: boolean
           job?: string | null
           major?: string | null
           name?: string | null
@@ -167,7 +163,6 @@ export type Database = {
           created_at?: string
           degree?: string | null
           education?: string | null
-          email?: string | null
           email_frequency?: string | null
           email_on_comment?: boolean | null
           email_on_follow?: boolean | null
@@ -178,7 +173,6 @@ export type Database = {
           favorite_movie?: string | null
           high_school?: string | null
           id?: string
-          is_admin?: boolean
           job?: string | null
           major?: string | null
           name?: string | null
