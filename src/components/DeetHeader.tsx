@@ -1,52 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Menu, X, List, ChevronRight, User, Shield } from "lucide-react";
+import { Search, Menu, X, List, User, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Switch } from "@/components/ui/switch";
-import { categories, topics } from "@/data/seedData";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminMode } from "@/hooks/useAdminMode";
-
-const TocContent = () => {
-  const navigate = useNavigate();
-  const topicsByCategory = categories.map((cat) => ({
-    ...cat,
-    topics: topics.filter((t) => t.categoryName === cat.name),
-  }));
-
-  return (
-    <>
-      <div className="p-3 border-b">
-        <h3 className="font-semibold text-sm">Table of Contents</h3>
-      </div>
-      <div className="p-2">
-        {topicsByCategory.map((cat) => (
-          <div key={cat.id} className="mb-2 last:mb-0">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1.5">
-              {cat.name}
-            </p>
-            {cat.topics.map((topic) => (
-              <button
-                key={topic.id}
-                className="flex items-center justify-between w-full rounded-md px-2 py-1.5 text-sm hover:bg-muted transition-colors text-left"
-                onClick={() => navigate(`/topic/${encodeURIComponent(topic.name)}`)}
-              >
-                <span>{topic.name}</span>
-                <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                  {topic.postCount} <ChevronRight className="h-3 w-3" />
-                </span>
-              </button>
-            ))}
-          </div>
-        ))}
-      </div>
-    </>
-  );
-};
 
 const DeetHeader = () => {
   const navigate = useNavigate();
@@ -67,16 +27,9 @@ const DeetHeader = () => {
         </a>
 
         <div className="hidden md:flex flex-1 max-w-md mx-4 items-center gap-2">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground" title="Table of Contents">
-                <List className="h-5 w-5" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="w-80 max-h-[70vh] overflow-y-auto p-0">
-              <TocContent />
-            </PopoverContent>
-          </Popover>
+          <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground" title="Topics Directory" onClick={() => navigate("/topics")}>
+            <List className="h-5 w-5" />
+          </Button>
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -92,15 +45,16 @@ const DeetHeader = () => {
           {user ? (
             <>
               {isAdmin && (
-                <div className="flex items-center gap-1.5 mr-2 px-2 py-1 rounded-md bg-muted">
-                  <Shield className="h-3.5 w-3.5 text-primary" />
-                  <span className="text-xs text-muted-foreground">Admin</span>
-                  <Switch
-                    checked={adminModeActive}
-                    onCheckedChange={toggleAdminMode}
-                    className="scale-75"
-                  />
-                </div>
+                <button
+                  onClick={toggleAdminMode}
+                  title={adminModeActive ? "Disable admin mode" : "Enable admin mode"}
+                  className={`relative mr-1 p-1.5 rounded-md transition-colors ${adminModeActive ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+                >
+                  <Shield className="h-4 w-4" />
+                  {adminModeActive && (
+                    <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary" />
+                  )}
+                </button>
               )}
               <button onClick={() => navigate("/profile")} className="flex items-center gap-2 mr-2 hover:opacity-80 transition-opacity">
                 <Avatar className="h-7 w-7">
@@ -126,16 +80,9 @@ const DeetHeader = () => {
         </nav>
 
         <div className="flex md:hidden items-center gap-2">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="icon" title="Table of Contents">
-                <List className="h-5 w-5" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="w-72 max-h-[60vh] overflow-y-auto p-0">
-              <TocContent />
-            </PopoverContent>
-          </Popover>
+          <Button variant="ghost" size="icon" title="Topics Directory" onClick={() => navigate("/topics")}>
+            <List className="h-5 w-5" />
+          </Button>
           <Button variant="ghost" size="icon" onClick={() => setSearchOpen(!searchOpen)}>
             <Search className="h-5 w-5" />
           </Button>

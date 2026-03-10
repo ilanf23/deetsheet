@@ -44,9 +44,34 @@ export const categories = [
   { id: "5", name: "Decades" },
   { id: "6", name: "Ages" },
   { id: "7", name: "Products" },
+  { id: "8", name: "States" },
+  { id: "9", name: "Countries" },
+  { id: "10", name: "Colleges" },
+  { id: "11", name: "Majors" },
+  { id: "12", name: "Holidays" },
+  { id: "13", name: "Sports" },
+  { id: "14", name: "Teams" },
+  { id: "15", name: "Nationalities" },
+  { id: "16", name: "Religions" },
+  { id: "17", name: "Pets" },
+  { id: "18", name: "Clubs" },
+  { id: "19", name: "Hobbies" },
+  { id: "20", name: "Fanclubs" },
+  { id: "21", name: "Events" },
+  { id: "22", name: "Schools" },
+  { id: "23", name: "Companies" },
+  { id: "24", name: "Local Businesses" },
 ];
 
-export const subjectCategories = ["Life", "Jobs", "Cities", "Health", "Decades", "Ages", "Products"];
+export const subjectCategories = ["Life", "Jobs", "Cities", "Health", "Decades", "Ages", "Products", "States", "Countries", "Colleges", "Majors", "Holidays", "Sports", "Teams", "Nationalities", "Religions", "Pets", "Clubs", "Hobbies", "Fanclubs", "Events", "Schools", "Companies", "Local Businesses"];
+
+/** Row groupings for the Topics Directory page */
+export const categoryRows: string[][] = [
+  ["Life", "Health", "Jobs", "Cities", "States", "Countries", "Decades"],
+  ["Colleges", "Majors", "Ages", "Holidays", "Sports", "Teams", "Nationalities"],
+  ["Religions", "Pets", "Clubs", "Hobbies", "Products", "Companies", "Local Businesses"],
+  ["Fanclubs", "Events", "Schools"],
+];
 
 export const topics: Topic[] = [
   // Life
@@ -125,6 +150,194 @@ export const topics: Topic[] = [
   { id: "85", name: "Starbucks", categoryName: "Products", postCount: 198, topPosts: ["The secret menu is real", "Mobile ordering skips the line", "Sizes are intentionally confusing", "Loyalty program is actually good", "The coffee is overroasted on purpose"], imageUrl: "https://images.unsplash.com/photo-1453614512568-c4024d13c247?w=300&q=80" },
   { id: "86", name: "Nike", categoryName: "Products", postCount: 156, topPosts: ["Quality has declined over the years", "Sales happen on a predictable cycle", "Air Max comfort is unmatched", "Sizing varies between models", "Resale culture ruined casual buying"], imageUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=300&q=80" },
   { id: "87", name: "Amazon", categoryName: "Products", postCount: 312, topPosts: ["Reviews can be fake — check Fakespot", "Prime Day deals are often inflated", "Subscribe and Save is underused", "Return policy is incredibly generous", "Warehouse deals are hidden gems"], imageUrl: "https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?w=300&q=80" },
+
+  // States
+  { id: "s1", name: "California", categoryName: "States", postCount: 320, topPosts: ["Cost of living is no joke", "The weather really is that good", "Traffic in LA defines your life"] },
+  { id: "s2", name: "Texas", categoryName: "States", postCount: 280, topPosts: ["Everything is bigger", "BBQ is a religion", "Property taxes are high"] },
+  { id: "s3", name: "Florida", categoryName: "States", postCount: 260, topPosts: ["Hurricane season is real", "No state income tax", "Humidity never quits"] },
+  { id: "s4", name: "New York", categoryName: "States", postCount: 310, topPosts: ["Upstate is a different world", "Bagels really are better", "Winters are harsh"] },
+  { id: "s5", name: "Illinois", categoryName: "States", postCount: 180, topPosts: ["Chicago runs the state", "Flat as a pancake", "Corruption is expected"] },
+  { id: "s6", name: "Ohio", categoryName: "States", postCount: 120, topPosts: ["Surprisingly affordable", "Four seasons in one week", "Midwest nice is real"] },
+  { id: "s7", name: "Georgia", categoryName: "States", postCount: 150, topPosts: ["Peaches and pecans everywhere", "Atlanta is booming", "Southern charm is real"] },
+  { id: "s8", name: "Pennsylvania", categoryName: "States", postCount: 140, topPosts: ["Philly vs. Pittsburgh forever", "Amish country is fascinating", "Wawa is a way of life"] },
+  { id: "s9", name: "Michigan", categoryName: "States", postCount: 130, topPosts: ["Great Lakes are underrated", "Detroit comeback is real", "Winters test your will"] },
+  { id: "s10", name: "Colorado", categoryName: "States", postCount: 190, topPosts: ["Altitude sickness hits newcomers", "Outdoor paradise", "Craft beer capital"] },
+
+  // Countries
+  { id: "co1", name: "Japan", categoryName: "Countries", postCount: 245, topPosts: ["Politeness is built into the culture", "Trains run on time to the second", "Food is an art form"] },
+  { id: "co2", name: "Mexico", categoryName: "Countries", postCount: 210, topPosts: ["The food puts American Mexican to shame", "Family is everything", "So much more than the border"] },
+  { id: "co3", name: "Italy", categoryName: "Countries", postCount: 198, topPosts: ["Dinner starts at 9 PM", "Every region has its own cuisine", "History is everywhere you look"] },
+  { id: "co4", name: "India", categoryName: "Countries", postCount: 230, topPosts: ["The diversity is staggering", "Spice levels are no joke", "Festivals happen constantly"] },
+  { id: "co5", name: "Brazil", categoryName: "Countries", postCount: 175, topPosts: ["Carnival is life-changing", "Football is religion", "The Amazon is disappearing"] },
+  { id: "co6", name: "Germany", categoryName: "Countries", postCount: 160, topPosts: ["Efficiency is a cultural value", "Beer gardens are sacred", "Public transit actually works"] },
+  { id: "co7", name: "France", categoryName: "Countries", postCount: 185, topPosts: ["Bread is a daily ritual", "Work-life balance is real", "Paris isn't all of France"] },
+  { id: "co8", name: "Australia", categoryName: "Countries", postCount: 170, topPosts: ["Everything can kill you is a myth", "The beaches are world-class", "Healthcare is actually good"] },
+  { id: "co9", name: "South Korea", categoryName: "Countries", postCount: 155, topPosts: ["K-pop changed global music", "Work culture is intense", "Street food is incredible"] },
+  { id: "co10", name: "Canada", categoryName: "Countries", postCount: 200, topPosts: ["Healthcare is free but slow", "Politeness is real", "Winters make Chicago look mild"] },
+
+  // Colleges
+  { id: "cl1", name: "Harvard", categoryName: "Colleges", postCount: 189, topPosts: ["The name opens doors forever", "Imposter syndrome is universal", "Grade inflation is real"] },
+  { id: "cl2", name: "Stanford", categoryName: "Colleges", postCount: 175, topPosts: ["Startup culture is everywhere", "The weather helps your GPA", "Duck syndrome is real"] },
+  { id: "cl3", name: "MIT", categoryName: "Colleges", postCount: 165, topPosts: ["Problem sets consume your life", "Collaboration is survival", "Hacking tradition is legendary"] },
+  { id: "cl4", name: "UCLA", categoryName: "Colleges", postCount: 210, topPosts: ["Campus is gorgeous", "Dining halls are top-tier", "Parking is a nightmare"] },
+  { id: "cl5", name: "Michigan", categoryName: "Colleges", postCount: 195, topPosts: ["Football Saturdays are sacred", "Ann Arbor is the perfect college town", "Winter is brutal"] },
+  { id: "cl6", name: "NYU", categoryName: "Colleges", postCount: 180, topPosts: ["NYC is your campus", "No traditional campus feel", "Debt is the real degree"] },
+  { id: "cl7", name: "Ohio State", categoryName: "Colleges", postCount: 200, topPosts: ["THE Ohio State University", "Campus is massive", "Football is everything"] },
+  { id: "cl8", name: "UT Austin", categoryName: "Colleges", postCount: 185, topPosts: ["Keep Austin weird applies to campus", "Hook 'em Horns is a lifestyle", "The heat is relentless"] },
+  { id: "cl9", name: "USC", categoryName: "Colleges", postCount: 170, topPosts: ["Trojan network is powerful", "Campus is beautiful", "Fight On forever"] },
+  { id: "cl10", name: "UNC", categoryName: "Colleges", postCount: 160, topPosts: ["Chapel Hill is charming", "Tar Heel basketball is religion", "The rivalry with Duke is intense"] },
+
+  // Majors
+  { id: "mj1", name: "Computer Science", categoryName: "Majors", postCount: 310, topPosts: ["Leetcode grind is real", "Imposter syndrome never leaves", "The pay makes it worth it"] },
+  { id: "mj2", name: "Business", categoryName: "Majors", postCount: 245, topPosts: ["Networking matters more than GPA", "Case studies get old fast", "Internships are everything"] },
+  { id: "mj3", name: "Engineering", categoryName: "Majors", postCount: 280, topPosts: ["The workload is insane", "Study groups are survival", "Co-ops change everything"] },
+  { id: "mj4", name: "Psychology", categoryName: "Majors", postCount: 190, topPosts: ["You need grad school to do anything", "Everyone thinks you can read minds", "Research methods is surprisingly hard"] },
+  { id: "mj5", name: "Biology", categoryName: "Majors", postCount: 220, topPosts: ["Pre-med weeder courses are brutal", "Lab work is tedious but essential", "Memorization is the whole game"] },
+  { id: "mj6", name: "English", categoryName: "Majors", postCount: 130, topPosts: ["Everyone asks what you'll do with it", "Writing skills transfer everywhere", "Reading 300 pages a week is normal"] },
+  { id: "mj7", name: "Nursing", categoryName: "Majors", postCount: 200, topPosts: ["Clinical rotations are exhausting", "Job security is unmatched", "The emotional toll is real"] },
+  { id: "mj8", name: "Finance", categoryName: "Majors", postCount: 175, topPosts: ["Excel is your best friend", "Wall Street recruiting starts freshman year", "The hours get worse after school"] },
+  { id: "mj9", name: "Political Science", categoryName: "Majors", postCount: 140, topPosts: ["Debate skills are the real takeaway", "Law school isn't guaranteed", "Internships in DC change perspectives"] },
+  { id: "mj10", name: "Art", categoryName: "Majors", postCount: 110, topPosts: ["Portfolio matters more than degree", "Critiques build thick skin", "Freelance hustle starts in school"] },
+
+  // Holidays
+  { id: "h1", name: "Christmas", categoryName: "Holidays", postCount: 290, topPosts: ["Start shopping in November", "Traditions matter more than gifts", "Family dynamics are tested"] },
+  { id: "h2", name: "Thanksgiving", categoryName: "Holidays", postCount: 250, topPosts: ["The food coma is real", "Host burnout is underrated", "Leftovers are the best part"] },
+  { id: "h3", name: "Halloween", categoryName: "Holidays", postCount: 220, topPosts: ["Start costume planning early", "Candy tax from your kids is valid", "Neighborhood decorations matter"] },
+  { id: "h4", name: "Fourth of July", categoryName: "Holidays", postCount: 180, topPosts: ["Fireworks and pets don't mix", "BBQ is the main event", "Sunburn sneaks up on you"] },
+  { id: "h5", name: "New Years", categoryName: "Holidays", postCount: 200, topPosts: ["Resolutions rarely stick", "Amateur night at every bar", "Staying in is underrated"] },
+  { id: "h6", name: "Easter", categoryName: "Holidays", postCount: 150, topPosts: ["Egg hunts are chaos", "Brunch is the move", "Candy overload for weeks"] },
+  { id: "h7", name: "Valentine's Day", categoryName: "Holidays", postCount: 190, topPosts: ["Restaurant prices double", "Expectations ruin it", "Galentine's Day is better"] },
+  { id: "h8", name: "Mother's Day", categoryName: "Holidays", postCount: 160, topPosts: ["Brunch reservations fill fast", "Homemade gifts hit different", "Call your mom"] },
+  { id: "h9", name: "Father's Day", categoryName: "Holidays", postCount: 130, topPosts: ["Dads say they want nothing", "Grilling together is the gift", "Quality time over stuff"] },
+  { id: "h10", name: "Labor Day", categoryName: "Holidays", postCount: 110, topPosts: ["Last hurrah of summer", "White after Labor Day is fine", "Sales are actually good"] },
+
+  // Sports
+  { id: "sp1", name: "Football", categoryName: "Sports", postCount: 340, topPosts: ["Fantasy football ruins friendships", "CTE awareness changed the game", "Sunday is a sacred day"] },
+  { id: "sp2", name: "Basketball", categoryName: "Sports", postCount: 310, topPosts: ["Pickup games teach life lessons", "The GOAT debate never ends", "March Madness is the best event"] },
+  { id: "sp3", name: "Baseball", categoryName: "Sports", postCount: 230, topPosts: ["Games are too long now", "Ballpark food is half the experience", "Statistics run the sport"] },
+  { id: "sp4", name: "Soccer", categoryName: "Sports", postCount: 270, topPosts: ["Growing fast in America", "World Cup unites everyone", "Youth soccer politics are insane"] },
+  { id: "sp5", name: "Golf", categoryName: "Sports", postCount: 180, topPosts: ["It's harder than it looks", "Networking happens on the course", "Equipment costs add up fast"] },
+  { id: "sp6", name: "Tennis", categoryName: "Sports", postCount: 150, topPosts: ["Great lifetime sport", "Court time is expensive", "The mental game is everything"] },
+  { id: "sp7", name: "Swimming", categoryName: "Sports", postCount: 140, topPosts: ["Best full-body workout", "Chlorine damages everything", "5 AM practice builds character"] },
+  { id: "sp8", name: "Hockey", categoryName: "Sports", postCount: 160, topPosts: ["Most expensive youth sport", "Playoff beards are tradition", "Fighting is part of the culture"] },
+  { id: "sp9", name: "Boxing", categoryName: "Sports", postCount: 120, topPosts: ["Discipline over aggression", "Cardio is insane", "Sparring teaches humility"] },
+  { id: "sp10", name: "Running", categoryName: "Sports", postCount: 200, topPosts: ["Runner's high is real", "Shoes matter more than anything", "Rest days prevent injury"] },
+
+  // Teams
+  { id: "tm1", name: "Lakers", categoryName: "Teams", postCount: 280, topPosts: ["Showtime legacy lives on", "LA fans are bandwagon", "Purple and gold is iconic"] },
+  { id: "tm2", name: "Yankees", categoryName: "Teams", postCount: 260, topPosts: ["27 rings speak for themselves", "Most loved and hated team", "Pinstripes are classic"] },
+  { id: "tm3", name: "Cowboys", categoryName: "Teams", postCount: 300, topPosts: ["America's Team is debatable", "Jerry Jones is the real show", "Haven't won since the 90s"] },
+  { id: "tm4", name: "Patriots", categoryName: "Teams", postCount: 240, topPosts: ["Dynasty era was historic", "Deflategate won't die", "Post-Brady adjustment is real"] },
+  { id: "tm5", name: "Warriors", categoryName: "Teams", postCount: 220, topPosts: ["Changed how basketball is played", "Splash Brothers era was magical", "Bay Area prices for tickets are insane"] },
+  { id: "tm6", name: "Red Sox", categoryName: "Teams", postCount: 190, topPosts: ["Breaking the curse was legendary", "Fenway is a cathedral", "Rivalry with Yankees is eternal"] },
+  { id: "tm7", name: "Bears", categoryName: "Teams", postCount: 170, topPosts: ["85 Bears were the greatest", "QB curse is real", "Soldier Field is too small"] },
+  { id: "tm8", name: "Dodgers", categoryName: "Teams", postCount: 210, topPosts: ["LA traffic to the stadium is brutal", "Vin Scully was the voice", "Dodger Dogs are overrated"] },
+  { id: "tm9", name: "Chiefs", categoryName: "Teams", postCount: 250, topPosts: ["Mahomes changed everything", "Arrowhead is the loudest stadium", "BBQ tailgates are elite"] },
+  { id: "tm10", name: "Celtics", categoryName: "Teams", postCount: 200, topPosts: ["Most championships in NBA", "Boston sports fans are intense", "Rivalry with Lakers is legendary"] },
+
+  // Nationalities
+  { id: "n1", name: "American", categoryName: "Nationalities", postCount: 310, topPosts: ["Tipping culture confuses everyone", "Healthcare is a constant worry", "Diversity is the real strength"] },
+  { id: "n2", name: "Mexican", categoryName: "Nationalities", postCount: 230, topPosts: ["Family gatherings are massive", "Food is an identity", "Work ethic is unmatched"] },
+  { id: "n3", name: "Chinese", categoryName: "Nationalities", postCount: 210, topPosts: ["Education is prioritized above all", "Food varies wildly by region", "Lunar New Year is the biggest holiday"] },
+  { id: "n4", name: "Indian", categoryName: "Nationalities", postCount: 220, topPosts: ["Arranged marriages still happen", "Cricket is life", "Festival calendar is packed"] },
+  { id: "n5", name: "Italian", categoryName: "Nationalities", postCount: 180, topPosts: ["Gesturing is a language", "Sunday dinner is non-negotiable", "Coffee has strict rules"] },
+  { id: "n6", name: "Irish", categoryName: "Nationalities", postCount: 160, topPosts: ["Pub culture is community", "The diaspora is massive", "Humor is a defense mechanism"] },
+  { id: "n7", name: "Japanese", categoryName: "Nationalities", postCount: 190, topPosts: ["Respect is woven into language", "Punctuality is expected", "Work culture is demanding"] },
+  { id: "n8", name: "Nigerian", categoryName: "Nationalities", postCount: 140, topPosts: ["Jollof rice debates are serious", "Education is highly valued", "Diaspora network is strong"] },
+  { id: "n9", name: "Brazilian", categoryName: "Nationalities", postCount: 170, topPosts: ["Joy is cultural", "Football is identity", "Music is everywhere"] },
+  { id: "n10", name: "Korean", categoryName: "Nationalities", postCount: 175, topPosts: ["Age hierarchy matters", "Food is communal", "Education pressure is intense"] },
+
+  // Religions
+  { id: "r1", name: "Christianity", categoryName: "Religions", postCount: 280, topPosts: ["Denominations differ wildly", "Community is the core value", "Sunday service structures the week"] },
+  { id: "r2", name: "Islam", categoryName: "Religions", postCount: 220, topPosts: ["Ramadan changes your perspective", "Prayer five times a day is grounding", "Misconceptions are exhausting"] },
+  { id: "r3", name: "Judaism", categoryName: "Religions", postCount: 180, topPosts: ["Shabbat is a weekly reset", "Food laws are complex", "History shapes identity deeply"] },
+  { id: "r4", name: "Hinduism", categoryName: "Religions", postCount: 200, topPosts: ["Festivals are joyful chaos", "Multiple paths to the divine", "Vegetarianism is common"] },
+  { id: "r5", name: "Buddhism", categoryName: "Religions", postCount: 190, topPosts: ["Meditation is the foundation", "Attachment causes suffering", "Mindfulness went mainstream"] },
+  { id: "r6", name: "Atheism", categoryName: "Religions", postCount: 150, topPosts: ["Morality doesn't require religion", "Holiday awkwardness is real", "Community is harder to find"] },
+  { id: "r7", name: "Sikhism", categoryName: "Religions", postCount: 110, topPosts: ["Langar feeds everyone equally", "Turbans are sacred", "Service to others is core"] },
+  { id: "r8", name: "Agnostic", categoryName: "Religions", postCount: 130, topPosts: ["Uncertainty is honest", "Both sides claim you", "Spiritual without structure"] },
+
+  // Pets
+  { id: "p1", name: "Dogs", categoryName: "Pets", postCount: 340, topPosts: ["Adoption saves lives", "Training starts day one", "Vet bills add up fast"] },
+  { id: "p2", name: "Cats", categoryName: "Pets", postCount: 300, topPosts: ["They choose you", "Litter box maintenance is real", "Independent doesn't mean unloving"] },
+  { id: "p3", name: "Fish", categoryName: "Pets", postCount: 120, topPosts: ["Aquariums are therapeutic", "Water chemistry is everything", "More work than people think"] },
+  { id: "p4", name: "Birds", categoryName: "Pets", postCount: 110, topPosts: ["They live surprisingly long", "Noise level varies wildly", "Intelligence is underestimated"] },
+  { id: "p5", name: "Hamsters", categoryName: "Pets", postCount: 90, topPosts: ["Great first pet for kids", "Nocturnal so expect night noise", "Cages need regular cleaning"] },
+  { id: "p6", name: "Rabbits", categoryName: "Pets", postCount: 100, topPosts: ["Not low-maintenance pets", "They need space to run", "Diet is mostly hay"] },
+  { id: "p7", name: "Reptiles", categoryName: "Pets", postCount: 85, topPosts: ["Heating setup is critical", "Not cuddly but fascinating", "Research species before buying"] },
+  { id: "p8", name: "Horses", categoryName: "Pets", postCount: 130, topPosts: ["Most expensive pet possible", "The bond is incredible", "Time commitment is massive"] },
+
+  // Clubs
+  { id: "cb1", name: "Book Club", categoryName: "Clubs", postCount: 150, topPosts: ["Pick books everyone can access", "Wine helps discussion", "Meeting consistency matters"] },
+  { id: "cb2", name: "Running Club", categoryName: "Clubs", postCount: 140, topPosts: ["All paces welcome matters", "Social runs beat solo runs", "Race day bonding is special"] },
+  { id: "cb3", name: "Wine Club", categoryName: "Clubs", postCount: 120, topPosts: ["Blind tastings are humbling", "Price doesn't equal quality", "Learn regions before grapes"] },
+  { id: "cb4", name: "Chess Club", categoryName: "Clubs", postCount: 100, topPosts: ["Online play changed everything", "Patience is the first lesson", "Tournaments build confidence"] },
+  { id: "cb5", name: "Garden Club", categoryName: "Clubs", postCount: 110, topPosts: ["Seed swaps are the best", "Community plots build friendships", "Start small and expand"] },
+  { id: "cb6", name: "Debate Club", categoryName: "Clubs", postCount: 90, topPosts: ["Arguing both sides is enlightening", "Research skills transfer everywhere", "Public speaking fear fades"] },
+  { id: "cb7", name: "Hiking Club", categoryName: "Clubs", postCount: 130, topPosts: ["Group safety is key", "Trail etiquette matters", "Nature heals"] },
+  { id: "cb8", name: "Cooking Club", categoryName: "Clubs", postCount: 115, topPosts: ["Potlucks reveal hidden talents", "Theme nights are fun", "Recipes become family treasures"] },
+
+  // Hobbies
+  { id: "hb1", name: "Photography", categoryName: "Hobbies", postCount: 220, topPosts: ["Phone cameras are good enough to start", "Light is everything", "Edit less than you think"] },
+  { id: "hb2", name: "Gardening", categoryName: "Hobbies", postCount: 200, topPosts: ["Start with herbs", "Composting changes everything", "Patience is the hardest part"] },
+  { id: "hb3", name: "Cooking", categoryName: "Hobbies", postCount: 250, topPosts: ["Salt is the most important skill", "Mise en place saves sanity", "Fail forward with recipes"] },
+  { id: "hb4", name: "Gaming", categoryName: "Hobbies", postCount: 290, topPosts: ["Moderation is key", "Online friends are real friends", "Backlogs are overwhelming"] },
+  { id: "hb5", name: "Reading", categoryName: "Hobbies", postCount: 210, topPosts: ["Libraries are free", "Audiobooks count", "Don't finish bad books"] },
+  { id: "hb6", name: "Woodworking", categoryName: "Hobbies", postCount: 140, topPosts: ["Start with hand tools", "Measure twice cut once", "Sawdust gets everywhere"] },
+  { id: "hb7", name: "Painting", categoryName: "Hobbies", postCount: 160, topPosts: ["Acrylic is forgiving for beginners", "Color theory changes everything", "Every painting teaches something"] },
+  { id: "hb8", name: "Fishing", categoryName: "Hobbies", postCount: 170, topPosts: ["Patience is the whole point", "Local knowledge beats gear", "Catch and release when possible"] },
+  { id: "hb9", name: "Knitting", categoryName: "Hobbies", postCount: 130, topPosts: ["YouTube taught a generation", "Yarn addiction is real", "Handmade gifts mean more"] },
+  { id: "hb10", name: "Cycling", categoryName: "Hobbies", postCount: 190, topPosts: ["Helmet always no exceptions", "Used bikes are great deals", "Commuting by bike changes your life"] },
+
+  // Fanclubs
+  { id: "fc1", name: "Taylor Swift", categoryName: "Fanclubs", postCount: 350, topPosts: ["Swifties are a force", "Era tours redefined concerts", "Easter eggs in everything"] },
+  { id: "fc2", name: "Star Wars", categoryName: "Fanclubs", postCount: 280, topPosts: ["Original trilogy is sacred", "Fandom can be toxic", "Expanded universe is rich"] },
+  { id: "fc3", name: "Marvel", categoryName: "Fanclubs", postCount: 300, topPosts: ["MCU fatigue is real", "Comic purists vs. movie fans", "Post-credit scenes started a trend"] },
+  { id: "fc4", name: "BTS", categoryName: "Fanclubs", postCount: 320, topPosts: ["ARMY is global", "Music transcends language", "Fan projects are incredible"] },
+  { id: "fc5", name: "Harry Potter", categoryName: "Fanclubs", postCount: 260, topPosts: ["Hogwarts house is an identity", "Rereading reveals new layers", "Separating art from artist is hard"] },
+  { id: "fc6", name: "Disney", categoryName: "Fanclubs", postCount: 240, topPosts: ["Annual passes are addictive", "Nostalgia is powerful marketing", "Theme parks are overpriced"] },
+  { id: "fc7", name: "Beyonce", categoryName: "Fanclubs", postCount: 230, topPosts: ["Beyhive is protective", "Surprise drops changed music", "Work ethic is unmatched"] },
+  { id: "fc8", name: "The Office", categoryName: "Fanclubs", postCount: 210, topPosts: ["That's what she said never gets old", "Michael Scott is secretly brilliant", "UK vs. US debate continues"] },
+
+  // Events
+  { id: "ev1", name: "Weddings", categoryName: "Events", postCount: 270, topPosts: ["Budget doubles from initial estimate", "Guest list causes drama", "Vendor reviews save heartache"] },
+  { id: "ev2", name: "Concerts", categoryName: "Events", postCount: 240, topPosts: ["Earplugs are essential", "GA vs. seats depends on the artist", "Merch lines are brutal"] },
+  { id: "ev3", name: "Graduations", categoryName: "Events", postCount: 150, topPosts: ["Ceremonies are long but meaningful", "Photos matter more than you think", "Celebrate the journey not just the day"] },
+  { id: "ev4", name: "Funerals", categoryName: "Events", postCount: 130, topPosts: ["Show up even if you don't know what to say", "Food trains help families", "Grief has no timeline"] },
+  { id: "ev5", name: "Job Interviews", categoryName: "Events", postCount: 220, topPosts: ["Research the company thoroughly", "STAR method works", "Follow up within 24 hours"] },
+  { id: "ev6", name: "First Dates", categoryName: "Events", postCount: 200, topPosts: ["Coffee dates are low pressure", "Ask questions and listen", "Be yourself not a performance"] },
+  { id: "ev7", name: "Road Trips", categoryName: "Events", postCount: 190, topPosts: ["Playlist makes or breaks it", "Snacks are essential", "Detours are the best memories"] },
+  { id: "ev8", name: "Moving Day", categoryName: "Events", postCount: 160, topPosts: ["Label everything", "Hire movers if you can", "First box: toilet paper and coffee maker"] },
+
+  // Schools
+  { id: "sc1", name: "Elementary School", categoryName: "Schools", postCount: 180, topPosts: ["Teachers shape lives", "Recess should be longer", "Homework in K-2 is unnecessary"] },
+  { id: "sc2", name: "Middle School", categoryName: "Schools", postCount: 190, topPosts: ["Worst years for most people", "Social dynamics are brutal", "Puberty makes everything harder"] },
+  { id: "sc3", name: "High School", categoryName: "Schools", postCount: 250, topPosts: ["It gets better after this", "Grades matter but not as much as you think", "Find your people"] },
+  { id: "sc4", name: "Trade School", categoryName: "Schools", postCount: 140, topPosts: ["Undervalued path to great careers", "Hands-on learning is effective", "Less debt more skills"] },
+  { id: "sc5", name: "Graduate School", categoryName: "Schools", postCount: 170, topPosts: ["Advisor relationship is everything", "Imposter syndrome is universal", "Funding matters more than ranking"] },
+  { id: "sc6", name: "Law School", categoryName: "Schools", postCount: 160, topPosts: ["1L year is brutal", "Cold calls are terrifying", "Network starts day one"] },
+  { id: "sc7", name: "Medical School", categoryName: "Schools", postCount: 155, topPosts: ["Anatomy lab changes you", "Step 1 defines your specialty options", "Sleep becomes a luxury"] },
+  { id: "sc8", name: "Homeschool", categoryName: "Schools", postCount: 120, topPosts: ["Socialization requires effort", "Flexibility is the biggest perk", "Curriculum options are overwhelming"] },
+
+  // Companies
+  { id: "cp1", name: "Google", categoryName: "Companies", postCount: 260, topPosts: ["Perks are incredible", "Politics increase with scale", "Interview process is intense"] },
+  { id: "cp2", name: "Apple", categoryName: "Companies", postCount: 240, topPosts: ["Secrecy culture is real", "Design thinking permeates everything", "Retail vs. corporate are different worlds"] },
+  { id: "cp3", name: "Amazon", categoryName: "Companies", postCount: 280, topPosts: ["Leadership principles are everything", "PIP culture creates anxiety", "Day 1 mentality is real"] },
+  { id: "cp4", name: "Microsoft", categoryName: "Companies", postCount: 220, topPosts: ["Culture changed under Nadella", "Work-life balance improved", "Teams dominates internal communication"] },
+  { id: "cp5", name: "Tesla", categoryName: "Companies", postCount: 200, topPosts: ["Mission drives people", "Burnout rate is high", "Stock options are the real compensation"] },
+  { id: "cp6", name: "Meta", categoryName: "Companies", postCount: 190, topPosts: ["Metaverse pivot confused everyone", "Engineering culture is strong", "Public perception weighs on morale"] },
+  { id: "cp7", name: "Netflix", categoryName: "Companies", postCount: 170, topPosts: ["Freedom and responsibility culture", "Keeper test creates pressure", "Content strategy changes constantly"] },
+  { id: "cp8", name: "JPMorgan", categoryName: "Companies", postCount: 150, topPosts: ["Analyst hours are brutal", "Training program is top-tier", "Dress code still matters"] },
+
+  // Local Businesses
+  { id: "lb1", name: "Coffee Shops", categoryName: "Local Businesses", postCount: 210, topPosts: ["Support local over chains", "WiFi policy matters", "Regulars become family"] },
+  { id: "lb2", name: "Barbershops", categoryName: "Local Businesses", postCount: 160, topPosts: ["Find your barber and stay loyal", "Conversation is half the experience", "Cash tips go furthest"] },
+  { id: "lb3", name: "Pizza Places", categoryName: "Local Businesses", postCount: 180, topPosts: ["Every town has a best slice debate", "Family-owned beats chains", "Lunch specials are the move"] },
+  { id: "lb4", name: "Gyms", categoryName: "Local Businesses", postCount: 190, topPosts: ["Cancellation policies are predatory", "January crowds thin by March", "Community gyms beat big chains"] },
+  { id: "lb5", name: "Bookstores", categoryName: "Local Businesses", postCount: 140, topPosts: ["Staff picks are usually great", "Events build community", "Buy local or lose local"] },
+  { id: "lb6", name: "Hardware Stores", categoryName: "Local Businesses", postCount: 120, topPosts: ["Staff knowledge beats big box", "They'll cut keys and mix paint", "Supporting local keeps expertise alive"] },
+  { id: "lb7", name: "Bakeries", categoryName: "Local Businesses", postCount: 150, topPosts: ["Morning pastries are worth early lines", "Custom cakes need advance notice", "Sourdough revival is real"] },
+  { id: "lb8", name: "Auto Shops", categoryName: "Local Businesses", postCount: 130, topPosts: ["Honesty is the most valuable trait", "Get a second opinion on big repairs", "Referrals mean everything"] },
 ];
 
 export const posts: Post[] = [

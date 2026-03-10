@@ -13,7 +13,7 @@ const TopicPage = () => {
   const { user, loading } = useAuth();
   const topic = topicName ? getTopicByName(topicName) : undefined;
   const [posts, setPosts] = useState(() => topicName ? getPostsByTopic(topicName) : []);
-  const [expandedId, setExpandedId] = useState<string | null>(posts[0]?.id ?? null);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set(posts[0] ? [posts[0].id] : []));
 
   const refreshPosts = () => {
     if (topicName) setPosts(getPostsByTopic(topicName));
@@ -51,8 +51,13 @@ const TopicPage = () => {
                     key={post.id}
                     post={post}
                     rank={i + 1}
-                    isExpanded={expandedId === post.id}
-                    onToggleExpand={() => setExpandedId(expandedId === post.id ? null : post.id)}
+                    isExpanded={expandedIds.has(post.id)}
+                    onToggleExpand={() => setExpandedIds(prev => {
+                      const next = new Set(prev);
+                      if (next.has(post.id)) next.delete(post.id);
+                      else next.add(post.id);
+                      return next;
+                    })}
                     isAuthenticated={!loading && !!user}
                   />
                 ))}

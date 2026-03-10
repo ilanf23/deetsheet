@@ -13,6 +13,8 @@ import {
   Forward,
   Trash2,
   Loader2,
+  Plus,
+  Hash,
 } from "lucide-react";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
@@ -24,6 +26,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import CreateTopicDialog from "@/components/CreateTopicDialog";
 
 const CREDENTIAL_ICON_MAP: Record<string, React.ReactNode> = {
   pencil: <Pencil className="h-4 w-4" />,
@@ -41,6 +44,15 @@ interface UserPost {
   comment_count: number;
   score: number;
   topic_name: string;
+}
+
+interface UserTopic {
+  id: string;
+  name: string;
+  slug: string;
+  category_name: string | null;
+  description: string | null;
+  created_at: string;
 }
 
 function getTimeAgo(dateStr: string): string {
@@ -107,14 +119,19 @@ const ProfileView = () => {
   const [postCount, setPostCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
 
+  // Topics created by user
+  const [userTopics, setUserTopics] = useState<UserTopic[]>([]);
+  const [topicCount, setTopicCount] = useState(0);
+  const [createTopicOpen, setCreateTopicOpen] = useState(false);
+
   useEffect(() => {
     if (!targetUserId) return;
 
     const fetchData = async () => {
       setLoading(true);
 
-      // Fetch profile, posts, and comment count in parallel
-      const [profileRes, postsRes, commentsRes] = await Promise.all([
+      // Fetch profile, posts, comment count, and topics in parallel
+      const [profileRes, postsRes, commentsRes, topicsRes] = await Promise.all([
         supabase
           .from("profiles")
           .select("*")
@@ -129,6 +146,11 @@ const ProfileView = () => {
           .from("comments")
           .select("id", { count: "exact", head: true })
           .eq("author_id", targetUserId),
+        supabase
+          .from("topics")
+          .select("id, name, slug, category_name, description, created_at")
+          .eq("created_by", targetUserId)
+          .order("created_at", { ascending: false }),
       ]);
 
       if (profileRes.data) {
@@ -151,6 +173,11 @@ const ProfileView = () => {
 
       if (commentsRes.count !== null) {
         setCommentCount(commentsRes.count);
+      }
+
+      if (topicsRes.data) {
+        setUserTopics(topicsRes.data as UserTopic[]);
+        setTopicCount(topicsRes.data.length);
       }
 
       setLoading(false);
@@ -195,6 +222,7 @@ const ProfileView = () => {
 
   const TABS = [
     { value: "posts", label: "Posts", count: postCount },
+    { value: "topics", label: "Topics", count: topicCount },
     { value: "comments", label: "Comments", count: commentCount },
     { value: "favorites", label: "Favorites", count: 0 },
     { value: "following", label: "Following", count: 0 },
@@ -472,6 +500,77 @@ const ProfileView = () => {
                               <Trash2 className="h-3.5 w-3.5" />
                               Delete
                             </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="topics" className="mt-4">
+                {isOwnProfile && (
+                  <div className="mb-4">
+                    <Button size="sm" onClick={() => setCreateTopicOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Topic
+                    </Button>
+                    <CreateTopicDialog
+                      open={createTopicOpen}
+                      onOpenChange={setCreateTopicOpen}
+                      onTopicCreated={() => {
+                        // Refetch topics
+                        supabase
+                          .from("topics")
+                          .select("id, name, slug, category_name, description, created_at")
+                          .eq("created_by", targetUserId!)
+                          .order("created_at", { ascending: false })
+                          .then(({ data }) => {
+                            if (data) {
+                              setUserTopics(data as UserTopic[]);
+                              setTopicCount(data.length);
+                            }
+                          });
+                      }}
+                    />
+                  </div>
+                )}
+                {userTopics.length === 0 ? (
+                  <Card>
+                    <CardContent className="py-12 text-center text-muted-foreground">
+                      <p className="text-sm">No topics created yet.</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {userTopics.map((topic) => (
+                      <Card key={topic.id} className="hover:shadow-md transition-shadow">
+                        <CardContent className="pt-4 pb-3">
+                          <div className="flex items-start gap-3">
+                            <Hash className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <a
+                                  href={`/topic/${encodeURIComponent(topic.name)}`}
+                                  className="font-semibold text-sm hover:underline"
+                                >
+                                  {topic.name}
+                                </a>
+                                {topic.category_name && (
+                                  <Badge variant="secondary" className="text-xs font-normal">
+                                    {topic.category_name}
+                                  </Badge>
+                                )}
+                              </div>
+                              {topic.description && (
+                                <p className="text-sm text-muted-foreground line-clamp-2">
+                                  {topic.description}
+                                </p>
+                              )}
+                              <p className="text-xs text-muted-foreground mt-1">
+                                Created {getTimeAgo(topic.created_at)}
+                              </p>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>

@@ -185,21 +185,27 @@ export type Database = {
       }
       topics: {
         Row: {
+          category_name: string | null
           created_at: string
+          created_by: string | null
           description: string | null
           id: string
           name: string
           slug: string
         }
         Insert: {
+          category_name?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           id?: string
           name: string
           slug: string
         }
         Update: {
+          category_name?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           id?: string
           name?: string

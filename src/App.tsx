@@ -14,6 +14,7 @@ import AuthCallback from "./pages/AuthCallback";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import TopicPage from "./pages/TopicPage";
+import TopicsDirectory from "./pages/TopicsDirectory";
 import About from "./pages/About";
 import FAQ from "./pages/FAQ";
 import Contact from "./pages/Contact";
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/topics" element={<TopicsDirectory />} />
             <Route path="/topic/:topicName" element={<TopicPage />} />
             <Route path="/about" element={<About />} />
             <Route path="/faq" element={<FAQ />} />

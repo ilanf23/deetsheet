@@ -3,11 +3,14 @@ import { Link } from "react-router-dom";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Plus } from "lucide-react";
 import { subjectCategories, getTopicsByCategory } from "@/data/seedData";
+import CreateTopicDialog from "@/components/CreateTopicDialog";
 
 const SubjectsSidebar = () => {
   const [bizName, setBizName] = useState("");
   const [bizCity, setBizCity] = useState("");
+  const [createOpen, setCreateOpen] = useState(false);
 
   return (
     <div className="space-y-4">
@@ -40,6 +43,19 @@ const SubjectsSidebar = () => {
           );
         })}
       </Accordion>
+
+      <div className="border-t pt-4">
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full justify-start gap-2"
+          onClick={() => setCreateOpen(true)}
+        >
+          <Plus className="h-4 w-4" />
+          Create a Topic
+        </Button>
+        <CreateTopicDialog open={createOpen} onOpenChange={setCreateOpen} />
+      </div>
 
       <div className="border-t pt-4 space-y-2">
         <h3 className="text-sm font-semibold text-card-foreground">Local Businesses</h3>

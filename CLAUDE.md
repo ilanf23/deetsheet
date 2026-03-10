@@ -40,6 +40,10 @@ src/
 └── test/              # Vitest setup and tests
 ```
 
+## Rules
+
+- **No hardcoded data**: Never use hardcoded strings, numbers, or mock data in components or pages. All display data must come from Supabase or be defined in constants/config files. No inline placeholder content, fake users, sample posts, or static lists that should be dynamic.
+
 ## Conventions
 
 - **Imports**: Use `@/` path alias (maps to `src/`). Group: React → libraries → local → ui.
