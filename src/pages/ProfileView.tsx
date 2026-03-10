@@ -50,7 +50,6 @@ interface UserTopic {
   id: string;
   name: string;
   slug: string;
-  category_name: string | null;
   description: string | null;
   created_at: string;
 }
