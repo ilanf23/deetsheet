@@ -9,13 +9,13 @@ const ColumnLayout = () => {
   );
 
   return (
-    <div className="container mx-auto px-4 mt-10">
+    <div className="container mx-auto px-4 mt-10 overflow-hidden">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1.5fr_280px] gap-10">
         {/* Left — Recently Added */}
         <RecentlyAddedSidebar />
 
         {/* Middle — Most Popular */}
-        <div>
+        <div className="min-w-0">
           <div className="flex items-center justify-between mb-4 px-1">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Most Popular</h2>
             <select className="text-xs border rounded px-2 py-1 bg-background text-muted-foreground">

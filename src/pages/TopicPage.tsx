@@ -33,13 +33,13 @@ const TopicPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
       <DeetHeader />
       <main className="flex-1">
-        <div className="container mx-auto px-4 mt-10 mb-20">
+        <div className="container mx-auto px-4 mt-10 mb-20 overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-10">
             {/* Main — Topic posts */}
-            <div>
+            <div className="min-w-0">
               <div className="mb-6">
                 <h1 className="text-2xl font-bold text-card-foreground font-heading">{topic.name}</h1>
                 <p className="text-sm text-muted-foreground">/{topic.categoryName}</p>

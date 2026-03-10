@@ -378,7 +378,7 @@ const ProfileEdit = () => {
   const days = Array.from({ length: 31 }, (_, i) => String(i + 1));
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-accent/30 to-background">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-accent/30 to-background overflow-x-hidden">
       <DeetHeader />
       <main className="flex-1 py-8 px-4">
         <div className="container mx-auto max-w-2xl">

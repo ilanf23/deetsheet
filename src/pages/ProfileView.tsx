@@ -214,14 +214,14 @@ const ProfileView = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-accent/30 to-background">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-accent/30 to-background overflow-x-hidden">
       <DeetHeader />
       <main className="flex-1 py-8 px-4">
-        <div className="container mx-auto max-w-5xl">
+        <div className="container mx-auto max-w-5xl overflow-hidden">
           {/* Two-column layout */}
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
             {/* Left column */}
-            <div>
+            <div className="min-w-0">
               {/* Avatar + basic info */}
               <div className="flex items-start gap-5 mb-6">
                 <div className="relative">

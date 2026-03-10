@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { MessageSquare } from "lucide-react";
 import { Post, getTimeAgo } from "@/data/seedData";
 import PostActionMenu from "@/components/PostActionMenu";
+import UserAvatar from "@/components/UserAvatar";
 
 interface PostCardProps {
   post: Post;
@@ -54,7 +55,10 @@ const PostCard = ({ post }: PostCardProps) => {
       )}
 
       <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>@{post.username} · {getTimeAgo(post.createdAt)}</span>
+        <span className="flex items-center gap-1.5">
+          <UserAvatar username={post.username} size="sm" />
+          <span>· {getTimeAgo(post.createdAt)}</span>
+        </span>
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1">
             <MessageSquare className="h-3.5 w-3.5" />

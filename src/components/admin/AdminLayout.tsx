@@ -71,7 +71,7 @@ export default function AdminLayout() {
           <SidebarTrigger />
           <span className="text-sm font-medium text-muted-foreground">DeetSheet Admin</span>
         </header>
-        <main className="p-6">
+        <main className="p-6 overflow-x-hidden min-w-0">
           <Outlet />
         </main>
       </SidebarInset>

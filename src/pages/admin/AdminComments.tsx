@@ -63,7 +63,7 @@ export default function AdminComments() {
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Comments</h1>
 
-      <div className="border rounded-md">
+      <div className="border rounded-md overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
