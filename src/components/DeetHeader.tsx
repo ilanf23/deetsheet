@@ -117,8 +117,6 @@ const DeetHeader = () => {
               <Button variant="ghost" size="sm" onClick={() => signOut()}>Sign Out</Button>
             </>
           ) : (
-            </>
-          ) : (
             <>
               <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => navigate("/signup")}>Sign Up</Button>
               <Button variant="outline" size="sm" onClick={() => navigate("/login")}>Log In</Button>
