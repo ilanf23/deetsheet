@@ -302,6 +302,7 @@ const ProfileEdit = () => {
     const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
     setAvatarUrl(publicUrl);
     setUploadingAvatar(false);
+    await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id);
     await refreshProfile();
     toast({ title: "Avatar updated!" });
 
