@@ -146,7 +146,7 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
       <div className="px-11 flex items-center gap-2 text-xs text-muted-foreground">
         <UserAvatar username={post.username} size="sm" />
         <span>· Posted {getTimeAgo(post.createdAt)} · {post.commentCount} comments</span>
-        <PostActionMenu />
+        <PostActionMenu postId={post.id} topicName={post.topicName} />
       </div>
 
       {/* Interaction icons */}

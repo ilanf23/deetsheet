@@ -50,7 +50,6 @@ interface UserTopic {
   id: string;
   name: string;
   slug: string;
-  category_name: string | null;
   description: string | null;
   created_at: string;
 }
@@ -148,8 +147,7 @@ const ProfileView = () => {
           .eq("author_id", targetUserId),
         supabase
           .from("topics")
-          .select("id, name, slug, category_name, description, created_at")
-          .eq("created_by", targetUserId)
+          .select("id, name, slug, description, created_at")
           .order("created_at", { ascending: false }),
       ]);
 
@@ -522,8 +520,7 @@ const ProfileView = () => {
                         // Refetch topics
                         supabase
                           .from("topics")
-                          .select("id, name, slug, category_name, description, created_at")
-                          .eq("created_by", targetUserId!)
+                          .select("id, name, slug, description, created_at")
                           .order("created_at", { ascending: false })
                           .then(({ data }) => {
                             if (data) {
@@ -556,11 +553,6 @@ const ProfileView = () => {
                                 >
                                   {topic.name}
                                 </a>
-                                {topic.category_name && (
-                                  <Badge variant="secondary" className="text-xs font-normal">
-                                    {topic.category_name}
-                                  </Badge>
-                                )}
                               </div>
                               {topic.description && (
                                 <p className="text-sm text-muted-foreground line-clamp-2">

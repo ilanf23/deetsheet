@@ -46,6 +46,35 @@ export type Database = {
           },
         ]
       }
+      favorites: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorites_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       posts: {
         Row: {
           author_id: string
@@ -183,29 +212,55 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          reasons: string[]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          reasons?: string[]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          reasons?: string[]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       topics: {
         Row: {
-          category_name: string | null
           created_at: string
-          created_by: string | null
           description: string | null
           id: string
           name: string
           slug: string
         }
         Insert: {
-          category_name?: string | null
           created_at?: string
-          created_by?: string | null
           description?: string | null
           id?: string
           name: string
           slug: string
         }
         Update: {
-          category_name?: string | null
           created_at?: string
-          created_by?: string | null
           description?: string | null
           id?: string
           name?: string

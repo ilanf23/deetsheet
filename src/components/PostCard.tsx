@@ -64,7 +64,7 @@ const PostCard = ({ post }: PostCardProps) => {
             <MessageSquare className="h-3.5 w-3.5" />
             {post.commentCount}
           </span>
-          <PostActionMenu />
+          <PostActionMenu postId={post.id} topicName={post.topicName} />
         </div>
       </div>
     </div>
