@@ -98,6 +98,18 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
         <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 mt-1" />
       </button>
 
+      {/* Post image */}
+      {post.imageUrl && (
+        <div className="px-11">
+          <img
+            src={post.imageUrl}
+            alt={displayTitle}
+            className="w-full max-h-64 object-cover rounded-lg"
+            loading="lazy"
+          />
+        </div>
+      )}
+
       {/* Long-form content body */}
       {post.title && post.content && (
         <div className="px-11">
