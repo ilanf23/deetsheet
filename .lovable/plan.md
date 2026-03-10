@@ -1,22 +1,22 @@
 
 
-# Plan: Populate Fake Profiles with Realistic Data
+# Plan: Sync Profile Image Across All Components
 
-## What We're Doing
-Update all 31 seed user profiles in the database with rich, realistic personal information — names, locations, jobs, education, bios, and demographics — so each user feels like a real person connected to the topics and posts they contribute to.
+## Problem
+When a user updates their profile image on the Profile page, it saves to the database but doesn't update the header avatar or other places showing the user's avatar. The `Profile.tsx` upload handler updates the DB but never calls `refreshProfile()` from AuthContext, so the header stays stale.
 
-## Approach
-Use the database insert tool to run UPDATE statements on the `profiles` table, filling in: `name`, `sex`, `city`, `state`, `country`, `job`, `education`, `college`, `major`, `degree`, `high_school`, `city_born`, `birth_month`, `birth_day`, `birth_year`, `favorite_movie`, `reading`, and richer `bio` text.
+## Changes
 
-Each profile will be crafted to match the user's posting history. For example:
-- **sarah_m** (posts about parenting) → Sarah Mitchell, 34, mom in Austin TX, elementary school teacher
-- **dr_hope** (posts about cancer) → Dr. Amara Hope, oncologist in Boston, Harvard Med
-- **server_life** (posts about waiting tables) → Marcus Torres, waiter in Portland
-- **chi_town** (posts about Chicago) → lives in Chicago, born there
-- **wanderlust** (posts about travel in 20s) → young traveler, remote worker
+### 1. `src/pages/Profile.tsx`
+- Import `refreshProfile` from `useAuth()`
+- After the avatar upload and DB update succeeds, call `await refreshProfile()` so the AuthContext picks up the new URL and the header avatar updates immediately
 
-## Technical Details
-- ~31 UPDATE statements via the data insert tool (not migrations, since this is data not schema)
-- No code changes needed — the Profile page already reads and displays these fields
-- Will ensure diversity in gender, location, age, and background across the user base
+### 2. `src/pages/ProfileEdit.tsx`
+- The cropped upload handler already calls `refreshProfile()` but does NOT save `avatar_url` to the database until form submit. Add an immediate DB update after upload (like Profile.tsx does) so the avatar persists even without clicking "Save"
+
+### 3. `src/components/CommentItem.tsx` (no change needed now)
+- Comments currently use seed data with hardcoded usernames, not real DB users. The avatar for the logged-in user's own comments would need the DB-backed avatar, but since comments aren't yet stored in DB with author profiles joined, this is a future concern. The current mock data won't reflect real avatars.
+
+## Summary
+Two small edits — one line addition in Profile.tsx and one line addition in ProfileEdit.tsx — to ensure avatar changes propagate to the header and persist to the database immediately.
 
