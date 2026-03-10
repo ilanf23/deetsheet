@@ -521,8 +521,7 @@ const ProfileView = () => {
                         // Refetch topics
                         supabase
                           .from("topics")
-                          .select("id, name, slug, category_name, description, created_at")
-                          .eq("created_by", targetUserId!)
+                          .select("id, name, slug, description, created_at")
                           .order("created_at", { ascending: false })
                           .then(({ data }) => {
                             if (data) {
