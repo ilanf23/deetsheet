@@ -1,89 +1,98 @@
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-
-const faqs = [
-  {
-    question: "What is DeetSheet?",
-    answer:
-      "DeetSheet is a community-driven platform where users can share, rate, and discuss posts across a wide range of topics. Think of it as a collaborative knowledge board — anyone can contribute insights, and the best content rises to the top through community ratings.",
-  },
-  {
-    question: "How do I create an account?",
-    answer:
-      "Click the Sign Up button in the header. You can register with your email and a password, or sign in instantly with your Google account. Once registered you can start posting, commenting, and rating right away.",
-  },
-  {
-    question: "How does the rating system work?",
-    answer:
-      "Every post can be rated on a star scale by community members. The average rating is displayed next to each post, and higher-rated posts are ranked higher within their topic. You can also see your own rating alongside the community average.",
-  },
-  {
-    question: "What are topics?",
-    answer:
-      "Topics are categories that group related posts together. When you visit a topic page you'll see all posts ranked by their community rating. You can browse existing topics from the home page or discover new ones through the search bar.",
-  },
-  {
-    question: "Can I edit or delete my posts?",
-    answer:
-      "Currently you can request an edit through the Report menu on any post. Full self-service editing and deletion is on our roadmap and will be available in a future update.",
-  },
-  {
-    question: "How do I report inappropriate content?",
-    answer:
-      "Click the three-dot menu (⋯) on any post and select from the report options — including junk, vulgar content, false information, and more. Check the relevant boxes and hit Send. Our moderation team reviews every report.",
-  },
-  {
-    question: "What does 'Add to Favorites' do?",
-    answer:
-      "Favoriting a post saves it to your personal favorites list so you can quickly find it later. Click the three-dot menu on any post and choose 'Add to Favorites'.",
-  },
-  {
-    question: "Is DeetSheet free to use?",
-    answer:
-      "Yes! DeetSheet is completely free. Creating an account, posting, commenting, and rating are all available at no cost.",
-  },
-  {
-    question: "How can I contact the DeetSheet team?",
-    answer:
-      "You can reach us through the Contact link in the footer, or email us directly at support@deetsheet.com. We'd love to hear your feedback and suggestions.",
-  },
-  {
-    question: "What are the community guidelines?",
-    answer:
-      "We expect all users to be respectful, post accurate information, and avoid spam or vulgar content. Posts that violate these guidelines may be removed after review. Full details are available on our Terms page.",
-  },
-];
+import { Link } from "react-router-dom";
 
 const FAQ = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <DeetHeader />
       <main className="flex-1 container mx-auto px-4 py-12 max-w-3xl">
-        <h1 className="text-3xl font-bold font-heading text-foreground mb-2">
+        <h1 className="text-3xl font-bold font-heading text-foreground mb-8">
           Frequently Asked Questions
         </h1>
-        <p className="text-muted-foreground mb-8">
-          Everything you need to know about DeetSheet.
-        </p>
 
-        <Accordion type="multiple" className="space-y-2">
-          {faqs.map((faq, index) => (
-            <AccordionItem key={index} value={`item-${index}`} className="border rounded-lg px-4">
-              <AccordionTrigger className="text-left text-sm font-semibold hover:no-underline">
-                {faq.question}
-              </AccordionTrigger>
-              <AccordionContent className="text-sm text-muted-foreground leading-relaxed">
-                {faq.answer}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+        <div className="space-y-6">
+          <div>
+            <p className="font-bold text-foreground">
+              Can I make a post or comment without creating a{" "}
+              <Link to="/profile-edit" className="underline text-primary">
+                profile
+              </Link>
+              ?
+            </p>
+            <p className="text-muted-foreground mt-1">
+              No. You must create a{" "}
+              <Link to="/profile-edit" className="underline text-primary">
+                profile
+              </Link>{" "}
+              in order to make a post or comment. There are many{" "}
+              <Link to="/profile-edit" className="underline text-primary">
+                advantages
+              </Link>{" "}
+              to creating an{" "}
+              <Link to="/profile-edit" className="underline text-primary">
+                account
+              </Link>
+              .
+            </p>
+          </div>
+
+          <div>
+            <p className="font-bold text-foreground">
+              I would like to start a new topic or subject. How do I create it?
+            </p>
+            <p className="text-muted-foreground mt-1">
+              At this time, topics and subjects are created by DeetSheet
+              administrators. If you would like to suggest a new topic, please
+              contact us and we will review your request.
+            </p>
+          </div>
+
+          <div>
+            <p className="font-bold text-foreground">
+              I don't see my post. Has it been deleted?
+            </p>
+            <p className="text-muted-foreground mt-1">
+              Posts that violate our community guidelines may be removed by
+              moderators. If you believe your post was removed in error, please
+              contact us for further assistance.
+            </p>
+          </div>
+
+          <div>
+            <p className="font-bold text-foreground">
+              How do I email my post to friends?
+            </p>
+            <p className="text-muted-foreground mt-1">
+              You can share any post by copying the link from your browser's
+              address bar and pasting it into an email. We are working on adding
+              a dedicated share-by-email feature in the future.
+            </p>
+          </div>
+
+          <div>
+            <p className="font-bold text-foreground">
+              How do I upload my post to Facebook or Twitter?
+            </p>
+            <p className="text-muted-foreground mt-1">
+              Currently, you can share your post on social media by copying the
+              post link and pasting it into a new Facebook or Twitter post. A
+              built-in social sharing feature is coming soon.
+            </p>
+          </div>
+
+          <div>
+            <p className="font-bold text-foreground">
+              I don't agree with a post. Is there a way to have it removed?
+            </p>
+            <p className="text-muted-foreground mt-1">
+              DeetSheet supports free expression and does not remove posts simply
+              because someone disagrees with them. However, if a post violates
+              our community guidelines, you can report it using the menu on the
+              post and our moderation team will review it.
+            </p>
+          </div>
+        </div>
       </main>
       <DeetFooter />
     </div>

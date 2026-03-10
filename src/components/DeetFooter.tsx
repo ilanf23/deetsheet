@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
 
 const DeetFooter = () => {
+  const { isAdmin } = useAdminAuth();
+
   return (
     <footer className="border-t bg-card">
       <div className="container mx-auto px-4 py-8">
@@ -14,6 +17,9 @@ const DeetFooter = () => {
             <Link to="/contact" className="hover:text-foreground transition">Contact</Link>
             <Link to="/terms" className="hover:text-foreground transition">Terms</Link>
             <Link to="/privacy" className="hover:text-foreground transition">Privacy</Link>
+            {isAdmin && (
+              <Link to="/admin" className="hover:text-foreground transition">Admin</Link>
+            )}
           </nav>
           <p className="text-xs text-muted-foreground">© 2026 DeetSheet. All rights reserved.</p>
         </div>

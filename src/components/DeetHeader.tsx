@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Menu, X, List, ChevronRight, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,6 @@ import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { categories, topics } from "@/data/seedData";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 
 const TocContent = () => {
   const navigate = useNavigate();
@@ -48,27 +47,10 @@ const TocContent = () => {
 
 const DeetHeader = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, avatarUrl } = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("profiles")
-      .select("avatar_url")
-      .eq("id", user.id)
-      .single()
-      .then(({ data, error }) => {
-        if (error) {
-          console.error("Failed to fetch avatar URL:", error);
-          return;
-        }
-        if (data?.avatar_url) setAvatarUrl(data.avatar_url);
-      });
-  }, [user]);
 
   const username = user?.user_metadata?.username || user?.email?.split("@")[0] || "User";
 

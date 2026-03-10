@@ -119,7 +119,7 @@ function getCredentialIcon(value: string) {
 
 const ProfileEdit = () => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -302,6 +302,7 @@ const ProfileEdit = () => {
     const publicUrl = `${urlData.publicUrl}?t=${Date.now()}`;
     setAvatarUrl(publicUrl);
     setUploadingAvatar(false);
+    await refreshProfile();
     toast({ title: "Avatar updated!" });
 
     // Clean up object URL
