@@ -156,12 +156,26 @@ const Profile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Left column — Personal Info */}
                 <div className="space-y-4">
-                  {/* Profile photo placeholder */}
+                  {/* Profile photo upload */}
                   <div className="flex items-start gap-4 mb-2">
-                    <div className="relative h-24 w-24 rounded-md bg-muted flex items-center justify-center shrink-0">
-                      <User className="h-12 w-12 text-muted-foreground" />
+                    <div className="relative h-24 w-24 rounded-md bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                      {uploadingAvatar ? (
+                        <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+                      ) : avatarUrl ? (
+                        <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+                      ) : (
+                        <User className="h-12 w-12 text-muted-foreground" />
+                      )}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        className="hidden"
+                        onChange={handleAvatarUpload}
+                      />
                       <button
                         type="button"
+                        onClick={() => fileInputRef.current?.click()}
                         className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center"
                       >
                         <Pencil className="h-3 w-3" />
