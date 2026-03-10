@@ -51,7 +51,7 @@ export default function AdminUsers() {
       !q ||
       u.name?.toLowerCase().includes(q) ||
       u.username?.toLowerCase().includes(q) ||
-      u.email?.toLowerCase().includes(q)
+      (u as any).email?.toLowerCase().includes(q)
     );
   });
 
