@@ -11,9 +11,9 @@ const DeetFooter = () => {
           <nav className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground">
             <a href="#" className="hover:text-foreground transition">About</a>
             <Link to="/faq" className="hover:text-foreground transition">FAQ</Link>
-            <a href="#" className="hover:text-foreground transition">Contact</a>
-            <a href="#" className="hover:text-foreground transition">Terms</a>
-            <a href="#" className="hover:text-foreground transition">Privacy</a>
+            <Link to="/contact" className="hover:text-foreground transition">Contact</Link>
+            <Link to="/terms" className="hover:text-foreground transition">Terms</Link>
+            <Link to="/privacy" className="hover:text-foreground transition">Privacy</Link>
           </nav>
           <p className="text-xs text-muted-foreground">© 2026 DeetSheet. All rights reserved.</p>
         </div>

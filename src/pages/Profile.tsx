@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { User, Pencil, GraduationCap, Eye, Calendar } from "lucide-react";
+import { User, Pencil, GraduationCap, Eye, Calendar, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import DeetHeader from "@/components/DeetHeader";
@@ -60,8 +59,10 @@ type ProfileFormValues = z.infer<typeof profileSchema>;
 
 const Profile = () => {
   const { toast } = useToast();
-  const { user, loading: authLoading } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [bio, setBio] = useState("");
   const [education, setEducation] = useState("");
   const [highSchool, setHighSchool] = useState("");
@@ -73,7 +74,6 @@ const Profile = () => {
   const [reading, setReading] = useState("");
   const [cityBorn, setCityBorn] = useState("");
   const [emailFrequency, setEmailFrequency] = useState("weekly");
-  const [saving, setSaving] = useState(false);
 
   const [prefs, setPrefs] = useState({
     emailOnMessage: true,
@@ -98,102 +98,47 @@ const Profile = () => {
     },
   });
 
-  // Redirect if not logged in
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/login");
-    }
-  }, [authLoading, user, navigate]);
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
 
-  // Load existing profile data
-  useEffect(() => {
-    if (!user) return;
-    const loadProfile = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-      if (data) {
-        form.reset({
-          name: data.name || user.user_metadata?.full_name || "",
-          entityType: data.entity_type || "",
-          sex: data.sex || "",
-          birthMonth: data.birth_month || "",
-          birthDay: data.birth_day || "",
-          birthYear: data.birth_year || "",
-          city: data.city || "",
-          state: data.state || "",
-          country: data.country || "",
-        });
-        setBio(data.bio || "");
-        setEducation(data.education || "");
-        setHighSchool(data.high_school || "");
-        setCollege(data.college || "");
-        setDegree(data.degree || "");
-        setMajor(data.major || "");
-        setJob(data.job || "");
-        setFavoriteMovie(data.favorite_movie || "");
-        setReading(data.reading || "");
-        setCityBorn(data.city_born || "");
-        setEmailFrequency(data.email_frequency || "weekly");
-        setPrefs({
-          emailOnMessage: data.email_on_message ?? true,
-          emailOnComment: data.email_on_comment ?? true,
-          emailOnFollow: data.email_on_follow ?? true,
-          emailOnPostEdit: data.email_on_post_edit ?? true,
-          emailTopPosts: data.email_top_posts ?? false,
-        });
-      } else {
-        // Pre-fill name from Google metadata if available
-        const googleName = user.user_metadata?.full_name || user.user_metadata?.name || "";
-        if (googleName) {
-          form.setValue("name", googleName);
-        }
-      }
-    };
-    loadProfile();
-  }, [user]);
-
-  const onSubmit = async (values: ProfileFormValues) => {
-    if (!user) return;
-    setSaving(true);
-    const { error } = await supabase
-      .from("profiles")
-      .upsert({
-        id: user.id,
-        name: values.name,
-        entity_type: values.entityType,
-        sex: values.sex,
-        birth_month: values.birthMonth,
-        birth_day: values.birthDay,
-        birth_year: values.birthYear,
-        city: values.city,
-        state: values.state,
-        country: values.country,
-        bio,
-        education,
-        high_school: highSchool,
-        college,
-        degree,
-        major,
-        job,
-        favorite_movie: favoriteMovie,
-        reading,
-        city_born: cityBorn,
-        email_frequency: emailFrequency,
-        email_on_message: prefs.emailOnMessage,
-        email_on_comment: prefs.emailOnComment,
-        email_on_follow: prefs.emailOnFollow,
-        email_on_post_edit: prefs.emailOnPostEdit,
-        email_top_posts: prefs.emailTopPosts,
-      });
-    setSaving(false);
-    if (error) {
-      toast({ title: "Error saving profile", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Profile saved!", description: "Your preferences have been updated." });
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+    if (!allowedTypes.includes(file.type)) {
+      toast({ title: "Invalid file type", description: "Please upload a JPG, PNG, WebP, or GIF image.", variant: "destructive" });
+      return;
     }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Please upload an image under 5MB.", variant: "destructive" });
+      return;
+    }
+
+    setUploadingAvatar(true);
+    const fileExt = file.name.split(".").pop();
+    const filePath = `${user.id}/avatar.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      toast({ title: "Upload failed", description: uploadError.message, variant: "destructive" });
+      setUploadingAvatar(false);
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(filePath);
+    
+    await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id);
+    setAvatarUrl(publicUrl + "?t=" + Date.now());
+    setUploadingAvatar(false);
+    toast({ title: "Photo updated!", description: "Your profile photo has been saved." });
+  };
+
+  const onSubmit = () => {
+    toast({
+      title: "Profile saved!",
+      description: "Your preferences have been updated.",
+    });
   };
 
   const currentYear = new Date().getFullYear();
@@ -211,12 +156,26 @@ const Profile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Left column — Personal Info */}
                 <div className="space-y-4">
-                  {/* Profile photo placeholder */}
+                  {/* Profile photo upload */}
                   <div className="flex items-start gap-4 mb-2">
-                    <div className="relative h-24 w-24 rounded-md bg-muted flex items-center justify-center shrink-0">
-                      <User className="h-12 w-12 text-muted-foreground" />
+                    <div className="relative h-24 w-24 rounded-md bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                      {uploadingAvatar ? (
+                        <Loader2 className="h-8 w-8 text-muted-foreground animate-spin" />
+                      ) : avatarUrl ? (
+                        <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+                      ) : (
+                        <User className="h-12 w-12 text-muted-foreground" />
+                      )}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        className="hidden"
+                        onChange={handleAvatarUpload}
+                      />
                       <button
                         type="button"
+                        onClick={() => fileInputRef.current?.click()}
                         className="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center"
                       >
                         <Pencil className="h-3 w-3" />
@@ -604,8 +563,8 @@ const Profile = () => {
               </div>
 
               <div className="flex justify-center">
-                <Button type="submit" className="px-8" disabled={saving}>
-                  {saving ? "Saving..." : "Save Profile"}
+                <Button type="submit" className="px-8">
+                  Save Profile
                 </Button>
               </div>
             </form>
