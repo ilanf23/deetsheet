@@ -34,6 +34,7 @@ const CommentItem = ({ comment, depth = 0 }: CommentItemProps) => {
       content: replyText,
       createdAt: new Date(),
       agreeCount: 0,
+      disagreeCount: 0,
       heartCount: 0,
     };
 
