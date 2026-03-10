@@ -107,12 +107,10 @@ export type Database = {
           email_on_message: boolean | null
           email_on_post_edit: boolean | null
           email_top_posts: boolean | null
-          email: string | null
           entity_type: string | null
           favorite_movie: string | null
           high_school: string | null
           id: string
-          is_admin: boolean
           job: string | null
           major: string | null
           name: string | null
@@ -134,7 +132,6 @@ export type Database = {
           created_at?: string
           degree?: string | null
           education?: string | null
-          email?: string | null
           email_frequency?: string | null
           email_on_comment?: boolean | null
           email_on_follow?: boolean | null
@@ -145,7 +142,6 @@ export type Database = {
           favorite_movie?: string | null
           high_school?: string | null
           id: string
-          is_admin?: boolean
           job?: string | null
           major?: string | null
           name?: string | null
@@ -167,7 +163,6 @@ export type Database = {
           created_at?: string
           degree?: string | null
           education?: string | null
-          email?: string | null
           email_frequency?: string | null
           email_on_comment?: boolean | null
           email_on_follow?: boolean | null
@@ -178,7 +173,6 @@ export type Database = {
           favorite_movie?: string | null
           high_school?: string | null
           id?: string
-          is_admin?: boolean
           job?: string | null
           major?: string | null
           name?: string | null
@@ -210,6 +204,24 @@ export type Database = {
           id?: string
           name?: string
           slug?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
         }
         Relationships: []
       }
@@ -250,10 +262,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -380,6 +398,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const

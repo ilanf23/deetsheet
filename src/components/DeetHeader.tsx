@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Menu, X, List, ChevronRight, User } from "lucide-react";
+import { Search, Menu, X, List, ChevronRight, User, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
 import { categories, topics } from "@/data/seedData";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useAdminMode } from "@/hooks/useAdminMode";
 
 const TocContent = () => {
   const navigate = useNavigate();
@@ -48,6 +51,8 @@ const TocContent = () => {
 const DeetHeader = () => {
   const navigate = useNavigate();
   const { user, signOut, avatarUrl } = useAuth();
+  const { isAdmin } = useAdminAuth();
+  const { adminModeActive, toggleAdminMode } = useAdminMode();
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -86,6 +91,17 @@ const DeetHeader = () => {
         <nav className="hidden md:flex items-center gap-1">
           {user ? (
             <>
+              {isAdmin && (
+                <div className="flex items-center gap-1.5 mr-2 px-2 py-1 rounded-md bg-muted">
+                  <Shield className="h-3.5 w-3.5 text-primary" />
+                  <span className="text-xs text-muted-foreground">Admin</span>
+                  <Switch
+                    checked={adminModeActive}
+                    onCheckedChange={toggleAdminMode}
+                    className="scale-75"
+                  />
+                </div>
+              )}
               <button onClick={() => navigate("/profile")} className="flex items-center gap-2 mr-2 hover:opacity-80 transition-opacity">
                 <Avatar className="h-7 w-7">
                   {avatarUrl && <AvatarImage src={avatarUrl} alt={username} />}
@@ -95,6 +111,9 @@ const DeetHeader = () => {
                 </Avatar>
                 <span className="text-sm text-muted-foreground">{username}</span>
               </button>
+              {adminModeActive && isAdmin && (
+                <Button variant="outline" size="sm" onClick={() => navigate("/admin")}>Admin Panel</Button>
+              )}
               <Button variant="outline" size="sm" onClick={() => navigate("/profile")}>Profile</Button>
               <Button variant="ghost" size="sm" onClick={() => signOut()}>Sign Out</Button>
             </>

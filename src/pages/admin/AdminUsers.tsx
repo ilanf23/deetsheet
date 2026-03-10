@@ -51,7 +51,7 @@ export default function AdminUsers() {
       !q ||
       u.name?.toLowerCase().includes(q) ||
       u.username?.toLowerCase().includes(q) ||
-      u.email?.toLowerCase().includes(q)
+      (u as any).email?.toLowerCase().includes(q)
     );
   });
 
@@ -106,7 +106,7 @@ export default function AdminUsers() {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm">{u.email || "—"}</TableCell>
+                  <TableCell className="text-sm">{(u as any).email || "—"}</TableCell>
                   <TableCell className="text-sm">
                     {[u.city, u.state].filter(Boolean).join(", ") || "—"}
                   </TableCell>
