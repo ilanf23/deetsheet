@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useAdminMode } from "@/hooks/useAdminMode";
 
 const DeetFooter = () => {
   const { isAdmin } = useAdminAuth();
+  const { adminModeActive } = useAdminMode();
 
   return (
     <footer className="border-t bg-card">
@@ -17,7 +19,7 @@ const DeetFooter = () => {
             <Link to="/contact" className="hover:text-foreground transition">Contact</Link>
             <Link to="/terms" className="hover:text-foreground transition">Terms</Link>
             <Link to="/privacy" className="hover:text-foreground transition">Privacy</Link>
-            {isAdmin && (
+            {isAdmin && adminModeActive && (
               <Link to="/admin" className="hover:text-foreground transition">Admin</Link>
             )}
           </nav>
