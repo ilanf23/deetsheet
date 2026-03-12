@@ -22,7 +22,10 @@ interface TopicPostExpandedProps {
 }
 
 const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthenticated }: TopicPostExpandedProps) => {
-  const avg = getAverageRating(post);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [avg, setAvg] = useState<number>(0);
+  const [ratingCount, setRatingCount] = useState<number>(0);
   const [userRating, setUserRating] = useState<number | null>(null);
   const [showRatingBar, setShowRatingBar] = useState(false);
   const [liked, setLiked] = useState(false);
@@ -34,6 +37,55 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
   const topLevelComments = getCommentsByPost(post.id);
 
   const displayTitle = post.title || post.content;
+
+  // Fetch average rating for this post
+  const fetchRatingStats = useCallback(async () => {
+    const { data } = await supabase
+      .from("ratings")
+      .select("value")
+      .eq("post_id", post.id);
+    if (data && data.length > 0) {
+      const average = data.reduce((sum, r) => sum + Number(r.value), 0) / data.length;
+      setAvg(Math.round(average * 10) / 10);
+      setRatingCount(data.length);
+    } else {
+      setAvg(0);
+      setRatingCount(0);
+    }
+  }, [post.id]);
+
+  // Fetch current user's rating
+  useEffect(() => {
+    fetchRatingStats();
+    if (user) {
+      supabase
+        .from("ratings")
+        .select("value")
+        .eq("post_id", post.id)
+        .eq("user_id", user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) setUserRating(Number(data.value));
+        });
+    }
+  }, [post.id, user, fetchRatingStats]);
+
+  // Submit or update rating
+  const handleRatingChange = async (value: number) => {
+    setUserRating(value);
+    if (!user) return;
+    const { error } = await supabase
+      .from("ratings")
+      .upsert(
+        { user_id: user.id, post_id: post.id, value },
+        { onConflict: "user_id,post_id" }
+      );
+    if (error) {
+      toast({ title: "Rating failed", description: error.message, variant: "destructive" });
+    } else {
+      await fetchRatingStats();
+    }
+  };
 
   if (!isExpanded) {
     return (
