@@ -22,10 +22,10 @@ interface TopicPostExpandedProps {
 }
 
 const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthenticated }: TopicPostExpandedProps) => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [avg, setAvg] = useState<number>(0);
-  const [ratingCount, setRatingCount] = useState<number>(0);
+  // Compute seed-data average as fallback
+  const seedAvg = post.ratingCount > 0 ? Math.round((post.ratingScore / post.ratingCount) * 10) / 10 : 0;
+  const [avg, setAvg] = useState<number>(seedAvg);
+  const [ratingCount, setRatingCount] = useState<number>(post.ratingCount);
   const [userRating, setUserRating] = useState<number | null>(null);
   const [showRatingBar, setShowRatingBar] = useState(false);
   const [liked, setLiked] = useState(false);
@@ -38,7 +38,7 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
 
   const displayTitle = post.title || post.content;
 
-  // Fetch average rating for this post
+  // Try to fetch real DB ratings (will override seed data if found)
   const fetchRatingStats = useCallback(async () => {
     const { data } = await supabase
       .from("ratings")
@@ -48,10 +48,8 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
       const average = data.reduce((sum, r) => sum + Number(r.value), 0) / data.length;
       setAvg(Math.round(average * 10) / 10);
       setRatingCount(data.length);
-    } else {
-      setAvg(0);
-      setRatingCount(0);
     }
+    // If no DB ratings, keep seed data values
   }, [post.id]);
 
   // Fetch current user's rating
