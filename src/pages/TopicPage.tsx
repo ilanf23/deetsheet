@@ -33,10 +33,10 @@ const TopicPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-background">
       <DeetHeader />
       <main className="flex-1">
-        <div className="container mx-auto px-4 mt-10 mb-20 overflow-hidden">
+        <div className="container mx-auto px-4 mt-10 mb-20">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-10">
             {/* Main — Topic posts */}
             <div className="min-w-0">
@@ -73,9 +73,7 @@ const TopicPage = () => {
 
             {/* Right — Recommendations */}
             <div className="hidden lg:block">
-              <div className="lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto scrollbar-thin lg:pr-2">
-                <TopicRecommendations currentTopic={topic} />
-              </div>
+              <TopicRecommendations currentTopic={topic} />
             </div>
           </div>
         </div>

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { topics, Topic } from "@/data/seedData";
 
@@ -6,14 +7,13 @@ interface TopicRecommendationsProps {
 }
 
 const TopicRecommendations = ({ currentTopic }: TopicRecommendationsProps) => {
-  // Get topics from same category first, then fill from others
   const sameCategoryTopics = topics.filter(
     (t) => t.categoryName === currentTopic.categoryName && t.id !== currentTopic.id
   );
   const otherTopics = topics.filter(
     (t) => t.categoryName !== currentTopic.categoryName && t.id !== currentTopic.id
   );
-  const recommended = [...sameCategoryTopics, ...otherTopics].slice(0, 6);
+  const recommended = [...sameCategoryTopics, ...otherTopics].slice(0, 12);
 
   return (
     <div>
@@ -28,11 +28,7 @@ const TopicRecommendations = ({ currentTopic }: TopicRecommendationsProps) => {
             className="block rounded-xl border bg-card overflow-hidden hover:shadow-md transition-all duration-200"
           >
             {topic.imageUrl && (
-              <img
-                src={topic.imageUrl}
-                alt={topic.name}
-                className="w-full h-24 object-cover"
-              />
+              <TopicImage src={topic.imageUrl} alt={topic.name} />
             )}
             <div className="p-3">
               <h3 className="text-sm font-bold text-card-foreground">{topic.name}</h3>
@@ -42,6 +38,22 @@ const TopicRecommendations = ({ currentTopic }: TopicRecommendationsProps) => {
         ))}
       </div>
     </div>
+  );
+};
+
+const TopicImage = ({ src, alt }: { src: string; alt: string }) => {
+  const [error, setError] = useState(false);
+
+  if (error) return null;
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className="w-full h-28 object-cover"
+      loading="lazy"
+      onError={() => setError(true)}
+    />
   );
 };
 
