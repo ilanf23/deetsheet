@@ -9,7 +9,7 @@ const ColumnLayout = () => {
   );
 
   return (
-    <div className="max-w-[1600px] mx-auto mt-5 overflow-hidden">
+    <div className="max-w-[1600px] mx-auto mt-5">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1.5fr_280px] gap-5">
         {/* Left — Recently Added */}
         <RecentlyAddedSidebar />
