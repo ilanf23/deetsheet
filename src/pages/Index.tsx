@@ -5,7 +5,7 @@ import DeetFooter from "@/components/DeetFooter";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-background">
       <DeetHeader />
       <main className="flex-1">
         <HeroBanner />

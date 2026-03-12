@@ -34,7 +34,7 @@ const RecentlyAddedSidebar = () => {
           ))}
         </select>
       </div>
-      <div className="space-y-3 lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto scrollbar-thin lg:pr-2">
+      <div className="space-y-3">
         {filteredPosts.map((post) => (
           <PostCard key={post.id} post={post} />
         ))}

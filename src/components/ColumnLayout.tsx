@@ -33,7 +33,7 @@ const ColumnLayout = () => {
 
         {/* Right — Subjects */}
         <div className="hidden lg:block">
-          <div className="lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto scrollbar-thin lg:pr-2">
+          <div>
             <SubjectsSidebar />
           </div>
         </div>
