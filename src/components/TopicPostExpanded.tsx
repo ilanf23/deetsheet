@@ -40,8 +40,12 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
 
   const displayTitle = post.title || post.content;
 
+  // Check if post.id is a valid UUID (DB post) vs seed data numeric ID
+  const isDbPost = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(post.id);
+
   // Try to fetch real DB ratings (will override seed data if found)
   const fetchRatingStats = useCallback(async () => {
+    if (!isDbPost) return;
     const { data } = await supabase
       .from("ratings")
       .select("value")
@@ -51,13 +55,12 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
       setAvg(Math.round(average * 10) / 10);
       setRatingCount(data.length);
     }
-    // If no DB ratings, keep seed data values
-  }, [post.id]);
+  }, [post.id, isDbPost]);
 
   // Fetch current user's rating
   useEffect(() => {
     fetchRatingStats();
-    if (user) {
+    if (user && isDbPost) {
       supabase
         .from("ratings")
         .select("value")
@@ -68,12 +71,12 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
           if (data) setUserRating(Number(data.value));
         });
     }
-  }, [post.id, user, fetchRatingStats]);
+  }, [post.id, user, fetchRatingStats, isDbPost]);
 
   // Submit or update rating
   const handleRatingChange = async (value: number) => {
     setUserRating(value);
-    if (!user) return;
+    if (!user || !isDbPost) return;
     const { error } = await supabase
       .from("ratings")
       .upsert(
