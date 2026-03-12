@@ -78,30 +78,36 @@ export type Database = {
       posts: {
         Row: {
           author_id: string
+          average_rating: number
           comment_count: number
           content: string
           created_at: string
           id: string
+          rating_count: number
           score: number
           title: string
           topic_id: string
         }
         Insert: {
           author_id: string
+          average_rating?: number
           comment_count?: number
           content: string
           created_at?: string
           id?: string
+          rating_count?: number
           score?: number
           title: string
           topic_id: string
         }
         Update: {
           author_id?: string
+          average_rating?: number
           comment_count?: number
           content?: string
           created_at?: string
           id?: string
+          rating_count?: number
           score?: number
           title?: string
           topic_id?: string
@@ -211,6 +217,38 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      ratings: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ratings_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reports: {
         Row: {

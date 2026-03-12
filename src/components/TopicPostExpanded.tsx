@@ -1,13 +1,16 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { ThumbsUp, CheckCircle, MessageSquare, Heart, Flag, Send, ChevronDown, ChevronRight, Star, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Post, getAverageRating, getTimeAgo, getCommentsByPost } from "@/data/seedData";
+import { Post, getTimeAgo, getCommentsByPost } from "@/data/seedData";
 import CommentItem from "@/components/CommentItem";
 import StarRatingBar from "@/components/StarRatingBar";
 import RichTextEditor from "@/components/RichTextEditor";
 import PostActionMenu from "@/components/PostActionMenu";
 import UserAvatar from "@/components/UserAvatar";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import type { Editor } from "@tiptap/react";
 
 interface TopicPostExpandedProps {
@@ -19,7 +22,10 @@ interface TopicPostExpandedProps {
 }
 
 const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthenticated }: TopicPostExpandedProps) => {
-  const avg = getAverageRating(post);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [avg, setAvg] = useState<number>(0);
+  const [ratingCount, setRatingCount] = useState<number>(0);
   const [userRating, setUserRating] = useState<number | null>(null);
   const [showRatingBar, setShowRatingBar] = useState(false);
   const [liked, setLiked] = useState(false);
@@ -31,6 +37,55 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
   const topLevelComments = getCommentsByPost(post.id);
 
   const displayTitle = post.title || post.content;
+
+  // Fetch average rating for this post
+  const fetchRatingStats = useCallback(async () => {
+    const { data } = await supabase
+      .from("ratings")
+      .select("value")
+      .eq("post_id", post.id);
+    if (data && data.length > 0) {
+      const average = data.reduce((sum, r) => sum + Number(r.value), 0) / data.length;
+      setAvg(Math.round(average * 10) / 10);
+      setRatingCount(data.length);
+    } else {
+      setAvg(0);
+      setRatingCount(0);
+    }
+  }, [post.id]);
+
+  // Fetch current user's rating
+  useEffect(() => {
+    fetchRatingStats();
+    if (user) {
+      supabase
+        .from("ratings")
+        .select("value")
+        .eq("post_id", post.id)
+        .eq("user_id", user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) setUserRating(Number(data.value));
+        });
+    }
+  }, [post.id, user, fetchRatingStats]);
+
+  // Submit or update rating
+  const handleRatingChange = async (value: number) => {
+    setUserRating(value);
+    if (!user) return;
+    const { error } = await supabase
+      .from("ratings")
+      .upsert(
+        { user_id: user.id, post_id: post.id, value },
+        { onConflict: "user_id,post_id" }
+      );
+    if (error) {
+      toast({ title: "Rating failed", description: error.message, variant: "destructive" });
+    } else {
+      await fetchRatingStats();
+    }
+  };
 
   if (!isExpanded) {
     return (
@@ -126,6 +181,7 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
           <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-1.5">
             <Star className="h-4 w-4 text-secondary fill-secondary" />
             <span className="text-sm font-semibold">Rank {avg}</span>
+            <span className="text-xs text-muted-foreground">({ratingCount})</span>
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); setShowRatingBar(!showRatingBar); }}
@@ -138,12 +194,8 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
           </button>
         </div>
         {showRatingBar && (
-          <StarRatingBar value={userRating} onChange={setUserRating} />
+          <StarRatingBar value={userRating} onChange={handleRatingChange} />
         )}
-      </div>
-
-      {/* Meta info */}
-      <div className="px-11 flex items-center gap-2 text-xs text-muted-foreground">
         <UserAvatar username={post.username} size="sm" />
         <span>· Posted {getTimeAgo(post.createdAt)} · {post.commentCount} comments</span>
         <PostActionMenu postId={post.id} topicName={post.topicName} />
