@@ -22,6 +22,8 @@ interface TopicPostExpandedProps {
 }
 
 const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthenticated }: TopicPostExpandedProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
   // Compute seed-data average as fallback
   const seedAvg = post.ratingCount > 0 ? Math.round((post.ratingScore / post.ratingCount) * 10) / 10 : 0;
   const [avg, setAvg] = useState<number>(seedAvg);
