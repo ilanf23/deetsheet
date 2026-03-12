@@ -1,13 +1,16 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { ThumbsUp, CheckCircle, MessageSquare, Heart, Flag, Send, ChevronDown, ChevronRight, Star, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Post, getAverageRating, getTimeAgo, getCommentsByPost } from "@/data/seedData";
+import { Post, getTimeAgo, getCommentsByPost } from "@/data/seedData";
 import CommentItem from "@/components/CommentItem";
 import StarRatingBar from "@/components/StarRatingBar";
 import RichTextEditor from "@/components/RichTextEditor";
 import PostActionMenu from "@/components/PostActionMenu";
 import UserAvatar from "@/components/UserAvatar";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import type { Editor } from "@tiptap/react";
 
 interface TopicPostExpandedProps {
