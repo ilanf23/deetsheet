@@ -71,8 +71,8 @@ const TopicPage = () => {
               )}
             </div>
 
-            {/* Right — Recommendations */}
-            <div className="hidden lg:block">
+            {/* Right — Recommendations (clips to left column height) */}
+            <div className="hidden lg:block overflow-hidden">
               <TopicRecommendations currentTopic={topic} />
             </div>
           </div>
