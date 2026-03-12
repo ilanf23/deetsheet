@@ -9,7 +9,7 @@ const ColumnLayout = () => {
   );
 
   return (
-    <div className="max-w-[1600px] mx-auto mt-5 overflow-hidden">
+    <div className="max-w-[1600px] mx-auto mt-5">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1.5fr_280px] gap-5">
         {/* Left — Recently Added */}
         <RecentlyAddedSidebar />
@@ -24,7 +24,7 @@ const ColumnLayout = () => {
               <option>This Month</option>
             </select>
           </div>
-          <div className="space-y-4 lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto scrollbar-thin lg:pr-2">
+          <div className="space-y-4">
             {popularTopics.map((topic) => (
               <PopularTopicSection key={topic.id} topic={topic} />
             ))}
@@ -33,7 +33,7 @@ const ColumnLayout = () => {
 
         {/* Right — Subjects */}
         <div className="hidden lg:block">
-          <div className="lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto scrollbar-thin lg:pr-2">
+          <div>
             <SubjectsSidebar />
           </div>
         </div>
