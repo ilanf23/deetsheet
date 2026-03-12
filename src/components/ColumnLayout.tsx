@@ -24,7 +24,7 @@ const ColumnLayout = () => {
               <option>This Month</option>
             </select>
           </div>
-          <div className="space-y-4 lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto scrollbar-thin lg:pr-2">
+          <div className="space-y-4">
             {popularTopics.map((topic) => (
               <PopularTopicSection key={topic.id} topic={topic} />
             ))}
