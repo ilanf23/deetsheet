@@ -73,9 +73,7 @@ const TopicPage = () => {
 
             {/* Right — Recommendations */}
             <div className="hidden lg:block">
-              <div className="lg:max-h-[calc(100vh-100px)] lg:overflow-y-auto scrollbar-thin lg:pr-2">
-                <TopicRecommendations currentTopic={topic} />
-              </div>
+              <TopicRecommendations currentTopic={topic} />
             </div>
           </div>
         </div>
