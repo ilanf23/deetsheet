@@ -1,25 +1,64 @@
-import { useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
 import TopicPostExpanded from "@/components/TopicPostExpanded";
 import TopicRecommendations from "@/components/TopicRecommendations";
 import AddPostBar from "@/components/AddPostBar";
 import { useAuth } from "@/contexts/AuthContext";
-import { getTopicByName, getPostsByTopic, getSubtitle } from "@/data/seedData";
+import type { Post } from "@/data/seedData";
+import {
+  useTopicByName,
+  usePostsByTopic,
+  getTopicSubtitle,
+} from "@/hooks/useSupabaseTopics";
 
 const TopicPage = () => {
   const { topicName } = useParams<{ topicName: string }>();
   const { user, loading } = useAuth();
-  const topic = topicName ? getTopicByName(topicName) : undefined;
-  const [posts, setPosts] = useState(() => topicName ? getPostsByTopic(topicName) : []);
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(() => new Set(posts[0] ? [posts[0].id] : []));
+  const queryClient = useQueryClient();
+
+  const {
+    data: topic,
+    isLoading: topicLoading,
+    isError: topicError,
+  } = useTopicByName(topicName);
+  const { data: postsData } = usePostsByTopic(topic?.id);
+  const posts = useMemo<Post[]>(
+    () => ((postsData ?? []) as unknown) as Post[],
+    [postsData]
+  );
+
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  // Auto-expand the first post once posts land, matching the legacy UX
+  // where the top-ranked post starts open on page load.
+  useEffect(() => {
+    if (posts.length > 0 && expandedIds.size === 0) {
+      setExpandedIds(new Set([posts[0].id]));
+    }
+  }, [posts, expandedIds.size]);
 
   const refreshPosts = () => {
-    if (topicName) setPosts(getPostsByTopic(topicName));
+    if (topic?.id) {
+      queryClient.invalidateQueries({ queryKey: ["posts-by-topic", topic.id] });
+    }
   };
 
-  if (!topic) {
+  if (topicLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <DeetHeader />
+        <main className="flex-1 container mx-auto px-4 py-20 text-center">
+          <p className="text-muted-foreground">Loading topic…</p>
+        </main>
+        <DeetFooter />
+      </div>
+    );
+  }
+
+  if (topicError || !topic) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <DeetHeader />
@@ -43,7 +82,7 @@ const TopicPage = () => {
               <div className="mb-6">
                 <h1 className="text-2xl font-bold text-card-foreground font-heading">{topic.name}</h1>
                 <p className="text-sm text-muted-foreground">/{topic.categoryName}</p>
-                <p className="text-sm text-muted-foreground mt-1">{getSubtitle(topic.name)}</p>
+                <p className="text-sm text-muted-foreground mt-1">{getTopicSubtitle(topic.name)}</p>
               </div>
               <div className="space-y-3">
                 {posts.map((post, i) => (
@@ -74,7 +113,9 @@ const TopicPage = () => {
             {/* Right — Recommendations (clips to left column height) */}
             <div className="hidden lg:block relative">
               <div className="absolute inset-0 overflow-hidden">
-                <TopicRecommendations currentTopic={topic} />
+                {/* TopicRecommendations still reads from seedData for now —
+                    refactor in Sprint 1 when the homepage flow moves off seed. */}
+                <TopicRecommendations currentTopic={topic as unknown as import("@/data/seedData").Topic} />
               </div>
             </div>
           </div>
