@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
 import { Separator } from "@/components/ui/separator";
-import { categories, topics, categoryRows } from "@/data/seedData";
+import { categories, categoryRows } from "@/data/seedData";
+import { useTopics, type TopicRow } from "@/hooks/useSupabaseTopics";
 
 type SortMode = "alphabetical" | "popular";
 
@@ -13,6 +14,8 @@ const TopicsDirectory = () => {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
   const MAX_VISIBLE = 10;
+
+  const { data: topics, isLoading } = useTopics();
 
   const toggleExpanded = (categoryName: string) => {
     setExpandedCategories((prev) => {
@@ -24,9 +27,10 @@ const TopicsDirectory = () => {
   };
 
   const topicsByCategory = useMemo(() => {
-    const map = new Map<string, typeof topics>();
+    const map = new Map<string, TopicRow[]>();
+    const all = topics ?? [];
     for (const cat of categories) {
-      const catTopics = topics.filter((t) => t.categoryName === cat.name);
+      const catTopics = all.filter((t) => t.categoryName === cat.name);
       if (sortMode === "alphabetical") {
         catTopics.sort((a, b) => a.name.localeCompare(b.name));
       } else {
@@ -35,7 +39,7 @@ const TopicsDirectory = () => {
       map.set(cat.name, catTopics);
     }
     return map;
-  }, [sortMode]);
+  }, [sortMode, topics]);
 
   const sortedRows = useMemo(() => {
     if (sortMode === "alphabetical") {
@@ -84,6 +88,10 @@ const TopicsDirectory = () => {
               Most Popular
             </button>
           </div>
+
+          {isLoading && (
+            <p className="text-sm text-muted-foreground mb-6">Loading topics…</p>
+          )}
 
           {/* Category grid grouped by rows */}
           {sortedRows.map((row, rowIdx) => (
