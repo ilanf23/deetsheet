@@ -1,22 +1,13 @@
 
 
-# Plan: Populate Fake Profiles with Realistic Data
+# Plan: Disable Email Verification for Signups
 
-## What We're Doing
-Update all 31 seed user profiles in the database with rich, realistic personal information — names, locations, jobs, education, bios, and demographics — so each user feels like a real person connected to the topics and posts they contribute to.
+## What changes
+Use the `configure_auth` tool to enable auto-confirm for email signups. This means new users will be immediately signed in after signing up without needing to click a verification link.
 
-## Approach
-Use the database insert tool to run UPDATE statements on the `profiles` table, filling in: `name`, `sex`, `city`, `state`, `country`, `job`, `education`, `college`, `major`, `degree`, `high_school`, `city_born`, `birth_month`, `birth_day`, `birth_year`, `favorite_movie`, `reading`, and richer `bio` text.
+## Code changes
 
-Each profile will be crafted to match the user's posting history. For example:
-- **sarah_m** (posts about parenting) → Sarah Mitchell, 34, mom in Austin TX, elementary school teacher
-- **dr_hope** (posts about cancer) → Dr. Amara Hope, oncologist in Boston, Harvard Med
-- **server_life** (posts about waiting tables) → Marcus Torres, waiter in Portland
-- **chi_town** (posts about Chicago) → lives in Chicago, born there
-- **wanderlust** (posts about travel in 20s) → young traveler, remote worker
-
-## Technical Details
-- ~31 UPDATE statements via the data insert tool (not migrations, since this is data not schema)
-- No code changes needed — the Profile page already reads and displays these fields
-- Will ensure diversity in gender, location, age, and background across the user base
+### `src/pages/SignUp.tsx`
+- Remove the `checkInbox` state and the "Check Your Inbox" screen
+- After successful signup, navigate directly to `/profile` instead of showing the verification message
 
