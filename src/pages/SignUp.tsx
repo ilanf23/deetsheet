@@ -27,7 +27,6 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [checkInbox, setCheckInbox] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,7 +51,8 @@ const SignUp = () => {
     if (error) {
       toast.error(error.message);
     } else {
-      setCheckInbox(true);
+      toast.success("Account created successfully!");
+      navigate("/profile");
     }
   };
 
@@ -66,30 +66,6 @@ const SignUp = () => {
     }
   };
 
-  if (checkInbox) {
-    return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <DeetHeader />
-        <main className="flex-1 py-8 px-4">
-          <Card className="max-w-md mx-auto">
-            <CardHeader className="text-center">
-              <h1 className="text-primary font-heading text-2xl font-bold">Check Your Inbox!</h1>
-            </CardHeader>
-            <CardContent className="text-center space-y-4">
-              <p className="text-sm text-muted-foreground">
-                We've sent a verification link to <strong>{email}</strong>. Click the link in your email to activate your account.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Didn't receive it? Check your spam folder or try signing up again.
-              </p>
-              <Link to="/login" className="text-primary underline text-sm">Go to Login</Link>
-            </CardContent>
-          </Card>
-        </main>
-        <DeetFooter />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
