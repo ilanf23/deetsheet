@@ -27,7 +27,6 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [checkInbox, setCheckInbox] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
