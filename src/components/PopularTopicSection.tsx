@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Star } from "lucide-react";
 import { Topic, getPostsByTopic, getSubtitle, getAverageRating } from "@/data/seedData";
+import UserRatingIndicator from "@/components/UserRatingIndicator";
 
 interface PopularTopicSectionProps {
   topic: Topic;
@@ -59,7 +60,7 @@ const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
                 <span className="flex items-center gap-1.5 text-secondary shrink-0 tabular-nums">
                   <span className="font-medium">{avg}</span>
                   <span className="text-muted-foreground/60">|</span>
-                  <Star className="h-4 w-4 fill-secondary text-secondary" />
+                  <UserRatingIndicator postId={post.id} />
                 </span>
               </li>
             );
