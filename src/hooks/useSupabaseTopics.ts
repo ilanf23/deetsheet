@@ -164,7 +164,7 @@ export const usePostsByTopic = (topicId: string | undefined) => {
         .select(
           "id, title, content, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            "profiles(username), topics(name, category_name)" as any
+            "profiles!posts_author_id_profiles_fkey(username), topics!posts_topic_id_fkey(name, category_name)" as any
         )
         .eq("topic_id", topicId)
         .order("average_rating", { ascending: false, nullsFirst: false })
