@@ -284,24 +284,30 @@ export type Database = {
       }
       topics: {
         Row: {
+          category_name: string
           created_at: string
           description: string | null
           id: string
           name: string
+          post_count: number
           slug: string
         }
         Insert: {
+          category_name?: string
           created_at?: string
           description?: string | null
           id?: string
           name: string
+          post_count?: number
           slug: string
         }
         Update: {
+          category_name?: string
           created_at?: string
           description?: string | null
           id?: string
           name?: string
+          post_count?: number
           slug?: string
         }
         Relationships: []
