@@ -8,6 +8,7 @@ import StarRatingBar from "@/components/StarRatingBar";
 import RichTextEditor from "@/components/RichTextEditor";
 import PostActionMenu from "@/components/PostActionMenu";
 import UserAvatar from "@/components/UserAvatar";
+import UserRatingIndicator from "@/components/UserRatingIndicator";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -180,22 +181,17 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
 
       {/* Rating box */}
       <div className="px-11 space-y-3">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-1.5">
-            <Star className="h-4 w-4 text-secondary fill-secondary" />
-            <span className="text-sm font-semibold">Rank {avg}</span>
-            <span className="text-xs text-muted-foreground">({ratingCount})</span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-1.5">
+              <Star className="h-4 w-4 text-secondary fill-secondary" />
+              <span className="text-sm font-semibold">Rank {avg}</span>
+              <span className="text-xs text-muted-foreground">({ratingCount})</span>
+            </div>
+            <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-1.5">
+              <span className="text-xs text-muted-foreground">You</span>
+              <UserRatingIndicator postId={post.id} onRatingChanged={fetchRatingStats} />
+            </div>
           </div>
-          <button
-            onClick={(e) => { e.stopPropagation(); setShowRatingBar(!showRatingBar); }}
-            className="flex items-center gap-2 bg-muted/50 hover:bg-muted rounded-lg px-3 py-1.5 transition-colors"
-          >
-            <span className="text-xs text-muted-foreground">You</span>
-            <span className="text-sm font-semibold">
-              {userRating !== null ? userRating.toFixed(1) : "—"}
-            </span>
-          </button>
-        </div>
         {showRatingBar && (
           <StarRatingBar value={userRating} onChange={handleRatingChange} />
         )}
