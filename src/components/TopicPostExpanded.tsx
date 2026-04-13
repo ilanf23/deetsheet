@@ -29,8 +29,6 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
   const seedAvg = post.ratingCount > 0 ? Math.round((post.ratingScore / post.ratingCount) * 10) / 10 : 0;
   const [avg, setAvg] = useState<number>(seedAvg);
   const [ratingCount, setRatingCount] = useState<number>(post.ratingCount);
-  const [userRating, setUserRating] = useState<number | null>(null);
-  const [showRatingBar, setShowRatingBar] = useState(false);
   const [liked, setLiked] = useState(false);
   const [checked, setChecked] = useState(false);
   const [hearted, setHearted] = useState(false);
@@ -58,38 +56,10 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
     }
   }, [post.id, isDbPost]);
 
-  // Fetch current user's rating
+  // Fetch DB ratings on mount
   useEffect(() => {
     fetchRatingStats();
-    if (user && isDbPost) {
-      supabase
-        .from("ratings")
-        .select("value")
-        .eq("post_id", post.id)
-        .eq("user_id", user.id)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (data) setUserRating(Number(data.value));
-        });
-    }
-  }, [post.id, user, fetchRatingStats, isDbPost]);
-
-  // Submit or update rating
-  const handleRatingChange = async (value: number) => {
-    setUserRating(value);
-    if (!user || !isDbPost) return;
-    const { error } = await supabase
-      .from("ratings")
-      .upsert(
-        { user_id: user.id, post_id: post.id, value },
-        { onConflict: "user_id,post_id" }
-      );
-    if (error) {
-      toast({ title: "Rating failed", description: error.message, variant: "destructive" });
-    } else {
-      await fetchRatingStats();
-    }
-  };
+  }, [fetchRatingStats]);
 
   if (!isExpanded) {
     return (
@@ -193,8 +163,6 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
             </div>
           </div>
         {showRatingBar && (
-          <StarRatingBar value={userRating} onChange={handleRatingChange} />
-        )}
         <UserAvatar username={post.username} size="sm" />
         <span>· Posted {getTimeAgo(post.createdAt)} · {post.commentCount} comments</span>
         <PostActionMenu postId={post.id} topicName={post.topicName} />
