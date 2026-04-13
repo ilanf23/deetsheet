@@ -162,7 +162,7 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
               <UserRatingIndicator postId={post.id} onRatingChanged={fetchRatingStats} />
             </div>
           </div>
-        {showRatingBar && (
+        
         <UserAvatar username={post.username} size="sm" />
         <span>· Posted {getTimeAgo(post.createdAt)} · {post.commentCount} comments</span>
         <PostActionMenu postId={post.id} topicName={post.topicName} />
