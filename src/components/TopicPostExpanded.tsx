@@ -8,6 +8,7 @@ import StarRatingBar from "@/components/StarRatingBar";
 import RichTextEditor from "@/components/RichTextEditor";
 import PostActionMenu from "@/components/PostActionMenu";
 import UserAvatar from "@/components/UserAvatar";
+import UserRatingIndicator from "@/components/UserRatingIndicator";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -28,8 +29,6 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
   const seedAvg = post.ratingCount > 0 ? Math.round((post.ratingScore / post.ratingCount) * 10) / 10 : 0;
   const [avg, setAvg] = useState<number>(seedAvg);
   const [ratingCount, setRatingCount] = useState<number>(post.ratingCount);
-  const [userRating, setUserRating] = useState<number | null>(null);
-  const [showRatingBar, setShowRatingBar] = useState(false);
   const [liked, setLiked] = useState(false);
   const [checked, setChecked] = useState(false);
   const [hearted, setHearted] = useState(false);
@@ -57,38 +56,10 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
     }
   }, [post.id, isDbPost]);
 
-  // Fetch current user's rating
+  // Fetch DB ratings on mount
   useEffect(() => {
     fetchRatingStats();
-    if (user && isDbPost) {
-      supabase
-        .from("ratings")
-        .select("value")
-        .eq("post_id", post.id)
-        .eq("user_id", user.id)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (data) setUserRating(Number(data.value));
-        });
-    }
-  }, [post.id, user, fetchRatingStats, isDbPost]);
-
-  // Submit or update rating
-  const handleRatingChange = async (value: number) => {
-    setUserRating(value);
-    if (!user || !isDbPost) return;
-    const { error } = await supabase
-      .from("ratings")
-      .upsert(
-        { user_id: user.id, post_id: post.id, value },
-        { onConflict: "user_id,post_id" }
-      );
-    if (error) {
-      toast({ title: "Rating failed", description: error.message, variant: "destructive" });
-    } else {
-      await fetchRatingStats();
-    }
-  };
+  }, [fetchRatingStats]);
 
   if (!isExpanded) {
     return (
@@ -180,25 +151,18 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
 
       {/* Rating box */}
       <div className="px-11 space-y-3">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-1.5">
-            <Star className="h-4 w-4 text-secondary fill-secondary" />
-            <span className="text-sm font-semibold">Rank {avg}</span>
-            <span className="text-xs text-muted-foreground">({ratingCount})</span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-1.5">
+              <Star className="h-4 w-4 text-secondary fill-secondary" />
+              <span className="text-sm font-semibold">Rank {avg}</span>
+              <span className="text-xs text-muted-foreground">({ratingCount})</span>
+            </div>
+            <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-1.5">
+              <span className="text-xs text-muted-foreground">You</span>
+              <UserRatingIndicator postId={post.id} onRatingChanged={fetchRatingStats} />
+            </div>
           </div>
-          <button
-            onClick={(e) => { e.stopPropagation(); setShowRatingBar(!showRatingBar); }}
-            className="flex items-center gap-2 bg-muted/50 hover:bg-muted rounded-lg px-3 py-1.5 transition-colors"
-          >
-            <span className="text-xs text-muted-foreground">You</span>
-            <span className="text-sm font-semibold">
-              {userRating !== null ? userRating.toFixed(1) : "—"}
-            </span>
-          </button>
-        </div>
-        {showRatingBar && (
-          <StarRatingBar value={userRating} onChange={handleRatingChange} />
-        )}
+        
         <UserAvatar username={post.username} size="sm" />
         <span>· Posted {getTimeAgo(post.createdAt)} · {post.commentCount} comments</span>
         <PostActionMenu postId={post.id} topicName={post.topicName} />

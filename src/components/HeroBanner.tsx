@@ -71,16 +71,10 @@ const HeroBanner = () => {
           <h1 className="text-white font-extrabold text-xl sm:text-2xl md:text-3xl lg:text-4xl leading-tight mb-4 whitespace-nowrap">
             {slide.headline}
           </h1>
-          {slide.quote ? (
-            <div className="text-green-300 text-xs sm:text-sm md:text-base whitespace-nowrap">
-              <p className="italic">&ldquo;{slide.quote}&rdquo;</p>
-              <p className="mt-1 font-semibold">— {slide.attribution}</p>
-            </div>
-          ) : (
-            <p className="text-green-300 text-xs sm:text-sm md:text-base whitespace-nowrap">
-              {slide.subtitle}
-            </p>
-          )}
+          <div className="text-green-300 text-xs sm:text-sm md:text-base whitespace-nowrap">
+            <p className="italic">&ldquo;{slide.quote}&rdquo;</p>
+            <p className="mt-1 font-semibold">— {slide.attribution}</p>
+          </div>
         </div>
       ))}
     </div>
