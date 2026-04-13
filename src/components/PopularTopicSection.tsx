@@ -13,55 +13,58 @@ const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
 
   return (
     <div
-      className="border rounded-xl bg-card cursor-pointer hover:shadow-lg transition-all duration-200 group"
+      className="border rounded-xl bg-card cursor-pointer hover:shadow-lg transition-all duration-200 p-5"
       onClick={() => navigate(`/topic/${encodeURIComponent(topic.name)}`)}
     >
-      {/* Header: image badge + title */}
-      <div className="flex items-center gap-3 p-4 pb-3">
+      {/* Header: title + subtitle on the left, Rating|You label on the right */}
+      <div className="flex items-start justify-between gap-4 mb-3">
+        <div className="min-w-0">
+          <h3 className="font-heading text-3xl font-normal text-primary leading-tight truncate">
+            {topic.name}
+          </h3>
+          {subtitle && (
+            <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+          )}
+        </div>
+        <span className="text-[11px] text-muted-foreground shrink-0 pt-2 whitespace-nowrap">
+          Rating <span className="mx-0.5">|</span> You
+        </span>
+      </div>
+
+      {/* Body: image on the left, numbered list + ratings on the right */}
+      <div className="flex gap-5">
         {topic.imageUrl && (
           <img
             src={topic.imageUrl}
             alt={topic.name}
-            className="w-16 h-16 rounded-full object-cover shrink-0"
+            className="w-32 sm:w-36 self-start rounded object-cover shrink-0 aspect-square"
           />
         )}
-        <div className="min-w-0">
-          <h3 className="text-base font-bold text-card-foreground font-heading leading-tight truncate">
-            {topic.name}
-          </h3>
-          {subtitle && (
-            <p className="text-xs text-muted-foreground mt-0.5 truncate">{subtitle}</p>
-          )}
-        </div>
-      </div>
-
-      {/* Post list */}
-      <div className="px-4 pb-4 space-y-3">
-        <ol className="space-y-1.5">
+        <ol className="flex-1 min-w-0 space-y-2">
           {topPosts.map((post, i) => {
             const avg = getAverageRating(post);
             return (
-              <li key={post.id} className="flex items-start gap-2 text-sm min-w-0">
-                <span className="font-bold text-primary w-5 shrink-0 text-right">{i + 1}.</span>
-                <span className="flex-1 text-card-foreground leading-snug truncate">{post.content}</span>
-                <span className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
-                  <Star className="h-3 w-3 text-secondary fill-secondary" />
-                  {avg}
+              <li key={post.id} className="flex items-center gap-3 text-[15px] min-w-0">
+                <span className="text-muted-foreground w-5 shrink-0 text-right">{i + 1}.</span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/topic/${encodeURIComponent(topic.name)}#post-${i + 1}`);
+                  }}
+                  className="flex-1 min-w-0 text-left text-primary leading-snug truncate hover:underline"
+                >
+                  {post.content}
+                </button>
+                <span className="flex items-center gap-1.5 text-secondary shrink-0 tabular-nums">
+                  <span className="font-medium">{avg}</span>
+                  <span className="text-muted-foreground/60">|</span>
+                  <Star className="h-4 w-4 fill-secondary text-secondary" />
                 </span>
               </li>
             );
           })}
         </ol>
-
-        {/* Footer: category pill + post count */}
-        <div className="flex items-center justify-between pt-2 border-t">
-          <span className="text-xs bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
-            {topic.categoryName}
-          </span>
-          <span className="text-xs text-muted-foreground">
-            {topic.postCount} posts
-          </span>
-        </div>
       </div>
     </div>
   );

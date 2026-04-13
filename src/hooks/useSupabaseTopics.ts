@@ -177,6 +177,35 @@ export const usePostsByTopic = (topicId: string | undefined) => {
   });
 };
 
+/**
+ * Fetch the most recently added posts for a topic, newest first.
+ * Used by the topic-page Recently Added sidebar, which mirrors the
+ * homepage sidebar but scoped to the current topic.
+ */
+export const useRecentPostsByTopic = (topicId: string | undefined, limit = 5) => {
+  return useQuery({
+    queryKey: ["recent-posts-by-topic", topicId, limit],
+    enabled: !!topicId,
+    queryFn: async (): Promise<PostRow[]> => {
+      if (!topicId) return [];
+      const { data, error } = await supabase
+        .from("posts")
+        .select(
+          "id, title, content, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, " +
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            "profiles!posts_author_id_profiles_fkey(username), topics!posts_topic_id_fkey(name, category_name)" as any
+        )
+        .eq("topic_id", topicId)
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (data ?? []).map((row: any) => mapPost(row as DbPostRaw));
+    },
+  });
+};
+
 /** Static subtitle for a topic page — pure function, kept here so the
  * TopicPage refactor doesn't need to import from seedData for one string. */
 export const getTopicSubtitle = (topicName: string): string =>

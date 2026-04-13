@@ -2,28 +2,39 @@ import { useState, useEffect } from "react";
 
 const slides = [
   {
-    image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=1600&q=80",
-    tagline: "Explore the Eternal City",
-    headline: "WHAT'S IT LIKE LIVING IN ROME?",
-    subtitle: "Discover the deets on history, food, and daily life in one of the world's oldest cities.",
-  },
-  {
-    image: "https://images.unsplash.com/photo-1534430480872-3498386e7856?w=1600&q=80",
-    tagline: "Life Behind the Scenes",
-    headline: "LEARN THE DEETS ABOUT ANY JOB",
-    subtitle: "From waiters to doctors, find out what it's really like before you start.",
-  },
-  {
-    image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1600&q=80",
-    tagline: "Share the Deets!",
-    headline: "WHAT'S IT LIKE LIVING IN PARIS?",
-    subtitle: "The cafés, the commute, the culture. Get the real details from people who know.",
-  },
-  {
-    image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80",
+    image: "/hero-city.jpg",
     tagline: "Real Talk, Real People",
-    headline: "LEARN & SHARE DETAILS ABOUT LIFE, PLACES AND MORE!",
-    subtitle: "Rate, discuss, and discover what matters most. Straight from those who've lived it.",
+    headline: "LEARN & SHARE DETAILS ABOUT YOUR CITY, TOWN, OR STATE",
+    quote: "Before I visit any city, I check DeetSheet to find out what are the best ways to enjoy the area.",
+    attribution: "Bob, 56, Boston, MA",
+  },
+  {
+    image: "/hero-restaurant.jpg",
+    tagline: "Real Talk, Real People",
+    headline: "SHARE DETAILS ABOUT YOUR FAVORITE RESTAURANT OR BAR",
+    quote: "I love posting hidden restaurant gems in my area on DeetSheet to show visitors where's the best place to eat.",
+    attribution: "Tracy, 43, Portland, OR",
+  },
+  {
+    image: "/hero-paris.jpg",
+    tagline: "Real Talk, Real People",
+    headline: "SHARE INNER MOST DETAILS ABOUT LOVE, LIFE & RELATIONSHIPS",
+    quote: "I never knew others felt the same way about first dates until I read stories from others on DeetSheet.",
+    attribution: "Christine, 26, Nashville, TN",
+  },
+  {
+    image: "/hero-passions.jpg",
+    tagline: "Real Talk, Real People",
+    headline: "SHARE DETAILS ABOUT YOUR PASSIONS, INTERESTS AND HOBBIES",
+    quote: "I've been playing pickle for three years and DeetSheet showed me tips on how to play better.",
+    attribution: "Rob, 62, Palm Beach, FL",
+  },
+  {
+    image: "/hero-school.jpg",
+    tagline: "Real Talk, Real People",
+    headline: "LEARN & SHARE DETAILS ABOUT YOUR SCHOOL OR UNIVERSITY",
+    quote: "I love sharing what makes University of Wisconsin special. I feel like it's one of the best schools to attend.",
+    attribution: "Mike, 32, Racine, WI",
   },
 ];
 
@@ -57,15 +68,19 @@ const HeroBanner = () => {
             i === current ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
-          <p className="text-green-400 font-bold text-sm md:text-base tracking-widest uppercase mb-2">
-            {slide.tagline}
-          </p>
-          <h1 className="text-white font-extrabold text-2xl md:text-4xl lg:text-5xl max-w-3xl leading-tight mb-4">
+          <h1 className="text-white font-extrabold text-xl sm:text-2xl md:text-3xl lg:text-4xl leading-tight mb-4 whitespace-nowrap">
             {slide.headline}
           </h1>
-          <p className="text-white/90 text-sm md:text-lg max-w-2xl">
-            {slide.subtitle}
-          </p>
+          {slide.quote ? (
+            <div className="text-green-300 text-xs sm:text-sm md:text-base whitespace-nowrap">
+              <p className="italic">&ldquo;{slide.quote}&rdquo;</p>
+              <p className="mt-1 font-semibold">— {slide.attribution}</p>
+            </div>
+          ) : (
+            <p className="text-green-300 text-xs sm:text-sm md:text-base whitespace-nowrap">
+              {slide.subtitle}
+            </p>
+          )}
         </div>
       ))}
     </div>

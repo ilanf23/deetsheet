@@ -1,10 +1,11 @@
 import { useState, useMemo, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
 import TopicPostExpanded from "@/components/TopicPostExpanded";
 import TopicRecommendations from "@/components/TopicRecommendations";
+import TopicRecentlyAdded from "@/components/TopicRecentlyAdded";
 import AddPostBar from "@/components/AddPostBar";
 import FollowTopicButton from "@/components/FollowTopicButton";
 import EmailCaptureForm from "@/components/EmailCaptureForm";
@@ -18,6 +19,7 @@ import {
 
 const TopicPage = () => {
   const { topicName } = useParams<{ topicName: string }>();
+  const { hash } = useLocation();
   const { user, loading } = useAuth();
   const queryClient = useQueryClient();
 
@@ -34,13 +36,21 @@ const TopicPage = () => {
 
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
-  // Auto-expand the first post once posts land, matching the legacy UX
-  // where the top-ranked post starts open on page load.
+  // Auto-expand: if the URL has #post-N, open that ranked post and scroll to it;
+  // otherwise fall back to opening the top-ranked post.
   useEffect(() => {
-    if (posts.length > 0 && expandedIds.size === 0) {
-      setExpandedIds(new Set([posts[0].id]));
+    if (posts.length === 0 || expandedIds.size > 0) return;
+    const match = hash.match(/^#post-(\d+)$/);
+    const targetIdx = match ? Math.min(parseInt(match[1], 10) - 1, posts.length - 1) : 0;
+    const targetPost = posts[targetIdx];
+    if (!targetPost) return;
+    setExpandedIds(new Set([targetPost.id]));
+    if (match) {
+      requestAnimationFrame(() => {
+        document.getElementById(`post-${targetIdx + 1}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
     }
-  }, [posts, expandedIds.size]);
+  }, [posts, expandedIds.size, hash]);
 
   const refreshPosts = () => {
     if (topic?.id) {
@@ -77,8 +87,12 @@ const TopicPage = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <DeetHeader />
       <main className="flex-1">
-        <div className="container mx-auto px-4 mt-10 mb-20">
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-10">
+        <div className="max-w-[1600px] mx-auto px-8 lg:px-16 mt-10 mb-20">
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_280px] gap-10">
+            {/* Left — Recently Added */}
+            <div className="hidden lg:block">
+              <TopicRecentlyAdded topicId={topic.id} topicName={topic.name} />
+            </div>
             {/* Main â Topic posts */}
             <div className="min-w-0">
               <div className="mb-6">
@@ -93,8 +107,8 @@ const TopicPage = () => {
               </div>
               <div className="space-y-3">
                 {posts.map((post, i) => (
+                  <div key={post.id} id={`post-${i + 1}`} className="scroll-mt-24">
                   <TopicPostExpanded
-                    key={post.id}
                     post={post}
                     rank={i + 1}
                     isExpanded={expandedIds.has(post.id)}
@@ -106,6 +120,7 @@ const TopicPage = () => {
                     })}
                     isAuthenticated={!loading && !!user}
                   />
+                  </div>
                 ))}
               </div>
               {!loading && !!user && topic && (
