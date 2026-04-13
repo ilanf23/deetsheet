@@ -46,7 +46,7 @@
     --sidebar-ring: 157 60% 30%;
 
     --font-heading: 'Merriweather', Georgia, serif;
-    --font-body: 'Merriweather', Georgia, serif;
+    --font-body: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
 
   .dark {

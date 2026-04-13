@@ -27,7 +27,7 @@ const PostCard = ({ post }: PostCardProps) => {
       className="group rounded-xl border bg-card p-4 hover:shadow-md transition-all duration-200 cursor-pointer"
       onClick={() => navigate(`/topic/${encodeURIComponent(post.topicName)}`)}
     >
-      <h3 className="font-bold text-card-foreground font-heading mb-1">{post.topicName}</h3>
+      <h3 className="font-bold text-primary font-heading mb-1 group-hover:underline">{post.topicName}</h3>
       <p
         ref={contentRef}
         className={`text-sm text-card-foreground leading-relaxed mb-1 ${expanded ? "" : "line-clamp-3"}`}

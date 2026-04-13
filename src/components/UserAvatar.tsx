@@ -28,7 +28,11 @@ const UserAvatar = ({
         </AvatarFallback>
       </Avatar>
       {showName && (
-        <span className="font-semibold text-card-foreground">@{username}</span>
+        <span
+          className={`font-semibold ${linkToProfile ? "text-primary group-hover:underline" : "text-card-foreground"}`}
+        >
+          @{username}
+        </span>
       )}
     </span>
   );
@@ -36,7 +40,7 @@ const UserAvatar = ({
   if (!linkToProfile) return content;
 
   return (
-    <Link to={`/profile/${username}`} className="hover:opacity-80 transition-opacity" onClick={(e) => e.stopPropagation()}>
+    <Link to={`/profile/${username}`} className="group inline-flex items-center hover:underline" onClick={(e) => e.stopPropagation()}>
       {content}
     </Link>
   );

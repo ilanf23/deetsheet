@@ -15,7 +15,7 @@ export default {
     extend: {
       fontFamily: {
         heading: ["Merriweather", "Georgia", "serif"],
-        body: ["Merriweather", "Georgia", "serif"],
+        body: ["ui-sans-serif", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
