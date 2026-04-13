@@ -2,21 +2,36 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import CreatePostDialog from "./CreatePostDialog";
-import { addPost } from "@/data/seedData";
+import { useCreatePost } from "@/hooks/useCreatePost";
+import { useToast } from "@/hooks/use-toast";
 
 interface AddPostBarProps {
+  topicId: string;
   topicName: string;
   categoryName: string;
   onPostAdded: () => void;
 }
 
-const AddPostBar = ({ topicName, categoryName, onPostAdded }: AddPostBarProps) => {
+const AddPostBar = ({ topicId, topicName, categoryName, onPostAdded }: AddPostBarProps) => {
   const [open, setOpen] = useState(false);
+  const createPost = useCreatePost();
+  const { toast } = useToast();
 
-  const handleSubmit = (detail: string, category: string) => {
-    addPost(topicName, category, detail, "anonymous");
-    onPostAdded();
-    setOpen(false);
+  const handleSubmit = async (detail: string, _category: string) => {
+    try {
+      await createPost.mutateAsync({
+        topicId,
+        topicName,
+        title: detail,
+        content: detail,
+      });
+      toast({ title: "Post created!", description: "Your post is now live." });
+      onPostAdded();
+      setOpen(false);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to create post";
+      toast({ title: "Error", description: message, variant: "destructive" });
+    }
   };
 
   return (
