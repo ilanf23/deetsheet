@@ -6,6 +6,8 @@ import DeetFooter from "@/components/DeetFooter";
 import TopicPostExpanded from "@/components/TopicPostExpanded";
 import TopicRecommendations from "@/components/TopicRecommendations";
 import AddPostBar from "@/components/AddPostBar";
+import FollowTopicButton from "@/components/FollowTopicButton";
+import EmailCaptureForm from "@/components/EmailCaptureForm";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Post } from "@/data/seedData";
 import {
@@ -51,7 +53,7 @@ const TopicPage = () => {
       <div className="min-h-screen flex flex-col bg-background">
         <DeetHeader />
         <main className="flex-1 container mx-auto px-4 py-20 text-center">
-          <p className="text-muted-foreground">Loading topic…</p>
+          <p className="text-muted-foreground">Loading topicâ¦</p>
         </main>
         <DeetFooter />
       </div>
@@ -77,12 +79,17 @@ const TopicPage = () => {
       <main className="flex-1">
         <div className="container mx-auto px-4 mt-10 mb-20">
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-10">
-            {/* Main — Topic posts */}
+            {/* Main â Topic posts */}
             <div className="min-w-0">
               <div className="mb-6">
-                <h1 className="text-2xl font-bold text-card-foreground font-heading">{topic.name}</h1>
-                <p className="text-sm text-muted-foreground">/{topic.categoryName}</p>
-                <p className="text-sm text-muted-foreground mt-1">{getTopicSubtitle(topic.name)}</p>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h1 className="text-2xl font-bold text-card-foreground font-heading">{topic.name}</h1>
+                    <p className="text-sm text-muted-foreground">/{topic.categoryName}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{getTopicSubtitle(topic.name)}</p>
+                  </div>
+                  <FollowTopicButton topicId={topic.id} />
+                </div>
               </div>
               <div className="space-y-3">
                 {posts.map((post, i) => (
@@ -103,6 +110,7 @@ const TopicPage = () => {
               </div>
               {!loading && !!user && topic && (
                 <AddPostBar
+                  topicId={topic.id}
                   topicName={topic.name}
                   categoryName={topic.categoryName}
                   onPostAdded={refreshPosts}
@@ -110,13 +118,12 @@ const TopicPage = () => {
               )}
             </div>
 
-            {/* Right — Recommendations (clips to left column height) */}
-            <div className="hidden lg:block relative">
-              <div className="absolute inset-0 overflow-hidden">
-                {/* TopicRecommendations still reads from seedData for now —
-                    refactor in Sprint 1 when the homepage flow moves off seed. */}
-                <TopicRecommendations currentTopic={topic as unknown as import("@/data/seedData").Topic} />
-              </div>
+            {/* Right â Recommendations + Email Capture */}
+            <div className="hidden lg:block space-y-6">
+              <EmailCaptureForm />
+              {/* TopicRecommendations still reads from seedData for now â
+                  refactor when the homepage flow moves off seed. */}
+              <TopicRecommendations currentTopic={topic as unknown as import("@/data/seedData").Topic} />
             </div>
           </div>
         </div>
