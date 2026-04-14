@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,19 +14,24 @@ interface CreateTopicDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onTopicCreated?: () => void;
+  defaultCategory?: string;
 }
 
 function generateSlug(name: string) {
   return name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 }
 
-export default function CreateTopicDialog({ open, onOpenChange, onTopicCreated }: CreateTopicDialogProps) {
+export default function CreateTopicDialog({ open, onOpenChange, onTopicCreated, defaultCategory }: CreateTopicDialogProps) {
   const [name, setName] = useState("");
-  const [categoryName, setCategoryName] = useState("");
+  const [categoryName, setCategoryName] = useState(defaultCategory ?? "");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+
+  useEffect(() => {
+    if (open && defaultCategory) setCategoryName(defaultCategory);
+  }, [open, defaultCategory]);
 
   const resetForm = () => {
     setName("");

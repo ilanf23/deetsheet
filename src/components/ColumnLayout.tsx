@@ -9,15 +9,15 @@ const ColumnLayout = () => {
   );
 
   return (
-    <div className="max-w-[1600px] mx-auto mt-5 px-8 lg:px-16">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1fr_1.5fr_280px] gap-5">
+    <div className="mx-auto mt-5 px-6 lg:px-10">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[300px_1fr_240px] gap-5">
         {/* Left — Recently Added */}
         <RecentlyAddedSidebar />
 
         {/* Middle — Most Popular */}
         <div className="min-w-0">
           <div className="flex items-center justify-between mb-4 px-1">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Most Popular</h2>
+            <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Most Popular</h2>
             <select className="text-xs border rounded px-2 py-1 bg-background text-muted-foreground">
               <option>This Year</option>
               <option>All Time</option>
@@ -32,10 +32,8 @@ const ColumnLayout = () => {
         </div>
 
         {/* Right — Subjects */}
-        <div className="hidden lg:block">
-          <div>
-            <SubjectsSidebar />
-          </div>
+        <div className="hidden lg:block lg:border-l lg:border-border lg:pl-5">
+          <SubjectsSidebar />
         </div>
       </div>
     </div>

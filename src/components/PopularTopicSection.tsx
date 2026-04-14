@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
-import { Star } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Topic, getPostsByTopic, getSubtitle, getAverageRating } from "@/data/seedData";
 import UserRatingIndicator from "@/components/UserRatingIndicator";
+import { useTopicByName, usePostsByTopic } from "@/hooks/useSupabaseTopics";
 
 interface PopularTopicSectionProps {
   topic: Topic;
@@ -9,12 +10,31 @@ interface PopularTopicSectionProps {
 
 const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
   const navigate = useNavigate();
-  const topPosts = getPostsByTopic(topic.name).slice(0, 5);
+  const queryClient = useQueryClient();
   const subtitle = getSubtitle(topic.name);
+
+  // Resolve this topic against the Supabase `topics` table so we can pull real
+  // posts (with UUID ids + live average_rating). Falls back to seed data only
+  // if the DB lookup hasn't resolved yet, so the layout never flashes empty.
+  const { data: dbTopic } = useTopicByName(topic.name);
+  const { data: dbPosts } = usePostsByTopic(dbTopic?.id);
+  const seedPosts = getPostsByTopic(topic.name).slice(0, 5);
+
+  const topPosts = (dbPosts && dbPosts.length > 0)
+    ? dbPosts.slice(0, 5).map((p) => ({
+        id: p.id,
+        content: p.title || p.content,
+        avg: p.ratingScore || 0,
+      }))
+    : seedPosts.map((p) => ({
+        id: p.id,
+        content: p.content,
+        avg: getAverageRating(p),
+      }));
 
   return (
     <div
-      className="border rounded-xl bg-card cursor-pointer hover:shadow-lg transition-all duration-200 p-5"
+      className="border rounded-xl bg-background cursor-pointer hover:shadow-lg transition-all duration-200 p-5"
       onClick={() => navigate(`/topic/${encodeURIComponent(topic.name)}`)}
     >
       {/* Header: title + subtitle on the left, Rating|You label on the right */}
@@ -42,29 +62,33 @@ const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
           />
         )}
         <ol className="flex-1 min-w-0 space-y-2">
-          {topPosts.map((post, i) => {
-            const avg = getAverageRating(post);
-            return (
-              <li key={post.id} className="flex items-center gap-3 text-[15px] min-w-0">
-                <span className="text-muted-foreground w-5 shrink-0 text-right">{i + 1}.</span>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/topic/${encodeURIComponent(topic.name)}#post-${i + 1}`);
+          {topPosts.map((post, i) => (
+            <li key={post.id} className="flex items-center gap-3 text-[15px] min-w-0">
+              <span className="text-muted-foreground w-5 shrink-0 text-right">{i + 1}.</span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/topic/${encodeURIComponent(topic.name)}#post-${i + 1}`);
+                }}
+                className="flex-1 min-w-0 text-left text-primary leading-snug truncate hover:underline"
+              >
+                {post.content}
+              </button>
+              <span className="flex items-center gap-1.5 text-secondary shrink-0 tabular-nums">
+                <span className="font-medium">{post.avg}</span>
+                <span className="text-muted-foreground/60">|</span>
+                <UserRatingIndicator
+                  postId={post.id}
+                  onRatingChanged={() => {
+                    if (dbTopic?.id) {
+                      queryClient.invalidateQueries({ queryKey: ["posts-by-topic", dbTopic.id] });
+                    }
                   }}
-                  className="flex-1 min-w-0 text-left text-primary leading-snug truncate hover:underline"
-                >
-                  {post.content}
-                </button>
-                <span className="flex items-center gap-1.5 text-secondary shrink-0 tabular-nums">
-                  <span className="font-medium">{avg}</span>
-                  <span className="text-muted-foreground/60">|</span>
-                  <UserRatingIndicator postId={post.id} />
-                </span>
-              </li>
-            );
-          })}
+                />
+              </span>
+            </li>
+          ))}
         </ol>
       </div>
     </div>

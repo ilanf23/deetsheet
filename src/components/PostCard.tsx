@@ -1,8 +1,6 @@
-import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MessageSquare } from "lucide-react";
 import { Post, getTimeAgo } from "@/data/seedData";
-import PostActionMenu from "@/components/PostActionMenu";
 import UserAvatar from "@/components/UserAvatar";
 
 interface PostCardProps {
@@ -11,61 +9,50 @@ interface PostCardProps {
 
 const PostCard = ({ post }: PostCardProps) => {
   const navigate = useNavigate();
-  const [expanded, setExpanded] = useState(false);
-  const [isClamped, setIsClamped] = useState(false);
-  const contentRef = useRef<HTMLParagraphElement>(null);
 
-  useEffect(() => {
-    const el = contentRef.current;
-    if (el) {
-      setIsClamped(el.scrollHeight > el.clientHeight);
-    }
-  }, [post.content]);
+  const openTopic = () => navigate(`/topic/${encodeURIComponent(post.topicName)}`);
 
   return (
     <div
-      className="group rounded-xl border bg-card p-4 hover:shadow-md transition-all duration-200 cursor-pointer"
-      onClick={() => navigate(`/topic/${encodeURIComponent(post.topicName)}`)}
+      className="group cursor-pointer py-3 border-b border-border last:border-b-0"
+      onClick={openTopic}
     >
-      <h3 className="font-bold text-primary font-heading mb-1 group-hover:underline">{post.topicName}</h3>
-      <p
-        ref={contentRef}
-        className={`text-sm text-card-foreground leading-relaxed mb-1 ${expanded ? "" : "line-clamp-3"}`}
-      >
-        {post.content}
-      </p>
-      {isClamped && (
-        <button
-          className="text-xs text-muted-foreground underline mb-2"
-          onClick={(e) => {
-            e.stopPropagation();
-            setExpanded((prev) => !prev);
-          }}
-        >
-          {expanded ? "Show less" : "Show more"}
-        </button>
-      )}
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
+        <UserAvatar username={post.username} size="sm" />
+        <span>·</span>
+        <span>{getTimeAgo(post.createdAt)}</span>
+      </div>
 
-      {post.imageUrl && (
-        <img
-          src={post.imageUrl}
-          alt={post.topicName}
-          className="w-full h-36 object-cover rounded-lg mb-3"
-        />
-      )}
-
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          <UserAvatar username={post.username} size="sm" />
-          <span>· {getTimeAgo(post.createdAt)}</span>
-        </span>
-        <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1">
-            <MessageSquare className="h-3.5 w-3.5" />
-            {post.commentCount}
-          </span>
-          <PostActionMenu postId={post.id} topicName={post.topicName} />
+      <div className="flex gap-3">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-[15px] font-medium text-foreground leading-snug line-clamp-2 mb-2">
+            {post.content}
+          </h3>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                openTopic();
+              }}
+              className="text-primary hover:underline font-medium truncate max-w-[140px]"
+            >
+              {post.topicName}
+            </button>
+            <span className="flex items-center gap-1">
+              <MessageSquare className="h-3 w-3" />
+              {post.commentCount}
+            </span>
+          </div>
         </div>
+
+        {post.imageUrl && (
+          <img
+            src={post.imageUrl}
+            alt={post.topicName}
+            className="w-16 h-16 rounded-md object-cover shrink-0"
+          />
+        )}
       </div>
     </div>
   );

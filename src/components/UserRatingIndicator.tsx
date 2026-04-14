@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Star, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -17,8 +17,34 @@ const UserRatingIndicator = ({ postId, onRatingChanged }: UserRatingIndicatorPro
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userRating, setUserRating] = useState<number | null>(null);
+  const [previewValue, setPreviewValue] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const starsRef = useRef<HTMLDivElement | null>(null);
+
+  // Convert pointer X inside the stars strip to a 0.1-resolution rating 0.1–10.0.
+  const valueFromPointer = (clientX: number): number | null => {
+    const el = starsRef.current;
+    if (!el) return null;
+    const rect = el.getBoundingClientRect();
+    const raw = ((clientX - rect.left) / rect.width) * 10;
+    return Math.max(0.1, Math.min(10, Math.round(raw * 10) / 10));
+  };
+
+  const cancelClose = useCallback(() => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  }, []);
+
+  const scheduleClose = useCallback(() => {
+    cancelClose();
+    closeTimerRef.current = setTimeout(() => setOpen(false), 150);
+  }, [cancelClose]);
+
+  useEffect(() => () => cancelClose(), [cancelClose]);
 
   const isDbPost = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(postId);
 
@@ -82,12 +108,22 @@ const UserRatingIndicator = ({ postId, onRatingChanged }: UserRatingIndicatorPro
     setOpen((v) => !v);
   };
 
+  const handleTriggerHover = () => {
+    if (!user || !isDbPost) return;
+    cancelClose();
+    setOpen(true);
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
           type="button"
           onClick={handleTriggerClick}
+          onMouseEnter={handleTriggerHover}
+          onMouseLeave={scheduleClose}
+          onFocus={handleTriggerHover}
+          onBlur={scheduleClose}
           className="flex items-center gap-0.5 shrink-0 cursor-pointer"
           aria-label={userRating ? `Your rating: ${userRating}` : "Rate this post"}
         >
@@ -103,33 +139,53 @@ const UserRatingIndicator = ({ postId, onRatingChanged }: UserRatingIndicatorPro
         align="end"
         sideOffset={4}
         onClick={(e) => e.stopPropagation()}
+        onMouseEnter={cancelClose}
+        onMouseLeave={scheduleClose}
+        onOpenAutoFocus={(e) => e.preventDefault()}
       >
-        <div className="flex items-center gap-1">
-          {Array.from({ length: 10 }, (_, i) => {
-            const val = i + 1;
-            const isSelected = userRating === val;
-            return (
-              <button
-                key={val}
-                type="button"
-                disabled={loading}
-                onClick={() => saveRating(val)}
-                className={`w-7 h-7 rounded text-xs font-semibold transition-colors ${
-                  isSelected
-                    ? "bg-secondary text-secondary-foreground"
-                    : "hover:bg-muted text-foreground"
-                }`}
-              >
-                {val}
-              </button>
-            );
-          })}
+        <div className="flex items-center gap-2">
+          <div
+            ref={starsRef}
+            className="flex cursor-pointer select-none"
+            onMouseMove={(e) => setPreviewValue(valueFromPointer(e.clientX))}
+            onMouseLeave={() => setPreviewValue(null)}
+            onClick={(e) => {
+              const v = valueFromPointer(e.clientX);
+              if (v !== null) saveRating(v);
+            }}
+            role="slider"
+            aria-label="Rate this post"
+            aria-valuemin={0.1}
+            aria-valuemax={10}
+            aria-valuenow={previewValue ?? userRating ?? 0}
+          >
+            {Array.from({ length: 10 }, (_, i) => {
+              const current = previewValue ?? userRating ?? 0;
+              const fill = Math.max(0, Math.min(1, current - i));
+              return (
+                <div key={i} className="relative leading-none">
+                  <Star className="h-6 w-6 text-muted-foreground/40" />
+                  <div
+                    className="absolute inset-0 overflow-hidden pointer-events-none"
+                    style={{ width: `${fill * 100}%` }}
+                  >
+                    <Star className="h-6 w-6 fill-secondary text-secondary" />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <span className="text-secondary font-semibold tabular-nums text-sm w-8 text-right">
+            {(previewValue ?? userRating) !== null
+              ? (previewValue ?? userRating!).toFixed(1)
+              : "—"}
+          </span>
           {userRating !== null && (
             <button
               type="button"
               disabled={loading}
               onClick={clearRating}
-              className="ml-1 w-7 h-7 rounded flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+              className="w-7 h-7 rounded flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
               aria-label="Clear rating"
             >
               <X className="h-3.5 w-3.5" />

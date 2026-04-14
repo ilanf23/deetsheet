@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getMockAvatarUrl } from "@/lib/mockAvatars";
 
 interface UserAvatarProps {
   username: string;
@@ -18,11 +19,12 @@ const UserAvatar = ({
 }: UserAvatarProps) => {
   const sizeClass = size === "sm" ? "h-6 w-6" : "h-8 w-8";
   const textSize = size === "sm" ? "text-[10px]" : "text-xs";
+  const resolvedAvatar = avatarUrl ?? getMockAvatarUrl(username);
 
   const content = (
     <span className="inline-flex items-center gap-1.5">
       <Avatar className={sizeClass}>
-        {avatarUrl && <AvatarImage src={avatarUrl} alt={username} />}
+        <AvatarImage src={resolvedAvatar} alt={username} />
         <AvatarFallback className={`${textSize} font-semibold bg-primary/10 text-primary`}>
           {username[0].toUpperCase()}
         </AvatarFallback>
