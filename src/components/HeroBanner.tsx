@@ -8,7 +8,7 @@ const slides = [
     quote: "Before I visit any city, I check DeetSheet to find out what are the best ways to enjoy the area.",
     attribution: "Bob, 56, Boston, MA",
     topicSlug: "Chicago",
-    postId: "h0000000-0000-0000-0000-000000000001",
+    postId: "a2000000-0000-0000-0000-000000000001",
   },
   {
     image: "/hero-restaurant.jpg",
@@ -16,7 +16,7 @@ const slides = [
     quote: "I love posting hidden restaurant gems in my area on DeetSheet to show visitors where's the best place to eat.",
     attribution: "Tracy, 43, Portland, OR",
     topicSlug: "Cooking",
-    postId: "h0000000-0000-0000-0000-000000000002",
+    postId: "a2000000-0000-0000-0000-000000000002",
   },
   {
     image: "/hero-paris.jpg",
@@ -24,7 +24,7 @@ const slides = [
     quote: "I never knew others felt the same way about first dates until I read stories from others on DeetSheet.",
     attribution: "Christine, 26, Nashville, TN",
     topicSlug: "Love",
-    postId: "h0000000-0000-0000-0000-000000000003",
+    postId: "a2000000-0000-0000-0000-000000000003",
   },
   {
     image: "/hero-passions.jpg",
@@ -32,7 +32,7 @@ const slides = [
     quote: "I've been playing pickle for three years and DeetSheet showed me tips on how to play better.",
     attribution: "Rob, 62, Palm Beach, FL",
     topicSlug: "Gym",
-    postId: "h0000000-0000-0000-0000-000000000004",
+    postId: "a2000000-0000-0000-0000-000000000004",
   },
   {
     image: "/hero-school.jpg",
@@ -40,7 +40,7 @@ const slides = [
     quote: "I love sharing what makes University of Wisconsin special. I feel like it's one of the best schools to attend.",
     attribution: "Mike, 32, Racine, WI",
     topicSlug: "College",
-    postId: "h0000000-0000-0000-0000-000000000005",
+    postId: "a2000000-0000-0000-0000-000000000005",
   },
 ];
 
