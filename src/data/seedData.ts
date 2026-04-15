@@ -473,9 +473,6 @@ export const getPostsByTopic = (topicName: string): Post[] =>
       return b.ratingCount - a.ratingCount;
     });
 
-export const getSubtitle = (topicName: string): string =>
-  `What are the most important details of being a ${topicName}?`;
-
 export const getTopicByName = (name: string): Topic | undefined =>
   topics.find((t) => t.name === name);
 

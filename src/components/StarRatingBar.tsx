@@ -19,7 +19,7 @@ const StarRatingBar = ({ value, onChange }: StarRatingBarProps) => {
     const rect = trackRef.current.getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     const raw = 1 + ratio * 9;
-    return Math.round(Math.max(1, Math.min(10, raw)) * 10) / 10;
+    return Math.max(1, Math.min(10, Math.round(raw)));
   }, []);
 
   const handlePointerDown = useCallback(
@@ -64,7 +64,7 @@ const StarRatingBar = ({ value, onChange }: StarRatingBarProps) => {
   const nudge = useCallback(
     (delta: number) => {
       const current = value ?? 5;
-      const next = Math.round(Math.max(1, Math.min(10, current + delta)) * 10) / 10;
+      const next = Math.max(1, Math.min(10, Math.round(current + delta)));
       onChange(next);
     },
     [value, onChange]
@@ -74,7 +74,7 @@ const StarRatingBar = ({ value, onChange }: StarRatingBarProps) => {
     <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
       {/* Left arrow */}
       <button
-        onClick={() => nudge(-0.1)}
+        onClick={() => nudge(-1)}
         className="p-1 text-muted-foreground hover:text-foreground transition-colors shrink-0"
       >
         <ChevronLeft className="h-4 w-4" />
@@ -111,7 +111,7 @@ const StarRatingBar = ({ value, onChange }: StarRatingBarProps) => {
 
       {/* Right arrow */}
       <button
-        onClick={() => nudge(0.1)}
+        onClick={() => nudge(1)}
         className="p-1 text-muted-foreground hover:text-foreground transition-colors shrink-0"
       >
         <ChevronRight className="h-4 w-4" />
@@ -120,7 +120,7 @@ const StarRatingBar = ({ value, onChange }: StarRatingBarProps) => {
       {/* Current value */}
       {displayValue !== null && (
         <span className="text-sm font-bold text-orange-500 w-8 text-right tabular-nums shrink-0">
-          {displayValue.toFixed(1)}
+          {displayValue}
         </span>
       )}
     </div>

@@ -100,7 +100,7 @@ const TopicPage = () => {
                   <div>
                     <h1 className="text-2xl font-bold text-card-foreground font-heading">{topic.name}</h1>
                     <p className="text-sm text-muted-foreground">/{topic.categoryName}</p>
-                    <p className="text-sm text-muted-foreground mt-1">{getTopicSubtitle(topic.name)}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{getTopicSubtitle(topic.name, topic.categoryName)}</p>
                   </div>
                   <FollowTopicButton topicId={topic.id} />
                 </div>

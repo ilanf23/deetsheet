@@ -23,13 +23,13 @@ const UserRatingIndicator = ({ postId, onRatingChanged }: UserRatingIndicatorPro
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const starsRef = useRef<HTMLDivElement | null>(null);
 
-  // Convert pointer X inside the stars strip to a 0.1-resolution rating 0.1–10.0.
   const valueFromPointer = (clientX: number): number | null => {
     const el = starsRef.current;
     if (!el) return null;
     const rect = el.getBoundingClientRect();
-    const raw = ((clientX - rect.left) / rect.width) * 10;
-    return Math.max(0.1, Math.min(10, Math.round(raw * 10) / 10));
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const raw = 1 + ratio * 9;
+    return Math.max(1, Math.min(10, Math.round(raw)));
   };
 
   const cancelClose = useCallback(() => {
@@ -155,7 +155,7 @@ const UserRatingIndicator = ({ postId, onRatingChanged }: UserRatingIndicatorPro
             }}
             role="slider"
             aria-label="Rate this post"
-            aria-valuemin={0.1}
+            aria-valuemin={1}
             aria-valuemax={10}
             aria-valuenow={previewValue ?? userRating ?? 0}
           >
@@ -177,7 +177,7 @@ const UserRatingIndicator = ({ postId, onRatingChanged }: UserRatingIndicatorPro
           </div>
           <span className="text-secondary font-semibold tabular-nums text-sm w-8 text-right">
             {(previewValue ?? userRating) !== null
-              ? (previewValue ?? userRating!).toFixed(1)
+              ? (previewValue ?? userRating!)
               : "—"}
           </span>
           {userRating !== null && (

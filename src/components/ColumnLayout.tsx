@@ -15,8 +15,8 @@ const ColumnLayout = () => {
         <RecentlyAddedSidebar />
 
         {/* Middle — Most Popular */}
-        <div className="min-w-0">
-          <div className="flex items-center justify-between mb-4 px-1">
+        <div className="min-w-0 pt-4">
+          <div className="flex items-center justify-between h-8 mb-4 px-1 pb-2 border-b border-border">
             <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Most Popular</h2>
             <select className="text-xs border rounded px-2 py-1 bg-background text-muted-foreground">
               <option>This Year</option>
@@ -32,7 +32,7 @@ const ColumnLayout = () => {
         </div>
 
         {/* Right — Subjects */}
-        <div className="hidden lg:block lg:border-l lg:border-border lg:pl-5">
+        <div className="hidden lg:block lg:border-l lg:border-border lg:pl-5 pt-4">
           <SubjectsSidebar />
         </div>
       </div>

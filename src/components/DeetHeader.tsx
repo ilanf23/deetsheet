@@ -21,9 +21,9 @@ const DeetHeader = () => {
 
   return (
     <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
-      <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
+      <div className="mx-auto flex h-16 items-center justify-between gap-4 px-6 lg:px-10">
         <a href="/" className="flex items-center shrink-0">
-          <img src="/logo.png" alt="DeetSheet" className="h-[144px] mt-5" />
+          <img src="/logo.png" alt="DeetSheet" className="h-[166px] mt-5" />
         </a>
 
         <div className="hidden md:flex flex-1 max-w-md mx-4 items-center gap-2">

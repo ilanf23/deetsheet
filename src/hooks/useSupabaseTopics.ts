@@ -206,7 +206,96 @@ export const useRecentPostsByTopic = (topicId: string | undefined, limit = 5) =>
   });
 };
 
-/** Static subtitle for a topic page — pure function, kept here so the
- * TopicPage refactor doesn't need to import from seedData for one string. */
-export const getTopicSubtitle = (topicName: string): string =>
-  `What are the most important details of being a ${topicName}?`;
+/**
+ * Grammatically correct subtitle for a topic page.
+ *
+ * The source template is "What are the most important details of being a {X}?",
+ * which only reads right for count nouns like "Parent" / "Waiter". For locations,
+ * time periods, health conditions, and identity adjectives, the article + verb
+ * need to change. This helper picks the right form using both per-topic overrides
+ * and per-category defaults, falling back to "being a/an {X}" with vowel-sound
+ * article selection.
+ */
+const VOWEL_SOUND = /^[aeiouAEIOU]/;
+
+// Topics that read best as "being in {X}" — "in College", "in Love".
+const BEING_IN_TOPICS = new Set<string>(["College", "Love"]);
+
+// Topics that read best with no article — "being Married", "being Gay".
+const NO_ARTICLE_TOPICS = new Set<string>([
+  "Married",
+  "Pregnant",
+  "Gay",
+  "Obese",
+  "Poor",
+]);
+
+// Categories where every topic is a place you live in.
+const LIVING_IN_CATEGORIES = new Set<string>([
+  "Cities",
+  "States",
+  "Countries",
+]);
+
+// Categories where every topic is an institution/group you're "in".
+const BEING_IN_CATEGORIES = new Set<string>([
+  "Colleges",
+  "Schools",
+  "Companies",
+  "Majors",
+  "Clubs",
+  "Fanclubs",
+  "Teams",
+]);
+
+// Health conditions are something you "have", not "are".
+const HAVING_CATEGORIES = new Set<string>(["Health"]);
+
+// Health conditions that take an article (countable): "having a Cold".
+const COUNTABLE_HEALTH = new Set<string>(["Cold", "Heart Attack"]);
+
+export const getTopicSubtitle = (
+  topicName: string,
+  categoryName?: string
+): string => {
+  const prefix = "What are the most important details of";
+
+  if (NO_ARTICLE_TOPICS.has(topicName)) {
+    return `${prefix} being ${topicName}?`;
+  }
+
+  if (BEING_IN_TOPICS.has(topicName)) {
+    return `${prefix} being in ${topicName}?`;
+  }
+
+  if (categoryName === "Decades") {
+    return `${prefix} living in the ${topicName}?`;
+  }
+
+  if (categoryName === "Ages") {
+    // Numeric ages ("20s", "30s") use "being in your 20s";
+    // word-form ages ("Teens") fall through to default "being a Teen".
+    if (/\d/.test(topicName)) {
+      return `${prefix} being in your ${topicName}?`;
+    }
+  }
+
+  if (categoryName && LIVING_IN_CATEGORIES.has(categoryName)) {
+    return `${prefix} living in ${topicName}?`;
+  }
+
+  if (categoryName && BEING_IN_CATEGORIES.has(categoryName)) {
+    return `${prefix} being in ${topicName}?`;
+  }
+
+  if (categoryName && HAVING_CATEGORIES.has(categoryName)) {
+    if (COUNTABLE_HEALTH.has(topicName)) {
+      const article = VOWEL_SOUND.test(topicName) ? "an" : "a";
+      return `${prefix} having ${article} ${topicName}?`;
+    }
+    return `${prefix} having ${topicName}?`;
+  }
+
+  const article = VOWEL_SOUND.test(topicName) ? "an" : "a";
+  return `${prefix} being ${article} ${topicName}?`;
+};

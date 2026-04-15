@@ -25,12 +25,11 @@ import {
   School,
   Building,
   Store,
-  Plus,
+  ChevronRight,
   ChevronDown,
   LucideIcon,
 } from "lucide-react";
 import { subjectCategories, getTopicsByCategory } from "@/data/seedData";
-import CreateTopicDialog from "@/components/CreateTopicDialog";
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
   Life: Heart,
@@ -64,10 +63,9 @@ interface CategoryRowProps {
   icon: LucideIcon;
   expanded: boolean;
   onToggle: () => void;
-  onCreate: () => void;
 }
 
-const CategoryRow = ({ category, icon: Icon, expanded, onToggle, onCreate }: CategoryRowProps) => {
+const CategoryRow = ({ category, icon: Icon, expanded, onToggle }: CategoryRowProps) => {
   const catTopics = getTopicsByCategory(category);
 
   return (
@@ -101,14 +99,13 @@ const CategoryRow = ({ category, icon: Icon, expanded, onToggle, onCreate }: Cat
             </li>
           ))}
           <li>
-            <button
-              type="button"
-              onClick={onCreate}
-              className="flex items-center gap-2 w-full px-3 py-1.5 text-sm rounded-md text-primary hover:bg-muted text-left"
+            <Link
+              to={`/topics?category=${encodeURIComponent(category)}`}
+              className="flex items-center gap-2 w-full px-3 py-1.5 text-sm rounded-md text-primary hover:bg-muted hover:underline"
             >
-              <Plus className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
-              <span className="truncate">New topic in {category}</span>
-            </button>
+              <ChevronRight className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+              <span className="truncate">View more</span>
+            </Link>
           </li>
         </ul>
       )}
@@ -117,7 +114,6 @@ const CategoryRow = ({ category, icon: Icon, expanded, onToggle, onCreate }: Cat
 };
 
 const SubjectsSidebar = () => {
-  const [createCategory, setCreateCategory] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set(subjectCategories));
 
   const toggle = (cat: string) => {
@@ -131,7 +127,7 @@ const SubjectsSidebar = () => {
 
   return (
     <nav className="space-y-0.5">
-      <h2 className="px-3 pb-1">
+      <h2 className="flex items-center h-8 px-3 pb-2 mb-2 border-b border-border">
         <Link
           to="/topics"
           className="text-[11px] font-heading font-semibold uppercase tracking-wider text-primary hover:underline"
@@ -147,15 +143,8 @@ const SubjectsSidebar = () => {
           icon={CATEGORY_ICONS[cat] ?? Sparkles}
           expanded={expanded.has(cat)}
           onToggle={() => toggle(cat)}
-          onCreate={() => setCreateCategory(cat)}
         />
       ))}
-
-      <CreateTopicDialog
-        open={createCategory !== null}
-        onOpenChange={(open) => !open && setCreateCategory(null)}
-        defaultCategory={createCategory ?? undefined}
-      />
     </nav>
   );
 };

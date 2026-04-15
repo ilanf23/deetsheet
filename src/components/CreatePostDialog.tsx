@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { categories } from "@/data/seedData";
+import { getTopicSubtitle } from "@/hooks/useSupabaseTopics";
 
 interface CreatePostDialogProps {
   topicName: string;
@@ -63,7 +64,7 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
       {/* Preview */}
       <div className="rounded-md bg-muted/50 px-3 py-2">
         <p className="text-sm text-muted-foreground italic">
-          What are the most important details of being a {subject || "..."}
+          {subject ? getTopicSubtitle(subject, category) : "What are the most important details of being a ..."}
         </p>
       </div>
 

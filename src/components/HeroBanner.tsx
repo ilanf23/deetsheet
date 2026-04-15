@@ -51,7 +51,7 @@ const HeroBanner = () => {
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrent((prev) => (prev + 1) % slides.length);
-    }, 4000);
+    }, 8000);
     return () => clearInterval(timer);
   }, []);
 
@@ -66,12 +66,12 @@ const HeroBanner = () => {
           key={slide.image}
           src={slide.image}
           alt=""
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
+          className={`absolute inset-0 w-full h-full object-cover brightness-[1.35] transition-opacity duration-700 ${
             i === current ? "opacity-100" : "opacity-0"
           }`}
         />
       ))}
-      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute inset-0 bg-black/25" />
       {slides.map((slide, i) => (
         <div
           key={i}
@@ -89,6 +89,19 @@ const HeroBanner = () => {
           </div>
         </div>
       ))}
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+        {slides.map((_, i) => (
+          <button
+            key={i}
+            type="button"
+            aria-label={`Go to slide ${i + 1}`}
+            onClick={() => setCurrent(i)}
+            className={`h-2 w-2 rounded-full transition-all ${
+              i === current ? "bg-primary" : "bg-white/50 hover:bg-white/75"
+            }`}
+          />
+        ))}
+      </div>
     </div>
   );
 };

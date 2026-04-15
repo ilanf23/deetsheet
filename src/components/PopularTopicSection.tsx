@@ -1,8 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Topic, getPostsByTopic, getSubtitle, getAverageRating } from "@/data/seedData";
+import { Topic, getPostsByTopic, getAverageRating } from "@/data/seedData";
 import UserRatingIndicator from "@/components/UserRatingIndicator";
-import { useTopicByName, usePostsByTopic } from "@/hooks/useSupabaseTopics";
+import { useTopicByName, usePostsByTopic, getTopicSubtitle } from "@/hooks/useSupabaseTopics";
 
 interface PopularTopicSectionProps {
   topic: Topic;
@@ -11,7 +11,7 @@ interface PopularTopicSectionProps {
 const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const subtitle = getSubtitle(topic.name);
+  const subtitle = getTopicSubtitle(topic.name, topic.categoryName);
 
   // Resolve this topic against the Supabase `topics` table so we can pull real
   // posts (with UUID ids + live average_rating). Falls back to seed data only
@@ -76,16 +76,18 @@ const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
                 {post.content}
               </button>
               <span className="flex items-center gap-1.5 text-secondary shrink-0 tabular-nums">
-                <span className="font-medium">{post.avg}</span>
+                <span className="font-medium w-5 text-right">{post.avg}</span>
                 <span className="text-muted-foreground/60">|</span>
-                <UserRatingIndicator
-                  postId={post.id}
-                  onRatingChanged={() => {
-                    if (dbTopic?.id) {
-                      queryClient.invalidateQueries({ queryKey: ["posts-by-topic", dbTopic.id] });
-                    }
-                  }}
-                />
+                <span className="w-5 flex justify-start">
+                  <UserRatingIndicator
+                    postId={post.id}
+                    onRatingChanged={() => {
+                      if (dbTopic?.id) {
+                        queryClient.invalidateQueries({ queryKey: ["posts-by-topic", dbTopic.id] });
+                      }
+                    }}
+                  />
+                </span>
               </span>
             </li>
           ))}
