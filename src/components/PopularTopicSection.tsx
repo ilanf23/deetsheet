@@ -75,10 +75,10 @@ const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
               >
                 {post.content}
               </button>
-              <span className="flex items-center gap-1.5 text-secondary shrink-0 tabular-nums">
-                <span className="font-medium w-5 text-right">{post.avg}</span>
-                <span className="text-muted-foreground/60">|</span>
-                <span className="w-5 flex justify-start">
+              <span className="flex items-center text-secondary shrink-0 tabular-nums">
+                <span className="font-medium w-8 text-right">{post.avg}</span>
+                <span className="text-muted-foreground/60 w-4 text-center">|</span>
+                <span className="w-8 flex justify-center">
                   <UserRatingIndicator
                     postId={post.id}
                     onRatingChanged={() => {
