@@ -1,9 +1,9 @@
-import { useState, useMemo, useEffect } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useMemo } from "react";
+import { useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
-import TopicPostExpanded from "@/components/TopicPostExpanded";
+import TopicPostListItem from "@/components/TopicPostListItem";
 import TopicRecommendations from "@/components/TopicRecommendations";
 import TopicRecentlyAdded from "@/components/TopicRecentlyAdded";
 import AddPostBar from "@/components/AddPostBar";
