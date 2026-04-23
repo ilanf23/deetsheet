@@ -1,6 +1,7 @@
 import PopularTopicSection from "@/components/PopularTopicSection";
 import SubjectsSidebar from "@/components/SubjectsSidebar";
 import RecentlyAddedSidebar from "@/components/RecentlyAddedSidebar";
+import HomeFeed from "@/components/HomeFeed";
 import { topics } from "@/data/seedData";
 import { useInfiniteList } from "@/hooks/useInfiniteList";
 
@@ -22,9 +23,12 @@ const ColumnLayout = () => {
         {/* Left — Recently Added */}
         <RecentlyAddedSidebar />
 
-        {/* Middle — Most Popular */}
+        {/* Middle — For You (location cascade) + Most Popular */}
         <div className="min-w-0 pt-4">
-          <div className="flex items-center justify-between h-8 mb-4 px-1 pb-2 border-b border-border">
+          {/* Personalized cascading feed lives at the top of the topic-posts column. */}
+          <HomeFeed />
+
+          <div className="flex items-center justify-between h-8 mt-8 mb-4 px-1 pb-2 border-b border-border">
             <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Most Popular</h2>
             <select className="text-xs border rounded px-2 py-1 bg-background text-muted-foreground">
               <option>This Year</option>
