@@ -19,7 +19,6 @@ import {
 
 const TopicPage = () => {
   const { topicName } = useParams<{ topicName: string }>();
-  const { hash } = useLocation();
   const { user, loading } = useAuth();
   const queryClient = useQueryClient();
 
@@ -33,24 +32,6 @@ const TopicPage = () => {
     () => ((postsData ?? []) as unknown) as Post[],
     [postsData]
   );
-
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-
-  // Auto-expand: if the URL has #post-N, open that ranked post and scroll to it;
-  // otherwise fall back to opening the top-ranked post.
-  useEffect(() => {
-    if (posts.length === 0 || expandedIds.size > 0) return;
-    const match = hash.match(/^#post-(\d+)$/);
-    const targetIdx = match ? Math.min(parseInt(match[1], 10) - 1, posts.length - 1) : 0;
-    const targetPost = posts[targetIdx];
-    if (!targetPost) return;
-    setExpandedIds(new Set([targetPost.id]));
-    if (match) {
-      requestAnimationFrame(() => {
-        document.getElementById(`post-${targetIdx + 1}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    }
-  }, [posts, expandedIds.size, hash]);
 
   const refreshPosts = () => {
     if (topic?.id) {
