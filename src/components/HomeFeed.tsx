@@ -22,7 +22,6 @@ import { getTopicSubtitle } from "@/hooks/useSupabaseTopics";
 const HomeFeed = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { location } = useLocation();
   const [showTrending, setShowTrending] = useState(false);
   const { data: sections, isLoading } = useHomeFeed();
 
