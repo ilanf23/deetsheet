@@ -33,9 +33,14 @@ const ColumnLayout = () => {
             </select>
           </div>
           <div className="space-y-4">
-            {popularTopics.map((topic) => (
+            {visible.map((topic) => (
               <PopularTopicSection key={topic.id} topic={topic} />
             ))}
+            {hasMore && (
+              <div ref={sentinelRef} className="h-10 flex items-center justify-center text-xs text-muted-foreground">
+                Loading more topics…
+              </div>
+            )}
           </div>
         </div>
 
