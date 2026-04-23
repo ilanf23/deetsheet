@@ -85,14 +85,14 @@ const SubtopicPage = () => {
       <DeetHeader />
       <main className="flex-1">
         <div className="max-w-[1400px] mx-auto px-8 lg:px-16 mt-10 mb-20">
-          {/* Breadcrumb */}
+          {/* Back link — always returns to the topic page, never home */}
           <nav className="mb-6 flex items-center gap-2 text-sm">
             <Link
               to={`/topic/${encodeURIComponent(topic.name)}`}
-              className="text-primary hover:underline inline-flex items-center gap-1"
+              className="text-primary hover:underline inline-flex items-center gap-1 font-medium"
             >
               <ChevronLeft className="h-4 w-4" />
-              {topic.name}
+              Back to {topic.name}
             </Link>
             <span className="text-muted-foreground">/</span>
             <span className="text-muted-foreground">#{rankNum}</span>
