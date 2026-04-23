@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -11,14 +11,35 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@/components/ui/radio-group";
 import { categories } from "@/data/seedData";
 import { getTopicSubtitle } from "@/hooks/useSupabaseTopics";
+import { useLocation } from "@/contexts/LocationContext";
+import { US_STATES } from "@/lib/usStates";
 
 interface CreatePostDialogProps {
   topicName: string;
   categoryName: string;
-  onSubmit: (detail: string, category: string) => void;
+  /**
+   * `locationChoice` describes what the author selected:
+   *  - { kind: "author" }   → use the author's saved location (default)
+   *  - { kind: "national" } → no specific geography
+   *  - { kind: "custom", city, state } → an explicit override
+   */
+  onSubmit: (
+    detail: string,
+    category: string,
+    locationChoice: LocationChoice
+  ) => void;
 }
+
+export type LocationChoice =
+  | { kind: "author" }
+  | { kind: "national" }
+  | { kind: "custom"; city: string; state: string };
 
 const DETAIL_CHAR_LIMIT = 200;
 
@@ -29,9 +50,34 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
   const [category, setCategory] = useState(categoryName);
   const [anonymous, setAnonymous] = useState(true);
 
+  // Location selector state. Default to the author's location when present;
+  // otherwise default to national so authors without a saved city aren't blocked.
+  const { location } = useLocation();
+  const [mode, setMode] = useState<"author" | "custom" | "national">(
+    location ? "author" : "national"
+  );
+  const [customCity, setCustomCity] = useState("");
+  const [customState, setCustomState] = useState("");
+
+  // If the author saves a location while this dialog is open, switch back to the default.
+  useEffect(() => {
+    if (location && mode === "national") {
+      setMode("author");
+    }
+  }, [location, mode]);
+
   const handleSubmit = () => {
     if (!detail.trim()) return;
-    onSubmit(detail.trim(), category);
+    let choice: LocationChoice;
+    if (mode === "national") {
+      choice = { kind: "national" };
+    } else if (mode === "custom") {
+      if (!customCity.trim() || !customState) return;
+      choice = { kind: "custom", city: customCity.trim(), state: customState };
+    } else {
+      choice = { kind: "author" };
+    }
+    onSubmit(detail.trim(), category, choice);
   };
 
   return (
@@ -114,6 +160,55 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
         </Select>
       </div>
 
+      {/* Location selector ----------------------------------------------- */}
+      <div className="space-y-2">
+        <Label>Location</Label>
+        <RadioGroup value={mode} onValueChange={(v) => setMode(v as typeof mode)} className="space-y-2">
+          {location && (
+            <div className="flex items-center gap-2">
+              <RadioGroupItem id="loc-author" value="author" />
+              <Label htmlFor="loc-author" className="cursor-pointer text-sm font-normal">
+                Use my location ({location.city}, {location.state})
+              </Label>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <RadioGroupItem id="loc-custom" value="custom" />
+            <Label htmlFor="loc-custom" className="cursor-pointer text-sm font-normal">
+              Pick a different location
+            </Label>
+          </div>
+          {mode === "custom" && (
+            <div className="grid grid-cols-3 gap-2 pl-6">
+              <Input
+                className="col-span-2"
+                placeholder="City"
+                value={customCity}
+                onChange={(e) => setCustomCity(e.target.value)}
+              />
+              <Select value={customState} onValueChange={setCustomState}>
+                <SelectTrigger>
+                  <SelectValue placeholder="State" />
+                </SelectTrigger>
+                <SelectContent>
+                  {US_STATES.map((s) => (
+                    <SelectItem key={s.code} value={s.code}>
+                      {s.code}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <RadioGroupItem id="loc-national" value="national" />
+            <Label htmlFor="loc-national" className="cursor-pointer text-sm font-normal">
+              National / No specific location
+            </Label>
+          </div>
+        </RadioGroup>
+      </div>
+
       {/* Anonymous checkbox */}
       <div className="flex items-center gap-2">
         <Checkbox
@@ -129,7 +224,7 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
       {/* Submit */}
       <Button
         onClick={handleSubmit}
-        disabled={!detail.trim()}
+        disabled={!detail.trim() || (mode === "custom" && (!customCity.trim() || !customState))}
         className="w-full bg-[#1a2340] hover:bg-[#252f4a] text-white font-semibold tracking-wide"
       >
         SUBMIT
