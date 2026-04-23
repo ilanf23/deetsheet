@@ -16,6 +16,7 @@ import AuthCallback from "./pages/AuthCallback";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import TopicPage from "./pages/TopicPage";
+import SubtopicPage from "./pages/SubtopicPage";
 import TopicsDirectory from "./pages/TopicsDirectory";
 import About from "./pages/About";
 import FAQ from "./pages/FAQ";
