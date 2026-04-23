@@ -38,11 +38,16 @@ const AddPostBar = ({ topicId, topicName, categoryName, onPostAdded }: AddPostBa
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="w-full flex items-center gap-3 px-4 py-3 border rounded-xl bg-card hover:bg-muted/50 transition-colors cursor-pointer mt-3">
-          <div className="flex items-center justify-center w-7 h-7 rounded-full bg-orange-500 text-white shrink-0">
+        <button
+          type="button"
+          className="w-full flex items-center gap-3 py-3 border-b border-border/60 hover:bg-muted/40 transition-colors cursor-pointer"
+        >
+          <div className="flex items-center justify-center w-7 h-7 rounded-full bg-secondary text-secondary-foreground shrink-0">
             <Plus className="w-4 h-4" />
           </div>
-          <span className="text-sm text-muted-foreground">Add your own advice or perspective!</span>
+          <span className="text-sm font-semibold text-primary">
+            Add your own advice or perspective!
+          </span>
         </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-y-auto">

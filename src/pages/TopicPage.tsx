@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
@@ -9,6 +9,11 @@ import TopicRecentlyAdded from "@/components/TopicRecentlyAdded";
 import AddPostBar from "@/components/AddPostBar";
 import FollowTopicButton from "@/components/FollowTopicButton";
 import EmailCaptureForm from "@/components/EmailCaptureForm";
+import TopicPaginationFooter, {
+  DEFAULT_PAGE_SIZE,
+  isValidPageSize,
+  type PageSize,
+} from "@/components/TopicPaginationFooter";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Post } from "@/data/seedData";
 import {
@@ -32,6 +37,36 @@ const TopicPage = () => {
     () => ((postsData ?? []) as unknown) as Post[],
     [postsData]
   );
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const sizeFromUrl = Number(searchParams.get("size"));
+  const size: PageSize = isValidPageSize(sizeFromUrl)
+    ? sizeFromUrl
+    : DEFAULT_PAGE_SIZE;
+
+  const [rendered, setRendered] = useState<number>(size);
+
+  useEffect(() => {
+    setRendered((prev) =>
+      Math.min(Math.max(prev, size), posts.length || size)
+    );
+  }, [posts.length, size]);
+
+  const visiblePosts = useMemo(
+    () => posts.slice(0, rendered),
+    [posts, rendered]
+  );
+
+  const handleSizeChange = (next: PageSize) => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set("size", String(next));
+    setSearchParams(nextParams, { replace: true });
+    setRendered((prev) => Math.max(prev, next));
+  };
+
+  const handleShowMore = () => {
+    setRendered((prev) => Math.min(prev + size, posts.length));
+  };
 
   const refreshPosts = () => {
     if (topic?.id) {
@@ -76,18 +111,24 @@ const TopicPage = () => {
             </div>
             {/* Main â Topic posts */}
             <div className="min-w-0">
-              <div className="mb-6">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h1 className="text-2xl font-bold text-card-foreground font-heading">{topic.name}</h1>
-                    <p className="text-sm text-muted-foreground">/{topic.categoryName}</p>
-                    <p className="text-sm text-muted-foreground mt-1">{getTopicSubtitle(topic.name, topic.categoryName)}</p>
+              <div className="mb-6 flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="flex items-baseline gap-3">
+                    <h1 className="text-3xl md:text-4xl font-heading font-bold text-card-foreground">
+                      {topic.name}
+                    </h1>
+                    <span className="text-sm text-muted-foreground">
+                      /{topic.categoryName}
+                    </span>
                   </div>
-                  <FollowTopicButton topicId={topic.id} />
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {getTopicSubtitle(topic.name, topic.categoryName)}
+                  </p>
                 </div>
+                <FollowTopicButton topicId={topic.id} />
               </div>
-              <div className="space-y-2">
-                {posts.map((post, i) => (
+              <div>
+                {visiblePosts.map((post, i) => (
                   <TopicPostListItem
                     key={post.id}
                     post={post}
@@ -95,15 +136,22 @@ const TopicPage = () => {
                     topicName={topic.name}
                   />
                 ))}
+                {!loading && !!user && topic && (
+                  <AddPostBar
+                    topicId={topic.id}
+                    topicName={topic.name}
+                    categoryName={topic.categoryName}
+                    onPostAdded={refreshPosts}
+                  />
+                )}
               </div>
-              {!loading && !!user && topic && (
-                <AddPostBar
-                  topicId={topic.id}
-                  topicName={topic.name}
-                  categoryName={topic.categoryName}
-                  onPostAdded={refreshPosts}
-                />
-              )}
+              <TopicPaginationFooter
+                size={size}
+                total={posts.length}
+                rendered={rendered}
+                onSizeChange={handleSizeChange}
+                onShowMore={handleShowMore}
+              />
             </div>
 
             {/* Right â Recommendations + Email Capture */}
