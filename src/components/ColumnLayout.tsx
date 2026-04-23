@@ -15,7 +15,9 @@ const ColumnLayout = () => {
     .filter((t): t is typeof topics[number] => Boolean(t));
   const rest = topics.filter((t) => !PRIORITY_TOPICS.includes(t.name));
   const popularTopics = [...priority, ...rest];
-  const { visible, sentinelRef, hasMore } = useInfiniteList(popularTopics, 6, 6);
+  // Initial count + 0px rootMargin keep the middle column roughly as tall as
+  // the flanking sidebars on first paint; more cards load as the user scrolls.
+  const { visible, sentinelRef, hasMore } = useInfiniteList(popularTopics, 4, 4, "0px");
 
   return (
     <div className="mx-auto mt-5 px-6 lg:px-10">

@@ -6,7 +6,12 @@ import { useEffect, useRef, useState } from "react";
  * enters the viewport, we bump `visibleCount` by `step` until we reach
  * `total`. This drives the Reddit-style "endless" feed on the homepage.
  */
-export function useInfiniteList<T>(items: T[], initial = 10, step = 10) {
+export function useInfiniteList<T>(
+  items: T[],
+  initial = 10,
+  step = 10,
+  rootMargin = "400px 0px"
+) {
   const [visibleCount, setVisibleCount] = useState(initial);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -26,11 +31,11 @@ export function useInfiniteList<T>(items: T[], initial = 10, step = 10) {
           setVisibleCount((c) => Math.min(c + step, items.length));
         }
       },
-      { rootMargin: "400px 0px" }
+      { rootMargin }
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [visibleCount, items.length, step]);
+  }, [visibleCount, items.length, step, rootMargin]);
 
   return {
     visible: items.slice(0, visibleCount),
