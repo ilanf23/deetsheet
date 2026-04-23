@@ -1,8 +1,10 @@
 import PostCard from "@/components/PostCard";
 import { getRecentPosts } from "@/data/seedData";
+import { useInfiniteList } from "@/hooks/useInfiniteList";
 
 const RecentlyAddedSidebar = () => {
   const recentPosts = getRecentPosts();
+  const { visible, sentinelRef, hasMore } = useInfiniteList(recentPosts, 8, 8);
 
   return (
     <div className="bg-background rounded-xl border border-border p-4">
@@ -12,9 +14,14 @@ const RecentlyAddedSidebar = () => {
         </h2>
       </div>
       <div>
-        {recentPosts.map((post) => (
+        {visible.map((post) => (
           <PostCard key={post.id} post={post} />
         ))}
+        {hasMore && (
+          <div ref={sentinelRef} className="h-8 flex items-center justify-center text-[11px] text-muted-foreground">
+            Loading more…
+          </div>
+        )}
       </div>
     </div>
   );
