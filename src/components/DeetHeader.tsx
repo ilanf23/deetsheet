@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminMode } from "@/hooks/useAdminMode";
+import LocationChip from "@/components/LocationChip";
 
 const DeetHeader = () => {
   const navigate = useNavigate();
@@ -42,6 +43,7 @@ const DeetHeader = () => {
         </div>
 
         <nav className="hidden md:flex items-center gap-1">
+          <div className="mr-2"><LocationChip /></div>
           {user ? (
             <>
               {isAdmin && (
@@ -80,6 +82,7 @@ const DeetHeader = () => {
         </nav>
 
         <div className="flex md:hidden items-center gap-2">
+          <LocationChip />
           <Button variant="ghost" size="icon" title="Topics Directory" onClick={() => navigate("/topics")}>
             <List className="h-5 w-5" />
           </Button>

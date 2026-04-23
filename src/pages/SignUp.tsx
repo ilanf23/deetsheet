@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -9,7 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "@/components/ui/sonner";
+import { US_STATES } from "@/lib/usStates";
+import { readStoredLocation, clearStoredLocation } from "@/lib/locationStorage";
 
 const benefits = [
   "Keep Track of all your favorite posts and comments.",
@@ -26,7 +35,44 @@ const SignUp = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [skipLocation, setSkipLocation] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Pre-fill from any anon location stored in localStorage so returning
+  // visitors don't have to re-type. They can still edit or skip.
+  useEffect(() => {
+    const stored = readStoredLocation();
+    if (stored?.city && stored?.state && stored.source === "manual") {
+      setCity(stored.city);
+      setState(stored.state);
+    }
+  }, []);
+
+  /**
+   * After signup, if the user provided a location (or had one in localStorage),
+   * resolve it to a locations.id via the SECURITY DEFINER RPC and write it onto
+   * the new profile. Then clear the localStorage key per spec.
+   */
+  const persistLocationForUser = async (userId: string) => {
+    if (skipLocation) return;
+    const cleanCity = city.trim();
+    const cleanState = state.trim().toUpperCase();
+    if (!cleanCity || cleanState.length !== 2) return;
+
+    const { data: locId, error } = await supabase.rpc("get_or_create_location", {
+      _city: cleanCity,
+      _state: cleanState,
+      _country: "US",
+    });
+    if (error || !locId) return;
+    await supabase
+      .from("profiles")
+      .update({ location_id: locId as string })
+      .eq("id", userId);
+    clearStoredLocation();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,8 +84,14 @@ const SignUp = () => {
       toast.error("Username must be at least 3 characters");
       return;
     }
+    // Location is optional. Only validate if the user is providing one.
+    if (!skipLocation && (city.trim() || state) && (!city.trim() || !state)) {
+      toast.error("Please complete both city and state, or click Skip for now");
+      return;
+    }
+
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -47,13 +99,24 @@ const SignUp = () => {
         data: { username },
       },
     });
-    setLoading(false);
+
     if (error) {
+      setLoading(false);
       toast.error(error.message);
-    } else {
-      toast.success("Account created successfully!");
-      navigate("/profile");
+      return;
     }
+
+    if (data.user) {
+      try {
+        await persistLocationForUser(data.user.id);
+      } catch {
+        /* Non-blocking — account is created either way. */
+      }
+    }
+
+    setLoading(false);
+    toast.success("Account created successfully!");
+    navigate("/profile");
   };
 
   const handleGoogleSignIn = async () => {
@@ -65,7 +128,6 @@ const SignUp = () => {
       toast.error(error.message);
     }
   };
-
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -98,6 +160,62 @@ const SignUp = () => {
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <Input id="confirmPassword" type="password" placeholder="********" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+              </div>
+
+              {/* Optional location ----------------------------------------- */}
+              <div className="rounded-md border border-border p-3 space-y-3 bg-muted/30">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <Label className="text-sm">Where are you based? <span className="text-muted-foreground font-normal">(Optional)</span></Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      We'll show posts from your city first.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      setSkipLocation(true);
+                      setCity("");
+                      setState("");
+                    }}
+                  >
+                    Skip for now
+                  </Button>
+                </div>
+                {!skipLocation && (
+                  <div className="grid grid-cols-3 gap-2">
+                    <Input
+                      className="col-span-2"
+                      placeholder="City"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                    />
+                    <Select value={state} onValueChange={setState}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="State" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {US_STATES.map((s) => (
+                          <SelectItem key={s.code} value={s.code}>
+                            {s.code}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {skipLocation && (
+                  <button
+                    type="button"
+                    onClick={() => setSkipLocation(false)}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    Add a location
+                  </button>
+                )}
               </div>
 
               <div className="relative my-6">
