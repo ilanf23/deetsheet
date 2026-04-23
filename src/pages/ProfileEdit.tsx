@@ -49,6 +49,7 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLocation } from "@/contexts/LocationContext";
 import { supabase } from "@/integrations/supabase/client";
 import LinkedInImportDialog from "@/components/LinkedInImportDialog";
 import AvatarCropDialog from "@/components/AvatarCropDialog";
@@ -120,6 +121,7 @@ function getCredentialIcon(value: string) {
 const ProfileEdit = () => {
   const { toast } = useToast();
   const { user, refreshProfile } = useAuth();
+  const { setLocation, clearLocation } = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -250,12 +252,24 @@ const ProfileEdit = () => {
         email_on_post_edit: prefs.emailOnPostEdit,
         email_top_posts: prefs.emailTopPosts,
       });
-    setSaving(false);
     if (error) {
+      setSaving(false);
       toast({ title: "Error saving profile", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Profile saved!", description: "Your preferences have been updated." });
+      return;
     }
+
+    // Keep the header location chip and home-feed filter in sync with the
+    // city/state the user just set on their profile.
+    const cityTrim = values.city?.trim() ?? "";
+    const stateTrim = values.state?.trim() ?? "";
+    if (cityTrim && stateTrim) {
+      await setLocation(cityTrim, stateTrim);
+    } else {
+      await clearLocation();
+    }
+
+    setSaving(false);
+    toast({ title: "Profile saved!", description: "Your preferences have been updated." });
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -63,27 +63,38 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
   const loadProfileLocation = useCallback(async (userId: string) => {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("location_id")
+      .select("location_id, city, state")
       .eq("id", userId)
       .maybeSingle();
 
-    if (!profile?.location_id) {
-      setLocationState(null);
-      return;
+    if (profile?.location_id) {
+      const { data: loc } = await supabase
+        .from("locations")
+        .select("id, city, state, country")
+        .eq("id", profile.location_id)
+        .maybeSingle();
+
+      if (loc) {
+        setLocationState({
+          id: loc.id,
+          city: loc.city,
+          state: loc.state,
+          country: loc.country,
+        });
+        return;
+      }
     }
 
-    const { data: loc } = await supabase
-      .from("locations")
-      .select("id, city, state, country")
-      .eq("id", profile.location_id)
-      .maybeSingle();
-
-    if (loc) {
+    // Fall back to the denormalized profile fields so users who set their
+    // city/state via ProfileEdit don't have to set location a second time.
+    const fallbackCity = profile?.city?.trim();
+    const fallbackState = profile?.state?.trim();
+    if (fallbackCity && fallbackState) {
       setLocationState({
-        id: loc.id,
-        city: loc.city,
-        state: loc.state,
-        country: loc.country,
+        id: null,
+        city: fallbackCity,
+        state: fallbackState.toUpperCase(),
+        country: "US",
       });
     } else {
       setLocationState(null);
@@ -144,7 +155,11 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
 
         const { error: updErr } = await supabase
           .from("profiles")
-          .update({ location_id: locId as string })
+          .update({
+            location_id: locId as string,
+            city: cleanCity,
+            state: cleanState,
+          })
           .eq("id", user.id);
         if (updErr) return null;
 
@@ -178,7 +193,10 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
 
   const clearLocation = useCallback(async () => {
     if (user) {
-      await supabase.from("profiles").update({ location_id: null }).eq("id", user.id);
+      await supabase
+        .from("profiles")
+        .update({ location_id: null, city: null, state: null })
+        .eq("id", user.id);
       setLocationState(null);
     } else {
       clearStoredLocation();
