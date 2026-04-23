@@ -86,22 +86,14 @@ const TopicPage = () => {
                   <FollowTopicButton topicId={topic.id} />
                 </div>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {posts.map((post, i) => (
-                  <div key={post.id} id={`post-${i + 1}`} className="scroll-mt-24">
-                  <TopicPostExpanded
+                  <TopicPostListItem
+                    key={post.id}
                     post={post}
                     rank={i + 1}
-                    isExpanded={expandedIds.has(post.id)}
-                    onToggleExpand={() => setExpandedIds(prev => {
-                      const next = new Set(prev);
-                      if (next.has(post.id)) next.delete(post.id);
-                      else next.add(post.id);
-                      return next;
-                    })}
-                    isAuthenticated={!loading && !!user}
+                    topicName={topic.name}
                   />
-                  </div>
                 ))}
               </div>
               {!loading && !!user && topic && (
