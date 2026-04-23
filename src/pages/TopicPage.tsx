@@ -1,9 +1,9 @@
-import { useState, useMemo, useEffect } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useMemo } from "react";
+import { useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
-import TopicPostExpanded from "@/components/TopicPostExpanded";
+import TopicPostListItem from "@/components/TopicPostListItem";
 import TopicRecommendations from "@/components/TopicRecommendations";
 import TopicRecentlyAdded from "@/components/TopicRecentlyAdded";
 import AddPostBar from "@/components/AddPostBar";
@@ -19,7 +19,6 @@ import {
 
 const TopicPage = () => {
   const { topicName } = useParams<{ topicName: string }>();
-  const { hash } = useLocation();
   const { user, loading } = useAuth();
   const queryClient = useQueryClient();
 
@@ -33,24 +32,6 @@ const TopicPage = () => {
     () => ((postsData ?? []) as unknown) as Post[],
     [postsData]
   );
-
-  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
-
-  // Auto-expand: if the URL has #post-N, open that ranked post and scroll to it;
-  // otherwise fall back to opening the top-ranked post.
-  useEffect(() => {
-    if (posts.length === 0 || expandedIds.size > 0) return;
-    const match = hash.match(/^#post-(\d+)$/);
-    const targetIdx = match ? Math.min(parseInt(match[1], 10) - 1, posts.length - 1) : 0;
-    const targetPost = posts[targetIdx];
-    if (!targetPost) return;
-    setExpandedIds(new Set([targetPost.id]));
-    if (match) {
-      requestAnimationFrame(() => {
-        document.getElementById(`post-${targetIdx + 1}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    }
-  }, [posts, expandedIds.size, hash]);
 
   const refreshPosts = () => {
     if (topic?.id) {
@@ -105,22 +86,14 @@ const TopicPage = () => {
                   <FollowTopicButton topicId={topic.id} />
                 </div>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-2">
                 {posts.map((post, i) => (
-                  <div key={post.id} id={`post-${i + 1}`} className="scroll-mt-24">
-                  <TopicPostExpanded
+                  <TopicPostListItem
+                    key={post.id}
                     post={post}
                     rank={i + 1}
-                    isExpanded={expandedIds.has(post.id)}
-                    onToggleExpand={() => setExpandedIds(prev => {
-                      const next = new Set(prev);
-                      if (next.has(post.id)) next.delete(post.id);
-                      else next.add(post.id);
-                      return next;
-                    })}
-                    isAuthenticated={!loading && !!user}
+                    topicName={topic.name}
                   />
-                  </div>
                 ))}
               </div>
               {!loading && !!user && topic && (
