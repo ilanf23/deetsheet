@@ -2,11 +2,19 @@ import PopularTopicSection from "@/components/PopularTopicSection";
 import SubjectsSidebar from "@/components/SubjectsSidebar";
 import RecentlyAddedSidebar from "@/components/RecentlyAddedSidebar";
 import { topics } from "@/data/seedData";
+import { useInfiniteList } from "@/hooks/useInfiniteList";
+
+const PRIORITY_TOPICS = ["Parent", "Waiter", "Chicago", "Cancer", "College", "Love", "Doctor", "1980s", "New York City", "iPhone", "Married", "20s", "McDonald's"];
 
 const ColumnLayout = () => {
-  const popularTopics = topics.filter((t) =>
-    ["Parent", "Waiter", "Chicago", "Cancer", "College", "Love", "Doctor", "1980s", "New York City", "iPhone", "Married", "20s", "McDonald's"].includes(t.name)
-  );
+  // Show priority topics first, then progressively reveal the rest of the
+  // catalog so the middle column scrolls "endlessly" Reddit-style.
+  const priority = PRIORITY_TOPICS
+    .map((name) => topics.find((t) => t.name === name))
+    .filter((t): t is typeof topics[number] => Boolean(t));
+  const rest = topics.filter((t) => !PRIORITY_TOPICS.includes(t.name));
+  const popularTopics = [...priority, ...rest];
+  const { visible, sentinelRef, hasMore } = useInfiniteList(popularTopics, 6, 6);
 
   return (
     <div className="mx-auto mt-5 px-6 lg:px-10">
