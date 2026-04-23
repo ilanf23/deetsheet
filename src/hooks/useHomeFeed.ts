@@ -3,21 +3,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from "@/contexts/LocationContext";
 
 /**
- * Cascading homepage feed:
+ * Cascading homepage feed (topic-driven):
  *
- *   1. Posts authored in the visitor's CITY    → "Near you in {City}"
- *   2. If <20 total, fill from the same STATE  → "More from {State}"
- *   3. If still <20, fill with national/trending → "Trending nationally"
+ *   1. Topics with posts in the visitor's CITY    → "Near you in {City}"
+ *   2. Fill from the same STATE                   → "More from {State}"
+ *   3. Fill with national/trending                → "Trending nationally"
  *
- * For visitors without a location, we skip straight to step 3 with no labels.
- *
- * NOTE: The "national" tier uses the highest-rated posts overall as a stand-in
- * for trending, so visitors with no location-targeted content still see a full
- * feed. Existing posts (with no location_id and is_national = false) are
- * included in this tier so they remain visible.
+ * For each tier we pick up to TOPICS_PER_TIER topics, and for each topic we
+ * fetch its top POSTS_PER_TOPIC posts so the cards always look full (matches
+ * the "≥5 posts per box" product requirement).
  */
 
-const TARGET_COUNT = 20;
+const TARGET_TOPICS = 8;        // total topic cards to render across all tiers
+const POSTS_PER_TOPIC = 5;      // posts shown inside each topic card
 
 export interface FeedPost {
   id: string;
@@ -76,6 +74,46 @@ const mapPost = (row: RawPostRow): FeedPost => ({
   state: row.locations?.state ?? null,
 });
 
+/**
+ * Pick distinct topic_ids (in order) from a list of posts, skipping any
+ * topic_ids we've already used in earlier tiers.
+ */
+const pickTopicIds = (rows: RawPostRow[], used: Set<string>, limit: number): string[] => {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const r of rows) {
+    if (used.has(r.topic_id) || seen.has(r.topic_id)) continue;
+    seen.add(r.topic_id);
+    out.push(r.topic_id);
+    if (out.length >= limit) break;
+  }
+  return out;
+};
+
+/**
+ * For a set of topic_ids, fetch the top POSTS_PER_TOPIC posts per topic
+ * (highest avg rating). We do one query per topic so each card is filled.
+ */
+const fetchPostsForTopics = async (topicIds: string[]): Promise<Map<string, FeedPost[]>> => {
+  const result = new Map<string, FeedPost[]>();
+  await Promise.all(
+    topicIds.map(async (tid) => {
+      const { data } = await supabase
+        .from("posts")
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .select(POST_SELECT as any)
+        .eq("topic_id", tid)
+        .order("average_rating", { ascending: false, nullsFirst: false })
+        .order("rating_count", { ascending: false })
+        .limit(POSTS_PER_TOPIC);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const posts = ((data as any[]) ?? []).map((r) => mapPost(r as RawPostRow));
+      result.set(tid, posts);
+    })
+  );
+  return result;
+};
+
 export const useHomeFeed = () => {
   const { location } = useLocation();
   const city = location?.city ?? null;
@@ -85,11 +123,11 @@ export const useHomeFeed = () => {
     queryKey: ["home-feed", city, state],
     queryFn: async (): Promise<FeedSection[]> => {
       const sections: FeedSection[] = [];
-      const seen = new Set<string>();
-      let remaining = TARGET_COUNT;
+      const usedTopicIds = new Set<string>();
+      let remainingTopics = TARGET_TOPICS;
 
       // ---- Tier 1: city ----
-      if (city && state && remaining > 0) {
+      if (city && state && remainingTopics > 0) {
         const { data: locRows } = await supabase
           .from("locations")
           .select("id")
@@ -102,24 +140,30 @@ export const useHomeFeed = () => {
           const { data } = await supabase
             .from("posts")
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .select(POST_SELECT as any)
+            .select("id, topic_id, average_rating, rating_count" as any)
             .in("location_id", locIds)
             .order("average_rating", { ascending: false, nullsFirst: false })
             .order("rating_count", { ascending: false })
-            .limit(remaining);
+            .limit(200);
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const posts = ((data as any[]) ?? []).map((r) => mapPost(r as RawPostRow));
-          posts.forEach((p) => seen.add(p.id));
-          if (posts.length > 0) {
+          const topicIds = pickTopicIds(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (data as any[]) ?? [],
+            usedTopicIds,
+            remainingTopics
+          );
+          if (topicIds.length > 0) {
+            const map = await fetchPostsForTopics(topicIds);
+            const posts: FeedPost[] = topicIds.flatMap((tid) => map.get(tid) ?? []);
+            topicIds.forEach((tid) => usedTopicIds.add(tid));
             sections.push({ key: "city", label: `Near you in ${city}`, posts });
-            remaining -= posts.length;
+            remainingTopics -= topicIds.length;
           }
         }
       }
 
       // ---- Tier 2: state ----
-      if (state && remaining > 0) {
+      if (state && remainingTopics > 0) {
         const { data: locRows } = await supabase
           .from("locations")
           .select("id")
@@ -130,45 +174,49 @@ export const useHomeFeed = () => {
           const { data } = await supabase
             .from("posts")
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            .select(POST_SELECT as any)
+            .select("id, topic_id, average_rating, rating_count" as any)
             .in("location_id", locIds)
             .order("average_rating", { ascending: false, nullsFirst: false })
             .order("rating_count", { ascending: false })
-            .limit(remaining + seen.size);
+            .limit(200);
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const posts = ((data as any[]) ?? [])
-            .map((r) => mapPost(r as RawPostRow))
-            .filter((p) => !seen.has(p.id))
-            .slice(0, remaining);
-          posts.forEach((p) => seen.add(p.id));
-          if (posts.length > 0) {
+          const topicIds = pickTopicIds(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (data as any[]) ?? [],
+            usedTopicIds,
+            remainingTopics
+          );
+          if (topicIds.length > 0) {
+            const map = await fetchPostsForTopics(topicIds);
+            const posts: FeedPost[] = topicIds.flatMap((tid) => map.get(tid) ?? []);
+            topicIds.forEach((tid) => usedTopicIds.add(tid));
             sections.push({ key: "state", label: `More from ${state}`, posts });
-            remaining -= posts.length;
+            remainingTopics -= topicIds.length;
           }
         }
       }
 
       // ---- Tier 3: national / trending fallback ----
-      if (remaining > 0) {
+      if (remainingTopics > 0) {
         const { data } = await supabase
           .from("posts")
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .select(POST_SELECT as any)
+          .select("id, topic_id, average_rating, rating_count" as any)
           .order("average_rating", { ascending: false, nullsFirst: false })
           .order("rating_count", { ascending: false })
-          .limit(remaining + seen.size);
+          .limit(500);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const posts = ((data as any[]) ?? [])
-          .map((r) => mapPost(r as RawPostRow))
-          .filter((p) => !seen.has(p.id))
-          .slice(0, remaining);
-
-        if (posts.length > 0) {
-          // Only label this tier when the visitor actually has a location and
-          // we've already shown city/state results — otherwise the bare feed
-          // shouldn't shout "Trending nationally".
+        const topicIds = pickTopicIds(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (data as any[]) ?? [],
+          usedTopicIds,
+          remainingTopics
+        );
+        if (topicIds.length > 0) {
+          const map = await fetchPostsForTopics(topicIds);
+          const posts: FeedPost[] = topicIds.flatMap((tid) => map.get(tid) ?? []);
+          // Only label this tier when the visitor has a location and we've
+          // already shown a city/state tier above.
           const label = sections.length > 0 ? "Trending nationally" : null;
           sections.push({ key: "national", label, posts });
         }
