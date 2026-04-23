@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useHomeFeed, type FeedPost, type FeedSection } from "@/hooks/useHomeFeed";
-import { useLocation } from "@/contexts/LocationContext";
+
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import UserRatingIndicator from "@/components/UserRatingIndicator";
@@ -22,17 +22,19 @@ import { getTopicSubtitle } from "@/hooks/useSupabaseTopics";
 const HomeFeed = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { location } = useLocation();
-  const [showAll, setShowAll] = useState(false);
+  const [showTrending, setShowTrending] = useState(false);
   const { data: sections, isLoading } = useHomeFeed();
 
-  // When "Show all locations" is on, only render the national tier (and strip its label).
+  // "Show trending instead" hides personalization and shows only the national tier
+  // (escape hatch required by the SOW).
   const visibleSections: FeedSection[] = useMemo(() => {
     if (!sections) return [];
-    return showAll
-      ? sections.filter((s) => s.key === "national").map((s) => ({ ...s, label: null }))
-      : sections;
-  }, [sections, showAll]);
+    if (!showTrending) return sections;
+    const national = sections.filter((s) => s.key === "national");
+    if (national.length > 0) return national.map((s) => ({ ...s, label: null }));
+    // If the cached feed didn't include a national tier, fall back to whatever we have.
+    return sections.map((s) => ({ ...s, label: null }));
+  }, [sections, showTrending]);
 
   return (
     <div>
@@ -41,14 +43,12 @@ const HomeFeed = () => {
         <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           For You
         </h2>
-        {location && (
-          <div className="flex items-center gap-2">
-            <Label htmlFor="show-all" className="text-xs text-muted-foreground cursor-pointer">
-              Show all locations
-            </Label>
-            <Switch id="show-all" checked={showAll} onCheckedChange={setShowAll} />
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <Label htmlFor="show-trending" className="text-xs text-muted-foreground cursor-pointer">
+            Show trending instead
+          </Label>
+          <Switch id="show-trending" checked={showTrending} onCheckedChange={setShowTrending} />
+        </div>
       </div>
 
       {isLoading && (

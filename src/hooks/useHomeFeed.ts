@@ -1,21 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from "@/contexts/LocationContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 /**
- * Cascading homepage feed (topic-driven):
+ * Personalized homepage feed.
  *
- *   1. Topics with posts in the visitor's CITY    → "Near you in {City}"
- *   2. Fill from the same STATE                   → "More from {State}"
- *   3. Fill with national/trending                → "Trending nationally"
+ * Signed in:
+ *   1. Profile signals (state, college, major, job, age, hobbies)
+ *   2. If sparse, fall through to city/state/national cascade
+ *   3. Always tail with a "Trending nationally" card if the column is thin
  *
- * For each tier we pick up to TOPICS_PER_TIER topics, and for each topic we
- * fetch its top POSTS_PER_TOPIC posts so the cards always look full (matches
- * the "≥5 posts per box" product requirement).
+ * Signed out:
+ *   1. City → State → National cascade (driven by localStorage location)
  */
 
-const TARGET_TOPICS = 8;        // total topic cards to render across all tiers
-const POSTS_PER_TOPIC = 5;      // posts shown inside each topic card
+const TARGET_TOPICS = 8;
+const POSTS_PER_TOPIC = 5;
+const MIN_PERSONALIZED_BEFORE_TAIL = 4;
 
 export interface FeedPost {
   id: string;
@@ -34,7 +36,7 @@ export interface FeedPost {
 }
 
 export interface FeedSection {
-  key: "city" | "state" | "national";
+  key: "profile" | "city" | "state" | "national";
   label: string | null;
   posts: FeedPost[];
 }
@@ -74,10 +76,6 @@ const mapPost = (row: RawPostRow): FeedPost => ({
   state: row.locations?.state ?? null,
 });
 
-/**
- * Pick distinct topic_ids (in order) from a list of posts, skipping any
- * topic_ids we've already used in earlier tiers.
- */
 const pickTopicIds = (rows: RawPostRow[], used: Set<string>, limit: number): string[] => {
   const out: string[] = [];
   const seen = new Set<string>();
@@ -90,10 +88,6 @@ const pickTopicIds = (rows: RawPostRow[], used: Set<string>, limit: number): str
   return out;
 };
 
-/**
- * For a set of topic_ids, fetch the top POSTS_PER_TOPIC posts per topic
- * (highest avg rating). We do one query per topic so each card is filled.
- */
 const fetchPostsForTopics = async (topicIds: string[]): Promise<Map<string, FeedPost[]>> => {
   const result = new Map<string, FeedPost[]>();
   await Promise.all(
@@ -114,20 +108,185 @@ const fetchPostsForTopics = async (topicIds: string[]): Promise<Map<string, Feed
   return result;
 };
 
+// US state name lookup (abbreviation → full name) since profiles store either form
+// and topics in the "States" category use full names.
+const STATE_NAMES: Record<string, string> = {
+  AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas", CA: "California",
+  CO: "Colorado", CT: "Connecticut", DE: "Delaware", FL: "Florida", GA: "Georgia",
+  HI: "Hawaii", ID: "Idaho", IL: "Illinois", IN: "Indiana", IA: "Iowa",
+  KS: "Kansas", KY: "Kentucky", LA: "Louisiana", ME: "Maine", MD: "Maryland",
+  MA: "Massachusetts", MI: "Michigan", MN: "Minnesota", MS: "Mississippi", MO: "Missouri",
+  MT: "Montana", NE: "Nebraska", NV: "Nevada", NH: "New Hampshire", NJ: "New Jersey",
+  NM: "New Mexico", NY: "New York", NC: "North Carolina", ND: "North Dakota", OH: "Ohio",
+  OK: "Oklahoma", OR: "Oregon", PA: "Pennsylvania", RI: "Rhode Island", SC: "South Carolina",
+  SD: "South Dakota", TN: "Tennessee", TX: "Texas", UT: "Utah", VT: "Vermont",
+  VA: "Virginia", WA: "Washington", WV: "West Virginia", WI: "Wisconsin", WY: "Wyoming",
+};
+
+const expandState = (s: string | null): string | null => {
+  if (!s) return null;
+  const trimmed = s.trim();
+  if (trimmed.length === 2) return STATE_NAMES[trimmed.toUpperCase()] ?? trimmed;
+  return trimmed;
+};
+
+const ageBucket = (birthYear: string | null): string | null => {
+  if (!birthYear) return null;
+  const yr = parseInt(birthYear, 10);
+  if (!yr || isNaN(yr)) return null;
+  const age = new Date().getFullYear() - yr;
+  if (age < 10 || age > 120) return null;
+  const decade = Math.floor(age / 10) * 10;
+  return `${decade}s`;
+};
+
+interface ProfileRow {
+  city: string | null;
+  state: string | null;
+  college: string | null;
+  major: string | null;
+  job: string | null;
+  birth_year: string | null;
+  entity_type: string | null;
+}
+
+interface SignalLookup {
+  category: string;
+  // Either an exact name match or a fuzzy ilike pattern
+  exact?: string;
+  fuzzy?: string;
+  buildLabel: (matchedName: string) => string;
+}
+
+const buildSignals = (p: ProfileRow): SignalLookup[] => {
+  const signals: SignalLookup[] = [];
+  const stateName = expandState(p.state);
+  if (stateName) {
+    signals.push({
+      category: "States",
+      exact: stateName,
+      buildLabel: (name) => `Because you're in ${name}`,
+    });
+  }
+  if (p.city) {
+    signals.push({
+      category: "Cities",
+      exact: p.city.trim(),
+      buildLabel: (name) => `Near you in ${name}`,
+    });
+  }
+  if (p.college) {
+    signals.push({
+      category: "Colleges",
+      fuzzy: p.college.trim(),
+      buildLabel: (name) => `From your alma mater: ${name}`,
+    });
+  }
+  if (p.major) {
+    signals.push({
+      category: "Majors",
+      fuzzy: p.major.trim(),
+      buildLabel: (name) => `For your major: ${name}`,
+    });
+  }
+  if (p.job) {
+    signals.push({
+      category: "Jobs",
+      fuzzy: p.job.trim(),
+      buildLabel: (name) => `For ${name}s like you`,
+    });
+  }
+  const age = ageBucket(p.birth_year);
+  if (age) {
+    signals.push({
+      category: "Ages",
+      exact: age,
+      buildLabel: (name) => `In your ${name}`,
+    });
+  }
+  if (p.entity_type) {
+    signals.push({
+      category: "Hobbies",
+      fuzzy: p.entity_type.trim(),
+      buildLabel: (name) => `Your interest: ${name}`,
+    });
+  }
+  return signals;
+};
+
+interface MatchedTopic {
+  id: string;
+  name: string;
+  label: string;
+}
+
+const matchTopicForSignal = async (sig: SignalLookup): Promise<MatchedTopic | null> => {
+  let q = supabase.from("topics").select("id, name").eq("category_name", sig.category);
+  if (sig.exact) {
+    q = q.ilike("name", sig.exact);
+  } else if (sig.fuzzy) {
+    // contains match (either direction handled by single ilike with %term%)
+    q = q.ilike("name", `%${sig.fuzzy}%`);
+  }
+  const { data } = await q.limit(1);
+  const row = data?.[0];
+  if (!row) return null;
+  return { id: row.id, name: row.name, label: sig.buildLabel(row.name) };
+};
+
 export const useHomeFeed = () => {
   const { location } = useLocation();
+  const { user } = useAuth();
   const city = location?.city ?? null;
   const state = location?.state ?? null;
+  const userId = user?.id ?? null;
 
   return useQuery({
-    queryKey: ["home-feed", city, state],
+    queryKey: ["home-feed", userId, city, state],
     queryFn: async (): Promise<FeedSection[]> => {
       const sections: FeedSection[] = [];
       const usedTopicIds = new Set<string>();
       let remainingTopics = TARGET_TOPICS;
 
-      // ---- Tier 1: city ----
-      if (city && state && remainingTopics > 0) {
+      // ---- Tier A: profile-driven personalization (signed in only) ----
+      if (userId) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("city, state, college, major, job, birth_year, entity_type")
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (profile) {
+          const signals = buildSignals(profile as ProfileRow);
+          const matches: MatchedTopic[] = [];
+          for (const sig of signals) {
+            if (matches.length >= remainingTopics) break;
+            const m = await matchTopicForSignal(sig);
+            if (m && !usedTopicIds.has(m.id) && !matches.some((x) => x.id === m.id)) {
+              matches.push(m);
+            }
+          }
+
+          if (matches.length > 0) {
+            const postsMap = await fetchPostsForTopics(matches.map((m) => m.id));
+            // Each profile match becomes its own labeled section with a single
+            // topic card so labels like "Because you're in Florida" stay accurate.
+            for (const m of matches) {
+              const posts = postsMap.get(m.id) ?? [];
+              if (posts.length === 0) continue;
+              sections.push({ key: "profile", label: m.label, posts });
+              usedTopicIds.add(m.id);
+              remainingTopics -= 1;
+            }
+          }
+        }
+      }
+
+      const personalizedCount = sections.length;
+      const hadPersonalization = personalizedCount > 0;
+
+      // ---- Tier B: city (only when we have NO personalization OR very thin) ----
+      if (!hadPersonalization && city && state && remainingTopics > 0) {
         const { data: locRows } = await supabase
           .from("locations")
           .select("id")
@@ -162,8 +321,8 @@ export const useHomeFeed = () => {
         }
       }
 
-      // ---- Tier 2: state ----
-      if (state && remainingTopics > 0) {
+      // ---- Tier C: state (only when we have NO personalization) ----
+      if (!hadPersonalization && state && remainingTopics > 0) {
         const { data: locRows } = await supabase
           .from("locations")
           .select("id")
@@ -196,8 +355,13 @@ export const useHomeFeed = () => {
         }
       }
 
-      // ---- Tier 3: national / trending fallback ----
-      if (remainingTopics > 0) {
+      // ---- Tier D: national / trending tail ----
+      // Always show when:
+      //   - no personalization happened (original cascade), OR
+      //   - personalized column is thin (< MIN_PERSONALIZED_BEFORE_TAIL)
+      const needsTail =
+        !hadPersonalization || personalizedCount < MIN_PERSONALIZED_BEFORE_TAIL;
+      if (needsTail && remainingTopics > 0) {
         const { data } = await supabase
           .from("posts")
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -215,8 +379,7 @@ export const useHomeFeed = () => {
         if (topicIds.length > 0) {
           const map = await fetchPostsForTopics(topicIds);
           const posts: FeedPost[] = topicIds.flatMap((tid) => map.get(tid) ?? []);
-          // Only label this tier when the visitor has a location and we've
-          // already shown a city/state tier above.
+          // Label this tier when there's already content above it.
           const label = sections.length > 0 ? "Trending nationally" : null;
           sections.push({ key: "national", label, posts });
         }
