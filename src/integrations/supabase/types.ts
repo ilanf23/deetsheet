@@ -125,6 +125,30 @@ export type Database = {
           },
         ]
       }
+      locations: {
+        Row: {
+          city: string
+          country: string
+          created_at: string
+          id: string
+          state: string
+        }
+        Insert: {
+          city: string
+          country?: string
+          created_at?: string
+          id?: string
+          state: string
+        }
+        Update: {
+          city?: string
+          country?: string
+          created_at?: string
+          id?: string
+          state?: string
+        }
+        Relationships: []
+      }
       post_drafts: {
         Row: {
           content: string
@@ -171,6 +195,8 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          is_national: boolean
+          location_id: string | null
           rating_count: number
           score: number
           title: string
@@ -183,6 +209,8 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          is_national?: boolean
+          location_id?: string | null
           rating_count?: number
           score?: number
           title: string
@@ -195,6 +223,8 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          is_national?: boolean
+          location_id?: string | null
           rating_count?: number
           score?: number
           title?: string
@@ -206,6 +236,13 @@ export type Database = {
             columns: ["author_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
             referencedColumns: ["id"]
           },
           {
@@ -242,6 +279,7 @@ export type Database = {
           high_school: string | null
           id: string
           job: string | null
+          location_id: string | null
           major: string | null
           name: string | null
           reading: string | null
@@ -273,6 +311,7 @@ export type Database = {
           high_school?: string | null
           id: string
           job?: string | null
+          location_id?: string | null
           major?: string | null
           name?: string | null
           reading?: string | null
@@ -304,6 +343,7 @@ export type Database = {
           high_school?: string | null
           id?: string
           job?: string | null
+          location_id?: string | null
           major?: string | null
           name?: string | null
           reading?: string | null
@@ -311,7 +351,15 @@ export type Database = {
           state?: string | null
           username?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ratings: {
         Row: {
@@ -512,6 +560,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_or_create_location: {
+        Args: { _city: string; _country?: string; _state: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
