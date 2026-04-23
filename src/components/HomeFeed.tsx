@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { useHomeFeed, type FeedPost, type FeedSection } from "@/hooks/useHomeFeed";
-import { useLocation } from "@/contexts/LocationContext";
+
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import UserRatingIndicator from "@/components/UserRatingIndicator";
