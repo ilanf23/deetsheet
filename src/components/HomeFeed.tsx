@@ -1,28 +1,38 @@
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
-import { useHomeFeed } from "@/hooks/useHomeFeed";
+import { useHomeFeed, type FeedPost, type FeedSection } from "@/hooks/useHomeFeed";
 import { useLocation } from "@/contexts/LocationContext";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import UserRatingIndicator from "@/components/UserRatingIndicator";
+import { topics as seedTopics } from "@/data/seedData";
+import { getTopicSubtitle } from "@/hooks/useSupabaseTopics";
 
 /**
  * Cascading city → state → national feed for the homepage.
- * Renders one section per tier with a clear, non-intrusive header.
  *
- * Includes a "Show all locations" toggle as the spec-required escape
- * hatch — when on, we render only the national tier regardless of the
- * visitor's saved location.
+ * Visually identical to <PopularTopicSection> — we group the section's
+ * posts by topic and render one PopularTopicSection-shaped box per topic
+ * (header + image + numbered list with the Rating | You column).
+ *
+ * "Show all locations" toggle is the spec-required escape hatch.
  */
 const HomeFeed = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { location } = useLocation();
   const [showAll, setShowAll] = useState(false);
   const { data: sections, isLoading } = useHomeFeed();
 
-  const visibleSections = showAll
-    ? (sections ?? []).filter((s) => s.key === "national").map((s) => ({ ...s, label: null }))
-    : sections ?? [];
+  // When "Show all locations" is on, only render the national tier (and strip its label).
+  const visibleSections: FeedSection[] = useMemo(() => {
+    if (!sections) return [];
+    return showAll
+      ? sections.filter((s) => s.key === "national").map((s) => ({ ...s, label: null }))
+      : sections;
+  }, [sections, showAll]);
 
   return (
     <div>
@@ -56,47 +66,136 @@ const HomeFeed = () => {
 
       <div className="space-y-6">
         {visibleSections.map((section) => (
-          <section key={section.key} className="space-y-2">
-            {section.label && (
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
-                {section.label}
-              </h3>
-            )}
-            <ul className="space-y-2">
-              {section.posts.map((post) => (
-                <li
-                  key={post.id}
-                  className="border rounded-lg bg-background p-3 hover:shadow-sm transition-shadow"
-                >
-                  <button
-                    type="button"
-                    onClick={() => navigate(`/topic/${encodeURIComponent(post.topicName)}`)}
-                    className="text-left w-full"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                          {post.topicName}
-                          {post.city && post.state && (
-                            <span className="ml-2 normal-case tracking-normal text-muted-foreground/70">
-                              · {post.city}, {post.state}
-                            </span>
-                          )}
-                        </p>
-                        <p className="text-primary leading-snug text-sm mt-0.5 hover:underline line-clamp-2">
-                          {post.title}
-                        </p>
-                      </div>
-                      <span className="text-secondary text-sm tabular-nums shrink-0 pt-1">
-                        {post.averageRating.toFixed(1)}
-                      </span>
-                    </div>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
+          <FeedTier
+            key={section.key}
+            section={section}
+            onRatingChanged={() => queryClient.invalidateQueries({ queryKey: ["home-feed"] })}
+            onNavigate={(topicName) => navigate(`/topic/${encodeURIComponent(topicName)}`)}
+          />
         ))}
+      </div>
+    </div>
+  );
+};
+
+interface FeedTierProps {
+  section: FeedSection;
+  onRatingChanged: () => void;
+  onNavigate: (topicName: string) => void;
+}
+
+/**
+ * One tier of the cascade. Posts are grouped by topic and each topic is
+ * rendered as a PopularTopicSection-style card so the visual treatment
+ * matches the rest of the column.
+ */
+const FeedTier = ({ section, onRatingChanged, onNavigate }: FeedTierProps) => {
+  // Group posts under their topic, preserving order.
+  const groups = useMemo(() => {
+    const map = new Map<string, FeedPost[]>();
+    for (const post of section.posts) {
+      const list = map.get(post.topicName) ?? [];
+      list.push(post);
+      map.set(post.topicName, list);
+    }
+    return Array.from(map.entries());
+  }, [section.posts]);
+
+  return (
+    <section className="space-y-3">
+      {section.label && (
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-1">
+          {section.label}
+        </h3>
+      )}
+      <div className="space-y-4">
+        {groups.map(([topicName, posts]) => (
+          <FeedTopicCard
+            key={`${section.key}-${topicName}`}
+            topicName={topicName}
+            posts={posts}
+            onRatingChanged={onRatingChanged}
+            onNavigate={onNavigate}
+          />
+        ))}
+      </div>
+    </section>
+  );
+};
+
+interface FeedTopicCardProps {
+  topicName: string;
+  posts: FeedPost[];
+  onRatingChanged: () => void;
+  onNavigate: (topicName: string) => void;
+}
+
+/**
+ * A single topic card in the For You feed. Mirrors PopularTopicSection
+ * exactly: header (title + subtitle, "Rating | You" label), image-left,
+ * numbered list with average rating + UserRatingIndicator on the right.
+ */
+const FeedTopicCard = ({ topicName, posts, onRatingChanged, onNavigate }: FeedTopicCardProps) => {
+  // Pull image + categoryName off the seed catalog so the card matches PopularTopicSection.
+  const seed = seedTopics.find((t) => t.name === topicName);
+  const categoryName = seed?.categoryName;
+  const subtitle = getTopicSubtitle(topicName, categoryName);
+  const imageUrl = seed?.imageUrl;
+  const topPosts = posts.slice(0, 5);
+
+  return (
+    <div
+      className="border rounded-xl bg-background cursor-pointer hover:shadow-lg transition-all duration-200 p-5"
+      onClick={() => onNavigate(topicName)}
+    >
+      {/* Header: title + subtitle on the left, Rating|You label on the right */}
+      <div className="flex items-start justify-between gap-4 mb-3">
+        <div className="min-w-0">
+          <h3 className="font-heading text-3xl font-normal text-primary leading-tight truncate">
+            {topicName}
+          </h3>
+          {subtitle && (
+            <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+          )}
+        </div>
+        <span className="text-[11px] text-muted-foreground shrink-0 pt-2 whitespace-nowrap">
+          Rating <span className="mx-0.5">|</span> You
+        </span>
+      </div>
+
+      {/* Body: image on the left, numbered list + ratings on the right */}
+      <div className="flex gap-5">
+        {imageUrl && (
+          <img
+            src={imageUrl}
+            alt={topicName}
+            className="w-32 sm:w-36 self-start rounded object-cover shrink-0 aspect-square"
+          />
+        )}
+        <ol className="flex-1 min-w-0 space-y-2">
+          {topPosts.map((post, i) => (
+            <li key={post.id} className="flex items-center gap-3 text-[15px] min-w-0">
+              <span className="text-muted-foreground w-5 shrink-0 text-right">{i + 1}.</span>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onNavigate(topicName);
+                }}
+                className="flex-1 min-w-0 text-left text-primary leading-snug truncate hover:underline"
+              >
+                {post.title || post.content}
+              </button>
+              <span className="flex items-center text-secondary shrink-0 tabular-nums">
+                <span className="font-medium w-8 text-right">{post.averageRating.toFixed(1)}</span>
+                <span className="text-muted-foreground/60 w-4 text-center">|</span>
+                <span className="w-8 flex justify-center">
+                  <UserRatingIndicator postId={post.id} onRatingChanged={onRatingChanged} />
+                </span>
+              </span>
+            </li>
+          ))}
+        </ol>
       </div>
     </div>
   );
