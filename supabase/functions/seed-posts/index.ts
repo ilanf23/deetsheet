@@ -1090,11 +1090,21 @@ Deno.serve(async (req) => {
           title += suffixes[cycleNum % suffixes.length];
         }
 
+        // Make subtopic headers longer and more descriptive, and the body
+        // copy more detailed, so each ranked subtopic feels like a real
+        // long-form post rather than a one-liner.
+        const expandedTitle = expandTitle(title, topic.name, rank);
+        const expandedContent = expandContent(
+          topicData.contents[contentIndex],
+          topic.name,
+          rank,
+        );
+
         posts.push({
           topic_id: topic.id,
           author_id: userIds[userIndex],
-          title,
-          content: topicData.contents[contentIndex],
+          title: expandedTitle,
+          content: expandedContent,
           score: 101 - rank,
           comment_count: 0,
         });
