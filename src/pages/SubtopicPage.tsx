@@ -10,6 +10,13 @@ import {
   usePostsByTopic,
 } from "@/hooks/useSupabaseTopics";
 import type { Post } from "@/data/seedData";
+import cowboysHero from "@/assets/cowboys-hero.jpg";
+
+// Topic-specific hero images for subtopic post pages.
+// Keyed by lowercased topic name for resilient matching.
+const TOPIC_POST_HERO: Record<string, string> = {
+  cowboys: cowboysHero,
+};
 
 /**
  * Dedicated page for a single ranked subtopic within a topic.
