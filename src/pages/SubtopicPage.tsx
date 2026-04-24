@@ -92,7 +92,7 @@ const SubtopicPage = () => {
       <main className="flex-1">
         <div className="max-w-[1400px] mx-auto px-8 lg:px-16 mt-10 mb-20">
           {/* Back link — always returns to the topic page, never home */}
-          <nav className="mb-6 flex items-center gap-2 text-sm">
+          <div className="mb-6 flex items-center gap-2 text-sm">
             <button
               type="button"
               onClick={() => navigate(backToTopicHref)}
@@ -103,7 +103,7 @@ const SubtopicPage = () => {
             </button>
             <span className="text-muted-foreground">/</span>
             <span className="text-muted-foreground">#{rankNum}</span>
-          </nav>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10">
             {/* Main — single post, force expanded */}
