@@ -10,6 +10,13 @@ import {
   usePostsByTopic,
 } from "@/hooks/useSupabaseTopics";
 import type { Post } from "@/data/seedData";
+import cowboysHero from "@/assets/cowboys-hero.jpg";
+
+// Topic-specific hero images for subtopic post pages.
+// Keyed by lowercased topic name for resilient matching.
+const TOPIC_POST_HERO: Record<string, string> = {
+  cowboys: cowboysHero,
+};
 
 /**
  * Dedicated page for a single ranked subtopic within a topic.
@@ -108,6 +115,21 @@ const SubtopicPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10">
             {/* Main — single post, force expanded */}
             <div className="min-w-0">
+              {(() => {
+                const heroSrc = TOPIC_POST_HERO[topic.name.toLowerCase()];
+                if (!heroSrc) return null;
+                return (
+                  <div className="mb-6 overflow-hidden rounded-2xl border bg-muted">
+                    <img
+                      src={heroSrc}
+                      alt={`${topic.name} hero`}
+                      width={1600}
+                      height={640}
+                      className="w-full h-56 sm:h-72 object-cover"
+                    />
+                  </div>
+                );
+              })()}
               {post ? (
                 <TopicPostExpanded
                   post={post}
