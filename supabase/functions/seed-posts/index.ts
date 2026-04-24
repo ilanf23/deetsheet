@@ -950,6 +950,47 @@ const topicPosts: Record<string, { titles: string[]; contents: string[] }> = {
   },
 };
 
+// Expand a short headline-style title into a longer, more descriptive subtopic header.
+// Pulls a deterministic descriptor based on the title + topic so the same post
+// always gets the same expanded header across reseeds.
+function expandTitle(title: string, topicName: string, rank: number): string {
+  // If the title already reads like a long-form header (>=70 chars or contains a colon/em-dash),
+  // leave it alone — we don't want to double up.
+  if (title.length >= 70 || /[:—–]/.test(title)) return title;
+
+  const descriptors = [
+    "what nobody tells you and what actually matters",
+    "a detailed breakdown from years of firsthand experience",
+    "the practical playbook I wish I'd had on day one",
+    "lessons learned the hard way and how to skip them",
+    "the full story, the trade-offs, and what I'd do differently",
+    "everything I've learned after dozens of attempts",
+    "an honest, no-fluff guide for people who want the real answer",
+    "the surprising details that change the whole picture",
+    "what works, what doesn't, and why most advice misses the point",
+    "a thorough walkthrough with the context most guides skip",
+  ];
+  const idx = Math.abs(hashString(`${topicName}:${title}:${rank}`)) % descriptors.length;
+  return `${title} — ${descriptors[idx]}`;
+}
+
+// Expand a 2-paragraph seed content block into a longer, more detailed post by
+// appending additional paragraphs that read naturally for the topic.
+function expandContent(content: string, topicName: string, rank: number): string {
+  const extras = [
+    `Here's the deeper context that took me a long time to appreciate. ${topicName} isn't really one problem — it's a stack of overlapping problems that interact in ways most quick guides ignore. Once you start treating it that way, you stop expecting a single "fix" and start building a system. Your decisions get better because you're choosing between trade-offs instead of chasing perfection. The people who do well long-term aren't the ones with the most information; they're the ones who've designed a way to keep adjusting as conditions change.`,
+    `A few specifics that made an outsized difference for me. First, write things down. Whatever your version of a journal or log looks like, keeping a record of what you tried and what happened turns vague intuition into actual data you can act on. Second, set checkpoints — every two weeks, every month, whatever cadence fits — to look back honestly. Third, find at least one person ahead of you on this and ask real questions. Twenty minutes of conversation with someone five years deeper into ${topicName} than you is worth more than weeks of reading.`,
+    `The mistakes I see most often share the same root cause: people optimize for the visible parts and ignore the invisible scaffolding. They focus on the showy outputs and skip the boring habits, the small daily reps, the slow relationship-building. The boring stuff is the leverage. Nothing about ${topicName} happens in a single dramatic moment; it accumulates. If you take care of the small things consistently, the big results show up almost as a side effect.`,
+    `One more thing worth saying out loud: it's normal to plateau, to backslide, to lose motivation, and to question whether you're doing the right thing. That doesn't mean you've failed or that you should quit. It usually means you're hitting the next layer of difficulty, the one that demands a slightly different approach than what got you here. When that happens, give yourself permission to slow down, reassess, and rebuild your routine. The people who make it through ${topicName} successfully aren't the ones who never struggled — they're the ones who treated the struggle as information instead of as a verdict.`,
+  ];
+  // Pick 2 extra paragraphs deterministically so each rank stays stable across reseeds.
+  const seed = Math.abs(hashString(`${topicName}:${rank}`));
+  const a = seed % extras.length;
+  const b = (seed + 1 + (seed % 3)) % extras.length;
+  const chosen = a === b ? [extras[a], extras[(a + 1) % extras.length]] : [extras[a], extras[b]];
+  return `${content}\n\n${chosen.join("\n\n")}`;
+}
+
 // Generic content for topics not in the specific map
 function getGenericContents(topicName: string): { titles: string[]; contents: string[] } {
   return {
@@ -1049,11 +1090,21 @@ Deno.serve(async (req) => {
           title += suffixes[cycleNum % suffixes.length];
         }
 
+        // Make subtopic headers longer and more descriptive, and the body
+        // copy more detailed, so each ranked subtopic feels like a real
+        // long-form post rather than a one-liner.
+        const expandedTitle = expandTitle(title, topic.name, rank);
+        const expandedContent = expandContent(
+          topicData.contents[contentIndex],
+          topic.name,
+          rank,
+        );
+
         posts.push({
           topic_id: topic.id,
           author_id: userIds[userIndex],
-          title,
-          content: topicData.contents[contentIndex],
+          title: expandedTitle,
+          content: expandedContent,
           score: 101 - rank,
           comment_count: 0,
         });
