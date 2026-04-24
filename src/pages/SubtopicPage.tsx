@@ -95,7 +95,12 @@ const SubtopicPage = () => {
           <div className="mb-6 flex items-center gap-2 text-sm">
             <button
               type="button"
-              onClick={() => navigate(backToTopicHref)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log("[SubtopicPage] back click → ", backToTopicHref);
+                navigate(backToTopicHref);
+              }}
               className="text-primary hover:underline inline-flex items-center gap-1 font-medium bg-transparent border-0 p-0 cursor-pointer"
             >
               <ChevronLeft className="h-4 w-4" />
