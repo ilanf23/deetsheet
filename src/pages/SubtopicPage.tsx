@@ -73,12 +73,13 @@ const SubtopicPage = () => {
           <p className="text-muted-foreground">
             #{rankNum} doesn't exist in {topic.name}.
           </p>
-          <Link
-            to={backToTopicHref}
-            className="text-primary hover:underline mt-4 inline-block"
+          <button
+            type="button"
+            onClick={() => navigate(backToTopicHref)}
+            className="text-primary hover:underline mt-4 inline-block bg-transparent border-0 p-0 cursor-pointer"
           >
             ← Back to {topic.name}
-          </Link>
+          </button>
         </main>
         <DeetFooter />
       </div>
