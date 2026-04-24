@@ -25,6 +25,7 @@ export interface TopicRow {
   categoryName: string;
   postCount: number;
   description: string | null;
+  imageUrl: string | null;
 }
 
 /** Shape the UI expects for a post row (maps to legacy seedData.Post,
@@ -52,6 +53,7 @@ type DbTopicRaw = {
   name: string;
   category_name: string | null;
   description: string | null;
+  image_url: string | null;
 };
 
 type DbPostRaw = {
@@ -76,6 +78,7 @@ const mapTopic = (row: DbTopicRaw, postCount: number): TopicRow => ({
   categoryName: row.category_name ?? "Life",
   postCount,
   description: row.description,
+  imageUrl: row.image_url ?? null,
 });
 
 const mapPost = (row: DbPostRaw): PostRow => ({
@@ -105,7 +108,7 @@ export const useTopics = () => {
       const { data, error } = await supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from("topics" as any)
-        .select("id, slug, name, category_name, description, posts(count)")
+        .select("id, slug, name, category_name, description, image_url, posts(count)")
         .order("name", { ascending: true });
 
       if (error) throw error;
@@ -133,7 +136,7 @@ export const useTopicByName = (topicName: string | undefined) => {
       const { data, error } = await supabase
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from("topics" as any)
-        .select("id, slug, name, category_name, description, posts(count)")
+        .select("id, slug, name, category_name, description, image_url, posts(count)")
         .or(`name.eq.${decoded},slug.eq.${decoded.toLowerCase()}`)
         .limit(1)
         .maybeSingle();

@@ -23,6 +23,11 @@ const SubtopicPage = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
 
+  // Back link href — derived from the URL param React Router already matched,
+  // so it's valid on first render and faithfully mirrors the URL the user
+  // landed on (slug or display-name form both work).
+  const backToTopicHref = `/topic/${encodeURIComponent(topicName ?? "")}`;
+
   const { data: topic, isLoading: topicLoading, isError: topicError } =
     useTopicByName(topicName);
   const { data: postsData } = usePostsByTopic(topic?.id);
@@ -36,7 +41,7 @@ const SubtopicPage = () => {
 
   if (topicLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen flex flex-col bg-white">
         <DeetHeader />
         <main className="flex-1 container mx-auto px-4 py-20 text-center">
           <p className="text-muted-foreground">Loading…</p>
@@ -48,7 +53,7 @@ const SubtopicPage = () => {
 
   if (topicError || !topic) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen flex flex-col bg-white">
         <DeetHeader />
         <main className="flex-1 container mx-auto px-4 py-20 text-center">
           <h1 className="text-2xl font-bold mb-2">Topic not found</h1>
@@ -61,7 +66,7 @@ const SubtopicPage = () => {
 
   if (posts.length > 0 && !post) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen flex flex-col bg-white">
         <DeetHeader />
         <main className="flex-1 container mx-auto px-4 py-20 text-center">
           <h1 className="text-2xl font-bold mb-2">Subtopic not found</h1>
@@ -69,7 +74,7 @@ const SubtopicPage = () => {
             #{rankNum} doesn't exist in {topic.name}.
           </p>
           <Link
-            to={`/topic/${encodeURIComponent(topic.name)}`}
+            to={backToTopicHref}
             className="text-primary hover:underline mt-4 inline-block"
           >
             ← Back to {topic.name}
@@ -81,14 +86,14 @@ const SubtopicPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-white">
       <DeetHeader />
       <main className="flex-1">
         <div className="max-w-[1400px] mx-auto px-8 lg:px-16 mt-10 mb-20">
           {/* Back link — always returns to the topic page, never home */}
           <nav className="mb-6 flex items-center gap-2 text-sm">
             <Link
-              to={`/topic/${encodeURIComponent(topic.name)}`}
+              to={backToTopicHref}
               className="text-primary hover:underline inline-flex items-center gap-1 font-medium"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -106,7 +111,7 @@ const SubtopicPage = () => {
                   post={post}
                   rank={rankNum}
                   isExpanded={true}
-                  onToggleExpand={() => navigate(`/topic/${encodeURIComponent(topic.name)}`)}
+                  onToggleExpand={() => navigate(backToTopicHref)}
                   isAuthenticated={!loading && !!user}
                 />
               ) : (
@@ -116,11 +121,11 @@ const SubtopicPage = () => {
 
             {/* Right — other ranked subtopics */}
             <aside className="hidden lg:block">
-              <div className="sticky top-24 border rounded-xl bg-card p-4">
-                <h2 className="text-xs font-heading font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+              <div className="sticky top-24">
+                <h2 className="text-xs font-heading font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-1">
                   Other subtopics in {topic.name}
                 </h2>
-                <ul className="space-y-1">
+                <ul className="space-y-3">
                   {posts.map((p, i) => {
                     const r = i + 1;
                     const isCurrent = r === rankNum;
@@ -133,10 +138,10 @@ const SubtopicPage = () => {
                       <li key={p.id}>
                         <Link
                           to={`/topic/${encodeURIComponent(topic.name)}/post/${r}`}
-                          className={`flex items-start gap-2 px-2 py-2 rounded-md text-sm transition-colors ${
+                          className={`flex items-start gap-2 p-3 border rounded-xl bg-background hover:shadow-md transition-all duration-200 text-sm ${
                             isCurrent
-                              ? "bg-muted text-card-foreground font-semibold"
-                              : "text-primary hover:bg-muted/60 hover:underline"
+                              ? "ring-1 ring-primary text-card-foreground font-semibold"
+                              : "text-primary"
                           }`}
                         >
                           <span className="w-5 shrink-0 text-right">{r}.</span>

@@ -76,7 +76,7 @@ const TopicPage = () => {
 
   if (topicLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen flex flex-col bg-white">
         <DeetHeader />
         <main className="flex-1 container mx-auto px-4 py-20 text-center">
           <p className="text-muted-foreground">Loading topicâ¦</p>
@@ -88,7 +88,7 @@ const TopicPage = () => {
 
   if (topicError || !topic) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen flex flex-col bg-white">
         <DeetHeader />
         <main className="flex-1 container mx-auto px-4 py-20 text-center">
           <h1 className="text-2xl font-bold mb-2">Topic not found</h1>
@@ -100,7 +100,7 @@ const TopicPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-white">
       <DeetHeader />
       <main className="flex-1">
         <div className="max-w-[1600px] mx-auto px-8 lg:px-16 mt-10 mb-20">
@@ -112,22 +112,27 @@ const TopicPage = () => {
             {/* Main â Topic posts */}
             <div className="min-w-0">
               <div className="mb-6 flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <div className="flex items-baseline gap-3">
-                    <h1 className="text-3xl md:text-4xl font-heading font-bold text-card-foreground">
-                      {topic.name}
-                    </h1>
-                    <span className="text-sm text-muted-foreground">
-                      /{topic.categoryName}
-                    </span>
+                <div className="min-w-0 flex items-start gap-4">
+                  {topic.imageUrl && (
+                    <TopicHeaderImage src={topic.imageUrl} alt={topic.name} />
+                  )}
+                  <div className="min-w-0">
+                    <div className="flex items-baseline gap-3">
+                      <h1 className="text-3xl md:text-4xl font-heading font-bold text-card-foreground">
+                        {topic.name}
+                      </h1>
+                      <span className="text-sm text-muted-foreground">
+                        /{topic.categoryName}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {getTopicSubtitle(topic.name, topic.categoryName)}
+                    </p>
                   </div>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {getTopicSubtitle(topic.name, topic.categoryName)}
-                  </p>
                 </div>
                 <FollowTopicButton topicId={topic.id} />
               </div>
-              <div>
+              <div className="space-y-3">
                 {visiblePosts.map((post, i) => (
                   <TopicPostListItem
                     key={post.id}
@@ -166,6 +171,20 @@ const TopicPage = () => {
       </main>
       <DeetFooter />
     </div>
+  );
+};
+
+const TopicHeaderImage = ({ src, alt }: { src: string; alt: string }) => {
+  const [error, setError] = useState(false);
+  if (error) return null;
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className="h-20 w-20 rounded-xl object-cover shrink-0"
+      loading="lazy"
+      onError={() => setError(true)}
+    />
   );
 };
 

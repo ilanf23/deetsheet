@@ -25,7 +25,7 @@ const TopicRecommendations = ({ currentTopic }: TopicRecommendationsProps) => {
           <Link
             key={topic.id}
             to={`/topic/${encodeURIComponent(topic.name)}`}
-            className="block rounded-xl border bg-card overflow-hidden hover:shadow-md transition-all duration-200"
+            className="block rounded-xl border bg-background overflow-hidden hover:shadow-md transition-all duration-200"
           >
             {topic.imageUrl && (
               <TopicImage src={topic.imageUrl} alt={topic.name} />

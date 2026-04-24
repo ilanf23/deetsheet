@@ -23,7 +23,7 @@ const TopicPostListItem = ({ post, rank, topicName }: TopicPostListItemProps) =>
   return (
     <Link
       to={`/topic/${encodeURIComponent(topicName)}/post/${rank}`}
-      className="group flex items-baseline gap-4 py-3 border-b border-border/60 hover:bg-muted/40 transition-colors"
+      className="group flex items-baseline gap-4 px-4 py-3 border rounded-xl bg-background hover:shadow-md transition-all duration-200"
     >
       <span className="w-8 shrink-0 text-right text-sm text-muted-foreground tabular-nums">
         {rank}.

@@ -148,7 +148,7 @@ const Profile = () => {
   const days = Array.from({ length: 31 }, (_, i) => String(i + 1));
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-white">
       <DeetHeader />
       <main className="flex-1 py-8 px-4">
         <div className="container mx-auto max-w-5xl">
@@ -520,7 +520,7 @@ const Profile = () => {
 
                 {/* Right column — Credentials & Knows about */}
                 <div className="space-y-6">
-                  <Card>
+                  <Card className="bg-background">
                     <CardHeader className="flex flex-row items-center justify-between pb-2">
                       <h3 className="font-heading font-semibold text-lg">Credentials & Highlights</h3>
                       <a href="#" className="text-sm text-primary hover:underline">More</a>

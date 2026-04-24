@@ -66,7 +66,7 @@ const UserPostsList = ({ userId }: { userId: string }) => {
             to={post.topic ? `/topic/${post.topic.slug}` : "#"}
             className="block"
           >
-            <Card className="hover:bg-muted/50 transition-colors">
+            <Card className="bg-background hover:shadow-md transition-all duration-200">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">

@@ -65,7 +65,7 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
     return (
       <button
         onClick={onToggleExpand}
-        className="w-full flex items-center gap-3 p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors text-left"
+        className="w-full flex items-center gap-3 p-3 rounded-lg border bg-background hover:shadow-md transition-all duration-200 text-left"
       >
         <span className="text-lg font-bold text-primary w-8 shrink-0 text-right">{rank}.</span>
         <span className="flex-1 text-sm text-card-foreground truncate">{displayTitle}</span>
@@ -80,7 +80,7 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
 
   if (!isAuthenticated) {
     return (
-      <div className="border rounded-xl bg-card p-5 space-y-4">
+      <div className="border rounded-xl bg-background p-5 space-y-4">
         <button onClick={onToggleExpand} className="flex items-start gap-3 w-full text-left">
           <span className="text-xl font-bold text-primary w-8 shrink-0 text-right">{rank}.</span>
           <h3 className="flex-1 text-base font-bold text-card-foreground leading-snug">{displayTitle}</h3>
@@ -120,7 +120,7 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
   }
 
   return (
-    <div className="border rounded-xl bg-card p-5 space-y-4">
+    <div className="border rounded-xl bg-background p-5 space-y-4">
       {/* Header */}
       <button onClick={onToggleExpand} className="flex items-start gap-3 w-full text-left">
         <span className="text-xl font-bold text-primary w-8 shrink-0 text-right">{rank}.</span>
@@ -223,7 +223,7 @@ const TopicPostExpanded = ({ post, rank, isExpanded, onToggleExpand, isAuthentic
       {topLevelComments.length > 0 && (
         <div className="px-11 border-t pt-4">
           <h4 className="text-sm font-semibold text-muted-foreground mb-2">Comments</h4>
-          <div className="divide-y">
+          <div>
             {topLevelComments.map((comment) => (
               <CommentItem key={comment.id} comment={comment} />
             ))}

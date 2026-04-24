@@ -229,7 +229,7 @@ const ProfileView = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gradient-to-b from-accent/30 to-background">
+      <div className="min-h-screen flex flex-col bg-white">
         <DeetHeader />
         <main className="flex-1 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -240,7 +240,7 @@ const ProfileView = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-accent/30 to-background overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
       <DeetHeader />
       <main className="flex-1 py-8 px-4">
         <div className="container mx-auto max-w-5xl overflow-hidden">
@@ -379,7 +379,7 @@ const ProfileView = () => {
             {/* Right sidebar */}
             <div className="space-y-6">
               {/* Credentials & Highlights */}
-              <Card>
+              <Card className="bg-background">
                 <CardContent className="pt-5">
                   <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
                     Credentials & Highlights
@@ -436,7 +436,7 @@ const ProfileView = () => {
 
               <TabsContent value="posts" className="mt-4">
                 {userPosts.length === 0 ? (
-                  <Card>
+                  <Card className="bg-background">
                     <CardContent className="py-12 text-center text-muted-foreground">
                       <p className="text-sm">No posts yet.</p>
                     </CardContent>
@@ -444,7 +444,7 @@ const ProfileView = () => {
                 ) : (
                   <div className="space-y-4">
                     {userPosts.map((post) => (
-                      <Card key={post.id} className="hover:shadow-md transition-shadow">
+                      <Card key={post.id} className="bg-background hover:shadow-md transition-shadow">
                         <CardContent className="pt-4 pb-3">
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex-1 min-w-0">
@@ -533,7 +533,7 @@ const ProfileView = () => {
                   </div>
                 )}
                 {userTopics.length === 0 ? (
-                  <Card>
+                  <Card className="bg-background">
                     <CardContent className="py-12 text-center text-muted-foreground">
                       <p className="text-sm">No topics created yet.</p>
                     </CardContent>
@@ -541,7 +541,7 @@ const ProfileView = () => {
                 ) : (
                   <div className="space-y-4">
                     {userTopics.map((topic) => (
-                      <Card key={topic.id} className="hover:shadow-md transition-shadow">
+                      <Card key={topic.id} className="bg-background hover:shadow-md transition-shadow">
                         <CardContent className="pt-4 pb-3">
                           <div className="flex items-start gap-3">
                             <Hash className="h-5 w-5 text-primary mt-0.5 shrink-0" />
@@ -574,7 +574,7 @@ const ProfileView = () => {
               {["comments", "favorites", "following", "followers"].map(
                 (tab) => (
                   <TabsContent key={tab} value={tab} className="mt-4">
-                    <Card>
+                    <Card className="bg-background">
                       <CardContent className="py-12 text-center text-muted-foreground">
                         <p className="text-sm">Coming soon</p>
                       </CardContent>
