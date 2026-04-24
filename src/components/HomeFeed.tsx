@@ -165,13 +165,16 @@ const FeedTopicCard = ({ topicName, posts, onRatingChanged, onNavigate }: FeedTo
 
       {/* Body: image on the left, numbered list + ratings on the right */}
       <div className="flex gap-5">
-        {imageUrl && (
-          <img
-            src={imageUrl}
-            alt={topicName}
-            className="w-32 sm:w-36 self-start rounded object-cover shrink-0 aspect-square"
-          />
-        )}
+        <img
+          src={imageUrl || "/placeholder.svg"}
+          alt={topicName}
+          onError={(e) => {
+            const img = e.currentTarget;
+            if (img.src.endsWith("/placeholder.svg")) return;
+            img.src = "/placeholder.svg";
+          }}
+          className="w-32 sm:w-36 self-start rounded object-cover shrink-0 aspect-square bg-muted"
+        />
         <ol className="flex-1 min-w-0 space-y-2">
           {topPosts.map((post, i) => (
             <li key={post.id} className="flex items-center gap-3 text-[15px] min-w-0">
