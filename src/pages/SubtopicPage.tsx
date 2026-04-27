@@ -166,10 +166,17 @@ const SubtopicPage = () => {
                       commentCount={post.commentCount}
                       postTitle={post.title || post.content}
                     />
+                    <JudgementReactionsRow />
                   </div>
                   <PostBody content={post.content} />
-                  <JudgementReactionsRow />
-                  <InlineCommentComposer />
+                  <InlineCommentComposer
+                    postId={post.id}
+                    onSubmitted={() =>
+                      queryClient.invalidateQueries({
+                        queryKey: ["comments", post.id],
+                      })
+                    }
+                  />
                   <PrevNextRankPager
                     topicName={topic.name}
                     rank={rankNum}
