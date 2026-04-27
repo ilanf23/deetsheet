@@ -1,59 +1,89 @@
-# Add 5–10 realistic comments to every subtopic
+## Goal
 
-## The problem (two layers)
+Strip em dashes (—) from all user-visible content: posts, topics, comments, and the seed/template strings that future seeded content comes from. Also fix a lingering TypeScript build error in `SubtopicPage.tsx`.
 
-1. **Database**: There are 22,700 posts but **0 comments** in the `comments` table. The seed-posts edge function has comment-seeding logic, but it's never been run successfully against the current post set.
-2. **Frontend**: `src/components/post/CommentsSection.tsx` reads from the local `seedData.ts` array (`getCommentsByPost`) — which only contains ~26 hardcoded comments tied to fake numeric post IDs (`"3"`, `"11"`, etc.). Real Supabase posts have UUID IDs, so even if the local array had comments, none would match. Every subtopic page currently shows "No comments yet."
+## Scope (current data)
 
-We have to fix both, otherwise seeding does nothing visible.
+A scan of the database shows:
+- **22,700 posts** contain em dashes (in `title` and/or `content`)
+- **96,684 comments** contain em dashes
+- **0 topics** contain em dashes (nothing to do there)
+- 0 en dashes (–) anywhere — only em dashes need replacing
 
-## What will be built
+## Replacement rule
 
-### 1. Rework comment seeding in the edge function
+Replace every em dash (`—`, U+2014) with a comma + space (`, `), then collapse any accidental `, ,` / leading/trailing whitespace artifacts. This reads more naturally than a plain space and matches how the seeded sentences were written (e.g. `"...not the ones who never struggled — they're the ones..."` → `"...not the ones who never struggled, they're the ones..."`).
 
-Update `supabase/functions/seed-posts/index.ts` so that running it in `comments` mode:
+If a line has the em dash surrounded by spaces (` — `), it becomes `, `. If it's adjacent to a word with no spaces (rare), it becomes `, ` as well.
 
-- Produces **5 to 10 comments per post** (currently 3–5).
-- Uses a much richer pool of generic comment templates that read like a real discussion thread — different voices (skeptic, expert, beginner, storyteller, contrarian), and templates that **build on each other** by referencing the post or earlier ideas (e.g. "Picking up on what others said…", "Counterpoint to the top comment…", "I'd push back on the framing here…").
-- Templates are interpolated with `${topicName}` so Cowboys posts get cowboys-flavored comments, Doctor posts get doctor-flavored ones, etc.
-- Keeps the existing topic-specific template arrays (Parent, Waiter, Chicago, …) and expands them so each topic has at least 10 distinct templates for variety, then falls back to the generic pool.
-- Spreads `created_at` across the past few weeks so the thread looks naturally aged and ordered.
-- Picks a different author for each comment, never the post's own author.
-- After inserting all comments for a topic batch, runs a single `UPDATE posts SET comment_count = (subquery)` so the rail/sidebar counts stay correct.
+## Plan
 
-The function is already batched by `topicOffset` / `topicLimit`, so we'll call it repeatedly in `comments` mode across all 227 topics (5 topics per call ≈ 45 invocations) to stay under edge-function timeouts.
+### 1. One-shot DB cleanup (data update via migration)
 
-### 2. Wire `CommentsSection` to read from Supabase
+Run a migration that updates existing rows in place:
 
-Replace the `getCommentsByPost(postId)` import in `src/components/post/CommentsSection.tsx` with a real Supabase query (`useQuery` against the `comments` table joined to `profiles` for username/avatar), keyed by `postId`. While loading, show a small skeleton; on empty, keep the existing "No comments yet" message.
+```sql
+UPDATE public.posts
+SET
+  title   = regexp_replace(replace(title,   '—', ', '), '\s*,\s*,\s*', ', ', 'g'),
+  content = regexp_replace(replace(content, '—', ', '), '\s*,\s*,\s*', ', ', 'g')
+WHERE title LIKE '%—%' OR content LIKE '%—%';
 
-Also update the comment submit handler (currently a no-op) to actually `insert` into the `comments` table when an authenticated user posts, and invalidate the query so the new comment appears immediately. Anonymous users keep seeing the "Sign in to join the discussion" link.
+UPDATE public.comments
+SET content = regexp_replace(replace(content, '—', ', '), '\s*,\s*,\s*', ', ', 'g')
+WHERE content LIKE '%—%';
 
-### 3. Adapt `CommentItem` to the real schema
+UPDATE public.topics
+SET
+  name        = replace(name, '—', ', '),
+  description = replace(description, '—', ', ')
+WHERE name LIKE '%—%' OR description LIKE '%—%';
+```
 
-The DB `comments` table only has `id, post_id, author_id, content, created_at` — there's no `parent_comment_id` or agree/disagree counts. So:
+This handles all ~119k rows server-side in one pass.
 
-- Render comments as a flat list (no nesting). The "reply" affordance and the agree/disagree buttons stay as **local-only UI state** (they already are, even today), but their counts start at 0 instead of from seed data.
-- Username comes from a `profiles` join; the profile-link href stays `/profile/{username}`.
+### 2. Strip em dashes from seed templates so newly seeded content stays clean
 
-This matches what the UI is actually capable of persisting today and avoids a schema migration.
+- `supabase/functions/seed-posts/index.ts` — the post-body and comment-body templates currently include em dashes. Replace each `—` in string literals with `,` (or remove where it reads better as a sentence break).
+- `src/data/seedData.ts` — same treatment for any remaining seed strings used as fallbacks.
 
-## Technical details
+### 3. Strip em dashes from static UI copy
 
-**Files changed**
-- `supabase/functions/seed-posts/index.ts` — expand templates, bump per-post count to 5–10, add comment_count refresh.
-- `src/components/post/CommentsSection.tsx` — switch from `getCommentsByPost` to a Supabase `useQuery`; wire submit to insert into the `comments` table.
-- `src/components/CommentItem.tsx` — accept the new DB-shaped comment row (drop `agreeCount`/`disagreeCount`/`heartCount` reads from props, keep them as local state); remove nested-replies rendering.
+Sweep these files and rewrite the em dashes that appear inside JSX text or string constants (UI copy only, not code comments):
+- `src/pages/SignUp.tsx`, `src/pages/Privacy.tsx`, `src/pages/Profile.tsx`, `src/pages/ProfileView.tsx`, `src/pages/TopicPage.tsx`, `src/pages/SubtopicPage.tsx`
+- `src/pages/admin/AdminUsers.tsx`, `AdminPosts.tsx`, `AdminTopics.tsx`, `AdminComments.tsx`
+- `src/components/HeroBanner.tsx`, `CreatePostDialog.tsx`, `PostActionMenu.tsx`, `ColumnLayout.tsx`, `UserRatingIndicator.tsx`
+- `src/components/post/PostMetaBar.tsx`, `PostRatingBox.tsx`
 
-**Files NOT touched**
-- `src/data/seedData.ts` — leave the legacy `comments` array in place (other dev surfaces may still reference `Comment` type).
-- DB schema — no migration needed; the existing `comments` table fields are sufficient.
+Em dashes inside code comments / file headers (e.g. `useSupabaseTopics.ts`, migration files) are left alone — they're not user-facing.
 
-**Execution order after approval**
-1. Edit the edge function and redeploy.
-2. Edit the React components.
-3. Run `seed-posts` in `mode: "comments"` across all 227 topics in batches of 5 (≈45 invocations), then verify with a `SELECT count(*) FROM comments` (expect 5–10 × 22,700 ≈ 110,000–225,000 rows) and a spot-check on a Cowboys / Florida post.
+### 4. Fix the existing TS build error
 
-## What the user will see
+`src/pages/SubtopicPage.tsx:159` references `post.authorId`, but the legacy `Post` type from `seedData.ts` doesn't declare it. The runtime row from `usePostsByTopic` does have `authorId` (see `useSupabaseTopics.ts` mapper). Fix by switching the local `Post` type to the `PostRow` shape returned by the hook (drop the `as Post` cast):
 
-Open any subtopic page → scroll to "Discussion" → there are 5 to 10 realistic comments from different users, with timestamps spread over the last few weeks, written in voices that respond to the post and to each other. Logged-in users can post a new comment and it appears immediately.
+```ts
+import type { PostRow } from "@/hooks/useSupabaseTopics";
+// ...
+const posts = postsData ?? [];
+```
+
+This removes the bad cast and lets TypeScript see `authorId`, `commentCount`, etc. correctly.
+
+## Out of scope
+
+- Em dashes inside developer-only files (migrations already applied, JSDoc, code comments) — not visible to end users.
+- En dashes (–), hyphens (-), and minus signs — none requested, none present in content.
+- Changing the *style* of dashes globally (e.g. forcing two hyphens). The user asked to remove em dashes; a comma keeps the prose readable.
+
+## Verification
+
+After the migration runs, re-query:
+
+```sql
+SELECT
+  (SELECT COUNT(*) FROM posts    WHERE title LIKE '%—%' OR content LIKE '%—%') AS posts_left,
+  (SELECT COUNT(*) FROM comments WHERE content LIKE '%—%')                      AS comments_left,
+  (SELECT COUNT(*) FROM topics   WHERE name  LIKE '%—%' OR COALESCE(description,'') LIKE '%—%') AS topics_left;
+```
+
+Expected: all zero. Then `npm run build` to confirm no TS errors remain.
