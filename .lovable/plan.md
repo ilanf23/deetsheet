@@ -1,34 +1,59 @@
-## Bug
+# Add 5–10 realistic comments to every subtopic
 
-On every subtopic page (`/topic/:topic/post/:rank`), clicking the green **"Back to {Topic}"** link in the breadcrumb sends the user to the homepage (`/`) instead of the topic page.
+## The problem (two layers)
 
-I reproduced this in the live preview from `/topic/Florida/post/1` and `/topic/Florida/post/2` — both ended at `/`, even though the link is coded with `to="/topic/Florida"` and that URL works correctly when typed directly into the address bar.
+1. **Database**: There are 22,700 posts but **0 comments** in the `comments` table. The seed-posts edge function has comment-seeding logic, but it's never been run successfully against the current post set.
+2. **Frontend**: `src/components/post/CommentsSection.tsx` reads from the local `seedData.ts` array (`getCommentsByPost`) — which only contains ~26 hardcoded comments tied to fake numeric post IDs (`"3"`, `"11"`, etc.). Real Supabase posts have UUID IDs, so even if the local array had comments, none would match. Every subtopic page currently shows "No comments yet."
 
-## Root cause
+We have to fix both, otherwise seeding does nothing visible.
 
-The link in `src/pages/SubtopicPage.tsx` is rendered as a React Router `<Link>`:
+## What will be built
 
-```tsx
-const backToTopicHref = `/topic/${encodeURIComponent(topicName ?? "")}`;
-<Link to={backToTopicHref}>Back to {topic.name}</Link>
-```
+### 1. Rework comment seeding in the edge function
 
-The href computed in code is correct, but the rendered click is being swallowed/redirected (most likely by the Lovable preview iframe shim that re-resolves in-app navigations and strips back to `/`). Direct navigation to the same URL works, so the routing config and `TopicPage` are fine — the problem is specifically with this `<Link>` click in the iframe.
+Update `supabase/functions/seed-posts/index.ts` so that running it in `comments` mode:
 
-## Fix
+- Produces **5 to 10 comments per post** (currently 3–5).
+- Uses a much richer pool of generic comment templates that read like a real discussion thread — different voices (skeptic, expert, beginner, storyteller, contrarian), and templates that **build on each other** by referencing the post or earlier ideas (e.g. "Picking up on what others said…", "Counterpoint to the top comment…", "I'd push back on the framing here…").
+- Templates are interpolated with `${topicName}` so Cowboys posts get cowboys-flavored comments, Doctor posts get doctor-flavored ones, etc.
+- Keeps the existing topic-specific template arrays (Parent, Waiter, Chicago, …) and expands them so each topic has at least 10 distinct templates for variety, then falls back to the generic pool.
+- Spreads `created_at` across the past few weeks so the thread looks naturally aged and ordered.
+- Picks a different author for each comment, never the post's own author.
+- After inserting all comments for a topic batch, runs a single `UPDATE posts SET comment_count = (subquery)` so the rail/sidebar counts stay correct.
 
-Replace the `<Link>` with an explicit programmatic navigation, which avoids the click-interception path entirely. Use the `navigate` hook that's already imported in the file.
+The function is already batched by `topicOffset` / `topicLimit`, so we'll call it repeatedly in `comments` mode across all 227 topics (5 topics per call ≈ 45 invocations) to stay under edge-function timeouts.
 
-In `src/pages/SubtopicPage.tsx`:
+### 2. Wire `CommentsSection` to read from Supabase
 
-1. Replace the `<Link to={backToTopicHref}>` in the breadcrumb (around line 95–101) with a `<button>` that calls `navigate(backToTopicHref)` on click. Keep the same icon, label, and green `text-primary` styling so it still reads as interactive per the color contract.
-2. Do the same for the `<Link to={backToTopicHref}>` in the "Subtopic not found" fallback (around line 76–81).
-3. Leave `onToggleExpand={() => navigate(backToTopicHref)}` on `TopicPostExpanded` as-is (already programmatic, already works).
+Replace the `getCommentsByPost(postId)` import in `src/components/post/CommentsSection.tsx` with a real Supabase query (`useQuery` against the `comments` table joined to `profiles` for username/avatar), keyed by `postId`. While loading, show a small skeleton; on empty, keep the existing "No comments yet" message.
 
-This keeps the destination identical (`/topic/{topicName}`) but routes through `react-router`'s imperative API, which is unaffected by the link-click interception causing the redirect to `/`.
+Also update the comment submit handler (currently a no-op) to actually `insert` into the `comments` table when an authenticated user posts, and invalidate the query so the new comment appears immediately. Anonymous users keep seeing the "Sign in to join the discussion" link.
 
-## Acceptance
+### 3. Adapt `CommentItem` to the real schema
 
-- From `/topic/Florida/post/1`, clicking "Back to Florida" lands on `/topic/Florida` (the topic list page) — not `/`.
-- Same for every other subtopic (`/post/2`, `/post/3`, …) and every other topic.
-- Visual styling of the back affordance is unchanged (chevron + green text + " / #N" suffix).
+The DB `comments` table only has `id, post_id, author_id, content, created_at` — there's no `parent_comment_id` or agree/disagree counts. So:
+
+- Render comments as a flat list (no nesting). The "reply" affordance and the agree/disagree buttons stay as **local-only UI state** (they already are, even today), but their counts start at 0 instead of from seed data.
+- Username comes from a `profiles` join; the profile-link href stays `/profile/{username}`.
+
+This matches what the UI is actually capable of persisting today and avoids a schema migration.
+
+## Technical details
+
+**Files changed**
+- `supabase/functions/seed-posts/index.ts` — expand templates, bump per-post count to 5–10, add comment_count refresh.
+- `src/components/post/CommentsSection.tsx` — switch from `getCommentsByPost` to a Supabase `useQuery`; wire submit to insert into the `comments` table.
+- `src/components/CommentItem.tsx` — accept the new DB-shaped comment row (drop `agreeCount`/`disagreeCount`/`heartCount` reads from props, keep them as local state); remove nested-replies rendering.
+
+**Files NOT touched**
+- `src/data/seedData.ts` — leave the legacy `comments` array in place (other dev surfaces may still reference `Comment` type).
+- DB schema — no migration needed; the existing `comments` table fields are sufficient.
+
+**Execution order after approval**
+1. Edit the edge function and redeploy.
+2. Edit the React components.
+3. Run `seed-posts` in `mode: "comments"` across all 227 topics in batches of 5 (≈45 invocations), then verify with a `SELECT count(*) FROM comments` (expect 5–10 × 22,700 ≈ 110,000–225,000 rows) and a spot-check on a Cowboys / Florida post.
+
+## What the user will see
+
+Open any subtopic page → scroll to "Discussion" → there are 5 to 10 realistic comments from different users, with timestamps spread over the last few weeks, written in voices that respond to the post and to each other. Logged-in users can post a new comment and it appears immediately.
