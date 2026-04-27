@@ -1,17 +1,9 @@
-import { useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Send } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Editor } from "@tiptap/react";
-import RichTextEditor from "@/components/RichTextEditor";
+import { useQuery } from "@tanstack/react-query";
 import CommentItem, { type DisplayComment } from "@/components/CommentItem";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
 
 interface CommentsSectionProps {
   postId: string;
-  isAuthenticated: boolean;
 }
 
 interface DbComment {
@@ -52,47 +44,12 @@ const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
   }));
 };
 
-const CommentsSection = ({ postId, isAuthenticated }: CommentsSectionProps) => {
-  const location = useLocation();
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const nextUrl = encodeURIComponent(`${location.pathname}${location.search}#discussion`);
-  const [commentText, setCommentText] = useState("");
-  const editorInstanceRef = useRef<Editor | null>(null);
-
+const CommentsSection = ({ postId }: CommentsSectionProps) => {
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ["comments", postId],
     queryFn: () => fetchComments(postId),
     enabled: !!postId,
   });
-
-  const createMutation = useMutation({
-    mutationFn: async (content: string) => {
-      if (!user) throw new Error("Not authenticated");
-      const { error } = await supabase.from("comments").insert({
-        post_id: postId,
-        author_id: user.id,
-        content,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["comments", postId] });
-      setCommentText("");
-      editorInstanceRef.current?.commands.clearContent();
-    },
-    onError: (err: unknown) => {
-      const message = err instanceof Error ? err.message : "Failed to post comment";
-      toast({ title: "Could not post comment", description: message, variant: "destructive" });
-    },
-  });
-
-  const handleSubmit = () => {
-    const trimmed = commentText.replace(/<[^>]*>/g, "").trim();
-    if (!trimmed) return;
-    createMutation.mutate(commentText);
-  };
 
   return (
     <section
@@ -111,44 +68,6 @@ const CommentsSection = ({ postId, isAuthenticated }: CommentsSectionProps) => {
       >
         Discussion ({isLoading ? "…" : comments.length})
       </h2>
-
-      {isAuthenticated ? (
-        <div
-          className="flex gap-2 border-b pb-[var(--space-rhythm-block)]"
-          style={{ borderColor: "hsl(var(--border-prose-divider))" }}
-        >
-          <RichTextEditor
-            placeholder="Share your thoughts on this answer…"
-            onUpdate={(html) => setCommentText(html)}
-            editorRef={(editor) => {
-              editorInstanceRef.current = editor;
-            }}
-          />
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={
-              !commentText.replace(/<[^>]*>/g, "").trim() || createMutation.isPending
-            }
-            className="self-end p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors disabled:opacity-40 disabled:hover:bg-transparent"
-            aria-label="Post comment"
-          >
-            <Send className="h-4 w-4" />
-          </button>
-        </div>
-      ) : (
-        <div
-          className="border-b pb-[var(--space-rhythm-block)]"
-          style={{ borderColor: "hsl(var(--border-prose-divider))" }}
-        >
-          <Link
-            to={`/login?next=${nextUrl}`}
-            className="text-primary font-medium hover:underline text-sm"
-          >
-            Sign in to join the discussion →
-          </Link>
-        </div>
-      )}
 
       {isLoading ? (
         <p className="text-muted-foreground text-sm italic">Loading discussion…</p>

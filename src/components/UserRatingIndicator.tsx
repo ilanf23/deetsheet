@@ -11,9 +11,11 @@ interface UserRatingIndicatorProps {
   postId: string;
   /** Called after a rating is saved/cleared so the parent can refresh averages */
   onRatingChanged?: () => void;
+  /** Size variant for the trigger; "sm" (default) is inline body size, "lg" matches a large display numeral. */
+  size?: "sm" | "lg";
 }
 
-const UserRatingIndicator = ({ postId, onRatingChanged }: UserRatingIndicatorProps) => {
+const UserRatingIndicator = ({ postId, onRatingChanged, size = "sm" }: UserRatingIndicatorProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -129,9 +131,23 @@ const UserRatingIndicator = ({ postId, onRatingChanged }: UserRatingIndicatorPro
           aria-label={userRating ? `Your rating: ${userRating}` : "Rate this post"}
         >
           {userRating !== null ? (
-            <span className="text-secondary font-medium tabular-nums text-sm">{userRating}</span>
+            <span
+              className={
+                size === "lg"
+                  ? "text-secondary font-bold tabular-nums text-4xl leading-none"
+                  : "text-secondary font-medium tabular-nums text-sm"
+              }
+            >
+              {userRating}
+            </span>
           ) : (
-            <Star className="h-4 w-4 fill-secondary text-secondary" />
+            <Star
+              className={
+                size === "lg"
+                  ? "h-9 w-9 fill-secondary text-secondary"
+                  : "h-4 w-4 fill-secondary text-secondary"
+              }
+            />
           )}
         </button>
       </PopoverTrigger>

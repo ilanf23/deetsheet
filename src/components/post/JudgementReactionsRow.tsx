@@ -1,0 +1,68 @@
+import { useState } from "react";
+import { Scale } from "lucide-react";
+import JudgeThisDialog from "@/components/post/JudgeThisDialog";
+import { JUDGEMENT_ICONS, type Judgement } from "@/components/post/judgements";
+
+const FEATURED: Judgement[] = ["Helpful", "Agree", "Insightful", "Heartfelt"];
+
+const JudgementReactionsRow = () => {
+  const [selected, setSelected] = useState<Set<Judgement>>(new Set());
+  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const toggleFeatured = (j: Judgement) => {
+    const next = new Set(selected);
+    if (next.has(j)) {
+      next.delete(j);
+    } else {
+      if (next.size >= 3) return;
+      next.add(j);
+    }
+    setSelected(next);
+  };
+
+  return (
+    <>
+      <div className="flex items-center gap-3 flex-wrap">
+        {FEATURED.map((j) => {
+          const Icon = JUDGEMENT_ICONS[j];
+          const isOn = selected.has(j);
+          const count = isOn ? 1 : 0;
+          return (
+            <button
+              key={j}
+              type="button"
+              onClick={() => toggleFeatured(j)}
+              aria-pressed={isOn}
+              aria-label={`${j}${isOn ? " (selected)" : ""}`}
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm transition-colors ${
+                isOn
+                  ? "text-secondary"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Icon className="h-4 w-4" />
+              <span className="tabular-nums">{count}</span>
+            </button>
+          );
+        })}
+        <button
+          type="button"
+          onClick={() => setDialogOpen(true)}
+          className="ml-auto inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          aria-label="Judge this answer"
+        >
+          <Scale className="h-4 w-4" />
+          <span className="hidden sm:inline">Judge this</span>
+        </button>
+      </div>
+      <JudgeThisDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        value={selected}
+        onChange={setSelected}
+      />
+    </>
+  );
+};
+
+export default JudgementReactionsRow;

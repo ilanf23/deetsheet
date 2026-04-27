@@ -8,8 +8,10 @@ import TopicRecentlyAdded from "@/components/TopicRecentlyAdded";
 import TopicRecommendations from "@/components/TopicRecommendations";
 import PostHeader from "@/components/post/PostHeader";
 import AuthorByline from "@/components/post/AuthorByline";
+import PostMetaBar from "@/components/post/PostMetaBar";
 import PostBody from "@/components/post/PostBody";
-import RatePostBlock from "@/components/post/RatePostBlock";
+import JudgementReactionsRow from "@/components/post/JudgementReactionsRow";
+import InlineCommentComposer from "@/components/post/InlineCommentComposer";
 import PrevNextRankPager from "@/components/post/PrevNextRankPager";
 import CommentsSection from "@/components/post/CommentsSection";
 import { useAuth } from "@/contexts/AuthContext";
@@ -129,36 +131,51 @@ const SubtopicPage = () => {
               {post ? (
                 <>
                   <div className="space-y-[var(--space-rhythm-block)]">
+                    <div className="space-y-[var(--space-rhythm-tight)] border-b border-border pb-[var(--space-rhythm-block)]">
+                      <div className="flex items-baseline gap-3">
+                        <button
+                          type="button"
+                          onClick={() => navigate(backToTopicHref)}
+                          className="text-3xl md:text-4xl font-heading font-bold text-primary hover:underline bg-transparent border-0 p-0 cursor-pointer"
+                        >
+                          {topic.name}
+                        </button>
+                        <span className="text-sm text-muted-foreground">
+                          /{topic.categoryName}
+                        </span>
+                      </div>
+                    </div>
                     <PostHeader
                       title={post.title || post.content}
                       rank={rankNum}
-                      total={total}
                       topicName={topic.name}
+                      postId={post.id}
                       averageRating={seedAvg}
                       ratingCount={post.ratingCount}
+                      onRatingChanged={refreshRatings}
                     />
                     <AuthorByline
                       username={post.username}
                       authorId={post.authorId}
                       createdAt={post.createdAt instanceof Date ? post.createdAt : new Date(post.createdAt)}
                     />
+                    <PostMetaBar
+                      postId={post.id}
+                      topicName={topic.name}
+                      commentCount={post.commentCount}
+                      postTitle={post.title || post.content}
+                    />
                   </div>
                   <PostBody content={post.content} />
-                  <RatePostBlock
-                    postId={post.id}
-                    isAuthenticated={isAuthenticated}
-                    onRatingChanged={refreshRatings}
-                  />
+                  <JudgementReactionsRow />
+                  <InlineCommentComposer />
                   <PrevNextRankPager
                     topicName={topic.name}
                     rank={rankNum}
                     prev={prevPost}
                     next={nextPost}
                   />
-                  <CommentsSection
-                    postId={post.id}
-                    isAuthenticated={isAuthenticated}
-                  />
+                  <CommentsSection postId={post.id} />
                 </>
               ) : (
                 <p className="text-muted-foreground">No posts in this topic yet.</p>
