@@ -19,21 +19,34 @@ interface DbComment {
   content: string;
   created_at: string;
   author_id: string;
-  profiles: { username: string | null } | null;
 }
 
 const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
   const { data, error } = await supabase
     .from("comments")
-    .select("id, content, created_at, author_id, profiles(username)")
+    .select("id, content, created_at, author_id")
     .eq("post_id", postId)
     .order("created_at", { ascending: true });
 
   if (error) throw error;
-  const rows = (data ?? []) as unknown as DbComment[];
+  const rows = (data ?? []) as DbComment[];
+  if (rows.length === 0) return [];
+
+  const authorIds = Array.from(new Set(rows.map((r) => r.author_id)));
+  const { data: profiles, error: profilesError } = await supabase
+    .from("profiles")
+    .select("id, username")
+    .in("id", authorIds);
+  if (profilesError) throw profilesError;
+
+  const usernameById = new Map<string, string>();
+  for (const p of profiles ?? []) {
+    usernameById.set(p.id, p.username || "anonymous");
+  }
+
   return rows.map((c) => ({
     id: c.id,
-    username: c.profiles?.username || "anonymous",
+    username: usernameById.get(c.author_id) || "anonymous",
     content: c.content,
     createdAt: new Date(c.created_at),
   }));
