@@ -1205,25 +1205,34 @@ Deno.serve(async (req) => {
 
       for (const post of allPosts) {
         const commentTemplates = topicCommentTemplates[post.topic_name] || getGenericComments(post.topic_name);
-        const numComments = 3 + (Math.abs(hashString(post.id)) % 3);
+        // 5–10 comments per post
+        const numComments = 5 + (Math.abs(hashString(post.id)) % 6);
+
+        // Pre-pick a unique-ish set of template indexes to keep variety in each thread
+        const templateOrder: number[] = [];
+        for (let c = 0; c < numComments; c++) {
+          const idx = Math.abs(hashString(post.id + "_t_" + c)) % commentTemplates.length;
+          templateOrder.push(idx);
+        }
 
         for (let c = 0; c < numComments; c++) {
-          let commentUserIndex = (Math.abs(hashString(post.id + c.toString())) % userIds.length);
+          let commentUserIndex = (Math.abs(hashString(post.id + "_u_" + c)) % userIds.length);
           if (userIds[commentUserIndex] === post.author_id) {
             commentUserIndex = (commentUserIndex + 1) % userIds.length;
           }
 
-          const templateIndex = c % commentTemplates.length;
-          const daysAgo = Math.abs(hashString(post.id + c.toString() + "t")) % 21;
-          const hoursAgo = Math.abs(hashString(post.id + c.toString() + "h")) % 24;
+          // Spread across the past ~21 days, with later comments slightly newer
+          // so the thread reads in a natural chronological order.
+          const baseDaysAgo = 21 - Math.floor((c / Math.max(1, numComments - 1)) * 18);
+          const jitterHours = Math.abs(hashString(post.id + "_j_" + c)) % 18;
           const commentDate = new Date();
-          commentDate.setDate(commentDate.getDate() - daysAgo);
-          commentDate.setHours(commentDate.getHours() - hoursAgo);
+          commentDate.setDate(commentDate.getDate() - baseDaysAgo);
+          commentDate.setHours(commentDate.getHours() - jitterHours);
 
           commentBatch.push({
             post_id: post.id,
             author_id: userIds[commentUserIndex],
-            content: commentTemplates[templateIndex],
+            content: commentTemplates[templateOrder[c]],
             created_at: commentDate.toISOString(),
           });
 
