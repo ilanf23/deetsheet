@@ -18,8 +18,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   useTopicByName,
   usePostsByTopic,
+  type PostRow,
 } from "@/hooks/useSupabaseTopics";
-import type { Post, Topic } from "@/data/seedData";
+import type { Topic } from "@/data/seedData";
 
 const SubtopicPage = () => {
   const { topicName, rank } = useParams<{ topicName: string; rank: string }>();
