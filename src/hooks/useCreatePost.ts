@@ -24,7 +24,7 @@ interface CreatePostInput {
  *   - "custom"   → resolve city/state via get_or_create_location
  *
  * On success it invalidates the posts-by-topic query so the feed
- * re-renders immediately and bumps the topic + home feed caches.
+ * re-renders immediately and bumps the topic caches.
  */
 export const useCreatePost = () => {
   const { user } = useAuth();
@@ -98,7 +98,6 @@ export const useCreatePost = () => {
       queryClient.invalidateQueries({
         queryKey: ["topic", variables.topicName],
       });
-      queryClient.invalidateQueries({ queryKey: ["home-feed"] });
     },
   });
 };

@@ -1,0 +1,194 @@
+/* ============================================================
+   Design Tokens — Post Page Redesign
+   Philosophy: Community Editorial (Substack + NYT Opinion + existing
+   DeetSheet community palette).
+
+   These tokens are STRICTLY ADDITIVE. They extend the existing token
+   system in src/index.css — they do not replace any existing variables.
+   Existing color, font, and --radius declarations are reused verbatim.
+
+   During Phase 6 (build), merge the additions in this file into
+   src/index.css under the matching @layer base { :root { ... } }
+   block. The .dark overrides go under .dark { ... }. No changes are
+   needed to tailwind.config.ts unless we choose to surface these as
+   utility classes (notes at bottom).
+   ============================================================ */
+
+/* ---------- LIGHT MODE (extends src/index.css :root) ---------- */
+:root {
+  /* --------------------------------------------------------------
+     Layout — reading widths
+     The single most important addition. Everything in the editorial
+     middle column is constrained by these. Without them we drift
+     back to the cramped 3-column body width that triggered the
+     redesign.
+     -------------------------------------------------------------- */
+  --reading-max-width: 720px;          /* article body & rate block */
+  --reading-prose-width: 65ch;          /* fallback when in prose context */
+  --middle-col-max-width: 760px;        /* outer column ceiling, allows 720 + side gutters */
+  --rail-width-left: 260px;
+  --rail-width-right: 280px;
+  --rail-gap: 1.5rem;                   /* 24px gutter between rails and reader */
+
+  /* --------------------------------------------------------------
+     Editorial type ramp
+     Composes on top of Tailwind's default scale. Tokens reflect
+     what the post page semantically *means*, not generic sizes.
+     The headings stay on the existing --font-heading (Merriweather).
+     -------------------------------------------------------------- */
+  --font-size-post-title: clamp(1.875rem, 1.4rem + 1.6vw, 2.5rem);   /* 30 → 40px */
+  --font-size-section-heading: 1.5rem;                                /* 24px — for "Discussion (N)" */
+  --font-size-prose-body: 1.0625rem;                                  /* 17px — slightly larger than default for comfortable reading */
+  --font-size-byline: 0.875rem;                                       /* 14px */
+  --font-size-meta: 0.75rem;                                          /* 12px — breadcrumb, rank pill, avg-chip */
+
+  --line-height-post-title: 1.15;
+  --line-height-section-heading: 1.25;
+  --line-height-prose-body: 1.7;                                      /* generous leading is the editorial signature */
+  --line-height-byline: 1.4;
+  --line-height-meta: 1.4;
+
+  --letter-spacing-rank-pill: 0.05em;                                 /* small caps feeling for #3 OF 18 */
+  --letter-spacing-section-heading: -0.005em;                         /* tiny optical tightening on serif headings */
+
+  /* --------------------------------------------------------------
+     Spacing — editorial vertical rhythm
+     The middle column uses a deliberate vertical rhythm so the
+     post feels paced, not packed. These tokens are the gaps
+     BETWEEN the named blocks in INFORMATION_ARCHITECTURE.md.
+     -------------------------------------------------------------- */
+  --space-rhythm-tight: 0.75rem;        /* 12px — within a block (e.g., breadcrumb to rank pill) */
+  --space-rhythm-block: 1.5rem;         /* 24px — between minor blocks (e.g., title to byline) */
+  --space-rhythm-section: 2.5rem;       /* 40px — between major sections (e.g., body to rate block) */
+  --space-rhythm-major: 4rem;           /* 64px — page-level rhythm (top of page to first block) */
+
+  /* --------------------------------------------------------------
+     Editorial surfaces & borders
+     Quiet, hairline. No drop shadows on the article body itself.
+     Reuses existing --border for hairlines; adds two semantic
+     surface tokens for the rate block and the rails.
+     -------------------------------------------------------------- */
+  --border-hairline: hsl(220 13% 91%);                  /* mirrors --border for clarity in editorial code */
+  --border-prose-divider: hsl(220 13% 88%);             /* very slightly stronger for in-body dividers */
+
+  --surface-rate-block: hsl(157 60% 97%);               /* very pale accent green wash for the foot CTA */
+  --surface-rate-block-border: hsl(157 60% 88%);
+  --surface-rail: hsl(0 0% 100%);                       /* matches --card */
+  --surface-rank-pill: hsl(220 14% 96%);                /* mirrors --muted */
+  --surface-rank-pill-text: hsl(220 10% 46%);           /* mirrors --muted-foreground */
+
+  /* --------------------------------------------------------------
+     Motion
+     Calm. No bounces on body content; bounces stay scoped to
+     UserRatingIndicator's existing star animation only.
+     All transitions respect prefers-reduced-motion (handled in
+     component code, not tokens).
+     -------------------------------------------------------------- */
+  --duration-instant: 50ms;
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+
+  --easing-default: cubic-bezier(0.4, 0, 0.2, 1);       /* standard material */
+  --easing-out: cubic-bezier(0, 0, 0.2, 1);             /* ui exits, slide-ins */
+  --easing-in: cubic-bezier(0.4, 0, 1, 1);              /* ui enters */
+
+  /* --------------------------------------------------------------
+     Shadows
+     Editorial = no aggressive shadows on the post body. These are
+     reserved for floating UI ONLY (popovers, dropdowns, mobile
+     scroll-strip cards). The article surface, rate block, rails
+     all use border-only treatment.
+     -------------------------------------------------------------- */
+  --shadow-popover: 0 4px 16px -4px hsl(220 20% 14% / 0.08), 0 2px 4px -2px hsl(220 20% 14% / 0.04);
+  --shadow-floating: 0 8px 32px -8px hsl(220 20% 14% / 0.12), 0 4px 8px -4px hsl(220 20% 14% / 0.06);
+  --shadow-focus: 0 0 0 3px hsl(157 60% 30% / 0.25);    /* matches --ring with halo */
+}
+
+/* ---------- DARK MODE (extends src/index.css .dark) ----------
+   NOTE: Dark mode is OUT OF SCOPE for the post-page-redesign
+   implementation (see DESIGN_BRIEF.md → Out of Scope). The page
+   currently hardcodes bg-white. These tokens are defined for when
+   the dark-mode wiring project is picked up, so the editorial
+   surfaces have correct values from day one.
+   ----------------------------------------------------------- */
+.dark {
+  --reading-max-width: 720px;
+  --reading-prose-width: 65ch;
+  --middle-col-max-width: 760px;
+  --rail-width-left: 260px;
+  --rail-width-right: 280px;
+  --rail-gap: 1.5rem;
+
+  --font-size-post-title: clamp(1.875rem, 1.4rem + 1.6vw, 2.5rem);
+  --font-size-section-heading: 1.5rem;
+  --font-size-prose-body: 1.0625rem;
+  --font-size-byline: 0.875rem;
+  --font-size-meta: 0.75rem;
+
+  --line-height-post-title: 1.15;
+  --line-height-section-heading: 1.25;
+  --line-height-prose-body: 1.7;
+  --line-height-byline: 1.4;
+  --line-height-meta: 1.4;
+
+  --letter-spacing-rank-pill: 0.05em;
+  --letter-spacing-section-heading: -0.005em;
+
+  --space-rhythm-tight: 0.75rem;
+  --space-rhythm-block: 1.5rem;
+  --space-rhythm-section: 2.5rem;
+  --space-rhythm-major: 4rem;
+
+  /* Dark mode: warm dark surfaces (not pure black), reduce contrast
+     on body text to avoid the "text on coal" harshness. */
+  --border-hairline: hsl(220 14% 22%);
+  --border-prose-divider: hsl(220 14% 26%);
+
+  --surface-rate-block: hsl(157 50% 12%);                /* deep green wash */
+  --surface-rate-block-border: hsl(157 50% 22%);
+  --surface-rail: hsl(220 20% 12%);                      /* matches .dark --card */
+  --surface-rank-pill: hsl(220 14% 18%);                 /* matches .dark --muted */
+  --surface-rank-pill-text: hsl(220 10% 60%);            /* matches .dark --muted-foreground */
+
+  --shadow-popover: 0 4px 16px -4px hsl(0 0% 0% / 0.4), 0 2px 4px -2px hsl(0 0% 0% / 0.2);
+  --shadow-floating: 0 8px 32px -8px hsl(0 0% 0% / 0.5), 0 4px 8px -4px hsl(0 0% 0% / 0.3);
+  --shadow-focus: 0 0 0 3px hsl(157 60% 40% / 0.35);
+}
+
+/* ============================================================
+   Optional Tailwind config extensions (for Phase 6 reference)
+   These would go into tailwind.config.ts → theme.extend.
+   They are ONLY needed if we want utility classes for the
+   tokens. The components built in Phase 6 may reference the
+   CSS variables directly via arbitrary-value syntax (e.g.,
+   max-w-[var(--reading-max-width)]) without changing the
+   Tailwind config — that is the recommended path to keep the
+   config clean.
+
+   Reference (do not paste into tailwind.config.ts unless you
+   want first-class utilities):
+
+     theme: {
+       extend: {
+         maxWidth: {
+           reading: 'var(--reading-max-width)',
+           'middle-col': 'var(--middle-col-max-width)',
+         },
+         spacing: {
+           'rhythm-tight':   'var(--space-rhythm-tight)',
+           'rhythm-block':   'var(--space-rhythm-block)',
+           'rhythm-section': 'var(--space-rhythm-section)',
+           'rhythm-major':   'var(--space-rhythm-major)',
+         },
+         fontSize: {
+           'post-title':    ['var(--font-size-post-title)',    { lineHeight: 'var(--line-height-post-title)' }],
+           'section-h':     ['var(--font-size-section-heading)', { lineHeight: 'var(--line-height-section-heading)' }],
+           'prose-body':    ['var(--font-size-prose-body)',    { lineHeight: 'var(--line-height-prose-body)' }],
+           'byline':        ['var(--font-size-byline)',        { lineHeight: 'var(--line-height-byline)' }],
+           'meta':          ['var(--font-size-meta)',          { lineHeight: 'var(--line-height-meta)' }],
+         },
+       },
+     }
+
+   ============================================================ */

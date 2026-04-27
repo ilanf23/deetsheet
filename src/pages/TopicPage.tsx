@@ -8,7 +8,6 @@ import TopicRecommendations from "@/components/TopicRecommendations";
 import TopicRecentlyAdded from "@/components/TopicRecentlyAdded";
 import AddPostBar from "@/components/AddPostBar";
 import FollowTopicButton from "@/components/FollowTopicButton";
-import EmailCaptureForm from "@/components/EmailCaptureForm";
 import TopicPaginationFooter, {
   DEFAULT_PAGE_SIZE,
   isValidPageSize,
@@ -103,19 +102,16 @@ const TopicPage = () => {
     <div className="min-h-screen flex flex-col bg-white">
       <DeetHeader />
       <main className="flex-1">
-        <div className="max-w-[1600px] mx-auto px-8 lg:px-16 mt-10 mb-20">
-          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr_280px] gap-10">
+        <div className="mx-auto mt-5 px-6 lg:px-10 mb-20">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[300px_1fr_240px] gap-5">
             {/* Left — Recently Added */}
-            <div className="hidden lg:block">
+            <div className="hidden lg:block pt-4">
               <TopicRecentlyAdded topicId={topic.id} topicName={topic.name} />
             </div>
             {/* Main â Topic posts */}
-            <div className="min-w-0">
+            <div className="min-w-0 pt-4">
               <div className="mb-6 flex items-start justify-between gap-4">
                 <div className="min-w-0 flex items-start gap-4">
-                  {topic.imageUrl && (
-                    <TopicHeaderImage src={topic.imageUrl} alt={topic.name} />
-                  )}
                   <div className="min-w-0">
                     <div className="flex items-baseline gap-3">
                       <h1 className="text-3xl md:text-4xl font-heading font-bold text-card-foreground">
@@ -129,27 +125,33 @@ const TopicPage = () => {
                       {getTopicSubtitle(topic.name, topic.categoryName)}
                     </p>
                   </div>
+                  {topic.imageUrl && (
+                    <TopicHeaderImage src={topic.imageUrl} alt={topic.name} />
+                  )}
                 </div>
                 <FollowTopicButton topicId={topic.id} />
               </div>
-              <div className="space-y-3">
+              <div className="divide-y divide-border border-y border-border">
                 {visiblePosts.map((post, i) => (
                   <TopicPostListItem
                     key={post.id}
                     post={post}
                     rank={i + 1}
                     topicName={topic.name}
+                    topicId={topic.id}
                   />
                 ))}
-                {!loading && !!user && topic && (
+              </div>
+              {!loading && !!user && topic && (
+                <div className="mt-6">
                   <AddPostBar
                     topicId={topic.id}
                     topicName={topic.name}
                     categoryName={topic.categoryName}
                     onPostAdded={refreshPosts}
                   />
-                )}
-              </div>
+                </div>
+              )}
               <TopicPaginationFooter
                 size={size}
                 total={posts.length}
@@ -160,8 +162,7 @@ const TopicPage = () => {
             </div>
 
             {/* Right â Recommendations + Email Capture */}
-            <div className="hidden lg:block space-y-6">
-              <EmailCaptureForm />
+            <div className="hidden lg:block lg:border-l lg:border-border lg:pl-5 pt-4 space-y-6">
               {/* TopicRecommendations still reads from seedData for now â
                   refactor when the homepage flow moves off seed. */}
               <TopicRecommendations currentTopic={topic as unknown as import("@/data/seedData").Topic} />
@@ -181,7 +182,7 @@ const TopicHeaderImage = ({ src, alt }: { src: string; alt: string }) => {
     <img
       src={src}
       alt={alt}
-      className="h-20 w-20 rounded-xl object-cover shrink-0"
+      className="h-36 w-56 rounded-lg object-cover shrink-0"
       loading="lazy"
       onError={() => setError(true)}
     />

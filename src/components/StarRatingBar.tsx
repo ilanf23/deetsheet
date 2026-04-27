@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { motion } from "motion/react";
 
 interface StarRatingBarProps {
   value: number | null;
@@ -94,16 +95,27 @@ const StarRatingBar = ({ value, onChange }: StarRatingBarProps) => {
             const num = i + 1;
             const isActive = activeCircle === num;
             return (
-              <Star
+              <motion.div
                 key={num}
-                className={`transition-all duration-150 ${
-                  isActive
-                    ? "w-9 h-9 text-orange-500 drop-shadow-lg z-10"
-                    : "w-7 h-7 text-orange-400"
-                }`}
-                fill="currentColor"
-                strokeWidth={isActive ? 1.5 : 1}
-              />
+                initial={{ y: 0, scale: 1 }}
+                animate={{ y: [0, -6, 0], scale: [1, 1.18, 1] }}
+                transition={{
+                  duration: 0.42,
+                  delay: i * 0.055,
+                  ease: "easeOut",
+                  times: [0, 0.5, 1],
+                }}
+              >
+                <Star
+                  className={`transition-all duration-150 ${
+                    isActive
+                      ? "w-9 h-9 text-orange-500 drop-shadow-lg z-10"
+                      : "w-7 h-7 text-orange-400"
+                  }`}
+                  fill="currentColor"
+                  strokeWidth={isActive ? 1.5 : 1}
+                />
+              </motion.div>
             );
           })}
         </div>

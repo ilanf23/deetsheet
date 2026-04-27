@@ -1,38 +1,31 @@
-import { useMemo } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { ChevronLeft, Star } from "lucide-react";
+import { useEffect, useMemo } from "react";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { ChevronLeft } from "lucide-react";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
-import TopicPostExpanded from "@/components/TopicPostExpanded";
+import TopicRecentlyAdded from "@/components/TopicRecentlyAdded";
+import TopicRecommendations from "@/components/TopicRecommendations";
+import PostHeader from "@/components/post/PostHeader";
+import AuthorByline from "@/components/post/AuthorByline";
+import PostBody from "@/components/post/PostBody";
+import RatePostBlock from "@/components/post/RatePostBlock";
+import PrevNextRankPager from "@/components/post/PrevNextRankPager";
+import CommentsSection from "@/components/post/CommentsSection";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   useTopicByName,
   usePostsByTopic,
 } from "@/hooks/useSupabaseTopics";
-import type { Post } from "@/data/seedData";
-import cowboysHero from "@/assets/cowboys-hero.jpg";
+import type { Post, Topic } from "@/data/seedData";
 
-// Topic-specific hero images for subtopic post pages.
-// Keyed by lowercased topic name for resilient matching.
-const TOPIC_POST_HERO: Record<string, string> = {
-  cowboys: cowboysHero,
-};
-
-/**
- * Dedicated page for a single ranked subtopic within a topic.
- * Route: /topic/:topicName/post/:rank
- *
- * Shows the full post (content, ratings, comments) plus a sidebar listing
- * the other ranked subtopics in the same topic for quick navigation.
- */
 const SubtopicPage = () => {
   const { topicName, rank } = useParams<{ topicName: string; rank: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryClient = useQueryClient();
   const { user, loading } = useAuth();
 
-  // Back link href — derived from the URL param React Router already matched,
-  // so it's valid on first render and faithfully mirrors the URL the user
-  // landed on (slug or display-name form both work).
   const backToTopicHref = `/topic/${encodeURIComponent(topicName ?? "")}`;
 
   const { data: topic, isLoading: topicLoading, isError: topicError } =
@@ -45,6 +38,31 @@ const SubtopicPage = () => {
 
   const rankNum = Math.max(1, parseInt(rank ?? "1", 10) || 1);
   const post = posts[rankNum - 1];
+  const total = posts.length;
+  const prevPost = rankNum > 1 ? posts[rankNum - 2] : undefined;
+  const nextPost = rankNum < total ? posts[rankNum] : undefined;
+
+  const isAuthenticated = !loading && !!user;
+
+  const seedAvg = post && post.ratingCount > 0
+    ? Math.round((post.ratingScore / post.ratingCount) * 10) / 10
+    : 0;
+
+  const refreshRatings = () => {
+    if (topic?.id) {
+      queryClient.invalidateQueries({ queryKey: ["posts-by-topic", topic.id] });
+    }
+  };
+
+  useEffect(() => {
+    if (!post) return;
+    if (!location.hash) return;
+    const id = location.hash.slice(1);
+    const el = document.getElementById(id);
+    if (!el) return;
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.scrollIntoView({ behavior: prefersReduced ? "auto" : "smooth", block: "start" });
+  }, [post, location.hash]);
 
   if (topicLoading) {
     return (
@@ -83,9 +101,9 @@ const SubtopicPage = () => {
           <button
             type="button"
             onClick={() => navigate(backToTopicHref)}
-            className="text-primary hover:underline mt-4 inline-block bg-transparent border-0 p-0 cursor-pointer"
+            className="text-primary hover:underline mt-4 inline-flex items-center gap-1 bg-transparent border-0 p-0 cursor-pointer"
           >
-            ← Back to {topic.name}
+            <ChevronLeft className="h-4 w-4" /> Back to {topic.name}
           </button>
         </main>
         <DeetFooter />
@@ -97,90 +115,68 @@ const SubtopicPage = () => {
     <div className="min-h-screen flex flex-col bg-white">
       <DeetHeader />
       <main className="flex-1">
-        <div className="max-w-[1400px] mx-auto px-8 lg:px-16 mt-10 mb-20">
-          {/* Back link — always returns to the topic page, never home */}
-          <div className="mb-6 flex items-center gap-2 text-sm">
-            <button
-              type="button"
-              onClick={() => navigate(backToTopicHref)}
-              className="text-primary hover:underline inline-flex items-center gap-1 font-medium bg-transparent border-0 p-0 cursor-pointer"
-            >
-              <ChevronLeft className="h-4 w-4" />
-              Back to {topic.name}
-            </button>
-            <span className="text-muted-foreground">/</span>
-            <span className="text-muted-foreground">#{rankNum}</span>
-          </div>
+        <div className="mx-auto px-4 sm:px-6 lg:px-10 mt-[var(--space-rhythm-section)] mb-[var(--space-rhythm-major)] max-w-[1400px]">
+          <div className="grid grid-cols-1 lg:grid-cols-[var(--rail-width-left)_minmax(0,var(--middle-col-max-width))_var(--rail-width-right)] gap-[var(--rail-gap)] justify-center">
+            {/* Left rail — site-wide activity */}
+            <aside className="hidden lg:block pt-2">
+              <div className="sticky top-24">
+                <TopicRecentlyAdded topicId={topic.id} topicName={topic.name} />
+              </div>
+            </aside>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-10">
-            {/* Main — single post, force expanded */}
-            <div className="min-w-0">
-              {(() => {
-                const heroSrc = TOPIC_POST_HERO[topic.name.toLowerCase()];
-                if (!heroSrc) return null;
-                return (
-                  <div className="mb-6 overflow-hidden rounded-2xl border bg-muted">
-                    <img
-                      src={heroSrc}
-                      alt={`${topic.name} hero`}
-                      width={1600}
-                      height={640}
-                      className="w-full h-56 sm:h-72 object-cover"
+            {/* Middle column — the read */}
+            <article className="min-w-0 pt-2 space-y-[var(--space-rhythm-section)]">
+              {post ? (
+                <>
+                  <div className="space-y-[var(--space-rhythm-block)]">
+                    <PostHeader
+                      title={post.title || post.content}
+                      rank={rankNum}
+                      total={total}
+                      topicName={topic.name}
+                      averageRating={seedAvg}
+                      ratingCount={post.ratingCount}
+                    />
+                    <AuthorByline
+                      username={post.username}
+                      authorId={post.authorId}
+                      createdAt={post.createdAt instanceof Date ? post.createdAt : new Date(post.createdAt)}
                     />
                   </div>
-                );
-              })()}
-              {post ? (
-                <TopicPostExpanded
-                  post={post}
-                  rank={rankNum}
-                  isExpanded={true}
-                  onToggleExpand={() => navigate(backToTopicHref)}
-                  isAuthenticated={!loading && !!user}
-                />
+                  <PostBody content={post.content} />
+                  <RatePostBlock
+                    postId={post.id}
+                    isAuthenticated={isAuthenticated}
+                    onRatingChanged={refreshRatings}
+                  />
+                  <PrevNextRankPager
+                    topicName={topic.name}
+                    rank={rankNum}
+                    prev={prevPost}
+                    next={nextPost}
+                  />
+                  <CommentsSection
+                    postId={post.id}
+                    isAuthenticated={isAuthenticated}
+                  />
+                </>
               ) : (
                 <p className="text-muted-foreground">No posts in this topic yet.</p>
               )}
-            </div>
+            </article>
 
-            {/* Right — other ranked subtopics */}
-            <aside className="hidden lg:block">
+            {/* Right rail — topic discovery */}
+            <aside className="hidden lg:block pt-2">
               <div className="sticky top-24">
-                <h2 className="text-xs font-heading font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-1">
-                  Other subtopics in {topic.name}
-                </h2>
-                <ul className="space-y-3">
-                  {posts.map((p, i) => {
-                    const r = i + 1;
-                    const isCurrent = r === rankNum;
-                    const seedAvg =
-                      p.ratingCount > 0
-                        ? Math.round((p.ratingScore / p.ratingCount) * 10) / 10
-                        : 0;
-                    const title = p.title || p.content;
-                    return (
-                      <li key={p.id}>
-                        <Link
-                          to={`/topic/${encodeURIComponent(topic.name)}/post/${r}`}
-                          className={`flex items-start gap-2 p-3 border rounded-xl bg-background hover:shadow-md transition-all duration-200 text-sm ${
-                            isCurrent
-                              ? "ring-1 ring-primary text-card-foreground font-semibold"
-                              : "text-primary"
-                          }`}
-                        >
-                          <span className="w-5 shrink-0 text-right">{r}.</span>
-                          <span className="flex-1 line-clamp-2">{title}</span>
-                          <span className="flex items-center gap-0.5 text-xs text-muted-foreground shrink-0 mt-0.5">
-                            <Star className="h-3 w-3 text-secondary fill-secondary" />
-                            {seedAvg}
-                          </span>
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
+                <TopicRecommendations currentTopic={topic as unknown as Topic} />
               </div>
             </aside>
+
+            {/* Mobile-only stacked rails (below the body) */}
+            <div className="lg:hidden space-y-[var(--space-rhythm-block)]">
+              <TopicRecentlyAdded topicId={topic.id} topicName={topic.name} />
+              <TopicRecommendations currentTopic={topic as unknown as Topic} />
+            </div>
           </div>
         </div>
       </main>

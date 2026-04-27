@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Star, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "motion/react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -163,7 +164,18 @@ const UserRatingIndicator = ({ postId, onRatingChanged }: UserRatingIndicatorPro
               const current = previewValue ?? userRating ?? 0;
               const fill = Math.max(0, Math.min(1, current - i));
               return (
-                <div key={i} className="relative leading-none">
+                <motion.div
+                  key={i}
+                  className="relative leading-none"
+                  initial={{ y: 0, scale: 1 }}
+                  animate={{ y: [0, -6, 0], scale: [1, 1.18, 1] }}
+                  transition={{
+                    duration: 0.42,
+                    delay: i * 0.055,
+                    ease: "easeOut",
+                    times: [0, 0.5, 1],
+                  }}
+                >
                   <Star className="h-6 w-6 text-muted-foreground/40" />
                   <div
                     className="absolute inset-0 overflow-hidden pointer-events-none"
@@ -171,7 +183,7 @@ const UserRatingIndicator = ({ postId, onRatingChanged }: UserRatingIndicatorPro
                   >
                     <Star className="h-6 w-6 fill-secondary text-secondary" />
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>

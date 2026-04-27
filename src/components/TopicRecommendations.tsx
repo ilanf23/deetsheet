@@ -17,22 +17,25 @@ const TopicRecommendations = ({ currentTopic }: TopicRecommendationsProps) => {
 
   return (
     <div>
-      <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground px-1 mb-4">
+      <h2
+        className="text-[var(--font-size-meta)] font-semibold uppercase text-muted-foreground px-1 mb-4"
+        style={{ letterSpacing: "var(--letter-spacing-rank-pill)" }}
+      >
         Related Topics
       </h2>
-      <div className="space-y-3">
+      <div className="space-y-2">
         {recommended.map((topic) => (
           <Link
             key={topic.id}
             to={`/topic/${encodeURIComponent(topic.name)}`}
-            className="block rounded-xl border bg-background overflow-hidden hover:shadow-md transition-all duration-200"
+            className="block rounded-[var(--radius)] border bg-background overflow-hidden hover:bg-accent/40 transition-colors duration-150"
           >
             {topic.imageUrl && (
               <TopicImage src={topic.imageUrl} alt={topic.name} />
             )}
             <div className="p-3">
-              <h3 className="text-sm font-bold text-card-foreground">{topic.name}</h3>
-              <p className="text-xs text-muted-foreground">{topic.categoryName} · {topic.postCount} posts</p>
+              <h3 className="text-sm font-semibold text-primary group-hover:underline">{topic.name}</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">{topic.categoryName} · {topic.postCount} posts</p>
             </div>
           </Link>
         ))}

@@ -258,8 +258,8 @@ const ProfileEdit = () => {
       return;
     }
 
-    // Keep the header location chip and home-feed filter in sync with the
-    // city/state the user just set on their profile.
+    // Keep the header location chip in sync with the city/state the user
+    // just set on their profile.
     const cityTrim = values.city?.trim() ?? "";
     const stateTrim = values.state?.trim() ?? "";
     if (cityTrim && stateTrim) {

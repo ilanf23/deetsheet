@@ -46,18 +46,21 @@ const CommentItem = ({ comment, depth = 0 }: CommentItemProps) => {
   };
 
   return (
-    <div className={depth > 0 ? "ml-8" : ""}>
-      <div className="flex gap-3 p-3 mb-3 border rounded-xl bg-background">
+    <article
+      className={depth > 0 ? "ml-6 pl-4 border-l" : ""}
+      style={depth > 0 ? { borderLeftColor: "hsl(var(--border-prose-divider))" } : undefined}
+    >
+      <div className="flex gap-3 py-3">
         <UserAvatar username={comment.username} size="md" showName={false} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 text-sm">
-            <Link to={`/profile/${comment.username}`} className="font-semibold text-card-foreground hover:underline">
+            <Link to={`/profile/${comment.username}`} className="font-semibold text-primary hover:underline">
               @{comment.username}
             </Link>
             <span className="text-xs text-muted-foreground">{getTimeAgo(comment.createdAt)}</span>
           </div>
           <div
-            className="prose prose-sm max-w-none text-card-foreground mt-1"
+            className="prose prose-sm max-w-none text-card-foreground mt-1 leading-relaxed"
             dangerouslySetInnerHTML={{ __html: comment.content }}
           />
           <div className="flex items-center gap-4 mt-2">
@@ -106,7 +109,7 @@ const CommentItem = ({ comment, depth = 0 }: CommentItemProps) => {
       {depth < maxDepth && allReplies.map((reply) => (
         <CommentItem key={reply.id} comment={reply} depth={depth + 1} />
       ))}
-    </div>
+    </article>
   );
 };
 

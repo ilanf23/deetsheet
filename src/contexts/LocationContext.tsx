@@ -1,5 +1,4 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -54,7 +53,6 @@ export const useLocation = () => useContext(LocationContext);
 
 export const LocationProvider = ({ children }: { children: ReactNode }) => {
   const { user, loading: authLoading } = useAuth();
-  const queryClient = useQueryClient();
   const [location, setLocationState] = useState<ActiveLocation | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasDismissed, setHasDismissed] = useState(false);
@@ -170,8 +168,6 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
           country: "US",
         };
         setLocationState(next);
-        // Refresh any feed query that depends on location
-        queryClient.invalidateQueries({ queryKey: ["home-feed"] });
         return next;
       }
 
@@ -185,10 +181,9 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
       };
       setLocationState(next);
       setHasDismissed(false);
-      queryClient.invalidateQueries({ queryKey: ["home-feed"] });
       return next;
     },
-    [user, queryClient]
+    [user]
   );
 
   const clearLocation = useCallback(async () => {
@@ -203,8 +198,7 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
       setLocationState(null);
       setHasDismissed(false);
     }
-    queryClient.invalidateQueries({ queryKey: ["home-feed"] });
-  }, [user, queryClient]);
+  }, [user]);
 
   const dismissSuggestion = useCallback(() => {
     if (user) return;

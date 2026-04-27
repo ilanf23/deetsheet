@@ -1,29 +1,47 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Star } from "lucide-react";
 import type { Post } from "@/data/seedData";
+import UserRatingIndicator from "@/components/UserRatingIndicator";
 
 interface TopicPostListItemProps {
   post: Post;
   rank: number;
   topicName: string;
+  topicId: string;
 }
 
-/**
- * Editorial row used on the topic page. The whole row is a link to the
- * dedicated subtopic page. Shows rank, title (green/clickable), and the
- * rating score on the right.
- */
-const TopicPostListItem = ({ post, rank, topicName }: TopicPostListItemProps) => {
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const TopicPostListItem = ({ post, rank, topicName, topicId }: TopicPostListItemProps) => {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
   const seedAvg =
     post.ratingCount > 0
       ? Math.round((post.ratingScore / post.ratingCount) * 10) / 10
       : 0;
   const displayTitle = post.title || post.content;
+  const isDbPost = UUID_RE.test(post.id);
+
+  const goToPost = () => {
+    navigate(`/topic/${encodeURIComponent(topicName)}/post/${rank}`);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      goToPost();
+    }
+  };
 
   return (
-    <Link
-      to={`/topic/${encodeURIComponent(topicName)}/post/${rank}`}
-      className="group flex items-baseline gap-4 px-4 py-3 border rounded-xl bg-background hover:shadow-md transition-all duration-200"
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={goToPost}
+      onKeyDown={handleKeyDown}
+      className="group flex items-baseline gap-4 px-3 py-3.5 -mx-3 rounded-md hover:bg-accent/60 transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <span className="w-8 shrink-0 text-right text-sm text-muted-foreground tabular-nums">
         {rank}.
@@ -36,7 +54,24 @@ const TopicPostListItem = ({ post, rank, topicName }: TopicPostListItemProps) =>
         <span className="text-foreground font-semibold">{seedAvg}</span>
         <span>({post.ratingCount})</span>
       </span>
-    </Link>
+      {isDbPost ? (
+        <span
+          className="shrink-0 w-8 flex justify-center"
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <UserRatingIndicator
+            postId={post.id}
+            onRatingChanged={() => {
+              queryClient.invalidateQueries({ queryKey: ["posts-by-topic", topicId] });
+            }}
+          />
+        </span>
+      ) : (
+        <span className="shrink-0 w-8" aria-hidden />
+      )}
+    </div>
   );
 };
 
