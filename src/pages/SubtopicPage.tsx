@@ -34,8 +34,8 @@ const SubtopicPage = () => {
   const { data: topic, isLoading: topicLoading, isError: topicError } =
     useTopicByName(topicName);
   const { data: postsData } = usePostsByTopic(topic?.id);
-  const posts = useMemo<Post[]>(
-    () => ((postsData ?? []) as unknown) as Post[],
+  const posts = useMemo<PostRow[]>(
+    () => postsData ?? [],
     [postsData]
   );
 
