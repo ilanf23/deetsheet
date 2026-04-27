@@ -1,89 +1,50 @@
 ## Goal
 
-Strip em dashes (—) from all user-visible content: posts, topics, comments, and the seed/template strings that future seeded content comes from. Also fix a lingering TypeScript build error in `SubtopicPage.tsx`.
+Allow users to reply to any comment, and to replies of replies, with no depth limit. The frontend UI for nested replies is already built, but it's failing with the error "Could not find the 'parent_comment_id' column of 'comments' in the schema cache" because the database column doesn't exist.
 
-## Scope (current data)
+## Root Cause
 
-A scan of the database shows:
-- **22,700 posts** contain em dashes (in `title` and/or `content`)
-- **96,684 comments** contain em dashes
-- **0 topics** contain em dashes (nothing to do there)
-- 0 en dashes (–) anywhere — only em dashes need replacing
+The `public.comments` table currently has only: `id`, `post_id`, `author_id`, `content`, `created_at`. The reply UI (CommentItem, CommentsSection, InlineCommentComposer) already reads/writes `parent_comment_id`, but the column was never added to the database.
 
-## Replacement rule
+## Changes
 
-Replace every em dash (`—`, U+2014) with a comma + space (`, `), then collapse any accidental `, ,` / leading/trailing whitespace artifacts. This reads more naturally than a plain space and matches how the seeded sentences were written (e.g. `"...not the ones who never struggled — they're the ones..."` → `"...not the ones who never struggled, they're the ones..."`).
+### 1. Database migration (single migration)
 
-If a line has the em dash surrounded by spaces (` — `), it becomes `, `. If it's adjacent to a word with no spaces (rare), it becomes `, ` as well.
-
-## Plan
-
-### 1. One-shot DB cleanup (data update via migration)
-
-Run a migration that updates existing rows in place:
+Add the self-referencing column and an index to support fast tree fetches:
 
 ```sql
-UPDATE public.posts
-SET
-  title   = regexp_replace(replace(title,   '—', ', '), '\s*,\s*,\s*', ', ', 'g'),
-  content = regexp_replace(replace(content, '—', ', '), '\s*,\s*,\s*', ', ', 'g')
-WHERE title LIKE '%—%' OR content LIKE '%—%';
+ALTER TABLE public.comments
+  ADD COLUMN parent_comment_id uuid NULL
+  REFERENCES public.comments(id) ON DELETE CASCADE;
 
-UPDATE public.comments
-SET content = regexp_replace(replace(content, '—', ', '), '\s*,\s*,\s*', ', ', 'g')
-WHERE content LIKE '%—%';
+CREATE INDEX IF NOT EXISTS idx_comments_parent_comment_id
+  ON public.comments(parent_comment_id);
 
-UPDATE public.topics
-SET
-  name        = replace(name, '—', ', '),
-  description = replace(description, '—', ', ')
-WHERE name LIKE '%—%' OR description LIKE '%—%';
+CREATE INDEX IF NOT EXISTS idx_comments_post_id_created_at
+  ON public.comments(post_id, created_at);
 ```
 
-This handles all ~119k rows server-side in one pass.
+Notes:
+- `NULL` = top-level comment (current behavior preserved for all existing rows).
+- `ON DELETE CASCADE` so deleting a comment cleans up its replies.
+- No RLS changes needed — existing policies on `comments` already cover insert/select/update/delete by post and author.
 
-### 2. Strip em dashes from seed templates so newly seeded content stays clean
+### 2. Frontend
 
-- `supabase/functions/seed-posts/index.ts` — the post-body and comment-body templates currently include em dashes. Replace each `—` in string literals with `,` (or remove where it reads better as a sentence break).
-- `src/data/seedData.ts` — same treatment for any remaining seed strings used as fallbacks.
+The frontend is already wired correctly:
+- `InlineCommentComposer` sends `parent_comment_id` on insert.
+- `CommentsSection` fetches it, builds a tree, and recursively renders.
+- `CommentItem` already supports unlimited logical depth (visual indent caps at 5 levels on mobile / 8 on desktop so deep threads stay readable, but reply nesting itself is unlimited).
 
-### 3. Strip em dashes from static UI copy
+No frontend code changes are required after the migration runs. The schema cache will refresh automatically and the "Reply" button will start working at every depth.
 
-Sweep these files and rewrite the em dashes that appear inside JSX text or string constants (UI copy only, not code comments):
-- `src/pages/SignUp.tsx`, `src/pages/Privacy.tsx`, `src/pages/Profile.tsx`, `src/pages/ProfileView.tsx`, `src/pages/TopicPage.tsx`, `src/pages/SubtopicPage.tsx`
-- `src/pages/admin/AdminUsers.tsx`, `AdminPosts.tsx`, `AdminTopics.tsx`, `AdminComments.tsx`
-- `src/components/HeroBanner.tsx`, `CreatePostDialog.tsx`, `PostActionMenu.tsx`, `ColumnLayout.tsx`, `UserRatingIndicator.tsx`
-- `src/components/post/PostMetaBar.tsx`, `PostRatingBox.tsx`
+### 3. Verification
 
-Em dashes inside code comments / file headers (e.g. `useSupabaseTopics.ts`, migration files) are left alone — they're not user-facing.
-
-### 4. Fix the existing TS build error
-
-`src/pages/SubtopicPage.tsx:159` references `post.authorId`, but the legacy `Post` type from `seedData.ts` doesn't declare it. The runtime row from `usePostsByTopic` does have `authorId` (see `useSupabaseTopics.ts` mapper). Fix by switching the local `Post` type to the `PostRow` shape returned by the hook (drop the `as Post` cast):
-
-```ts
-import type { PostRow } from "@/hooks/useSupabaseTopics";
-// ...
-const posts = postsData ?? [];
-```
-
-This removes the bad cast and lets TypeScript see `authorId`, `commentCount`, etc. correctly.
+After the migration:
+- Post a top-level comment, reply to it, then reply to that reply (and so on) to confirm infinite nesting works.
+- Confirm existing comments still display unchanged (all have `parent_comment_id = NULL`).
 
 ## Out of scope
 
-- Em dashes inside developer-only files (migrations already applied, JSDoc, code comments) — not visible to end users.
-- En dashes (–), hyphens (-), and minus signs — none requested, none present in content.
-- Changing the *style* of dashes globally (e.g. forcing two hyphens). The user asked to remove em dashes; a comma keeps the prose readable.
-
-## Verification
-
-After the migration runs, re-query:
-
-```sql
-SELECT
-  (SELECT COUNT(*) FROM posts    WHERE title LIKE '%—%' OR content LIKE '%—%') AS posts_left,
-  (SELECT COUNT(*) FROM comments WHERE content LIKE '%—%')                      AS comments_left,
-  (SELECT COUNT(*) FROM topics   WHERE name  LIKE '%—%' OR COALESCE(description,'') LIKE '%—%') AS topics_left;
-```
-
-Expected: all zero. Then `npm run build` to confirm no TS errors remain.
+- No changes to seed data — existing seeded comments remain top-level.
+- No change to the visual indent caps (purely presentational; logical nesting is already unlimited).
