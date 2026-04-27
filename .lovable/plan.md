@@ -1,50 +1,50 @@
+# Add Mock Ratings to All Posts
+
 ## Goal
+Seed every post (subtopic) with 5–10 random rating points so the UI shows realistic rank/score values across the platform.
 
-Allow users to reply to any comment, and to replies of replies, with no depth limit. The frontend UI for nested replies is already built, but it's failing with the error "Could not find the 'parent_comment_id' column of 'comments' in the schema cache" because the database column doesn't exist.
+## Approach
+Run a one-time SQL data insert against the `ratings` table. The existing trigger `update_post_rating_stats` will automatically recompute `average_rating` and `rating_count` on each post — no extra work needed.
 
-## Root Cause
+## Constraints discovered
+- `ratings.user_id` has a foreign key to `auth.users`, so we cannot invent UUIDs. We must reuse real existing users (the 33 profiles in the database).
+- `ratings` has a UNIQUE constraint on `(user_id, post_id)`, capping each post at 33 ratings max — 5–10 fits comfortably.
+- 22,697 posts currently have zero ratings; 3 already have ratings (those will be left alone, or topped up to 5 minimum).
 
-The `public.comments` table currently has only: `id`, `post_id`, `author_id`, `content`, `created_at`. The reply UI (CommentItem, CommentsSection, InlineCommentComposer) already reads/writes `parent_comment_id`, but the column was never added to the database.
+## Plan
 
-## Changes
+1. For every post with `rating_count < 5`, insert random ratings from a random sample of existing profile user IDs.
+2. Each post gets a random target between 5 and 10 ratings.
+3. Each rating value is a random integer 1–10, weighted slightly toward 6–9 so averages look realistic (not flat 5.5).
+4. Use `ON CONFLICT (user_id, post_id) DO NOTHING` to safely skip duplicates.
+5. Trigger automatically updates `posts.average_rating` and `posts.rating_count`.
 
-### 1. Database migration (single migration)
+## Technical detail
 
-Add the self-referencing column and an index to support fast tree fetches:
+Single SQL statement run via the database insert tool:
 
 ```sql
-ALTER TABLE public.comments
-  ADD COLUMN parent_comment_id uuid NULL
-  REFERENCES public.comments(id) ON DELETE CASCADE;
-
-CREATE INDEX IF NOT EXISTS idx_comments_parent_comment_id
-  ON public.comments(parent_comment_id);
-
-CREATE INDEX IF NOT EXISTS idx_comments_post_id_created_at
-  ON public.comments(post_id, created_at);
+WITH users AS (SELECT id FROM profiles),
+post_targets AS (
+  SELECT id AS post_id, 5 + floor(random() * 6)::int AS target
+  FROM posts WHERE rating_count < 5
+),
+expanded AS (
+  SELECT pt.post_id, u.id AS user_id,
+         -- weighted random 1–10 (skewed 6–9)
+         GREATEST(1, LEAST(10, round(6 + (random() - 0.5) * 6)::int)) AS value,
+         row_number() OVER (PARTITION BY pt.post_id ORDER BY random()) AS rn,
+         pt.target
+  FROM post_targets pt CROSS JOIN users u
+)
+INSERT INTO ratings (post_id, user_id, value)
+SELECT post_id, user_id, value FROM expanded WHERE rn <= target
+ON CONFLICT (user_id, post_id) DO NOTHING;
 ```
 
-Notes:
-- `NULL` = top-level comment (current behavior preserved for all existing rows).
-- `ON DELETE CASCADE` so deleting a comment cleans up its replies.
-- No RLS changes needed — existing policies on `comments` already cover insert/select/update/delete by post and author.
+## Verification
+After running, query a sample of posts to confirm `rating_count` is between 5–10 and `average_rating` is populated with varied values.
 
-### 2. Frontend
-
-The frontend is already wired correctly:
-- `InlineCommentComposer` sends `parent_comment_id` on insert.
-- `CommentsSection` fetches it, builds a tree, and recursively renders.
-- `CommentItem` already supports unlimited logical depth (visual indent caps at 5 levels on mobile / 8 on desktop so deep threads stay readable, but reply nesting itself is unlimited).
-
-No frontend code changes are required after the migration runs. The schema cache will refresh automatically and the "Reply" button will start working at every depth.
-
-### 3. Verification
-
-After the migration:
-- Post a top-level comment, reply to it, then reply to that reply (and so on) to confirm infinite nesting works.
-- Confirm existing comments still display unchanged (all have `parent_comment_id = NULL`).
-
-## Out of scope
-
-- No changes to seed data — existing seeded comments remain top-level.
-- No change to the visual indent caps (purely presentational; logical nesting is already unlimited).
+## Notes
+- This is mock data for visual QA. If you later want to wipe it, we can delete ratings created in this batch by timestamp.
+- Since the same 33 users get spread across 22k posts, each user will appear as a rater on many posts — fine for visual feel, but not realistic per-user activity.
