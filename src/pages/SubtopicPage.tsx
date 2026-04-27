@@ -18,8 +18,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   useTopicByName,
   usePostsByTopic,
+  type PostRow,
 } from "@/hooks/useSupabaseTopics";
-import type { Post, Topic } from "@/data/seedData";
+import type { Topic } from "@/data/seedData";
 
 const SubtopicPage = () => {
   const { topicName, rank } = useParams<{ topicName: string; rank: string }>();
@@ -33,8 +34,8 @@ const SubtopicPage = () => {
   const { data: topic, isLoading: topicLoading, isError: topicError } =
     useTopicByName(topicName);
   const { data: postsData } = usePostsByTopic(topic?.id);
-  const posts = useMemo<Post[]>(
-    () => ((postsData ?? []) as unknown) as Post[],
+  const posts = useMemo<PostRow[]>(
+    () => postsData ?? [],
     [postsData]
   );
 
