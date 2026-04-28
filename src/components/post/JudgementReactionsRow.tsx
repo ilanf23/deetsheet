@@ -22,7 +22,7 @@ const JudgementReactionsRow = () => {
 
   return (
     <>
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex items-center gap-4 flex-wrap text-sm">
         {FEATURED.map((j) => {
           const Icon = JUDGEMENT_ICONS[j];
           const isOn = selected.has(j);
@@ -34,25 +34,24 @@ const JudgementReactionsRow = () => {
               onClick={() => toggleFeatured(j)}
               aria-pressed={isOn}
               aria-label={`${j}${isOn ? " (selected)" : ""}`}
-              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm transition-colors ${
+              className={`inline-flex items-center gap-1 transition-colors ${
                 isOn
                   ? "text-secondary"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Icon className="h-4 w-4" />
-              <span className="tabular-nums">{count}</span>
+              {count > 0 && <span className="tabular-nums">{count}</span>}
             </button>
           );
         })}
         <button
           type="button"
           onClick={() => setDialogOpen(true)}
-          className="ml-auto inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors"
           aria-label="Judge this answer"
         >
           <Scale className="h-4 w-4" />
-          <span className="hidden sm:inline">Judge this</span>
         </button>
       </div>
       <JudgeThisDialog

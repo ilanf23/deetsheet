@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, ChevronUp } from "lucide-react";
 
 interface PostBodyProps {
   content: string;
@@ -20,6 +20,10 @@ const PostBody = ({ content }: PostBodyProps) => {
     setOverflows(el.scrollHeight > el.clientHeight + 1);
   }, [content, expanded]);
 
+  // The toggle is shown if (a) we're collapsed and the content overflows, or
+  // (b) we're currently expanded (so the user can collapse back).
+  const showToggle = expanded || overflows;
+
   return (
     <div style={{ maxWidth: "var(--reading-max-width)" }}>
       <div
@@ -38,14 +42,15 @@ const PostBody = ({ content }: PostBodyProps) => {
       >
         {content}
       </div>
-      {!expanded && overflows && (
+      {showToggle && (
         <button
           type="button"
-          onClick={() => setExpanded(true)}
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+          aria-label={expanded ? "Collapse post" : "Show full post"}
           className="mt-3 inline-flex items-center justify-center w-10 h-10 rounded-full text-muted-foreground hover:text-primary hover:bg-accent/40 transition-colors"
-          aria-label="Show full post"
         >
-          <MoreHorizontal className="h-5 w-5" />
+          {expanded ? <ChevronUp className="h-5 w-5" /> : <MoreHorizontal className="h-5 w-5" />}
         </button>
       )}
     </div>

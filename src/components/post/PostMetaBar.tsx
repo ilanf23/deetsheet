@@ -1,15 +1,15 @@
 import { MessageSquare, Share2 } from "lucide-react";
-import PostActionMenu from "@/components/PostActionMenu";
 import { useToast } from "@/hooks/use-toast";
+import PostActionMenu from "@/components/PostActionMenu";
 
 interface PostMetaBarProps {
-  postId: string;
-  topicName: string;
   commentCount: number;
   postTitle: string;
+  postId?: string;
+  topicName?: string;
 }
 
-const PostMetaBar = ({ postId, topicName, commentCount, postTitle }: PostMetaBarProps) => {
+const PostMetaBar = ({ commentCount, postTitle, postId, topicName }: PostMetaBarProps) => {
   const { toast } = useToast();
 
   const scrollToDiscussion = () => {

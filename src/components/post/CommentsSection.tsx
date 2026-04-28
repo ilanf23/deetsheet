@@ -111,21 +111,9 @@ const CommentsSection = ({ postId }: CommentsSectionProps) => {
   return (
     <section
       id="discussion"
-      className="space-y-[var(--space-rhythm-block)]"
+      aria-label={`Discussion (${comments.length})`}
       style={{ maxWidth: "var(--reading-max-width)" }}
-      aria-labelledby="discussion-heading"
     >
-      <h2
-        id="discussion-heading"
-        className="font-heading font-bold text-card-foreground"
-        style={{
-          fontSize: "var(--font-size-section-heading)",
-          lineHeight: "var(--line-height-section-heading)",
-        }}
-      >
-        Discussion ({isLoading ? "…" : comments.length})
-      </h2>
-
       {isLoading ? (
         <p className="text-muted-foreground text-sm italic">Loading discussion…</p>
       ) : tree.length === 0 ? (
@@ -133,9 +121,7 @@ const CommentsSection = ({ postId }: CommentsSectionProps) => {
           No comments yet. Be the first to discuss this answer.
         </p>
       ) : (
-        <div className="space-y-[var(--space-rhythm-tight)]">
-          {renderTree(tree, 0)}
-        </div>
+        <div>{renderTree(tree, 0)}</div>
       )}
     </section>
   );

@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Send } from "lucide-react";
 import type { Editor } from "@tiptap/react";
 import RichTextEditor from "@/components/RichTextEditor";
-import UserAvatar from "@/components/UserAvatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -31,11 +30,34 @@ const InlineCommentComposer = ({
   const location = useLocation();
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [focused, setFocused] = useState(false);
   const editorRef = useRef<Editor | null>(null);
 
   const isAuthenticated = !!user;
-  const username = user?.user_metadata?.username || user?.email?.split("@")[0] || "you";
+  const isReply = !!parentCommentId;
+  const trimmed = text.replace(/<[^>]*>/g, "").trim();
+  // Active = there is content OR the editor is focused OR this is a reply (always shows actions).
+  const active = focused || trimmed.length > 0 || isReply;
   const nextUrl = encodeURIComponent(`${location.pathname}${location.search}#discussion`);
+  const placeholder = isReply
+    ? `Replying to @${parentUsername ?? "user"} —`
+    : "Share a comment.";
+
+  const userMeta = (user?.user_metadata ?? {}) as {
+    avatar_url?: string;
+    username?: string;
+  };
+  const avatarUrl = userMeta.avatar_url;
+  const identityForInitial = userMeta.username || user?.email || "Y";
+  const initial = identityForInitial[0]?.toUpperCase() ?? "Y";
+
+  // Wire focus listeners onto the TipTap editor instance once it's available.
+  const attachFocusListeners = (editor: Editor | null) => {
+    editorRef.current = editor;
+    if (!editor) return;
+    editor.on("focus", () => setFocused(true));
+    editor.on("blur", () => setFocused(false));
+  };
 
   useEffect(() => {
     if (autoFocus && editorRef.current) {
@@ -45,19 +67,26 @@ const InlineCommentComposer = ({
 
   if (!isAuthenticated) {
     return (
-      <div className="rounded-[var(--radius)] border p-4">
-        <Link to={`/login?next=${nextUrl}`} className="text-primary font-medium hover:underline text-sm">
-          Sign in to share a comment →
-        </Link>
+      <div className="flex gap-3 items-start">
+        <div className="flex flex-col items-center gap-1 pt-1 shrink-0">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="text-xs font-semibold bg-muted text-muted-foreground">
+              ?
+            </AvatarFallback>
+          </Avatar>
+          <span className="text-[0.7rem] text-muted-foreground leading-none">You</span>
+        </div>
+        <div className="flex-1 rounded-[var(--radius)] border bg-background px-4 py-3">
+          <Link
+            to={`/login?next=${nextUrl}`}
+            className="text-primary font-medium hover:underline text-sm"
+          >
+            Sign in to share a comment →
+          </Link>
+        </div>
       </div>
     );
   }
-
-  const trimmed = text.replace(/<[^>]*>/g, "").trim();
-  const isReply = !!parentCommentId;
-  const placeholder = isReply
-    ? `Replying to @${parentUsername ?? "user"} —`
-    : "Share a comment.";
 
   const handleSend = async () => {
     if (!trimmed || submitting || !user) return;
@@ -81,45 +110,67 @@ const InlineCommentComposer = ({
 
     setText("");
     editorRef.current?.commands.clearContent();
+    editorRef.current?.commands.blur();
+    setFocused(false);
     onSubmitted?.();
     if (isReply) onCancel?.();
   };
 
+  const handleCancel = () => {
+    setText("");
+    editorRef.current?.commands.clearContent();
+    editorRef.current?.commands.blur();
+    setFocused(false);
+    onCancel?.();
+  };
+
   return (
-    <div className="rounded-[var(--radius)] border p-3 sm:p-4 flex gap-3">
-      <div className="flex flex-col items-center w-12 shrink-0">
-        <UserAvatar username={username} size="md" showName={false} />
-        <span className="text-xs text-muted-foreground mt-1">You</span>
+    <div className="flex gap-3 items-start">
+      <div className="flex flex-col items-center gap-1 pt-1 shrink-0">
+        <Avatar className="h-8 w-8">
+          {avatarUrl && <AvatarImage src={avatarUrl} alt="Your avatar" />}
+          <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
+            {initial}
+          </AvatarFallback>
+        </Avatar>
+        <span className="text-[0.7rem] text-muted-foreground leading-none">You</span>
       </div>
-      <div className="flex-1 min-w-0 flex flex-col gap-2">
+      <div
+        className={`flex-1 rounded-[var(--radius)] border bg-background transition-colors ${
+          active ? "ring-1 ring-border" : ""
+        }`}
+      >
         <RichTextEditor
           placeholder={placeholder}
+          bordered={false}
+          showToolbar={active}
+          minHeight={active ? "72px" : "44px"}
           onUpdate={(html) => setText(html)}
-          editorRef={(editor) => { editorRef.current = editor; }}
+          editorRef={attachFocusListeners}
         />
-        <div className="flex justify-end gap-2">
-          {isReply && onCancel && (
+        {active && (
+          <div className="flex justify-end items-center gap-2 px-2 pb-2">
+            {isReply && (
+              <Button
+                type="button"
+                onClick={handleCancel}
+                size="sm"
+                variant="ghost"
+                disabled={submitting}
+              >
+                Cancel
+              </Button>
+            )}
             <Button
               type="button"
-              onClick={onCancel}
+              onClick={handleSend}
+              disabled={!trimmed || submitting}
               size="sm"
-              variant="ghost"
-              disabled={submitting}
             >
-              Cancel
+              {submitting ? "Sending…" : isReply ? "Reply" : "Send"}
             </Button>
-          )}
-          <Button
-            type="button"
-            onClick={handleSend}
-            disabled={!trimmed || submitting}
-            size="sm"
-            className="gap-1.5"
-          >
-            <Send className="h-3.5 w-3.5" />
-            {submitting ? "Sending…" : isReply ? "Reply" : "Send"}
-          </Button>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

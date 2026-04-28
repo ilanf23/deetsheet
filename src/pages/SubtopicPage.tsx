@@ -12,9 +12,7 @@ import PostMetaBar from "@/components/post/PostMetaBar";
 import PostBody from "@/components/post/PostBody";
 import JudgementReactionsRow from "@/components/post/JudgementReactionsRow";
 import InlineCommentComposer from "@/components/post/InlineCommentComposer";
-import PrevNextRankPager from "@/components/post/PrevNextRankPager";
 import CommentsSection from "@/components/post/CommentsSection";
-import { useAuth } from "@/contexts/AuthContext";
 import {
   useTopicByName,
   usePostsByTopic,
@@ -27,7 +25,6 @@ const SubtopicPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const { user, loading } = useAuth();
 
   const backToTopicHref = `/topic/${encodeURIComponent(topicName ?? "")}`;
 
@@ -41,11 +38,6 @@ const SubtopicPage = () => {
 
   const rankNum = Math.max(1, parseInt(rank ?? "1", 10) || 1);
   const post = posts[rankNum - 1];
-  const total = posts.length;
-  const prevPost = rankNum > 1 ? posts[rankNum - 2] : undefined;
-  const nextPost = rankNum < total ? posts[rankNum] : undefined;
-
-  const isAuthenticated = !loading && !!user;
 
   const seedAvg = post && post.ratingCount > 0
     ? Math.round((post.ratingScore / post.ratingCount) * 10) / 10
@@ -118,7 +110,7 @@ const SubtopicPage = () => {
     <div className="min-h-screen flex flex-col bg-white">
       <DeetHeader />
       <main className="flex-1">
-        <div className="mx-auto px-4 sm:px-6 lg:px-10 mt-[var(--space-rhythm-section)] mb-[var(--space-rhythm-major)] max-w-[1400px]">
+        <div className="mx-auto px-4 sm:px-6 lg:px-10 mt-[var(--space-rhythm-block)] mb-[var(--space-rhythm-major)] max-w-[1400px]">
           <div className="grid grid-cols-1 lg:grid-cols-[var(--rail-width-left)_minmax(0,var(--middle-col-max-width))_var(--rail-width-right)] gap-[var(--rail-gap)] justify-center">
             {/* Left rail — site-wide activity */}
             <aside className="hidden lg:block pt-2">
@@ -128,11 +120,11 @@ const SubtopicPage = () => {
             </aside>
 
             {/* Middle column — the read */}
-            <article className="min-w-0 pt-2 space-y-[var(--space-rhythm-section)]">
+            <article className="min-w-0 pt-2 space-y-[var(--space-rhythm-block)]">
               {post ? (
                 <>
-                  <div className="space-y-[var(--space-rhythm-block)]">
-                    <div className="space-y-[var(--space-rhythm-tight)] border-b border-border pb-[var(--space-rhythm-block)]">
+                  <div className="space-y-[var(--space-rhythm-tight)]">
+                    <div className="space-y-[var(--space-rhythm-tight)] border-b border-border pb-[var(--space-rhythm-tight)]">
                       <div className="flex items-baseline gap-3">
                         <button
                           type="button"
@@ -161,28 +153,24 @@ const SubtopicPage = () => {
                       createdAt={post.createdAt instanceof Date ? post.createdAt : new Date(post.createdAt)}
                     />
                     <PostMetaBar
-                      postId={post.id}
-                      topicName={topic.name}
                       commentCount={post.commentCount}
                       postTitle={post.title || post.content}
+                      postId={post.id}
+                      topicName={topic.name}
                     />
                     <JudgementReactionsRow />
                   </div>
                   <PostBody content={post.content} />
-                  <InlineCommentComposer
-                    postId={post.id}
-                    onSubmitted={() =>
-                      queryClient.invalidateQueries({
-                        queryKey: ["comments", post.id],
-                      })
-                    }
-                  />
-                  <PrevNextRankPager
-                    topicName={topic.name}
-                    rank={rankNum}
-                    prev={prevPost}
-                    next={nextPost}
-                  />
+                  <div className="border-t border-border pt-[var(--space-rhythm-block)]">
+                    <InlineCommentComposer
+                      postId={post.id}
+                      onSubmitted={() =>
+                        queryClient.invalidateQueries({
+                          queryKey: ["comments", post.id],
+                        })
+                      }
+                    />
+                  </div>
                   <CommentsSection postId={post.id} />
                 </>
               ) : (

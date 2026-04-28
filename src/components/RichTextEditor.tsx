@@ -16,12 +16,21 @@ interface RichTextEditorProps {
   onUpdate?: (html: string) => void;
   onSubmit?: () => void;
   editorRef?: (editor: ReturnType<typeof useEditor>) => void;
+  /** Wrap in a bordered/rounded surface. Default true preserves existing call sites. */
+  bordered?: boolean;
+  /** Show the format toolbar above the content area. Default true preserves existing call sites. */
+  showToolbar?: boolean;
+  /** Override the minimum content height. Default "60px" preserves existing call sites. */
+  minHeight?: string;
 }
 
 const RichTextEditor = ({
   placeholder = "Add a comment...",
   onUpdate,
   editorRef,
+  bordered = true,
+  showToolbar = true,
+  minHeight = "60px",
 }: RichTextEditorProps) => {
   const editor = useEditor({
     extensions: [
@@ -32,7 +41,8 @@ const RichTextEditor = ({
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm max-w-none focus:outline-none min-h-[60px] px-3 py-2 text-sm",
+          "prose prose-sm max-w-none focus:outline-none px-3 py-2 text-sm",
+        style: `min-height: ${minHeight};`,
       },
     },
     onUpdate: ({ editor }) => {
@@ -54,27 +64,40 @@ const RichTextEditor = ({
     { icon: ListOrdered, action: () => editor.chain().focus().toggleOrderedList().run(), active: editor.isActive("orderedList") },
   ];
 
+  const toolbar = showToolbar ? (
+    <div className="flex items-center gap-0.5 border-b px-2 py-1">
+      {tools.map(({ icon: Icon, action, active }, i) => (
+        <button
+          key={i}
+          type="button"
+          onMouseDown={(e) => {
+            e.preventDefault();
+            action();
+          }}
+          className={`p-1.5 rounded transition-colors ${
+            active
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:text-foreground hover:bg-muted"
+          }`}
+        >
+          <Icon className="h-3.5 w-3.5" />
+        </button>
+      ))}
+    </div>
+  ) : null;
+
+  if (!bordered) {
+    return (
+      <div className="flex-1 min-w-0">
+        {toolbar}
+        <EditorContent editor={editor} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex-1 border rounded-lg bg-background overflow-hidden">
-      <div className="flex items-center gap-0.5 border-b px-2 py-1">
-        {tools.map(({ icon: Icon, action, active }, i) => (
-          <button
-            key={i}
-            type="button"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              action();
-            }}
-            className={`p-1.5 rounded transition-colors ${
-              active
-                ? "bg-primary/10 text-primary"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            }`}
-          >
-            <Icon className="h-3.5 w-3.5" />
-          </button>
-        ))}
-      </div>
+      {toolbar}
       <EditorContent editor={editor} />
     </div>
   );

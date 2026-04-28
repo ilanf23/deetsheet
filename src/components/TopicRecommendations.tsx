@@ -8,10 +8,10 @@ interface TopicRecommendationsProps {
 
 const TopicRecommendations = ({ currentTopic }: TopicRecommendationsProps) => {
   const sameCategoryTopics = topics.filter(
-    (t) => t.categoryName === currentTopic.categoryName && t.id !== currentTopic.id
+    (t) => t.categoryName === currentTopic.categoryName && t.name !== currentTopic.name
   );
   const otherTopics = topics.filter(
-    (t) => t.categoryName !== currentTopic.categoryName && t.id !== currentTopic.id
+    (t) => t.categoryName !== currentTopic.categoryName && t.name !== currentTopic.name
   );
   const recommended = [...sameCategoryTopics, ...otherTopics].slice(0, 12);
 

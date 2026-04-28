@@ -114,8 +114,14 @@ const TopicPage = () => {
                 <div className="min-w-0 flex items-start gap-4">
                   <div className="min-w-0">
                     <div className="flex items-baseline gap-3">
-                      <h1 className="text-3xl md:text-4xl font-heading font-bold text-card-foreground">
-                        {topic.name}
+                      <h1 className="text-3xl md:text-4xl font-heading font-bold">
+                        <button
+                          type="button"
+                          onClick={() => window.location.reload()}
+                          className="text-primary hover:underline bg-transparent border-0 p-0 text-left cursor-pointer"
+                        >
+                          {topic.name}
+                        </button>
                       </h1>
                       <span className="text-sm text-muted-foreground">
                         /{topic.categoryName}
