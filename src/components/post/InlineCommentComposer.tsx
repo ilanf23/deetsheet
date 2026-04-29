@@ -143,8 +143,8 @@ const InlineCommentComposer = ({
         <RichTextEditor
           placeholder={placeholder}
           bordered={false}
-          showToolbar={active}
-          minHeight={active ? "72px" : "44px"}
+          showToolbar={focused || trimmed.length > 0}
+          minHeight="120px"
           onUpdate={(html) => setText(html)}
           editorRef={attachFocusListeners}
         />

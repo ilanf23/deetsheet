@@ -55,13 +55,14 @@ const JudgementReactionsRow = () => {
             <button
               type="button"
               onClick={() => setDialogOpen(true)}
-              className="inline-flex items-center text-muted-foreground hover:text-foreground transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors"
               aria-label="Judge this answer"
             >
               <Scale className="h-4 w-4" />
+              <span className="text-xs font-medium">Judge this</span>
             </button>
           </TooltipTrigger>
-          <TooltipContent>Judge this</TooltipContent>
+          <TooltipContent>Add a judgement</TooltipContent>
         </Tooltip>
       </div>
       <JudgeThisDialog

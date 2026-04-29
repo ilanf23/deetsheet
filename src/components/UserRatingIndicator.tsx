@@ -134,7 +134,7 @@ const UserRatingIndicator = ({ postId, onRatingChanged, size = "sm" }: UserRatin
             <span
               className={
                 size === "lg"
-                  ? "text-secondary font-bold tabular-nums text-4xl leading-none"
+                  ? "text-secondary font-bold tabular-nums text-2xl leading-none"
                   : "text-secondary font-medium tabular-nums text-sm"
               }
             >
@@ -144,7 +144,7 @@ const UserRatingIndicator = ({ postId, onRatingChanged, size = "sm" }: UserRatin
             <Star
               className={
                 size === "lg"
-                  ? "h-9 w-9 fill-secondary text-secondary"
+                  ? "h-6 w-6 fill-secondary text-secondary"
                   : "h-4 w-4 fill-secondary text-secondary"
               }
             />

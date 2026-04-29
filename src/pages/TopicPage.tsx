@@ -113,7 +113,7 @@ const TopicPage = () => {
             {/* Main â Topic posts */}
             <div className="min-w-0 pt-4">
               <div className="mb-6 flex items-start justify-between gap-4">
-                <div className="min-w-0">
+                <div className="min-w-0 pl-1.5">
                   <div className="flex items-baseline gap-3">
                     <h1 className="text-3xl md:text-4xl font-heading font-bold">
                       <button
@@ -154,14 +154,14 @@ const TopicPage = () => {
               />
               <div
                 aria-hidden
-                className="flex items-baseline gap-4 px-3 -mx-3 pb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
+                className="flex items-baseline gap-4 px-3 -mx-3 pb-2 text-sm md:text-base font-heading text-muted-foreground"
               >
                 <span className="w-8 shrink-0" />
                 <span className="flex-1 min-w-0" />
                 <span className="shrink-0">Rating</span>
                 <span className="shrink-0 w-8 text-center">You</span>
               </div>
-              <div className="divide-y divide-border border-y border-border">
+              <div className="divide-y divide-border border-b border-border">
                 {visiblePosts.map((post, i) => (
                   <TopicPostListItem
                     key={post.id}
