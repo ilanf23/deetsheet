@@ -41,7 +41,7 @@ const JudgementReactionsRow = () => {
               }`}
             >
               <Icon className="h-4 w-4" />
-              {count > 0 && <span className="tabular-nums">{count}</span>}
+              <span className="tabular-nums">{count}</span>
             </button>
           );
         })}

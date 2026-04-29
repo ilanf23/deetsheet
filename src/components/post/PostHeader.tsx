@@ -19,7 +19,7 @@ const PostHeader = ({
   onRatingChanged,
 }: PostHeaderProps) => {
   return (
-    <header className="flex items-start gap-4 flex-wrap">
+    <header className="flex flex-col md:flex-row md:items-start gap-4">
       <div className="flex items-baseline gap-3 flex-1 min-w-0">
         <span
           className="font-heading text-muted-foreground tabular-nums shrink-0"
@@ -32,7 +32,7 @@ const PostHeader = ({
           {rank}.
         </span>
         <h1
-          className="font-heading font-bold text-primary min-w-0"
+          className="font-heading font-bold text-primary min-w-0 break-words"
           style={{
             fontSize: "var(--font-size-post-title)",
             lineHeight: "var(--line-height-post-title)",

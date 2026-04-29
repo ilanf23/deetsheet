@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import CommentItem, { type DisplayComment } from "@/components/CommentItem";
+import CommentItem, {
+  type CommentNode,
+  type DisplayComment,
+} from "@/components/CommentItem";
 import { supabase } from "@/integrations/supabase/client";
 
 interface CommentsSectionProps {
@@ -14,8 +17,6 @@ interface DbComment {
   author_id: string;
   parent_comment_id: string | null;
 }
-
-type CommentNode = DisplayComment & { children: CommentNode[] };
 
 const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
   const { data, error } = await supabase
@@ -63,7 +64,9 @@ const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
 const buildTree = (comments: DisplayComment[]): CommentNode[] => {
   const byId = new Map<string, CommentNode>();
   const roots: CommentNode[] = [];
-  for (const c of comments) byId.set(c.id, { ...c, children: [] });
+  for (const c of comments) {
+    byId.set(c.id, { ...c, children: [], descendantCount: 0 });
+  }
   for (const node of byId.values()) {
     if (node.parentCommentId && byId.has(node.parentCommentId)) {
       byId.get(node.parentCommentId)!.children.push(node);
@@ -71,6 +74,13 @@ const buildTree = (comments: DisplayComment[]): CommentNode[] => {
       roots.push(node);
     }
   }
+  const countDescendants = (n: CommentNode): number => {
+    let count = n.children.length;
+    for (const c of n.children) count += countDescendants(c);
+    n.descendantCount = count;
+    return count;
+  };
+  for (const root of roots) countDescendants(root);
   return roots;
 };
 
@@ -93,21 +103,6 @@ const CommentsSection = ({ postId }: CommentsSectionProps) => {
     invalidate();
   };
 
-  const renderTree = (nodes: CommentNode[], depth: number) =>
-    nodes.map((node) => (
-      <CommentItem
-        key={node.id}
-        comment={node}
-        postId={postId}
-        depth={depth}
-        isReplyOpen={openReplyId === node.id}
-        onReplyToggle={setOpenReplyId}
-        onReplySubmitted={handleReplySubmitted}
-      >
-        {node.children.length > 0 && renderTree(node.children, depth + 1)}
-      </CommentItem>
-    ));
-
   return (
     <section
       id="discussion"
@@ -121,7 +116,19 @@ const CommentsSection = ({ postId }: CommentsSectionProps) => {
           No comments yet. Be the first to discuss this answer.
         </p>
       ) : (
-        <div>{renderTree(tree, 0)}</div>
+        <div>
+          {tree.map((node) => (
+            <CommentItem
+              key={node.id}
+              node={node}
+              postId={postId}
+              depth={0}
+              openReplyId={openReplyId}
+              onReplyToggle={setOpenReplyId}
+              onReplySubmitted={handleReplySubmitted}
+            />
+          ))}
+        </div>
       )}
     </section>
   );

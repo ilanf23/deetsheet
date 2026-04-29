@@ -5,7 +5,7 @@ import { getMockAvatarUrl } from "@/lib/mockAvatars";
 interface UserAvatarProps {
   username: string;
   avatarUrl?: string;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
   showName?: boolean;
   linkToProfile?: boolean;
 }
@@ -17,8 +17,10 @@ const UserAvatar = ({
   showName = true,
   linkToProfile = true,
 }: UserAvatarProps) => {
-  const sizeClass = size === "sm" ? "h-6 w-6" : "h-8 w-8";
-  const textSize = size === "sm" ? "text-[10px]" : "text-xs";
+  const sizeClass =
+    size === "sm" ? "h-6 w-6" : size === "md" ? "h-8 w-8" : "h-10 w-10";
+  const textSize =
+    size === "sm" ? "text-[10px]" : size === "md" ? "text-xs" : "text-sm";
   const resolvedAvatar = avatarUrl ?? getMockAvatarUrl(username);
 
   const content = (
