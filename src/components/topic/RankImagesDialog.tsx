@@ -100,7 +100,7 @@ const RankImagesDialog = ({
         </div>
 
         <div className="px-8 pb-8 max-h-[70vh] overflow-y-auto">
-          <div className="grid grid-cols-6 gap-3">
+          <div className="grid grid-cols-6 grid-flow-row-dense gap-3">
             {/* Hero / featured image — spans 3 cols x 2 rows */}
             {heroSrc && (
               <button
