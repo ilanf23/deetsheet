@@ -1,16 +1,19 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 
 /**
  * Reveal items progressively as the user scrolls. Uses IntersectionObserver
  * on a sentinel <div> rendered after the visible slice. When the sentinel
- * enters the viewport, we bump `visibleCount` by `step` until we reach
- * `total`. This drives the Reddit-style "endless" feed on the homepage.
+ * enters the viewport (or the supplied scroll root), we bump `visibleCount`
+ * by `step` until we reach `total`. This drives the Reddit-style "endless"
+ * feed on the homepage. Pass `rootRef` when the sentinel lives inside an
+ * independently-scrolling container (e.g. the homepage middle column).
  */
 export function useInfiniteList<T>(
   items: T[],
   initial = 10,
   step = 10,
-  rootMargin = "400px 0px"
+  rootMargin = "400px 0px",
+  rootRef?: RefObject<Element | null>
 ) {
   const [visibleCount, setVisibleCount] = useState(initial);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -31,11 +34,11 @@ export function useInfiniteList<T>(
           setVisibleCount((c) => Math.min(c + step, items.length));
         }
       },
-      { rootMargin }
+      { root: rootRef?.current ?? null, rootMargin }
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [visibleCount, items.length, step, rootMargin]);
+  }, [visibleCount, items.length, step, rootMargin, rootRef]);
 
   return {
     visible: items.slice(0, visibleCount),

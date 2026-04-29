@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import PopularTopicSection from "@/components/PopularTopicSection";
 import SubjectsSidebar from "@/components/SubjectsSidebar";
 import RecentlyAddedSidebar from "@/components/RecentlyAddedSidebar";
@@ -14,18 +15,24 @@ const ColumnLayout = () => {
     .filter((t): t is typeof topics[number] => Boolean(t));
   const rest = topics.filter((t) => !PRIORITY_TOPICS.includes(t.name));
   const popularTopics = [...priority, ...rest];
-  // Initial count + 0px rootMargin keep the middle column roughly as tall as
-  // the flanking sidebars on first paint; more cards load as the user scrolls.
-  const { visible, sentinelRef, hasMore } = useInfiniteList(popularTopics, 4, 4, "0px");
+  // Each column scrolls independently on lg+, so the IntersectionObserver
+  // must observe the middle column itself rather than the viewport.
+  const middleRef = useRef<HTMLDivElement | null>(null);
+  const { visible, sentinelRef, hasMore } = useInfiniteList(popularTopics, 4, 4, "0px", middleRef);
 
   return (
-    <div className="mx-auto mt-5 px-6 lg:px-10">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[300px_1fr_240px] gap-5">
+    <div className="flex-1 lg:min-h-0 lg:overflow-hidden mx-auto w-full px-6 lg:px-10 mt-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[300px_1fr_240px] gap-5 lg:h-full">
         {/* Left — Recently Added */}
-        <RecentlyAddedSidebar />
+        <div className="lg:h-full lg:overflow-y-auto lg:pr-2 lg:[scrollbar-gutter:stable]">
+          <RecentlyAddedSidebar />
+        </div>
 
         {/* Middle — Most Popular */}
-        <div className="min-w-0 pt-4">
+        <div
+          ref={middleRef}
+          className="min-w-0 pt-4 lg:h-full lg:overflow-y-auto lg:pr-2 lg:[scrollbar-gutter:stable]"
+        >
           <div className="flex items-center justify-between h-8 mb-4 px-1 pb-2 border-b border-border">
             <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Most Popular</h2>
             <select className="text-xs border rounded px-2 py-1 bg-background text-muted-foreground">
@@ -47,7 +54,7 @@ const ColumnLayout = () => {
         </div>
 
         {/* Right — Subjects */}
-        <div className="hidden lg:block lg:border-l lg:border-border lg:pl-5 pt-4">
+        <div className="hidden lg:block lg:border-l lg:border-border lg:pl-5 pt-4 lg:h-full lg:overflow-y-auto lg:pr-2 lg:[scrollbar-gutter:stable]">
           <SubjectsSidebar />
         </div>
       </div>
