@@ -45,7 +45,6 @@ export type Database = {
       }
       comments: {
         Row: {
-          _rewritten: boolean
           author_id: string
           content: string
           created_at: string
@@ -54,7 +53,6 @@ export type Database = {
           post_id: string
         }
         Insert: {
-          _rewritten?: boolean
           author_id: string
           content: string
           created_at?: string
@@ -63,7 +61,6 @@ export type Database = {
           post_id: string
         }
         Update: {
-          _rewritten?: boolean
           author_id?: string
           content?: string
           created_at?: string
@@ -576,15 +573,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      _gen_comment: {
-        Args: {
-          is_top_level: boolean
-          r_tier: number
-          r_variant: number
-          topic_name: string
-        }
-        Returns: string
-      }
       get_or_create_location: {
         Args: { _city: string; _country?: string; _state: string }
         Returns: string
