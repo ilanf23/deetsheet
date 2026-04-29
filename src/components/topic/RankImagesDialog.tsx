@@ -129,7 +129,7 @@ const RankImagesDialog = ({
                 type="button"
                 onClick={() => setSelectedId(img.id)}
                 className={cn(
-                  "relative rounded-lg overflow-hidden group focus:outline-none focus:ring-2 focus:ring-primary aspect-square",
+                  "relative rounded-lg overflow-hidden group focus:outline-none focus:ring-2 focus:ring-primary aspect-[2/3]",
                   selectedId === img.id && "ring-2 ring-primary"
                 )}
               >
