@@ -18,18 +18,30 @@ interface MockImage {
 }
 
 // Build a deterministic-ish set of stock candidate images per topic.
-// Uses Unsplash's "Source" endpoint which returns a topical photo for a query.
-// We append a stable signature per slot so each card is a different photo.
-const buildMockImages = (slug: string): MockImage[] => {
-  const query = encodeURIComponent(slug.replace(/-/g, " "));
-  return Array.from({ length: 13 }).map((_, i) => ({
-    id: `${slug}-${i}`,
-    // Unsplash Source: free, no key required. The "sig" param forces variety.
-    url: `https://source.unsplash.com/600x600/?${query}&sig=${i + 1}`,
-    rank: 9.3,
-    you: 9,
-  }));
+// Picsum is a reliable, no-key image CDN. We seed each slot with a hash of
+// the topic slug + index so every topic has a stable but unique gallery.
+const hashString = (str: string): number => {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (h << 5) - h + str.charCodeAt(i);
+    h |= 0;
+  }
+  return Math.abs(h);
 };
+
+const buildMockImages = (slug: string): MockImage[] => {
+  const base = hashString(slug);
+  return Array.from({ length: 13 }).map((_, i) => {
+    const seed = (base + i * 97) % 1000; // 0-999, stable per topic+slot
+    return {
+      id: `${slug}-${i}`,
+      url: `https://picsum.photos/seed/${slug}-${seed}/600/600`,
+      rank: 9.3,
+      you: 9,
+    };
+  });
+};
+
 
 const RatingChip = ({ rank, you }: { rank: number; you: number | null }) => (
   <div className="absolute top-2 right-2 flex items-stretch rounded-md overflow-hidden shadow-md text-[11px] font-semibold leading-none">
