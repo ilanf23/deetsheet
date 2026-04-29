@@ -1,0 +1,2 @@
+ALTER TABLE public.comments ADD COLUMN IF NOT EXISTS _rewritten boolean NOT NULL DEFAULT false;
+CREATE INDEX IF NOT EXISTS idx_comments_rewritten_partial ON public.comments(id) WHERE _rewritten = false;
