@@ -6,6 +6,27 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTopicImages, type TopicImageRow } from "@/hooks/useTopicImages";
 import { useToast } from "@/hooks/use-toast";
 
+const ImageTile = ({ src, alt, className }: { src: string; alt: string; className?: string }) => {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [src]);
+  if (failed) {
+    return (
+      <div className={cn("absolute inset-0 flex items-center justify-center text-[11px] text-white/60 px-2 text-center", className)}>
+        Image unavailable
+      </div>
+    );
+  }
+  return (
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      className={cn("w-full h-full object-cover transition-transform", className)}
+      onError={() => setFailed(true)}
+    />
+  );
+};
+
 interface RankImagesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
