@@ -5,9 +5,9 @@ import DeetFooter from "@/components/DeetFooter";
 
 const Index = () => {
   return (
-    <div className="min-h-screen lg:h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-white">
       <DeetHeader />
-      <main className="flex-1 lg:min-h-0 flex flex-col">
+      <main className="flex-1 flex flex-col">
         <HeroBanner />
         <ColumnLayout />
       </main>
