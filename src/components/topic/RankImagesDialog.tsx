@@ -18,18 +18,30 @@ interface MockImage {
 }
 
 // Build a deterministic-ish set of stock candidate images per topic.
-// Uses Unsplash's "Source" endpoint which returns a topical photo for a query.
-// We append a stable signature per slot so each card is a different photo.
-const buildMockImages = (slug: string): MockImage[] => {
-  const query = encodeURIComponent(slug.replace(/-/g, " "));
-  return Array.from({ length: 13 }).map((_, i) => ({
-    id: `${slug}-${i}`,
-    // Unsplash Source: free, no key required. The "sig" param forces variety.
-    url: `https://source.unsplash.com/600x600/?${query}&sig=${i + 1}`,
-    rank: 9.3,
-    you: 9,
-  }));
+// Picsum is a reliable, no-key image CDN. We seed each slot with a hash of
+// the topic slug + index so every topic has a stable but unique gallery.
+const hashString = (str: string): number => {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) {
+    h = (h << 5) - h + str.charCodeAt(i);
+    h |= 0;
+  }
+  return Math.abs(h);
 };
+
+const buildMockImages = (slug: string): MockImage[] => {
+  const base = hashString(slug);
+  return Array.from({ length: 13 }).map((_, i) => {
+    const seed = (base + i * 97) % 1000; // 0-999, stable per topic+slot
+    return {
+      id: `${slug}-${i}`,
+      url: `https://picsum.photos/seed/${slug}-${seed}/600/600`,
+      rank: 9.3,
+      you: 9,
+    };
+  });
+};
+
 
 const RatingChip = ({ rank, you }: { rank: number; you: number | null }) => (
   <div className="absolute top-2 right-2 flex items-stretch rounded-md overflow-hidden shadow-md text-[11px] font-semibold leading-none">
@@ -88,18 +100,18 @@ const RankImagesDialog = ({
         </div>
 
         <div className="px-8 pb-8 max-h-[70vh] overflow-y-auto">
-          <div className="grid grid-cols-6 gap-3">
+          <div className="grid grid-cols-6 gap-3 auto-rows-fr">
             {/* Hero / featured image — spans 3 cols x 2 rows */}
             {heroSrc && (
               <button
                 type="button"
-                className="relative col-span-3 row-span-2 rounded-lg overflow-hidden group focus:outline-none focus:ring-2 focus:ring-primary"
+                className="relative col-span-3 row-span-2 rounded-lg overflow-hidden group focus:outline-none focus:ring-2 focus:ring-primary aspect-square"
                 onClick={() => featured && setSelectedId(featured.id)}
               >
                 <img
                   src={heroSrc}
                   alt={topicName}
-                  className="w-full h-full object-cover aspect-square"
+                  className="w-full h-full object-cover"
                   onError={(e) => {
                     (e.currentTarget as HTMLImageElement).style.visibility =
                       "hidden";
@@ -109,14 +121,15 @@ const RankImagesDialog = ({
               </button>
             )}
 
-            {/* Smaller candidate tiles */}
+            {/* Smaller candidate tiles — 6 fit beside the hero (3 cols x 2 rows),
+                remaining 6 wrap to the row below for a clean 6-col layout. */}
             {images.slice(0, 12).map((img) => (
               <button
                 key={img.id}
                 type="button"
                 onClick={() => setSelectedId(img.id)}
                 className={cn(
-                  "relative col-span-1 rounded-lg overflow-hidden group focus:outline-none focus:ring-2 focus:ring-primary aspect-square",
+                  "relative rounded-lg overflow-hidden group focus:outline-none focus:ring-2 focus:ring-primary aspect-[2/3]",
                   selectedId === img.id && "ring-2 ring-primary"
                 )}
               >
