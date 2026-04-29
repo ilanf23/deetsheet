@@ -21,18 +21,15 @@ const ColumnLayout = () => {
   const { visible, sentinelRef, hasMore } = useInfiniteList(popularTopics, 4, 4, "0px", middleRef);
 
   return (
-    <div className="flex-1 lg:min-h-0 lg:overflow-hidden mx-auto w-full px-6 lg:px-10 mt-5">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[300px_1fr_240px] gap-5 lg:h-full">
+    <div className="flex-1 mx-auto w-full px-6 lg:px-10 mt-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[300px_1fr_240px] gap-5">
         {/* Left — Recently Added */}
-        <div className="lg:h-full lg:overflow-y-auto lg:pr-2 lg:[scrollbar-gutter:stable]">
+        <div>
           <RecentlyAddedSidebar />
         </div>
 
         {/* Middle — Most Popular */}
-        <div
-          ref={middleRef}
-          className="min-w-0 pt-4 lg:h-full lg:overflow-y-auto lg:pr-2 lg:[scrollbar-gutter:stable]"
-        >
+        <div ref={middleRef} className="min-w-0 pt-4">
           <div className="flex items-center justify-between h-8 mb-4 px-1 pb-2 border-b border-border">
             <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Most Popular</h2>
             <select className="text-xs border rounded px-2 py-1 bg-background text-muted-foreground">
@@ -54,7 +51,7 @@ const ColumnLayout = () => {
         </div>
 
         {/* Right — Subjects */}
-        <div className="hidden lg:block lg:border-l lg:border-border lg:pl-5 pt-4 lg:h-full lg:overflow-y-auto lg:pr-2 lg:[scrollbar-gutter:stable]">
+        <div className="hidden lg:block lg:border-l lg:border-border lg:pl-5 pt-4">
           <SubjectsSidebar />
         </div>
       </div>
