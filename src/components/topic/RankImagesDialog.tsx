@@ -100,18 +100,18 @@ const RankImagesDialog = ({
         </div>
 
         <div className="px-8 pb-8 max-h-[70vh] overflow-y-auto">
-          <div className="grid grid-cols-6 grid-flow-row-dense gap-3">
+          <div className="grid grid-cols-6 gap-3 auto-rows-fr">
             {/* Hero / featured image — spans 3 cols x 2 rows */}
             {heroSrc && (
               <button
                 type="button"
-                className="relative col-span-3 row-span-2 rounded-lg overflow-hidden group focus:outline-none focus:ring-2 focus:ring-primary"
+                className="relative col-span-3 row-span-2 rounded-lg overflow-hidden group focus:outline-none focus:ring-2 focus:ring-primary aspect-square"
                 onClick={() => featured && setSelectedId(featured.id)}
               >
                 <img
                   src={heroSrc}
                   alt={topicName}
-                  className="w-full h-full object-cover aspect-square"
+                  className="w-full h-full object-cover"
                   onError={(e) => {
                     (e.currentTarget as HTMLImageElement).style.visibility =
                       "hidden";
@@ -121,14 +121,15 @@ const RankImagesDialog = ({
               </button>
             )}
 
-            {/* Smaller candidate tiles */}
+            {/* Smaller candidate tiles — 6 fit beside the hero (3 cols x 2 rows),
+                remaining 6 wrap to the row below for a clean 6-col layout. */}
             {images.slice(0, 12).map((img) => (
               <button
                 key={img.id}
                 type="button"
                 onClick={() => setSelectedId(img.id)}
                 className={cn(
-                  "relative col-span-1 rounded-lg overflow-hidden group focus:outline-none focus:ring-2 focus:ring-primary aspect-square",
+                  "relative rounded-lg overflow-hidden group focus:outline-none focus:ring-2 focus:ring-primary aspect-square",
                   selectedId === img.id && "ring-2 ring-primary"
                 )}
               >
