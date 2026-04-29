@@ -2,6 +2,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Placeholder from "@tiptap/extension-placeholder";
+import type { MarkType } from "@tiptap/pm/model";
 import {
   Bold,
   Italic,
@@ -55,11 +56,38 @@ const RichTextEditor = ({
 
   if (!editor) return null;
 
+  // Empty-selection: ProseMirror's implicit storedMarks path doesn't reliably carry the
+  // mark forward, so for empty selections we set/clear stored marks ourselves — that way
+  // the next typed character picks them up and the toolbar's active pill flips immediately.
+  const toggleMark = (markName: "bold" | "italic" | "underline" | "strike") => {
+    const markType = editor.schema.marks[markName] as MarkType | undefined;
+    if (!markType) return;
+
+    editor.chain().focus().run();
+
+    const { state, view } = editor;
+    if (state.selection.empty) {
+      const tr = editor.isActive(markName)
+        ? state.tr.removeStoredMark(markType)
+        : state.tr.addStoredMark(markType.create());
+      view.dispatch(tr);
+      return;
+    }
+
+    const cmd = {
+      bold: "toggleBold",
+      italic: "toggleItalic",
+      underline: "toggleUnderline",
+      strike: "toggleStrike",
+    }[markName];
+    (editor.chain().focus() as Record<string, () => { run: () => boolean }>)[cmd]().run();
+  };
+
   const tools = [
-    { icon: Bold, action: () => editor.chain().focus().toggleBold().run(), active: editor.isActive("bold") },
-    { icon: Italic, action: () => editor.chain().focus().toggleItalic().run(), active: editor.isActive("italic") },
-    { icon: UnderlineIcon, action: () => editor.chain().focus().toggleUnderline().run(), active: editor.isActive("underline") },
-    { icon: Strikethrough, action: () => editor.chain().focus().toggleStrike().run(), active: editor.isActive("strike") },
+    { icon: Bold, action: () => toggleMark("bold"), active: editor.isActive("bold") },
+    { icon: Italic, action: () => toggleMark("italic"), active: editor.isActive("italic") },
+    { icon: UnderlineIcon, action: () => toggleMark("underline"), active: editor.isActive("underline") },
+    { icon: Strikethrough, action: () => toggleMark("strike"), active: editor.isActive("strike") },
     { icon: List, action: () => editor.chain().focus().toggleBulletList().run(), active: editor.isActive("bulletList") },
     { icon: ListOrdered, action: () => editor.chain().focus().toggleOrderedList().run(), active: editor.isActive("orderedList") },
   ];

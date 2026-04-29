@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
@@ -111,31 +111,43 @@ const TopicPage = () => {
             {/* Main â Topic posts */}
             <div className="min-w-0 pt-4">
               <div className="mb-6 flex items-start justify-between gap-4">
-                <div className="min-w-0 flex items-start gap-4">
-                  <div className="min-w-0">
-                    <div className="flex items-baseline gap-3">
-                      <h1 className="text-3xl md:text-4xl font-heading font-bold">
-                        <button
-                          type="button"
-                          onClick={() => window.location.reload()}
-                          className="text-primary hover:underline bg-transparent border-0 p-0 text-left cursor-pointer"
-                        >
-                          {topic.name}
-                        </button>
-                      </h1>
-                      <span className="text-sm text-muted-foreground">
-                        /{topic.categoryName}
-                      </span>
-                    </div>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {getTopicSubtitle(topic.name, topic.categoryName)}
-                    </p>
+                <div className="min-w-0">
+                  <div className="flex items-baseline gap-3">
+                    <h1 className="text-3xl md:text-4xl font-heading font-bold">
+                      <button
+                        type="button"
+                        onClick={() => window.location.reload()}
+                        className="text-primary hover:underline bg-transparent border-0 p-0 text-left cursor-pointer"
+                      >
+                        {topic.name}
+                      </button>
+                    </h1>
+                    <Link
+                      to={`/topics#${encodeURIComponent(topic.categoryName)}`}
+                      className="text-sm text-primary hover:underline"
+                    >
+                      /{topic.categoryName}
+                    </Link>
                   </div>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {getTopicSubtitle(topic.name, topic.categoryName)}
+                  </p>
+                </div>
+                <div className="flex items-start gap-4">
+                  <FollowTopicButton topicId={topic.id} />
                   {topic.imageUrl && (
                     <TopicHeaderImage src={topic.imageUrl} alt={topic.name} />
                   )}
                 </div>
-                <FollowTopicButton topicId={topic.id} />
+              </div>
+              <div
+                aria-hidden
+                className="flex items-baseline gap-4 px-3 -mx-3 pb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
+              >
+                <span className="w-8 shrink-0" />
+                <span className="flex-1 min-w-0" />
+                <span className="shrink-0">Rating</span>
+                <span className="shrink-0 w-8 text-center">You</span>
               </div>
               <div className="divide-y divide-border border-y border-border">
                 {visiblePosts.map((post, i) => (
@@ -188,7 +200,7 @@ const TopicHeaderImage = ({ src, alt }: { src: string; alt: string }) => {
     <img
       src={src}
       alt={alt}
-      className="h-36 w-56 rounded-lg object-cover shrink-0"
+      className="h-28 w-64 rounded-lg object-cover shrink-0"
       loading="lazy"
       onError={() => setError(true)}
     />

@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Star } from "lucide-react";
 import type { Post } from "@/data/seedData";
 import UserRatingIndicator from "@/components/UserRatingIndicator";
 
@@ -49,10 +48,9 @@ const TopicPostListItem = ({ post, rank, topicName, topicId }: TopicPostListItem
       <h3 className="flex-1 min-w-0 truncate text-sm md:text-base font-heading font-semibold text-primary group-hover:underline">
         {displayTitle}
       </h3>
-      <span className="shrink-0 flex items-center gap-1 text-xs text-muted-foreground">
-        <Star className="h-3 w-3 fill-secondary text-secondary" />
+      <span className="shrink-0 flex items-baseline gap-1 text-sm md:text-base font-heading text-muted-foreground">
         <span className="text-foreground font-semibold">{seedAvg}</span>
-        <span>({post.ratingCount})</span>
+        <span className="text-xs">({post.ratingCount})</span>
       </span>
       {isDbPost ? (
         <span

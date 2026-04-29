@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useMemo, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
 import { Separator } from "@/components/ui/separator";
@@ -10,12 +10,23 @@ type SortMode = "alphabetical" | "popular";
 
 const TopicsDirectory = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [sortMode, setSortMode] = useState<SortMode>("alphabetical");
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
   const MAX_VISIBLE = 10;
 
   const { data: topics, isLoading } = useTopics();
+
+  useEffect(() => {
+    if (!location.hash || isLoading) return;
+    const target = decodeURIComponent(location.hash.slice(1));
+    if (!target) return;
+    const el = document.getElementById(`category-${target}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [location.hash, isLoading, topics]);
 
   const toggleExpanded = (categoryName: string) => {
     setExpandedCategories((prev) => {
@@ -104,7 +115,7 @@ const TopicsDirectory = () => {
                   const hasMore = catTopics.length > MAX_VISIBLE;
 
                   return (
-                    <div key={catName}>
+                    <div key={catName} id={`category-${catName}`} className="scroll-mt-24">
                       <h3 className="font-bold text-sm mb-2 text-foreground">{catName}</h3>
                       <ul className="space-y-1">
                         {visible.map((topic) => (
