@@ -464,6 +464,73 @@ export type Database = {
           },
         ]
       }
+      topic_image_ratings: {
+        Row: {
+          created_at: string
+          id: string
+          topic_image_id: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          topic_image_id: string
+          user_id: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          topic_image_id?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topic_image_ratings_topic_image_id_fkey"
+            columns: ["topic_image_id"]
+            isOneToOne: false
+            referencedRelation: "topic_images"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      topic_images: {
+        Row: {
+          average_rating: number
+          created_at: string
+          id: string
+          rating_count: number
+          topic_id: string
+          url: string
+        }
+        Insert: {
+          average_rating?: number
+          created_at?: string
+          id?: string
+          rating_count?: number
+          topic_id: string
+          url: string
+        }
+        Update: {
+          average_rating?: number
+          created_at?: string
+          id?: string
+          rating_count?: number
+          topic_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "topic_images_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       topics: {
         Row: {
           category_name: string

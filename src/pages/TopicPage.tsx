@@ -137,20 +137,19 @@ const TopicPage = () => {
                 </div>
                 <div className="flex items-start gap-4">
                   <FollowTopicButton topicId={topic.id} />
-                  {topic.imageUrl && (
-                    <TopicHeaderImage
-                      src={topic.imageUrl}
-                      alt={topic.name}
-                      onClick={() => setRankOpen(true)}
-                    />
-                  )}
+                  <TopicHeaderImage
+                    src={topic.imageUrl}
+                    alt={topic.name}
+                    onClick={() => setRankOpen(true)}
+                  />
                 </div>
               </div>
               <RankImagesDialog
                 open={rankOpen}
                 onOpenChange={setRankOpen}
+                topicId={topic.id}
                 topicName={topic.name}
-                topicSlug={topic.slug ?? topic.name.toLowerCase().replace(/\s+/g, "-")}
+                categoryName={topic.categoryName}
                 primaryImage={topic.imageUrl}
               />
               <div
@@ -211,26 +210,32 @@ const TopicHeaderImage = ({
   alt,
   onClick,
 }: {
-  src: string;
+  src: string | null;
   alt: string;
   onClick?: () => void;
 }) => {
   const [error, setError] = useState(false);
-  if (error) return null;
+  const showImage = !!src && !error;
   return (
     <button
       type="button"
       onClick={onClick}
-      className="shrink-0 rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary group"
+      className="shrink-0 rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary group bg-muted"
       aria-label={`Rank images for ${alt}`}
     >
-      <img
-        src={src}
-        alt={alt}
-        className="h-28 w-64 object-cover transition-transform group-hover:scale-[1.02]"
-        loading="lazy"
-        onError={() => setError(true)}
-      />
+      {showImage ? (
+        <img
+          src={src!}
+          alt={alt}
+          className="h-28 w-64 object-cover transition-transform group-hover:scale-[1.02]"
+          loading="lazy"
+          onError={() => setError(true)}
+        />
+      ) : (
+        <div className="h-28 w-64 flex items-center justify-center text-xs text-muted-foreground font-medium">
+          Rank an image →
+        </div>
+      )}
     </button>
   );
 };

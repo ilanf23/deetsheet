@@ -80,7 +80,7 @@ const RichTextEditor = ({
       underline: "toggleUnderline",
       strike: "toggleStrike",
     }[markName];
-    (editor.chain().focus() as Record<string, () => { run: () => boolean }>)[cmd]().run();
+    (editor.chain().focus() as unknown as Record<string, () => { run: () => boolean }>)[cmd]().run();
   };
 
   const tools = [
