@@ -137,10 +137,21 @@ const TopicPage = () => {
                 <div className="flex items-start gap-4">
                   <FollowTopicButton topicId={topic.id} />
                   {topic.imageUrl && (
-                    <TopicHeaderImage src={topic.imageUrl} alt={topic.name} />
+                    <TopicHeaderImage
+                      src={topic.imageUrl}
+                      alt={topic.name}
+                      onClick={() => setRankOpen(true)}
+                    />
                   )}
                 </div>
               </div>
+              <RankImagesDialog
+                open={rankOpen}
+                onOpenChange={setRankOpen}
+                topicName={topic.name}
+                topicSlug={topic.slug ?? topic.name.toLowerCase().replace(/\s+/g, "-")}
+                primaryImage={topic.imageUrl}
+              >
               <div
                 aria-hidden
                 className="flex items-baseline gap-4 px-3 -mx-3 pb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
