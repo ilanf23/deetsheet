@@ -1,9 +1,10 @@
 /**
- * Builds topic-relevant image search queries for the Rank Images dialog.
+ * Builds topic-relevant image URLs for the Rank Images dialog.
  *
- * We use Unsplash's keyless "source" endpoint, which returns a real photo
- * matching the comma-separated keywords. By varying the modifier per slot
- * we get ~12 different but on-topic candidates per topic.
+ * Unsplash's keyless `source.unsplash.com` endpoint was deprecated and now
+ * returns no image. We use Loremflickr instead, which is keyless, returns
+ * keyword-matched real photos, and supports a `lock` seed so each slot is
+ * stable but distinct.
  */
 
 const MODIFIERS_BY_CATEGORY: Record<string, string[]> = {
@@ -29,9 +30,21 @@ const DEFAULT_MODIFIERS = [
   "everyday", "story", "experience", "background", "feeling", "context",
 ];
 
+/** Stable numeric hash so each (topic, slot) gets a deterministic seed. */
+const hashString = (s: string): number => {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = (h << 5) - h + s.charCodeAt(i);
+    h |= 0;
+  }
+  return Math.abs(h);
+};
+
 /**
- * Generate ~12 unique image URLs for the topic, each phrased as a different
- * angle on the same subject so the gallery looks varied but on-theme.
+ * Generate ~12 unique image URLs for the topic. Each URL combines the topic
+ * name with a different modifier keyword so the gallery looks varied but
+ * on-theme, and uses a deterministic `lock` seed so the same slot keeps the
+ * same photo across reloads.
  */
 export const buildTopicImageUrls = (
   topicName: string,
@@ -39,12 +52,13 @@ export const buildTopicImageUrls = (
   count = 12
 ): string[] => {
   const modifiers = MODIFIERS_BY_CATEGORY[categoryName] ?? DEFAULT_MODIFIERS;
-  const subject = encodeURIComponent(topicName.trim());
+  const cleanTopic = topicName.trim().toLowerCase().replace(/[^a-z0-9\s]/g, "");
+  const topicTag = cleanTopic.replace(/\s+/g, ",");
 
   return Array.from({ length: count }).map((_, i) => {
-    const mod = encodeURIComponent(modifiers[i % modifiers.length]);
-    // `sig` keeps Unsplash from returning the same photo across slots.
-    const sig = `${topicName}-${i}`.replace(/\s+/g, "-").toLowerCase();
-    return `https://source.unsplash.com/featured/600x600/?${subject},${mod}&sig=${encodeURIComponent(sig)}`;
+    const mod = modifiers[i % modifiers.length];
+    const tags = encodeURIComponent(`${topicTag},${mod}`);
+    const lock = hashString(`${cleanTopic}-${mod}-${i}`) % 100000;
+    return `https://loremflickr.com/600/600/${tags}?lock=${lock}`;
   });
 };
