@@ -137,20 +137,19 @@ const TopicPage = () => {
                 </div>
                 <div className="flex items-start gap-4">
                   <FollowTopicButton topicId={topic.id} />
-                  {topic.imageUrl && (
-                    <TopicHeaderImage
-                      src={topic.imageUrl}
-                      alt={topic.name}
-                      onClick={() => setRankOpen(true)}
-                    />
-                  )}
+                  <TopicHeaderImage
+                    src={topic.imageUrl}
+                    alt={topic.name}
+                    onClick={() => setRankOpen(true)}
+                  />
                 </div>
               </div>
               <RankImagesDialog
                 open={rankOpen}
                 onOpenChange={setRankOpen}
+                topicId={topic.id}
                 topicName={topic.name}
-                topicSlug={topic.slug ?? topic.name.toLowerCase().replace(/\s+/g, "-")}
+                categoryName={topic.categoryName}
                 primaryImage={topic.imageUrl}
               />
               <div
