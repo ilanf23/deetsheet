@@ -151,7 +151,7 @@ const TopicPage = () => {
                 topicName={topic.name}
                 topicSlug={topic.slug ?? topic.name.toLowerCase().replace(/\s+/g, "-")}
                 primaryImage={topic.imageUrl}
-              >
+              />
               <div
                 aria-hidden
                 className="flex items-baseline gap-4 px-3 -mx-3 pb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
