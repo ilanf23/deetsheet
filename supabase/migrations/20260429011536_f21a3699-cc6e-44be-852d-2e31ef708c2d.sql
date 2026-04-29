@@ -1,0 +1,1 @@
+ALTER TABLE public.comments DISABLE TRIGGER comments_update_count;
