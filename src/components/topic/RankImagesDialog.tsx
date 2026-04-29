@@ -6,6 +6,27 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTopicImages, type TopicImageRow } from "@/hooks/useTopicImages";
 import { useToast } from "@/hooks/use-toast";
 
+const ImageTile = ({ src, alt, className }: { src: string; alt: string; className?: string }) => {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => setFailed(false), [src]);
+  if (failed) {
+    return (
+      <div className={cn("absolute inset-0 flex items-center justify-center text-[11px] text-white/60 px-2 text-center", className)}>
+        Image unavailable
+      </div>
+    );
+  }
+  return (
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      className={cn("w-full h-full object-cover transition-transform", className)}
+      onError={() => setFailed(true)}
+    />
+  );
+};
+
 interface RankImagesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -153,16 +174,9 @@ const RankImagesDialog = ({
             <>
               <div className="grid grid-cols-6 gap-3 auto-rows-fr">
                 {/* Hero */}
-                {featured && (
+                {featured && heroSrc && (
                   <div className="col-span-3 row-span-2 relative rounded-lg overflow-hidden aspect-square bg-white/5">
-                    <img
-                      src={heroSrc}
-                      alt={topicName}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
-                      }}
-                    />
+                    <ImageTile src={heroSrc} alt={topicName} />
                     <RatingChip rank={featured.averageRating} you={featured.yourRating} />
                   </div>
                 )}
@@ -178,14 +192,10 @@ const RankImagesDialog = ({
                       selectedId === img.id && "ring-2 ring-primary"
                     )}
                   >
-                    <img
+                    <ImageTile
                       src={img.url}
                       alt={`${topicName} option`}
-                      loading="lazy"
-                      className="w-full h-full object-cover transition-transform group-hover:scale-[1.03]"
-                      onError={(e) => {
-                        (e.currentTarget as HTMLImageElement).style.visibility = "hidden";
-                      }}
+                      className="group-hover:scale-[1.03]"
                     />
                     <RatingChip rank={img.averageRating} you={img.yourRating} />
                   </button>

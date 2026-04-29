@@ -49,16 +49,25 @@ export const useTopicImages = ({ topicId, topicName, categoryName }: UseTopicIma
         rating_count: number;
       }>;
 
-      // Lazy seed: anyone signed in can populate. Anonymous visitors will
-      // see the empty state until someone signs in once for this topic.
-      if (rows.length === 0 && userId) {
+      // Detect rows seeded from now-deprecated image hosts so we can re-seed.
+      const isBrokenUrl = (u: string) =>
+        u.includes("source.unsplash.com");
+      const allBroken =
+        rows.length > 0 && rows.every((r) => isBrokenUrl(r.url));
+
+      // Lazy seed (or re-seed) when there are no rows, or every row points to
+      // a known-broken host. Anonymous visitors fall back to the empty state.
+      if ((rows.length === 0 || allBroken) && userId) {
         const urls = buildTopicImageUrls(topicName, categoryName);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: inserted, error: insertErr } = await (supabase.from as any)("topic_images")
           .insert(urls.map((url) => ({ topic_id: topicId, url })))
           .select("id, url, average_rating, rating_count");
         if (insertErr) throw insertErr;
-        rows = (inserted ?? []) as typeof rows;
+        rows = [
+          ...rows.filter((r) => !isBrokenUrl(r.url)),
+          ...((inserted ?? []) as typeof rows),
+        ];
       }
 
       let yourRatings: Record<string, number> = {};
