@@ -8,6 +8,7 @@ import TopicRecommendations from "@/components/TopicRecommendations";
 import TopicRecentlyAdded from "@/components/TopicRecentlyAdded";
 import AddPostBar from "@/components/AddPostBar";
 import FollowTopicButton from "@/components/FollowTopicButton";
+import RankImagesDialog from "@/components/topic/RankImagesDialog";
 import TopicPaginationFooter, {
   DEFAULT_PAGE_SIZE,
   isValidPageSize,
