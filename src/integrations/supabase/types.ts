@@ -45,6 +45,7 @@ export type Database = {
       }
       comments: {
         Row: {
+          _rewritten: boolean
           author_id: string
           content: string
           created_at: string
@@ -53,6 +54,7 @@ export type Database = {
           post_id: string
         }
         Insert: {
+          _rewritten?: boolean
           author_id: string
           content: string
           created_at?: string
@@ -61,6 +63,7 @@ export type Database = {
           post_id: string
         }
         Update: {
+          _rewritten?: boolean
           author_id?: string
           content?: string
           created_at?: string
