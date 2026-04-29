@@ -74,8 +74,8 @@ const RankImagesDialog = ({
       <DialogContent
         className="max-w-6xl w-[95vw] p-0 bg-[#1f1f1f] border-0 text-white overflow-hidden"
       >
-        <DialogTitle asChild>
-          <VisuallyHidden>Rank images for {topicName}</VisuallyHidden>
+        <DialogTitle className="sr-only">
+          Rank images for {topicName}
         </DialogTitle>
 
         <div className="px-8 pt-8 pb-4">
