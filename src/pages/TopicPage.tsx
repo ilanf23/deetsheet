@@ -45,6 +45,7 @@ const TopicPage = () => {
     : DEFAULT_PAGE_SIZE;
 
   const [rendered, setRendered] = useState<number>(size);
+  const [rankOpen, setRankOpen] = useState(false);
 
   useEffect(() => {
     setRendered((prev) =>
@@ -205,17 +206,32 @@ const TopicPage = () => {
   );
 };
 
-const TopicHeaderImage = ({ src, alt }: { src: string; alt: string }) => {
+const TopicHeaderImage = ({
+  src,
+  alt,
+  onClick,
+}: {
+  src: string;
+  alt: string;
+  onClick?: () => void;
+}) => {
   const [error, setError] = useState(false);
   if (error) return null;
   return (
-    <img
-      src={src}
-      alt={alt}
-      className="h-28 w-64 rounded-lg object-cover shrink-0"
-      loading="lazy"
-      onError={() => setError(true)}
-    />
+    <button
+      type="button"
+      onClick={onClick}
+      className="shrink-0 rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary group"
+      aria-label={`Rank images for ${alt}`}
+    >
+      <img
+        src={src}
+        alt={alt}
+        className="h-28 w-64 object-cover transition-transform group-hover:scale-[1.02]"
+        loading="lazy"
+        onError={() => setError(true)}
+      />
+    </button>
   );
 };
 
