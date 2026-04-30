@@ -1,21 +1,29 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { MessageSquare } from "lucide-react";
 import { Post, getTimeAgo } from "@/data/seedData";
 import UserAvatar from "@/components/UserAvatar";
 
 interface PostCardProps {
   post: Post;
+  postRank?: number;
 }
 
-const PostCard = ({ post }: PostCardProps) => {
+const PostCard = ({ post, postRank }: PostCardProps) => {
   const navigate = useNavigate();
 
   const openTopic = () => navigate(`/topic/${encodeURIComponent(post.topicName)}`);
+  const linksToPost = typeof postRank === "number";
+  const postHref = linksToPost
+    ? `/topic/${encodeURIComponent(post.topicName)}/post/${postRank}`
+    : null;
+  const contentText = post.title || post.content;
 
   return (
     <div
-      className="group cursor-pointer py-3 border-b border-border last:border-b-0"
-      onClick={openTopic}
+      className={`group py-3 border-b border-border last:border-b-0 ${
+        linksToPost ? "" : "cursor-pointer"
+      }`}
+      onClick={linksToPost ? undefined : openTopic}
     >
       <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1.5">
         <UserAvatar username={post.username} size="sm" />
@@ -25,9 +33,17 @@ const PostCard = ({ post }: PostCardProps) => {
 
       <div className="flex gap-3">
         <div className="flex-1 min-w-0">
-          <h3 className="text-[15px] font-medium text-foreground leading-snug line-clamp-2 mb-2">
-            {post.content}
-          </h3>
+          {linksToPost && postHref ? (
+            <h3 className="text-[15px] font-medium leading-snug line-clamp-2 mb-2">
+              <Link to={postHref} className="text-primary hover:underline">
+                {contentText}
+              </Link>
+            </h3>
+          ) : (
+            <h3 className="text-[15px] font-medium text-foreground leading-snug line-clamp-2 mb-2">
+              {contentText}
+            </h3>
+          )}
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <button
               type="button"
@@ -50,7 +66,7 @@ const PostCard = ({ post }: PostCardProps) => {
           <img
             src={post.imageUrl}
             alt={post.topicName}
-            className="w-16 h-16 rounded-md object-cover shrink-0"
+            className="w-28 h-28 rounded-sm object-cover shrink-0"
           />
         )}
       </div>

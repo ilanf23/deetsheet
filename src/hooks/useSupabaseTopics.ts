@@ -45,6 +45,7 @@ export interface PostRow {
   commentCount: number;
   score: number;
   createdAt: Date;
+  imageUrl: string | null;
 }
 
 type DbTopicRaw = {
@@ -68,7 +69,7 @@ type DbPostRaw = {
   comment_count: number | null;
   created_at: string;
   profiles?: { username: string | null } | null;
-  topics?: { name: string; category_name: string | null } | null;
+  topics?: { name: string; category_name: string | null; image_url: string | null } | null;
 };
 
 const mapTopic = (row: DbTopicRaw, postCount: number): TopicRow => ({
@@ -95,6 +96,7 @@ const mapPost = (row: DbPostRaw): PostRow => ({
   commentCount: row.comment_count ?? 0,
   score: row.score,
   createdAt: new Date(row.created_at),
+  imageUrl: row.topics?.image_url ?? null,
 });
 
 /**
@@ -167,7 +169,7 @@ export const usePostsByTopic = (topicId: string | undefined) => {
         .select(
           "id, title, content, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            "profiles!posts_author_id_profiles_fkey(username), topics!posts_topic_id_fkey(name, category_name)" as any
+            "profiles!posts_author_id_profiles_fkey(username), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
         .eq("topic_id", topicId)
         .order("average_rating", { ascending: false, nullsFirst: false })
@@ -176,6 +178,78 @@ export const usePostsByTopic = (topicId: string | undefined) => {
       if (error) throw error;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (data ?? []).map((row: any) => mapPost(row as DbPostRaw));
+    },
+  });
+};
+
+/**
+ * Fetch the most recently added posts across every topic, newest first.
+ * Used by the homepage left-column "Recent Posts" sidebar.
+ */
+export const useRecentPosts = (limit = 8) => {
+  return useQuery({
+    queryKey: ["recent-posts", limit],
+    queryFn: async (): Promise<PostRow[]> => {
+      const { data, error } = await supabase
+        .from("posts")
+        .select(
+          "id, title, content, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, " +
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            "profiles!posts_author_id_profiles_fkey(username), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
+        )
+        .order("created_at", { ascending: false })
+        .limit(limit);
+
+      if (error) throw error;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (data ?? []).map((row: any) => mapPost(row as DbPostRaw));
+    },
+  });
+};
+
+/**
+ * Resolve each post's 1-based rank within its own topic (rating-sorted,
+ * matching `usePostsByTopic`'s ordering: average_rating desc, rating_count
+ * desc). Used by surfaces that link to /topic/:topicName/post/:rank from
+ * lists that aren't sorted by rank — e.g. the homepage Recent Posts sidebar.
+ *
+ * One batched query per unique topic_id set, sorted client-side per topic.
+ */
+export const usePostRanksForTopics = (topicIds: string[]) => {
+  const sortedKey = [...topicIds].sort().join(",");
+  return useQuery({
+    queryKey: ["post-ranks-for-topics", sortedKey],
+    enabled: topicIds.length > 0,
+    queryFn: async (): Promise<Map<string, number>> => {
+      const { data, error } = await supabase
+        .from("posts")
+        .select("id, topic_id, average_rating, rating_count")
+        .in("topic_id", topicIds);
+
+      if (error) throw error;
+
+      const byTopic = new Map<string, Array<{ id: string; avg: number; count: number }>>();
+      for (const row of (data ?? []) as Array<{
+        id: string;
+        topic_id: string;
+        average_rating: number | null;
+        rating_count: number | null;
+      }>) {
+        const arr = byTopic.get(row.topic_id) ?? [];
+        arr.push({
+          id: row.id,
+          avg: Number(row.average_rating ?? 0),
+          count: row.rating_count ?? 0,
+        });
+        byTopic.set(row.topic_id, arr);
+      }
+
+      const ranks = new Map<string, number>();
+      for (const arr of byTopic.values()) {
+        arr.sort((a, b) => (b.avg !== a.avg ? b.avg - a.avg : b.count - a.count));
+        arr.forEach((row, i) => ranks.set(row.id, i + 1));
+      }
+      return ranks;
     },
   });
 };
@@ -196,7 +270,7 @@ export const useRecentPostsByTopic = (topicId: string | undefined, limit = 5) =>
         .select(
           "id, title, content, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            "profiles!posts_author_id_profiles_fkey(username), topics!posts_topic_id_fkey(name, category_name)" as any
+            "profiles!posts_author_id_profiles_fkey(username), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
         .eq("topic_id", topicId)
         .order("created_at", { ascending: false })

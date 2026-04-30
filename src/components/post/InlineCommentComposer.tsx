@@ -136,7 +136,7 @@ const InlineCommentComposer = ({
         <span className="text-[0.7rem] text-muted-foreground leading-none">You</span>
       </div>
       <div
-        className={`flex-1 rounded-[var(--radius)] border bg-background transition-colors ${
+        className={`flex-1 flex flex-col rounded-[var(--radius)] border bg-background overflow-hidden transition-colors resize-y min-h-[180px] ${
           active ? "ring-1 ring-border" : ""
         }`}
       >
@@ -149,7 +149,7 @@ const InlineCommentComposer = ({
           editorRef={attachFocusListeners}
         />
         {active && (
-          <div className="flex justify-end items-center gap-2 px-2 pb-2">
+          <div className="shrink-0 flex justify-end items-center gap-2 px-2 pb-2">
             {isReply && (
               <Button
                 type="button"

@@ -1,10 +1,19 @@
+import { useMemo } from "react";
 import PostCard from "@/components/PostCard";
-import { getRecentPosts } from "@/data/seedData";
-import { useInfiniteList } from "@/hooks/useInfiniteList";
+import type { Post } from "@/data/seedData";
+import {
+  useRecentPosts,
+  usePostRanksForTopics,
+} from "@/hooks/useSupabaseTopics";
 
 const RecentlyAddedSidebar = () => {
-  const recentPosts = getRecentPosts();
-  const { visible, sentinelRef, hasMore } = useInfiniteList(recentPosts, 8, 8);
+  const { data: posts, isLoading } = useRecentPosts(8);
+
+  const topicIds = useMemo(
+    () => Array.from(new Set((posts ?? []).map((p) => p.topicId))),
+    [posts]
+  );
+  const { data: ranks } = usePostRanksForTopics(topicIds);
 
   return (
     <div className="bg-background rounded-xl border border-border p-4">
@@ -14,14 +23,22 @@ const RecentlyAddedSidebar = () => {
         </h2>
       </div>
       <div>
-        {visible.map((post) => (
-          <PostCard key={post.id} post={post} />
-        ))}
-        {hasMore && (
-          <div ref={sentinelRef} className="h-8 flex items-center justify-center text-[11px] text-muted-foreground">
-            Loading more…
-          </div>
+        {isLoading && (
+          <p className="text-[11px] text-muted-foreground px-1 py-2">Loading…</p>
         )}
+        {!isLoading && (!posts || posts.length === 0) && (
+          <p className="text-[11px] text-muted-foreground px-1 py-2">
+            No recent posts yet.
+          </p>
+        )}
+        {!isLoading &&
+          posts?.map((post) => (
+            <PostCard
+              key={post.id}
+              post={post as unknown as Post}
+              postRank={ranks?.get(post.id)}
+            />
+          ))}
       </div>
     </div>
   );

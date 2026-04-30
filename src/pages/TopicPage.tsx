@@ -161,7 +161,7 @@ const TopicPage = () => {
                 <span className="shrink-0">Rating</span>
                 <span className="shrink-0 w-8 text-center">You</span>
               </div>
-              <div className="divide-y divide-border border-b border-border">
+              <div className="divide-y divide-border border-y border-border rounded-t-md">
                 {visiblePosts.map((post, i) => (
                   <TopicPostListItem
                     key={post.id}

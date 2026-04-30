@@ -42,7 +42,7 @@ const RichTextEditor = ({
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm max-w-none focus:outline-none px-3 py-2 text-sm",
+          "prose prose-sm max-w-none focus:outline-none px-3 py-2 text-sm h-full",
         style: `min-height: ${minHeight};`,
       },
     },
@@ -116,9 +116,9 @@ const RichTextEditor = ({
 
   if (!bordered) {
     return (
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 min-h-0 flex flex-col">
         {toolbar}
-        <EditorContent editor={editor} />
+        <EditorContent editor={editor} className="flex-1 min-h-0 overflow-auto" />
       </div>
     );
   }
