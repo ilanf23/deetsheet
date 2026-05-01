@@ -18,6 +18,7 @@ import {
   usePostsByTopic,
   type PostRow,
 } from "@/hooks/useSupabaseTopics";
+import { buildPostImageUrl } from "@/lib/topicImageQueries";
 import type { Topic } from "@/data/seedData";
 
 const SubtopicPage = () => {
