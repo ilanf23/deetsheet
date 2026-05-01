@@ -18,6 +18,7 @@ import {
   usePostsByTopic,
   type PostRow,
 } from "@/hooks/useSupabaseTopics";
+import { buildPostImageUrl } from "@/lib/topicImageQueries";
 import type { Topic } from "@/data/seedData";
 
 const SubtopicPage = () => {
@@ -160,6 +161,16 @@ const SubtopicPage = () => {
                     />
                     <JudgementReactionsRow />
                   </div>
+                  <img
+                    src={buildPostImageUrl(post.id, topic.name, topic.categoryName)}
+                    alt={post.title || topic.name}
+                    loading="lazy"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                    }}
+                    className="w-full rounded-lg border border-border object-cover aspect-[16/9]"
+                    style={{ maxWidth: "var(--reading-max-width)" }}
+                  />
                   <PostBody content={post.content} />
                   <div className="border-t border-border pt-[var(--space-rhythm-block)]">
                     <InlineCommentComposer

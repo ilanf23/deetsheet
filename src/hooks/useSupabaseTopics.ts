@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { buildPostImageUrl } from "@/lib/topicImageQueries";
 
 /**
  * Data hooks that replace the hardcoded seedData.ts imports on
@@ -96,7 +97,11 @@ const mapPost = (row: DbPostRaw): PostRow => ({
   commentCount: row.comment_count ?? 0,
   score: row.score,
   createdAt: new Date(row.created_at),
-  imageUrl: row.topics?.image_url ?? null,
+  imageUrl: buildPostImageUrl(
+    row.id,
+    row.topics?.name ?? "",
+    row.topics?.category_name ?? "Life"
+  ),
 });
 
 /**
