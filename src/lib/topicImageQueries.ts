@@ -62,3 +62,22 @@ export const buildTopicImageUrls = (
     return `https://loremflickr.com/600/600/${tags}?lock=${lock}`;
   });
 };
+
+/**
+ * Build a single, deterministic image URL for an individual post. Seeded by
+ * the post id so each post in a topic gets a unique-but-stable on-theme image.
+ */
+export const buildPostImageUrl = (
+  postId: string,
+  topicName: string,
+  categoryName: string
+): string => {
+  const modifiers = MODIFIERS_BY_CATEGORY[categoryName] ?? DEFAULT_MODIFIERS;
+  const cleanTopic = (topicName || "life").trim().toLowerCase().replace(/[^a-z0-9\s]/g, "") || "life";
+  const topicTag = cleanTopic.replace(/\s+/g, ",");
+  const seed = hashString(postId || cleanTopic);
+  const mod = modifiers[seed % modifiers.length];
+  const tags = encodeURIComponent(`${topicTag},${mod}`);
+  const lock = seed % 100000;
+  return `https://loremflickr.com/600/600/${tags}?lock=${lock}`;
+};
