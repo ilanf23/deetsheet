@@ -75,9 +75,22 @@ export const buildPostImageUrl = (
   const modifiers = MODIFIERS_BY_CATEGORY[categoryName] ?? DEFAULT_MODIFIERS;
   const cleanTopic = (topicName || "life").trim().toLowerCase().replace(/[^a-z0-9\s]/g, "") || "life";
   const topicTag = cleanTopic.replace(/\s+/g, ",");
-  const seed = hashString(postId || cleanTopic);
-  const mod = modifiers[seed % modifiers.length];
-  const tags = encodeURIComponent(`${topicTag},${mod}`);
-  const lock = seed % 100000;
-  return `https://loremflickr.com/600/600/${tags}?lock=${lock}`;
+
+  // Two independent hashes so each post pulls a distinct (primary, secondary)
+  // modifier pair — varying the actual tag set, not just the lock seed, which
+  // is what makes Loremflickr return visibly different photos.
+  const seedA = hashString(`a:${postId}`);
+  const seedB = hashString(`b:${postId}:${cleanTopic}`);
+  const primary = modifiers[seedA % modifiers.length];
+  let secondary = modifiers[seedB % modifiers.length];
+  if (secondary === primary) {
+    secondary = modifiers[(seedB + 1) % modifiers.length];
+  }
+
+  const tags = encodeURIComponent(`${topicTag},${primary},${secondary}`);
+  const lock = hashString(`${postId}:${primary}:${secondary}`) % 1_000_000;
+  // Tiny dimension jitter forces a fresh image fetch even when tag pools collide.
+  const w = 600 + (seedA % 5);
+  const h = 600 + (seedB % 5);
+  return `https://loremflickr.com/${w}/${h}/${tags}?lock=${lock}`;
 };
