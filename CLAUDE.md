@@ -67,6 +67,10 @@ src/
 
 profiles, posts, comments, topics, user_roles
 
+## Admin Handoff
+
+Current admin implementation notes live in `docs/admin.md`.
+
 ## Key Patterns
 
 - Data fetching: Direct Supabase queries in useEffect or event handlers
