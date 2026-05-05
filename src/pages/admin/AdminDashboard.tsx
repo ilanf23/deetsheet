@@ -1,198 +1,679 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ChartContainer, ChartConfig, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, LineChart, Line } from "recharts";
-import { Users, FileText, MessageSquare, Hash } from "lucide-react";
-import { format, parseISO, startOfMonth, startOfWeek } from "date-fns";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
+import { Clock, Flag, UserPlus, FileEdit, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import {
+  format,
+  parseISO,
+  startOfDay,
+  startOfWeek,
+  startOfMonth,
+  subDays,
+  subMonths,
+  isAfter,
+  isBefore,
+  addDays,
+  addWeeks,
+  addMonths,
+} from "date-fns";
 
-interface ActivityItem {
-  type: "post" | "comment";
-  content: string;
-  author_id: string;
+type ActivityRow = {
+  type: "post" | "comment" | "report";
+  label: string;
   created_at: string;
+};
+
+type MetricKey = "signups" | "posts" | "comments" | "reports";
+type RangeKey = "7d" | "30d" | "3m" | "6m" | "12m" | "all";
+type GroupKey = "day" | "week" | "month";
+
+const METRICS: {
+  key: MetricKey;
+  label: string;
+  color: string;
+  light: string;
+}[] = [
+  { key: "signups", label: "Signups", color: "hsl(var(--admin-primary))", light: "hsl(var(--admin-primary) / 0.18)" },
+  { key: "posts", label: "Posts", color: "hsl(var(--admin-success))", light: "hsl(var(--admin-success) / 0.22)" },
+  { key: "comments", label: "Comments", color: "hsl(var(--admin-info))", light: "hsl(var(--admin-info) / 0.24)" },
+  { key: "reports", label: "Reports", color: "hsl(var(--admin-danger))", light: "hsl(var(--admin-danger) / 0.22)" },
+];
+
+const RANGES: { key: RangeKey; label: string; days: number | "all" }[] = [
+  { key: "7d", label: "7 days", days: 7 },
+  { key: "30d", label: "30 days", days: 30 },
+  { key: "3m", label: "3 months", days: 90 },
+  { key: "6m", label: "6 months", days: 180 },
+  { key: "12m", label: "12 months", days: 365 },
+  { key: "all", label: "All", days: "all" },
+];
+
+function StatCard({
+  label,
+  value,
+  hint,
+  hintTone = "muted",
+  icon: Icon,
+}: {
+  label: string;
+  value: number | string;
+  hint: string;
+  hintTone?: "muted" | "warning";
+  icon: React.ComponentType<{ className?: string }>;
+}) {
+  return (
+    <div
+      className="rounded-xl px-6 py-5"
+      style={{
+        backgroundColor: "hsl(var(--admin-surface))",
+        border: "1px solid hsl(var(--admin-border))",
+      }}
+    >
+      <div className="flex items-start justify-between">
+        <p className="text-[13px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>
+          {label}
+        </p>
+        <Icon className="h-4 w-4" style={{ color: "hsl(var(--admin-fg-muted))" }} />
+      </div>
+      <p
+        className="mt-3 text-[34px] font-bold leading-none tracking-tight"
+        style={{ color: "hsl(var(--admin-fg))" }}
+      >
+        {value}
+      </p>
+      <p
+        className="mt-3 text-[13px]"
+        style={{
+          color:
+            hintTone === "warning"
+              ? "hsl(var(--admin-warning))"
+              : "hsl(var(--admin-fg-muted))",
+        }}
+      >
+        {hint}
+      </p>
+    </div>
+  );
 }
 
-const signupChartConfig: ChartConfig = {
-  count: { label: "Signups", color: "hsl(var(--primary))" },
-};
+function QuickAction({ to, label }: { to: string; label: string }) {
+  return (
+    <Link
+      to={to}
+      className="inline-flex items-center px-5 py-2.5 rounded-lg text-[14px] font-medium"
+      style={{
+        backgroundColor: "hsl(var(--admin-surface))",
+        border: "1px solid hsl(var(--admin-border))",
+        color: "hsl(var(--admin-fg))",
+      }}
+    >
+      {label}
+    </Link>
+  );
+}
 
-const postsChartConfig: ChartConfig = {
-  count: { label: "Posts", color: "hsl(var(--primary))" },
-};
+function ActivityTag({ type }: { type: ActivityRow["type"] }) {
+  const styles =
+    type === "post"
+      ? { backgroundColor: "hsl(var(--admin-primary))", color: "#fff" }
+      : type === "comment"
+      ? { backgroundColor: "hsl(var(--admin-info))", color: "#fff" }
+      : { backgroundColor: "hsl(var(--admin-danger))", color: "#fff" };
+  return (
+    <span
+      className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold"
+      style={styles}
+    >
+      {type}
+    </span>
+  );
+}
+
+function ChartTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: any[];
+  label?: string;
+}) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div
+      className="rounded-lg px-3 py-2 text-[12px] shadow-sm"
+      style={{
+        backgroundColor: "hsl(var(--admin-surface))",
+        border: "1px solid hsl(var(--admin-border-strong))",
+        color: "hsl(var(--admin-fg))",
+      }}
+    >
+      <p className="font-semibold mb-1">{label}</p>
+      {payload.map((p) => (
+        <p key={p.dataKey} className="flex items-center gap-2">
+          <span
+            className="inline-block h-2 w-2 rounded-sm"
+            style={{ backgroundColor: p.color }}
+          />
+          <span style={{ color: "hsl(var(--admin-fg-muted))" }}>{p.name}</span>
+          <span className="ml-auto font-semibold tabular-nums">{p.value.toLocaleString()}</span>
+        </p>
+      ))}
+    </div>
+  );
+}
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({ users: 0, posts: 0, comments: 0, topics: 0 });
-  const [signupData, setSignupData] = useState<{ month: string; count: number }[]>([]);
-  const [postData, setPostData] = useState<{ week: string; count: number }[]>([]);
-  const [activity, setActivity] = useState<ActivityItem[]>([]);
+  // KPIs
+  const [pendingApprovals] = useState(0);
+  const [openReports, setOpenReports] = useState(0);
+  const [reportBreakdown, setReportBreakdown] = useState("");
+  const [newUsers24h, setNewUsers24h] = useState(0);
+  const [usersDelta, setUsersDelta] = useState("—");
+  const [posts24h, setPosts24h] = useState(0);
+  const [postsDelta, setPostsDelta] = useState("—");
+
+  // Time-series source data
+  const [signupTs, setSignupTs] = useState<string[]>([]);
+  const [postTs, setPostTs] = useState<string[]>([]);
+  const [commentTs, setCommentTs] = useState<string[]>([]);
+  const [reportTs, setReportTs] = useState<string[]>([]);
+
+  // Activity feed
+  const [activity, setActivity] = useState<ActivityRow[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Filters
+  const [range, setRange] = useState<RangeKey>("6m");
+  const [group, setGroup] = useState<GroupKey>("month");
+  const [activeMetrics, setActiveMetrics] = useState<MetricKey[]>(["signups", "posts"]);
+  const [hovered, setHovered] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchAll = async () => {
-      const [usersRes, postsRes, commentsRes, topicsRes] = await Promise.all([
-        supabase.from("profiles").select("id", { count: "exact", head: true }),
-        supabase.from("posts").select("id", { count: "exact", head: true }),
-        supabase.from("comments").select("id", { count: "exact", head: true }),
-        supabase.from("topics").select("id", { count: "exact", head: true }),
+      const last24 = subDays(new Date(), 1).toISOString();
+      const prev48 = subDays(new Date(), 2).toISOString();
+
+      const [
+        u24,
+        uPrev,
+        p24,
+        pPrev,
+        reports,
+        profilesAll,
+        postsAll,
+        commentsAll,
+        reportsAll,
+        recentPosts,
+        recentComments,
+        recentReports,
+      ] = await Promise.all([
+        supabase.from("profiles").select("id", { count: "exact", head: true }).gte("created_at", last24),
+        supabase
+          .from("profiles")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", prev48)
+          .lt("created_at", last24),
+        supabase.from("posts").select("id", { count: "exact", head: true }).gte("created_at", last24),
+        supabase
+          .from("posts")
+          .select("id", { count: "exact", head: true })
+          .gte("created_at", prev48)
+          .lt("created_at", last24),
+        supabase.from("reports").select("reasons", { count: "exact" }),
+        supabase.from("profiles").select("created_at"),
+        supabase.from("posts").select("created_at"),
+        supabase.from("comments").select("created_at"),
+        supabase.from("reports").select("created_at"),
+        supabase.from("posts").select("title, created_at").order("created_at", { ascending: false }).limit(5),
+        supabase.from("comments").select("content, created_at").order("created_at", { ascending: false }).limit(5),
+        supabase.from("reports").select("reasons, created_at").order("created_at", { ascending: false }).limit(5),
       ]);
 
-      setStats({
-        users: usersRes.count ?? 0,
-        posts: postsRes.count ?? 0,
-        comments: commentsRes.count ?? 0,
-        topics: topicsRes.count ?? 0,
-      });
+      setNewUsers24h(u24.count ?? 0);
+      setUsersDelta(formatDelta(u24.count ?? 0, uPrev.count ?? 0));
+      setPosts24h(p24.count ?? 0);
+      setPostsDelta(formatDelta(p24.count ?? 0, pPrev.count ?? 0));
 
-      // Signups by month
-      const { data: profiles } = await supabase.from("profiles").select("created_at");
-      if (profiles) {
-        const grouped: Record<string, number> = {};
-        profiles.forEach((p) => {
-          const key = format(startOfMonth(parseISO(p.created_at)), "yyyy-MM");
-          grouped[key] = (grouped[key] || 0) + 1;
+      setOpenReports(reports.count ?? 0);
+      if (reports.data && reports.data.length) {
+        const tally: Record<string, number> = {};
+        reports.data.forEach((r) => {
+          (r.reasons as string[] | null)?.forEach((reason) => {
+            tally[reason] = (tally[reason] ?? 0) + 1;
+          });
         });
-        setSignupData(
-          Object.entries(grouped)
-            .sort(([a], [b]) => a.localeCompare(b))
-            .map(([month, count]) => ({ month, count }))
-        );
+        const top = Object.entries(tally)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([reason, n]) => `${n} ${reason}`)
+          .join(", ");
+        setReportBreakdown(top || "No reasons recorded");
+      } else {
+        setReportBreakdown("No open reports");
       }
 
-      // Posts by week
-      const { data: allPosts } = await supabase.from("posts").select("created_at");
-      if (allPosts) {
-        const grouped: Record<string, number> = {};
-        allPosts.forEach((p) => {
-          const key = format(startOfWeek(parseISO(p.created_at)), "yyyy-MM-dd");
-          grouped[key] = (grouped[key] || 0) + 1;
-        });
-        setPostData(
-          Object.entries(grouped)
-            .sort(([a], [b]) => a.localeCompare(b))
-            .map(([week, count]) => ({ week, count }))
-        );
-      }
+      setSignupTs((profilesAll.data ?? []).map((r) => r.created_at));
+      setPostTs((postsAll.data ?? []).map((r) => r.created_at));
+      setCommentTs((commentsAll.data ?? []).map((r) => r.created_at));
+      setReportTs((reportsAll.data ?? []).map((r) => r.created_at));
 
-      // Recent activity
-      const [recentPosts, recentComments] = await Promise.all([
-        supabase.from("posts").select("title, author_id, created_at").order("created_at", { ascending: false }).limit(10),
-        supabase.from("comments").select("content, author_id, created_at").order("created_at", { ascending: false }).limit(10),
-      ]);
-
-      const merged: ActivityItem[] = [
-        ...(recentPosts.data || []).map((p) => ({ type: "post" as const, content: p.title, author_id: p.author_id, created_at: p.created_at })),
-        ...(recentComments.data || []).map((c) => ({ type: "comment" as const, content: c.content, author_id: c.author_id, created_at: c.created_at })),
+      const merged: ActivityRow[] = [
+        ...(recentPosts.data ?? []).map((p) => ({
+          type: "post" as const,
+          label: p.title,
+          created_at: p.created_at,
+        })),
+        ...(recentComments.data ?? []).map((c) => ({
+          type: "comment" as const,
+          label: `New comment on a post`,
+          created_at: c.created_at,
+        })),
+        ...(recentReports.data ?? []).map((r) => ({
+          type: "report" as const,
+          label: `Reported · ${(r.reasons as string[] | null)?.join(", ") ?? "no reason"}`,
+          created_at: r.created_at,
+        })),
       ]
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, 10);
-
+        .slice(0, 6);
       setActivity(merged);
+
       setLoading(false);
     };
 
     fetchAll();
   }, []);
 
+  // Derived chart data
+  const chartData = useMemo(() => {
+    const sourceByMetric: Record<MetricKey, string[]> = {
+      signups: signupTs,
+      posts: postTs,
+      comments: commentTs,
+      reports: reportTs,
+    };
+
+    const now = new Date();
+    const rangeDef = RANGES.find((r) => r.key === range)!;
+    const allTimestamps = ([] as string[]).concat(...Object.values(sourceByMetric));
+    const earliest =
+      allTimestamps.length === 0
+        ? subDays(now, 30)
+        : new Date(Math.min(...allTimestamps.map((t) => new Date(t).getTime())));
+    const start =
+      rangeDef.days === "all" ? earliest : subDays(now, rangeDef.days as number);
+    const periodLength = (now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+    const prevStart = new Date(start.getTime() - periodLength * 24 * 60 * 60 * 1000);
+
+    const buckets = generateBuckets(start, now, group);
+
+    const data = buckets.map((bucketStart, i) => {
+      const next = buckets[i + 1] ?? now;
+      const row: Record<string, number | string> = { label: bucketLabel(bucketStart, group) };
+      activeMetrics.forEach((m) => {
+        row[m] = sourceByMetric[m].filter((ts) => {
+          const d = parseISO(ts);
+          return !isBefore(d, bucketStart) && isBefore(d, next);
+        }).length;
+      });
+      return row;
+    });
+
+    // Totals for current and previous period
+    const totals: Record<MetricKey, number> = {
+      signups: 0,
+      posts: 0,
+      comments: 0,
+      reports: 0,
+    };
+    const prevTotals: Record<MetricKey, number> = {
+      signups: 0,
+      posts: 0,
+      comments: 0,
+      reports: 0,
+    };
+    (Object.keys(sourceByMetric) as MetricKey[]).forEach((m) => {
+      sourceByMetric[m].forEach((ts) => {
+        const d = parseISO(ts);
+        if (!isBefore(d, start) && !isAfter(d, now)) totals[m]++;
+        if (!isBefore(d, prevStart) && isBefore(d, start)) prevTotals[m]++;
+      });
+    });
+
+    return { data, totals, prevTotals, start, now };
+  }, [signupTs, postTs, commentTs, reportTs, range, group, activeMetrics]);
+
+  const totalCurrent = activeMetrics.reduce((sum, m) => sum + chartData.totals[m], 0);
+  const totalPrev = activeMetrics.reduce((sum, m) => sum + chartData.prevTotals[m], 0);
+  const periodDelta =
+    totalPrev === 0
+      ? totalCurrent === 0
+        ? 0
+        : 100
+      : Math.round(((totalCurrent - totalPrev) / totalPrev) * 100);
+
   if (loading) {
-    return <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div
+          className="h-7 w-7 rounded-full animate-spin border-2"
+          style={{ borderColor: "hsl(var(--admin-primary))", borderTopColor: "transparent" }}
+        />
+      </div>
+    );
   }
 
-  const statCards = [
-    { label: "Total Users", value: stats.users, icon: Users },
-    { label: "Total Posts", value: stats.posts, icon: FileText },
-    { label: "Total Comments", value: stats.comments, icon: MessageSquare },
-    { label: "Total Topics", value: stats.topics, icon: Hash },
-  ];
-
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+    <div className="space-y-7">
+      <h1 className="text-[40px] font-bold leading-none tracking-tight" style={{ color: "hsl(var(--admin-fg))" }}>
+        Dashboard
+      </h1>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map((s) => (
-          <Card key={s.label}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{s.label}</CardTitle>
-              <s.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{s.value}</div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <StatCard
+          label="Pending Approvals"
+          value={pendingApprovals}
+          hint={pendingApprovals === 0 ? "No pending posts" : "—"}
+          icon={Clock}
+        />
+        <StatCard
+          label="Open Reports"
+          value={openReports}
+          hint={reportBreakdown}
+          hintTone="warning"
+          icon={Flag}
+        />
+        <StatCard label="New Users (24h)" value={newUsers24h} hint={usersDelta} icon={UserPlus} />
+        <StatCard label="Posts (24h)" value={posts24h} hint={postsDelta} icon={FileEdit} />
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Signups by Month</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {signupData.length > 0 ? (
-              <ChartContainer config={signupChartConfig} className="h-[250px] w-full">
-                <BarChart data={signupData}>
-                  <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="count" fill="var(--color-count)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ChartContainer>
-            ) : (
-              <p className="text-sm text-muted-foreground">No signup data yet.</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Posts by Week</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {postData.length > 0 ? (
-              <ChartContainer config={postsChartConfig} className="h-[250px] w-full">
-                <LineChart data={postData}>
-                  <XAxis dataKey="week" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis fontSize={12} tickLine={false} axisLine={false} allowDecimals={false} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line type="monotone" dataKey="count" stroke="var(--color-count)" strokeWidth={2} dot={false} />
-                </LineChart>
-              </ChartContainer>
-            ) : (
-              <p className="text-sm text-muted-foreground">No post data yet.</p>
-            )}
-          </CardContent>
-        </Card>
+      <div className="flex flex-wrap gap-3">
+        <QuickAction to="/admin/posts" label="Review Pending Posts" />
+        <QuickAction to="/admin/reports" label="View Report Queue" />
+        <QuickAction to="/admin/users" label="Manage Users" />
       </div>
 
-      {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Recent Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {activity.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No recent activity.</p>
-          ) : (
-            <div className="space-y-3">
-              {activity.map((item, i) => (
-                <div key={i} className="flex items-start gap-3 text-sm">
-                  <Badge variant={item.type === "post" ? "default" : "secondary"}>
-                    {item.type}
-                  </Badge>
-                  <span className="flex-1 truncate">{item.content}</span>
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    {format(parseISO(item.created_at), "MMM d, h:mm a")}
-                  </span>
-                </div>
-              ))}
+      {/* Activity chart with filters */}
+      <section
+        className="rounded-2xl p-7"
+        style={{
+          backgroundColor: "hsl(var(--admin-surface))",
+          border: "1px solid hsl(var(--admin-border))",
+        }}
+      >
+        <header className="flex flex-wrap items-end justify-between gap-6 mb-6">
+          <div>
+            <p className="text-[13px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>
+              Activity · {summarizeRange(range)} · grouped by {group}
+            </p>
+            <div className="flex items-end gap-3 mt-1.5">
+              <h2
+                className="text-[34px] font-bold leading-none tracking-tight tabular-nums"
+                style={{ color: "hsl(var(--admin-fg))" }}
+              >
+                {totalCurrent.toLocaleString()}
+              </h2>
+              <span
+                className="inline-flex items-center gap-1 text-[13px] font-medium pb-1"
+                style={{
+                  color:
+                    periodDelta >= 0
+                      ? "hsl(var(--admin-success))"
+                      : "hsl(var(--admin-danger))",
+                }}
+              >
+                {periodDelta >= 0 ? (
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                ) : (
+                  <ArrowDownRight className="h-3.5 w-3.5" />
+                )}
+                {periodDelta >= 0 ? "+" : ""}
+                {periodDelta}% vs prev period
+              </span>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {METRICS.map((m) => {
+              const isOn = activeMetrics.includes(m.key);
+              return (
+                <button
+                  key={m.key}
+                  onClick={() =>
+                    setActiveMetrics((cur) =>
+                      isOn ? cur.filter((k) => k !== m.key) : [...cur, m.key],
+                    )
+                  }
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[12px] transition-colors"
+                  style={{
+                    backgroundColor: isOn ? m.light : "transparent",
+                    color: isOn ? m.color : "hsl(var(--admin-fg-muted))",
+                    border: `1px solid ${
+                      isOn ? "transparent" : "hsl(var(--admin-border))"
+                    }`,
+                    fontWeight: isOn ? 600 : 500,
+                  }}
+                >
+                  <span
+                    className="inline-block h-2 w-2 rounded-sm"
+                    style={{ backgroundColor: isOn ? m.color : "hsl(var(--admin-fg-subtle))" }}
+                  />
+                  {m.label}
+                  <span className="tabular-nums" style={{ opacity: isOn ? 1 : 0.7 }}>
+                    {chartData.totals[m.key].toLocaleString()}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </header>
+
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+          <div
+            className="inline-flex items-center gap-1 p-0.5 rounded-full"
+            style={{ backgroundColor: "hsl(var(--admin-bg))" }}
+          >
+            {RANGES.map((r) => {
+              const isActive = range === r.key;
+              return (
+                <button
+                  key={r.key}
+                  onClick={() => {
+                    setRange(r.key);
+                    if (r.days === "all" || (typeof r.days === "number" && r.days > 90)) setGroup("month");
+                    else if (typeof r.days === "number" && r.days > 14) setGroup("week");
+                    else setGroup("day");
+                  }}
+                  className="px-3.5 py-1.5 rounded-full text-[12px]"
+                  style={{
+                    backgroundColor: isActive ? "hsl(var(--admin-surface))" : "transparent",
+                    color: isActive ? "hsl(var(--admin-fg))" : "hsl(var(--admin-fg-muted))",
+                    fontWeight: isActive ? 600 : 500,
+                    boxShadow: isActive ? "0 1px 2px rgba(0,0,0,0.04)" : "none",
+                  }}
+                >
+                  {r.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <span className="mx-2 text-[12px]" style={{ color: "hsl(var(--admin-fg-subtle))" }}>
+            ·
+          </span>
+
+          <div
+            className="inline-flex items-center gap-1 p-0.5 rounded-full"
+            style={{ backgroundColor: "hsl(var(--admin-bg))" }}
+          >
+            {(["day", "week", "month"] as GroupKey[]).map((g) => {
+              const isActive = group === g;
+              return (
+                <button
+                  key={g}
+                  onClick={() => setGroup(g)}
+                  className="px-3.5 py-1.5 rounded-full text-[12px] capitalize"
+                  style={{
+                    backgroundColor: isActive ? "hsl(var(--admin-surface))" : "transparent",
+                    color: isActive ? "hsl(var(--admin-fg))" : "hsl(var(--admin-fg-muted))",
+                    fontWeight: isActive ? 600 : 500,
+                    boxShadow: isActive ? "0 1px 2px rgba(0,0,0,0.04)" : "none",
+                  }}
+                >
+                  {g}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="h-[320px] -mx-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={chartData.data}
+              margin={{ top: 16, right: 16, left: 8, bottom: 0 }}
+              barGap={4}
+              barCategoryGap="22%"
+              onMouseLeave={() => setHovered(null)}
+            >
+              <CartesianGrid
+                vertical={false}
+                stroke="hsl(var(--admin-border))"
+                strokeDasharray="3 3"
+              />
+              <XAxis
+                dataKey="label"
+                fontSize={11}
+                tickLine={false}
+                axisLine={false}
+                tick={{ fill: "hsl(var(--admin-fg-muted))" }}
+                interval="preserveStartEnd"
+                minTickGap={24}
+              />
+              <YAxis
+                fontSize={11}
+                tickLine={false}
+                axisLine={false}
+                tick={{ fill: "hsl(var(--admin-fg-muted))" }}
+                width={28}
+                allowDecimals={false}
+              />
+              <Tooltip
+                cursor={{ fill: "hsl(var(--admin-primary) / 0.05)" }}
+                content={<ChartTooltip />}
+              />
+              {activeMetrics.map((m) => {
+                const meta = METRICS.find((x) => x.key === m)!;
+                return (
+                  <Bar
+                    key={m}
+                    dataKey={m}
+                    name={meta.label}
+                    fill={meta.color}
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={32}
+                    animationDuration={600}
+                    onMouseEnter={(_, idx) => setHovered(`${m}-${idx}`)}
+                  >
+                    {chartData.data.map((_, idx) => (
+                      <Cell
+                        key={idx}
+                        opacity={
+                          hovered && !hovered.endsWith(`-${idx}`) ? 0.45 : 1
+                        }
+                      />
+                    ))}
+                  </Bar>
+                );
+              })}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </section>
+
+      {/* Recent activity */}
+      <div
+        className="rounded-xl px-6 py-5"
+        style={{
+          backgroundColor: "hsl(var(--admin-surface))",
+          border: "1px solid hsl(var(--admin-border))",
+        }}
+      >
+        <h3 className="text-[15px] font-semibold mb-4" style={{ color: "hsl(var(--admin-fg))" }}>
+          Recent Activity
+        </h3>
+        {activity.length === 0 ? (
+          <p className="text-[13px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>
+            No recent activity.
+          </p>
+        ) : (
+          <ul className="space-y-3">
+            {activity.map((item, i) => (
+              <li key={i} className="flex items-center gap-3 text-[14px]">
+                <ActivityTag type={item.type} />
+                <span className="flex-1 truncate" style={{ color: "hsl(var(--admin-fg))" }}>
+                  {item.label}
+                </span>
+                <span
+                  className="text-[12px] whitespace-nowrap"
+                  style={{ color: "hsl(var(--admin-fg-muted))" }}
+                >
+                  {format(parseISO(item.created_at), "MMM d, h:mm a")}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
+}
+
+function generateBuckets(start: Date, end: Date, group: GroupKey): Date[] {
+  const buckets: Date[] = [];
+  let cursor =
+    group === "day"
+      ? startOfDay(start)
+      : group === "week"
+      ? startOfWeek(start, { weekStartsOn: 1 })
+      : startOfMonth(start);
+  const step = (d: Date) =>
+    group === "day" ? addDays(d, 1) : group === "week" ? addWeeks(d, 1) : addMonths(d, 1);
+  while (!isAfter(cursor, end)) {
+    buckets.push(cursor);
+    cursor = step(cursor);
+  }
+  return buckets;
+}
+
+function bucketLabel(d: Date, group: GroupKey) {
+  if (group === "day") return format(d, "MMM d");
+  if (group === "week") return format(d, "MMM d");
+  return format(d, "MMM yyyy");
+}
+
+function summarizeRange(range: RangeKey) {
+  const r = RANGES.find((x) => x.key === range)!;
+  if (r.days === "all") return "All time";
+  return `Last ${r.label}`;
+}
+
+function formatDelta(current: number, previous: number) {
+  if (previous === 0) {
+    return current === 0 ? "No change vs last 24h" : `+${current} vs last 24h`;
+  }
+  const pct = Math.round(((current - previous) / previous) * 100);
+  const sign = pct >= 0 ? "+" : "";
+  return `${sign}${pct}% vs last 24h`;
 }

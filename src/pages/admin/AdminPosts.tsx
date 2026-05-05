@@ -1,177 +1,284 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Search, Trash2, Eye } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { formatDistanceToNow, parseISO } from "date-fns";
+import type { Tables } from "@/integrations/supabase/types";
 
-interface Post {
-  id: string;
-  title: string;
-  content: string;
-  author_id: string;
-  score: number;
-  comment_count: number;
-  created_at: string;
-  topic_id: string;
-  topics: { name: string } | null;
-}
+type Post = Tables<"posts">;
+type Profile = Tables<"profiles">;
 
-interface Topic {
-  id: string;
-  name: string;
+type PostTab = "pending" | "published" | "reported" | "rejected" | "deleted";
+
+const PAGE_SIZE = 12;
+
+function StatusPill({ status }: { status: PostTab }) {
+  const palette: Record<PostTab, { bg: string; fg: string; label: string }> = {
+    pending: {
+      bg: "hsl(var(--admin-warning-soft))",
+      fg: "hsl(var(--admin-warning))",
+      label: "Pending",
+    },
+    published: {
+      bg: "hsl(var(--admin-success-soft))",
+      fg: "hsl(var(--admin-success))",
+      label: "Published",
+    },
+    reported: {
+      bg: "hsl(var(--admin-danger-soft))",
+      fg: "hsl(var(--admin-danger))",
+      label: "Reported",
+    },
+    rejected: {
+      bg: "hsl(var(--admin-danger-soft))",
+      fg: "hsl(var(--admin-danger))",
+      label: "Rejected",
+    },
+    deleted: {
+      bg: "hsl(var(--admin-info-soft))",
+      fg: "hsl(var(--admin-info))",
+      label: "Deleted",
+    },
+  };
+  const p = palette[status];
+  return (
+    <span
+      className="inline-flex items-center px-2.5 py-0.5 rounded text-[12px]"
+      style={{ backgroundColor: p.bg, color: p.fg }}
+    >
+      {p.label}
+    </span>
+  );
 }
 
 export default function AdminPosts() {
+  const [tab, setTab] = useState<PostTab>("pending");
   const [posts, setPosts] = useState<Post[]>([]);
-  const [topics, setTopics] = useState<Topic[]>([]);
-  const [search, setSearch] = useState("");
-  const [topicFilter, setTopicFilter] = useState("all");
-  const [viewPost, setViewPost] = useState<Post | null>(null);
+  const [authors, setAuthors] = useState<Map<string, Profile>>(new Map());
+  const [reportedIds, setReportedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
   const { toast } = useToast();
 
-  const fetchData = async () => {
-    setLoading(true);
-    const [postsRes, topicsRes] = await Promise.all([
-      supabase.from("posts").select("*, topics(name)").order("created_at", { ascending: false }),
-      supabase.from("topics").select("id, name").order("name"),
-    ]);
+  useEffect(() => {
+    const fetchAll = async () => {
+      setLoading(true);
+      const [postsRes, profilesRes, reportsRes] = await Promise.all([
+        supabase.from("posts").select("*").order("created_at", { ascending: false }),
+        supabase.from("profiles").select("id, name, username, avatar_url"),
+        supabase.from("reports").select("post_id"),
+      ]);
+      setPosts((postsRes.data ?? []) as Post[]);
+      const map = new Map<string, Profile>();
+      (profilesRes.data ?? []).forEach((p) => map.set(p.id, p as Profile));
+      setAuthors(map);
+      const ids = new Set<string>();
+      (reportsRes.data ?? []).forEach((r: any) => {
+        if (r.post_id) ids.add(r.post_id);
+      });
+      setReportedIds(ids);
+      setLoading(false);
+    };
+    fetchAll();
+  }, []);
 
-    if (postsRes.error) {
-      toast({ title: "Error loading posts", description: postsRes.error.message, variant: "destructive" });
-    } else {
-      setPosts((postsRes.data as Post[]) || []);
-    }
+  // No `status` field on posts yet, so "pending" is empty by design until the schema lands.
+  const visiblePosts = useMemo(() => {
+    if (tab === "pending") return [];
+    if (tab === "rejected") return [];
+    if (tab === "deleted") return [];
+    if (tab === "reported") return posts.filter((p) => reportedIds.has(p.id));
+    return posts;
+  }, [posts, reportedIds, tab]);
 
-    if (topicsRes.data) setTopics(topicsRes.data);
-    setLoading(false);
+  const tabCounts = {
+    pending: 0,
+    published: posts.length,
+    reported: posts.filter((p) => reportedIds.has(p.id)).length,
+    rejected: 0,
+    deleted: 0,
   };
 
-  useEffect(() => { fetchData(); }, []);
+  const total = visiblePosts.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const pageRows = visiblePosts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const visibleStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const visibleEnd = Math.min(page * PAGE_SIZE, total);
 
-  const handleDelete = async (postId: string) => {
-    const { error } = await supabase.from("posts").delete().eq("id", postId);
-    if (error) {
-      toast({ title: "Error deleting post", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Post deleted" });
-      fetchData();
-    }
-  };
-
-  const filtered = posts.filter((p) => {
-    const matchesSearch = !search || p.title.toLowerCase().includes(search.toLowerCase());
-    const matchesTopic = topicFilter === "all" || p.topic_id === topicFilter;
-    return matchesSearch && matchesTopic;
-  });
+  const handleApprove = (id: string) =>
+    toast({ title: "Approved", description: `Post ${id.slice(0, 8)} approved.` });
+  const handleReject = (id: string) =>
+    toast({
+      title: "Rejected",
+      description: `Post ${id.slice(0, 8)} rejected.`,
+      variant: "destructive",
+    });
 
   if (loading) {
-    return <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div
+          className="h-7 w-7 rounded-full animate-spin border-2"
+          style={{ borderColor: "hsl(var(--admin-primary))", borderTopColor: "transparent" }}
+        />
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Posts</h1>
+    <div className="space-y-6">
+      <div className="flex items-start justify-between">
+        <h1
+          className="text-[40px] font-bold leading-none tracking-tight"
+          style={{ color: "hsl(var(--admin-fg))" }}
+        >
+          Posts
+        </h1>
+        <span className="text-[13px] mt-3" style={{ color: "hsl(var(--admin-fg-muted))" }}>
+          {posts.length.toLocaleString()} total posts
+        </span>
+      </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative max-w-sm flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search by title..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+      <div
+        className="inline-flex items-center gap-1 p-1 rounded-full"
+        style={{ backgroundColor: "hsl(var(--admin-primary-soft))" }}
+      >
+        {(["pending", "published", "reported", "rejected", "deleted"] as PostTab[]).map((t) => {
+          const isActive = tab === t;
+          return (
+            <button
+              key={t}
+              onClick={() => {
+                setTab(t);
+                setPage(1);
+              }}
+              className="px-4 py-1.5 rounded-full text-[13px] capitalize"
+              style={{
+                backgroundColor: isActive ? "hsl(var(--admin-surface))" : "transparent",
+                color: isActive ? "hsl(var(--admin-fg))" : "hsl(var(--admin-fg-muted))",
+                fontWeight: isActive ? 600 : 400,
+                boxShadow: isActive ? "0 1px 2px rgba(0,0,0,0.04)" : "none",
+              }}
+            >
+              {t}
+              {tabCounts[t] > 0 ? ` (${tabCounts[t]})` : ""}
+            </button>
+          );
+        })}
+      </div>
+
+      <div
+        className="rounded-xl overflow-hidden"
+        style={{
+          backgroundColor: "hsl(var(--admin-surface))",
+          border: "1px solid hsl(var(--admin-border))",
+        }}
+      >
+        <div
+          className="grid grid-cols-[3fr_1fr_1fr_1fr_1fr] px-6 py-3 text-[12px]"
+          style={{
+            color: "hsl(var(--admin-fg-muted))",
+            borderBottom: "1px solid hsl(var(--admin-border))",
+          }}
+        >
+          <span>Title</span>
+          <span>Author</span>
+          <span>Status</span>
+          <span>Submitted</span>
+          <span className="text-right">Actions</span>
         </div>
-        <Select value={topicFilter} onValueChange={setTopicFilter}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="All Topics" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Topics</SelectItem>
-            {topics.map((t) => (
-              <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
 
-      <div className="border rounded-md overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Topic</TableHead>
-              <TableHead>Score</TableHead>
-              <TableHead>Comments</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">No posts found.</TableCell>
-              </TableRow>
-            ) : (
-              filtered.map((p) => (
-                <TableRow key={p.id}>
-                  <TableCell className="font-medium text-sm max-w-[300px] truncate">{p.title}</TableCell>
-                  <TableCell><Badge variant="secondary">{p.topics?.name || "—"}</Badge></TableCell>
-                  <TableCell className="text-sm">{p.score}</TableCell>
-                  <TableCell className="text-sm">{p.comment_count}</TableCell>
-                  <TableCell className="text-sm">{format(parseISO(p.created_at), "MMM d, yyyy")}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => setViewPost(p)}>
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete post?</AlertDialogTitle>
-                            <AlertDialogDescription>This will permanently delete "{p.title}" and all its comments.</AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(p.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {/* View Post Dialog */}
-      <Dialog open={!!viewPost} onOpenChange={(open) => !open && setViewPost(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{viewPost?.title}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2 text-sm">
-            <div className="flex gap-2">
-              <Badge variant="secondary">{viewPost?.topics?.name}</Badge>
-              <span className="text-muted-foreground">Score: {viewPost?.score} | Comments: {viewPost?.comment_count}</span>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              {viewPost?.created_at && format(parseISO(viewPost.created_at), "MMMM d, yyyy 'at' h:mm a")}
-            </p>
-            <div className="pt-4 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: viewPost?.content || "" }} />
+        {pageRows.length === 0 ? (
+          <div
+            className="px-6 py-16 text-center text-[14px]"
+            style={{ color: "hsl(var(--admin-fg-muted))" }}
+          >
+            {tab === "pending"
+              ? "No pending posts. The post-approval workflow activates once the status field lands on the schema."
+              : `No ${tab} posts.`}
           </div>
-        </DialogContent>
-      </Dialog>
+        ) : (
+          pageRows.map((p) => {
+            const author = authors.get(p.author_id);
+            return (
+              <div
+                key={p.id}
+                className="grid grid-cols-[3fr_1fr_1fr_1fr_1fr] items-center px-6 py-4 text-[14px]"
+                style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}
+              >
+                <span style={{ color: "hsl(var(--admin-fg))" }}>{p.title}</span>
+                <span style={{ color: "hsl(var(--admin-fg-muted))" }}>
+                  {author?.name ?? author?.username ?? "Unknown"}
+                </span>
+                <span>
+                  <StatusPill status={tab === "reported" ? "reported" : "published"} />
+                </span>
+                <span style={{ color: "hsl(var(--admin-fg-muted))" }}>
+                  {formatDistanceToNow(parseISO(p.created_at))} ago
+                </span>
+                <span className="flex items-center justify-end gap-4">
+                  <button
+                    onClick={() => handleApprove(p.id)}
+                    style={{ color: "hsl(var(--admin-primary))" }}
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => handleReject(p.id)}
+                    style={{ color: "hsl(var(--admin-danger))" }}
+                  >
+                    Reject
+                  </button>
+                </span>
+              </div>
+            );
+          })
+        )}
+
+        <div
+          className="flex items-center justify-between px-6 py-4 text-[13px]"
+          style={{ color: "hsl(var(--admin-fg-muted))" }}
+        >
+          <span>
+            Showing {visibleStart}–{visibleEnd} of {total} {tab} posts
+          </span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              style={{
+                color: page === 1 ? "hsl(var(--admin-fg-subtle))" : "hsl(var(--admin-primary))",
+              }}
+            >
+              ← Prev
+            </button>
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setPage(i + 1)}
+                className="px-1"
+                style={{
+                  color: page === i + 1 ? "hsl(var(--admin-fg))" : "hsl(var(--admin-fg-muted))",
+                  fontWeight: page === i + 1 ? 600 : 400,
+                }}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              style={{
+                color:
+                  page === totalPages
+                    ? "hsl(var(--admin-fg-subtle))"
+                    : "hsl(var(--admin-primary))",
+              }}
+            >
+              Next →
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

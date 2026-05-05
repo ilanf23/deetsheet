@@ -1,80 +1,125 @@
 import { Outlet, NavLink, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  SidebarProvider,
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarFooter,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarInset,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { LayoutDashboard, Users, FileText, MessageSquare, Hash, ArrowLeft, LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
+  LayoutGrid,
+  Users,
+  FileText,
+  MessageSquare,
+  Hash,
+  Flag,
+  History,
+  ArrowLeft,
+  LogOut,
+} from "lucide-react";
 
 const navItems = [
-  { to: "/admin", label: "Dashboard", icon: LayoutDashboard, end: true },
+  { to: "/admin", label: "Dashboard", icon: LayoutGrid, end: true },
   { to: "/admin/users", label: "Users", icon: Users },
   { to: "/admin/posts", label: "Posts", icon: FileText },
   { to: "/admin/comments", label: "Comments", icon: MessageSquare },
   { to: "/admin/topics", label: "Topics", icon: Hash },
+  { to: "/admin/reports", label: "Reports", icon: Flag },
+  { to: "/admin/audit", label: "Audit Log", icon: History },
 ];
 
 export default function AdminLayout() {
   const { user, signOut } = useAuth();
 
   return (
-    <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader className="p-4 border-b">
-          <Link to="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" />
+    <div className="admin-shell min-h-screen flex">
+      <aside
+        className="w-[268px] shrink-0 flex flex-col"
+        style={{
+          backgroundColor: "hsl(var(--admin-surface))",
+          borderRight: "1px solid hsl(var(--admin-border))",
+        }}
+      >
+        <div className="px-6 pt-6 pb-5" style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 text-[13px]"
+            style={{ color: "hsl(var(--admin-fg-muted))" }}
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
             Back to site
           </Link>
-          <h2 className="text-lg font-bold mt-2">Admin Portal</h2>
-        </SidebarHeader>
-        <SidebarContent className="p-2">
-          <SidebarMenu>
-            {navItems.map((item) => (
-              <SidebarMenuItem key={item.to}>
-                <SidebarMenuButton asChild>
-                  <NavLink
-                    to={item.to}
-                    end={item.end}
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2 rounded-md text-sm ${
-                        isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted"
-                      }`
+          <h2
+            className="mt-3 text-[19px] font-bold tracking-tight"
+            style={{ color: "hsl(var(--admin-fg))" }}
+          >
+            Admin Portal
+          </h2>
+        </div>
+
+        <nav className="flex-1 px-3 py-4 space-y-1">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-md text-[14px] transition-colors`
+              }
+              style={({ isActive }) =>
+                isActive
+                  ? {
+                      backgroundColor: "hsl(var(--admin-primary))",
+                      color: "#ffffff",
+                      fontWeight: 600,
                     }
-                  >
-                    <item.icon className="h-4 w-4" />
-                    {item.label}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
-        </SidebarContent>
-        <SidebarFooter className="p-4 border-t">
-          <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-          <Button variant="ghost" size="sm" className="w-full justify-start mt-1" onClick={signOut}>
-            <LogOut className="h-4 w-4 mr-2" />
+                  : {
+                      color: "hsl(var(--admin-fg))",
+                    }
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <item.icon
+                    className="h-[17px] w-[17px]"
+                    style={{ color: isActive ? "#ffffff" : "hsl(var(--admin-fg))" }}
+                  />
+                  {item.label}
+                </>
+              )}
+            </NavLink>
+          ))}
+        </nav>
+
+        <div
+          className="px-6 py-5 space-y-2"
+          style={{ borderTop: "1px solid hsl(var(--admin-border))" }}
+        >
+          <p
+            className="text-[13px] truncate"
+            style={{ color: "hsl(var(--admin-fg-muted))" }}
+          >
+            {user?.email ?? "—"}
+          </p>
+          <button
+            onClick={signOut}
+            className="inline-flex items-center gap-2 text-[13px]"
+            style={{ color: "hsl(var(--admin-fg-muted))" }}
+          >
+            <LogOut className="h-3.5 w-3.5" />
             Sign out
-          </Button>
-        </SidebarFooter>
-      </Sidebar>
-      <SidebarInset>
-        <header className="flex items-center gap-2 border-b px-4 py-3">
-          <SidebarTrigger />
-          <span className="text-sm font-medium text-muted-foreground">DeetSheet Admin</span>
+          </button>
+        </div>
+      </aside>
+
+      <div className="flex-1 flex flex-col min-w-0">
+        <header
+          className="flex items-center gap-2 px-8 py-5"
+          style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}
+        >
+          <LayoutGrid className="h-5 w-5" style={{ color: "hsl(var(--admin-fg))" }} />
+          <span className="text-[15px] font-semibold" style={{ color: "hsl(var(--admin-fg))" }}>
+            DeetSheet Admin
+          </span>
         </header>
-        <main className="p-6 overflow-x-hidden min-w-0">
+        <main className="flex-1 px-10 py-8 overflow-x-hidden min-w-0">
           <Outlet />
         </main>
-      </SidebarInset>
-    </SidebarProvider>
+      </div>
+    </div>
   );
 }

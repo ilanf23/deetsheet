@@ -151,6 +151,39 @@
   padding-left: 1.25rem;
 }
 
+/* Admin v2 — Forest Sage theme. Scoped to .admin-shell so the public site is untouched. */
+.admin-shell {
+  --admin-bg: 40 22% 92%;
+  --admin-surface: 0 0% 100%;
+  --admin-border: 60 8% 86%;
+  --admin-border-strong: 60 8% 78%;
+  --admin-fg: 150 30% 14%;
+  --admin-fg-muted: 140 10% 45%;
+  --admin-fg-subtle: 140 8% 60%;
+  --admin-primary: 142 30% 26%;
+  --admin-primary-hover: 142 32% 21%;
+  --admin-primary-soft: 140 18% 88%;
+  --admin-success: 138 24% 38%;
+  --admin-success-soft: 130 20% 86%;
+  --admin-warning: 26 60% 45%;
+  --admin-warning-soft: 30 70% 92%;
+  --admin-danger: 4 50% 50%;
+  --admin-danger-soft: 8 60% 92%;
+  --admin-info: 210 12% 50%;
+  --admin-info-soft: 210 14% 88%;
+
+  background-color: hsl(var(--admin-bg));
+  color: hsl(var(--admin-fg));
+  font-family: var(--font-heading);
+}
+
+.admin-shell h1,
+.admin-shell h2,
+.admin-shell h3,
+.admin-shell h4 {
+  color: hsl(var(--admin-fg));
+}
+
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
