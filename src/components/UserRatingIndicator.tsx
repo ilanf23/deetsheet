@@ -11,8 +11,8 @@ interface UserRatingIndicatorProps {
   postId: string;
   /** Called after a rating is saved/cleared so the parent can refresh averages */
   onRatingChanged?: () => void;
-  /** Size variant for the trigger; "sm" (default) is inline body size, "lg" matches a large display numeral. */
-  size?: "sm" | "lg";
+  /** Size variant for the trigger; "sm" (default) is inline body size, "title" matches the post title, "lg" matches a large display numeral. */
+  size?: "sm" | "title" | "lg";
 }
 
 const UserRatingIndicator = ({ postId, onRatingChanged, size = "sm" }: UserRatingIndicatorProps) => {
@@ -135,6 +135,8 @@ const UserRatingIndicator = ({ postId, onRatingChanged, size = "sm" }: UserRatin
               className={
                 size === "lg"
                   ? "text-secondary font-bold tabular-nums text-2xl leading-none"
+                  : size === "title"
+                    ? "text-secondary font-semibold tabular-nums text-sm md:text-base font-heading leading-none"
                   : "text-secondary font-medium tabular-nums text-sm"
               }
             >

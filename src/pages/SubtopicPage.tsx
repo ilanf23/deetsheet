@@ -37,8 +37,15 @@ const SubtopicPage = () => {
     [postsData]
   );
 
-  const rankNum = Math.max(1, parseInt(rank ?? "1", 10) || 1);
-  const post = posts[rankNum - 1];
+  // The `:rank` slot accepts either a 1-based topic rank or a post UUID,
+  // so links from sidebars (which now pass post.id directly) can avoid the
+  // expensive per-topic rank lookup.
+  const isUuid = !!rank && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rank);
+  const indexById = isUuid ? posts.findIndex((p) => p.id === rank) : -1;
+  const rankNum = isUuid
+    ? indexById + 1
+    : Math.max(1, parseInt(rank ?? "1", 10) || 1);
+  const post = rankNum > 0 ? posts[rankNum - 1] : undefined;
 
   const seedAvg = post && post.ratingCount > 0
     ? Math.round((post.ratingScore / post.ratingCount) * 10) / 10
@@ -92,7 +99,7 @@ const SubtopicPage = () => {
         <main className="flex-1 container mx-auto px-4 py-20 text-center">
           <h1 className="text-2xl font-bold mb-2">Subtopic not found</h1>
           <p className="text-muted-foreground">
-            #{rankNum} doesn't exist in {topic.name}.
+            {isUuid ? "That post" : `#${rankNum}`} doesn't exist in {topic.name}.
           </p>
           <button
             type="button"
@@ -112,7 +119,7 @@ const SubtopicPage = () => {
       <DeetHeader />
       <main className="flex-1">
         <div className="mx-auto px-4 sm:px-6 lg:px-10 mt-[var(--space-rhythm-block)] mb-[var(--space-rhythm-major)] max-w-[1400px]">
-          <div className="grid grid-cols-1 lg:grid-cols-[var(--rail-width-left)_minmax(0,var(--middle-col-max-width))_var(--rail-width-right)] gap-[var(--rail-gap)] justify-center">
+          <div className="grid grid-cols-1 lg:grid-cols-[300px_minmax(0,var(--middle-col-max-width))_240px] gap-[var(--rail-gap)] justify-center">
             {/* Left rail — site-wide activity */}
             <aside className="hidden lg:block pt-2">
               <div className="sticky top-24">
@@ -161,18 +168,12 @@ const SubtopicPage = () => {
                     />
                     <JudgementReactionsRow />
                   </div>
-                  <img
-                    src={buildPostImageUrl(post.id, topic.name, topic.categoryName)}
-                    alt={post.title || topic.name}
-                    loading="lazy"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = "none";
-                    }}
-                    className="w-full rounded-lg border border-border object-cover aspect-[16/9]"
-                    style={{ maxWidth: "var(--reading-max-width)" }}
+                  <PostBody
+                    content={post.content}
+                    imageSrc={buildPostImageUrl(post.id, topic.name, topic.categoryName)}
+                    imageAlt={post.title || topic.name}
                   />
-                  <PostBody content={post.content} />
-                  <div className="border-t border-border pt-[var(--space-rhythm-block)]">
+                  <div id="comments" className="border-t border-border pt-[var(--space-rhythm-block)] scroll-mt-24">
                     <InlineCommentComposer
                       postId={post.id}
                       onSubmitted={() =>

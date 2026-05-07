@@ -1,19 +1,9 @@
-import { useMemo } from "react";
 import PostCard from "@/components/PostCard";
 import type { Post } from "@/data/seedData";
-import {
-  useRecentPosts,
-  usePostRanksForTopics,
-} from "@/hooks/useSupabaseTopics";
+import { useRecentPosts } from "@/hooks/useSupabaseTopics";
 
 const RecentlyAddedSidebar = () => {
   const { data: posts, isLoading } = useRecentPosts(8);
-
-  const topicIds = useMemo(
-    () => Array.from(new Set((posts ?? []).map((p) => p.topicId))),
-    [posts]
-  );
-  const { data: ranks } = usePostRanksForTopics(topicIds);
 
   return (
     <div className="bg-card rounded-xl border border-border p-4">
@@ -33,11 +23,7 @@ const RecentlyAddedSidebar = () => {
         )}
         {!isLoading &&
           posts?.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post as unknown as Post}
-              postRank={ranks?.get(post.id)}
-            />
+            <PostCard key={post.id} post={post as unknown as Post} />
           ))}
       </div>
     </div>

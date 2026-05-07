@@ -1,10 +1,6 @@
-import { useMemo } from "react";
 import PostCard from "@/components/PostCard";
 import { Post } from "@/data/seedData";
-import {
-  useRecentPostsByTopic,
-  usePostRanksForTopics,
-} from "@/hooks/useSupabaseTopics";
+import { useRecentPostsByTopic } from "@/hooks/useSupabaseTopics";
 
 interface TopicRecentlyAddedProps {
   topicId: string;
@@ -13,8 +9,6 @@ interface TopicRecentlyAddedProps {
 
 const TopicRecentlyAdded = ({ topicId, topicName }: TopicRecentlyAddedProps) => {
   const { data: posts, isLoading } = useRecentPostsByTopic(topicId, 5);
-  const topicIds = useMemo(() => (topicId ? [topicId] : []), [topicId]);
-  const { data: ranks } = usePostRanksForTopics(topicIds);
 
   return (
     <div className="bg-card rounded-xl border border-border p-4">
@@ -34,11 +28,7 @@ const TopicRecentlyAdded = ({ topicId, topicName }: TopicRecentlyAddedProps) => 
         )}
         {!isLoading &&
           posts?.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post as unknown as Post}
-              postRank={ranks?.get(post.id)}
-            />
+            <PostCard key={post.id} post={post as unknown as Post} />
           ))}
       </div>
     </div>

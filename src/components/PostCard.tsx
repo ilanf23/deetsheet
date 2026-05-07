@@ -3,40 +3,46 @@ import type { MouseEvent } from "react";
 import { MessageSquare, Share2 } from "lucide-react";
 import { Post, getTimeAgo } from "@/data/seedData";
 import UserRatingIndicator from "@/components/UserRatingIndicator";
+import { useToast } from "@/hooks/use-toast";
 
 interface PostCardProps {
   post: Post;
-  postRank?: number;
 }
 
-const PostCard = ({ post, postRank }: PostCardProps) => {
+const PostCard = ({ post }: PostCardProps) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const openTopic = () => navigate(`/topic/${encodeURIComponent(post.topicName)}`);
-  const linksToPost = typeof postRank === "number";
-  const postHref = linksToPost
-    ? `/topic/${encodeURIComponent(post.topicName)}/post/${postRank}`
-    : null;
+  const postHref = `/topic/${encodeURIComponent(post.topicName)}/post/${post.id}`;
   const contentText = post.title || post.content;
   const handleShare = async (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    const url = postHref ? `${window.location.origin}${postHref}` : `${window.location.origin}/topic/${encodeURIComponent(post.topicName)}`;
+    const url = `${window.location.origin}${postHref}`;
 
-    if (navigator.share) {
-      await navigator.share({ title: contentText, url });
-      return;
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title: contentText, url });
+        return;
+      } catch (err) {
+        if ((err as DOMException)?.name === "AbortError") return;
+      }
     }
 
-    await navigator.clipboard?.writeText(url);
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({ title: "Link copied", description: url });
+    } catch {
+      toast({
+        title: "Couldn't copy link",
+        description: url,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
-    <div
-      className={`group py-4 border-b border-border last:border-b-0 ${
-        linksToPost ? "" : "cursor-pointer"
-      }`}
-      onClick={linksToPost ? undefined : openTopic}
-    >
+    <div className="group py-4 border-b border-border last:border-b-0">
       <button
         type="button"
         onClick={(e) => {
@@ -48,25 +54,23 @@ const PostCard = ({ post, postRank }: PostCardProps) => {
         {post.topicName}
       </button>
 
-      {linksToPost && postHref ? (
-        <Link
-          to={postHref}
-          className="mb-3.5 block text-2xl leading-tight text-primary hover:underline"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {contentText}
-        </Link>
-      ) : (
-        <h3 className="mb-3.5 text-2xl leading-tight text-primary">
-          {contentText}
-        </h3>
-      )}
+      <Link
+        to={postHref}
+        className="mb-3.5 block text-2xl leading-tight text-primary hover:underline"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {contentText}
+      </Link>
 
       {post.imageUrl && (
         <div className="mb-3.5 aspect-square w-full overflow-hidden bg-muted">
           <img
             src={post.imageUrl}
             alt={post.topicName}
+            width={600}
+            height={600}
+            loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover"
           />
         </div>
@@ -80,7 +84,10 @@ const PostCard = ({ post, postRank }: PostCardProps) => {
       <div className="flex items-center gap-4 text-base text-foreground/70">
         <button
           type="button"
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`${postHref}#comments`);
+          }}
           className="flex items-center gap-2 hover:text-foreground"
         >
           <MessageSquare className="h-5 w-5 fill-current" />

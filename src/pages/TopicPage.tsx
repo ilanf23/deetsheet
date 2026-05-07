@@ -104,14 +104,15 @@ const TopicPage = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <DeetHeader />
       <main className="flex-1">
-        <div className="mx-auto mt-5 px-6 lg:px-10 mb-20">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[300px_1fr_240px] gap-5">
+        <div className="mx-auto mt-5 px-6 lg:px-10 mb-20 lg:mb-0 lg:h-[calc(100vh-4rem)]">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[300px_1fr] gap-5 lg:h-full">
             {/* Left — Recently Added */}
-            <div className="hidden lg:block pt-4">
+            <div className="hidden lg:block pt-4 lg:h-full lg:overflow-y-auto lg:pr-2">
               <TopicRecentlyAdded topicId={topic.id} topicName={topic.name} />
             </div>
             {/* Main â Topic posts */}
-            <div className="min-w-0 pt-4">
+            <div className="min-w-0 lg:h-full lg:overflow-y-auto lg:pr-2 lg:grid lg:grid-cols-[1fr_240px] lg:gap-5 lg:items-start">
+              <div className="min-w-0 pt-4">
               <div className="mb-6 flex items-start justify-between gap-4">
                 <div className="min-w-0 pl-1.5">
                   <div className="flex items-baseline gap-3">
@@ -192,13 +193,14 @@ const TopicPage = () => {
                 onSizeChange={handleSizeChange}
                 onShowMore={handleShowMore}
               />
-            </div>
+              </div>
 
             {/* Right â Recommendations + Email Capture */}
             <div className="hidden lg:block lg:border-l lg:border-border lg:pl-5 pt-4 space-y-6">
               {/* TopicRecommendations still reads from seedData for now â
                   refactor when the homepage flow moves off seed. */}
               <TopicRecommendations currentTopic={topic as unknown as import("@/data/seedData").Topic} />
+            </div>
             </div>
           </div>
         </div>

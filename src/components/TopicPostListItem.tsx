@@ -54,7 +54,7 @@ const TopicPostListItem = ({ post, rank, topicName, topicId, showRanking = true 
       {showRanking && (
         <>
           <span className="shrink-0 w-20 flex items-baseline justify-end gap-1 text-sm md:text-base font-heading text-muted-foreground tabular-nums">
-            <span className="text-foreground font-semibold">{seedAvg}</span>
+            <span className="text-secondary font-semibold">{seedAvg}</span>
             <span className="text-xs">({post.ratingCount})</span>
           </span>
           {isDbPost ? (
@@ -69,6 +69,7 @@ const TopicPostListItem = ({ post, rank, topicName, topicId, showRanking = true 
                 onRatingChanged={() => {
                   queryClient.invalidateQueries({ queryKey: ["posts-by-topic", topicId] });
                 }}
+                size="title"
               />
             </span>
           ) : (

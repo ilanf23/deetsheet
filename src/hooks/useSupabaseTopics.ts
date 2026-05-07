@@ -189,7 +189,8 @@ export const usePostsByTopic = (topicId: string | undefined) => {
 
 /**
  * Fetch the most recently added posts across every topic, newest first.
- * Used by the homepage left-column "Recent Posts" sidebar.
+ * Server-side `LIMIT` returns exactly the rows we render — no over-fetch
+ * or client-side shuffle.
  */
 export const useRecentPosts = (limit = 8) => {
   return useQuery({
