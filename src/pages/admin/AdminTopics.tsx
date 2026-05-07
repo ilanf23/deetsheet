@@ -35,7 +35,10 @@ export default function AdminTopics() {
 
   const fetchTopics = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("topics").select("*").order("name");
+    const { data, error } = await supabase
+      .from("topics")
+      .select("id, name, slug, description, created_at")
+      .order("name");
 
     if (error) {
       toast({ title: "Error loading topics", description: error.message, variant: "destructive" });

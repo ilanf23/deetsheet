@@ -41,7 +41,10 @@ export default function AdminUsers() {
   const fetchAll = async () => {
     setLoading(true);
     const [usersRes, rolesRes] = await Promise.all([
-      supabase.from("profiles").select("*").order("created_at", { ascending: false }),
+      supabase
+        .from("profiles")
+        .select("id, name, username, avatar_url, created_at")
+        .order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
     ]);
     if (usersRes.error) {

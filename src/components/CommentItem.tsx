@@ -17,6 +17,7 @@ export interface DisplayComment {
   username: string;
   content: string;
   createdAt: Date;
+  likeCount: number;
   parentCommentId: string | null;
   parentUsername: string | null;
 }

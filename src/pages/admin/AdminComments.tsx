@@ -25,7 +25,7 @@ export default function AdminComments() {
     setLoading(true);
     const { data, error } = await supabase
       .from("comments")
-      .select("*, posts(title)")
+      .select("id, content, author_id, post_id, created_at, posts(title)")
       .order("created_at", { ascending: false });
 
     if (error) {

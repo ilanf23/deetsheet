@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,15 +25,28 @@ import Contact from "./pages/Contact";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
-import AdminRouteGuard from "./components/admin/AdminRouteGuard";
-import AdminLayout from "./components/admin/AdminLayout";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminPosts from "./pages/admin/AdminPosts";
-import AdminComments from "./pages/admin/AdminComments";
-import AdminTopics from "./pages/admin/AdminTopics";
-import AdminReports from "./pages/admin/AdminReports";
-import AdminAuditLog from "./pages/admin/AdminAuditLog";
+
+// Admin surface is code-split: it pulls in recharts + date-fns + a stack of
+// shadcn primitives that the public site never needs. Keeping these out of
+// the main chunk meaningfully shrinks first-paint cost for everyone, and
+// admins only pay the chunk-fetch on first nav into /admin.
+const AdminLayout = lazy(() => import("./components/admin/AdminLayout"));
+const AdminRouteGuard = lazy(() => import("./components/admin/AdminRouteGuard"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminPosts = lazy(() => import("./pages/admin/AdminPosts"));
+const AdminComments = lazy(() => import("./pages/admin/AdminComments"));
+const AdminTopics = lazy(() => import("./pages/admin/AdminTopics"));
+const AdminReports = lazy(() => import("./pages/admin/AdminReports"));
+const AdminAuditLog = lazy(() => import("./pages/admin/AdminAuditLog"));
+
+function AdminChunkFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+    </div>
+  );
+}
 
 const queryClient = new QueryClient();
 
@@ -64,14 +78,23 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
-            <Route path="/admin" element={<AdminRouteGuard><AdminLayout /></AdminRouteGuard>}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="users" element={<AdminUsers />} />
-              <Route path="posts" element={<AdminPosts />} />
-              <Route path="comments" element={<AdminComments />} />
-              <Route path="topics" element={<AdminTopics />} />
-              <Route path="reports" element={<AdminReports />} />
-              <Route path="audit" element={<AdminAuditLog />} />
+            <Route
+              path="/admin"
+              element={
+                <Suspense fallback={<AdminChunkFallback />}>
+                  <AdminLayout />
+                </Suspense>
+              }
+            >
+              <Route element={<AdminRouteGuard />}>
+                <Route index element={<AdminDashboard />} />
+                <Route path="users" element={<AdminUsers />} />
+                <Route path="posts" element={<AdminPosts />} />
+                <Route path="comments" element={<AdminComments />} />
+                <Route path="topics" element={<AdminTopics />} />
+                <Route path="reports" element={<AdminReports />} />
+                <Route path="audit" element={<AdminAuditLog />} />
+              </Route>
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

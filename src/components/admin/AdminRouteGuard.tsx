@@ -1,10 +1,12 @@
-import { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect } from "react";
 
-export default function AdminRouteGuard({ children }: { children: ReactNode }) {
+// Auth gate for admin child routes. Lives *inside* the layout outlet so the
+// sidebar/header keep painting while we verify the admin role — only the main
+// content area shows a skeleton during the check.
+export default function AdminRouteGuard() {
   const { isAdmin, isLoading, user } = useAdminAuth();
   const { toast } = useToast();
 
@@ -16,8 +18,11 @@ export default function AdminRouteGuard({ children }: { children: ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      <div className="flex items-center justify-center py-20">
+        <div
+          className="h-7 w-7 rounded-full animate-spin border-2"
+          style={{ borderColor: "hsl(var(--admin-primary))", borderTopColor: "transparent" }}
+        />
       </div>
     );
   }
@@ -25,5 +30,5 @@ export default function AdminRouteGuard({ children }: { children: ReactNode }) {
   if (!user) return <Navigate to="/login" replace />;
   if (!isAdmin) return <Navigate to="/" replace />;
 
-  return <>{children}</>;
+  return <Outlet />;
 }

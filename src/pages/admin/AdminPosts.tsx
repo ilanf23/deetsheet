@@ -62,8 +62,13 @@ export default function AdminPosts() {
   useEffect(() => {
     const fetchAll = async () => {
       setLoading(true);
+      // Only pull columns the table actually displays. The full `posts` row
+      // includes rich-text body content which is expensive over the wire.
       const [postsRes, profilesRes, reportsRes] = await Promise.all([
-        supabase.from("posts").select("*").order("created_at", { ascending: false }),
+        supabase
+          .from("posts")
+          .select("id, title, author_id, created_at")
+          .order("created_at", { ascending: false }),
         supabase.from("profiles").select("id, name, username, avatar_url"),
         supabase.from("reports").select("post_id"),
       ]);

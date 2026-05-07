@@ -102,7 +102,10 @@ export default function AdminReports() {
     const load = async () => {
       setLoading(true);
       const [reportsRes, postsRes, profilesRes] = await Promise.all([
-        supabase.from("reports").select("*").order("created_at", { ascending: false }),
+        supabase
+          .from("reports")
+          .select("id, post_id, user_id, reasons, created_at")
+          .order("created_at", { ascending: false }),
         supabase.from("posts").select("id, title, author_id"),
         supabase.from("profiles").select("id, name, username"),
       ]);

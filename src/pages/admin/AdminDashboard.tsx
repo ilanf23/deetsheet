@@ -189,9 +189,10 @@ export default function AdminDashboard() {
   const [commentTs, setCommentTs] = useState<string[]>([]);
   const [reportTs, setReportTs] = useState<string[]>([]);
 
-  // Activity feed
+  // Activity feed. We don't gate the page on this — KPI cards and chart shell
+  // render with placeholders so the user sees structure on first paint.
   const [activity, setActivity] = useState<ActivityRow[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [activityLoading, setActivityLoading] = useState(true);
 
   // Filters
   const [range, setRange] = useState<RangeKey>("6m");
@@ -279,8 +280,7 @@ export default function AdminDashboard() {
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 6);
       setActivity(merged);
-
-      setLoading(false);
+      setActivityLoading(false);
     };
 
     fetchKpisAndActivity();
@@ -391,17 +391,6 @@ export default function AdminDashboard() {
         ? 0
         : 100
       : Math.round(((totalCurrent - totalPrev) / totalPrev) * 100);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <div
-          className="h-7 w-7 rounded-full animate-spin border-2"
-          style={{ borderColor: "hsl(var(--admin-primary))", borderTopColor: "transparent" }}
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-7">
@@ -642,7 +631,11 @@ export default function AdminDashboard() {
         <h3 className="text-[15px] font-semibold mb-4" style={{ color: "hsl(var(--admin-fg))" }}>
           Recent Activity
         </h3>
-        {activity.length === 0 ? (
+        {activityLoading ? (
+          <p className="text-[13px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>
+            Loading recent activity…
+          </p>
+        ) : activity.length === 0 ? (
           <p className="text-[13px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>
             No recent activity.
           </p>

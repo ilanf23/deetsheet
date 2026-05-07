@@ -5,6 +5,7 @@ import CommentItem, {
   type DisplayComment,
 } from "@/components/CommentItem";
 import { supabase } from "@/integrations/supabase/client";
+import { sortByHotScore } from "@/lib/commentRanking";
 
 interface CommentsSectionProps {
   postId: string;
@@ -16,12 +17,13 @@ interface DbComment {
   created_at: string;
   author_id: string;
   parent_comment_id: string | null;
+  like_count: number;
 }
 
 const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
   const { data, error } = await supabase
     .from("comments")
-    .select("id, content, created_at, author_id, parent_comment_id")
+    .select("id, content, created_at, author_id, parent_comment_id, like_count")
     .eq("post_id", postId)
     .order("created_at", { ascending: true });
 
@@ -53,6 +55,7 @@ const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
       username: usernameByAuthorId.get(c.author_id) || "anonymous",
       content: c.content,
       createdAt: new Date(c.created_at),
+      likeCount: c.like_count ?? 0,
       parentCommentId: c.parent_comment_id,
       parentUsername: parentAuthorId
         ? usernameByAuthorId.get(parentAuthorId) ?? null
@@ -94,7 +97,8 @@ const CommentsSection = ({ postId }: CommentsSectionProps) => {
     enabled: !!postId,
   });
 
-  const tree = buildTree(comments);
+  const nowMs = Date.now();
+  const tree = sortByHotScore(buildTree(comments), nowMs);
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ["comments", postId] });
 
