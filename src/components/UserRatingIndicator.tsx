@@ -127,7 +127,7 @@ const UserRatingIndicator = ({ postId, onRatingChanged, size = "sm" }: UserRatin
           onMouseLeave={scheduleClose}
           onFocus={handleTriggerHover}
           onBlur={scheduleClose}
-          className="flex items-center gap-0.5 shrink-0 cursor-pointer"
+          className="flex items-center gap-0.5 shrink-0 cursor-pointer focus:outline-none focus-visible:outline-none"
           aria-label={userRating ? `Your rating: ${userRating}` : "Rate this post"}
         >
           {userRating !== null ? (
