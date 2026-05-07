@@ -11,8 +11,6 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
-import ProfileView from "./pages/ProfileView";
-import ProfileEdit from "./pages/ProfileEdit";
 import AuthCallback from "./pages/AuthCallback";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -25,6 +23,20 @@ import Contact from "./pages/Contact";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
+
+// Profile pages are code-split: ProfileEdit alone pulls in react-hook-form,
+// @hookform/resolvers, zod, and react-easy-crop — none of which the rest of
+// the site uses. ProfileView is split too so the read path stays cheap.
+const ProfileView = lazy(() => import("./pages/ProfileView"));
+const ProfileEdit = lazy(() => import("./pages/ProfileEdit"));
+
+function ProfileChunkFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+    </div>
+  );
+}
 
 // Admin surface is code-split: it pulls in recharts + date-fns + a stack of
 // shadcn primitives that the public site never needs. Keeping these out of
@@ -64,9 +76,30 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/profile" element={<ProfileView />} />
-            <Route path="/profile/:userId" element={<ProfileView />} />
-            <Route path="/profile/edit" element={<ProfileEdit />} />
+            <Route
+              path="/profile"
+              element={
+                <Suspense fallback={<ProfileChunkFallback />}>
+                  <ProfileView />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/profile/:userId"
+              element={
+                <Suspense fallback={<ProfileChunkFallback />}>
+                  <ProfileView />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/profile/edit"
+              element={
+                <Suspense fallback={<ProfileChunkFallback />}>
+                  <ProfileEdit />
+                </Suspense>
+              }
+            />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />

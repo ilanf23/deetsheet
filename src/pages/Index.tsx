@@ -7,9 +7,9 @@ import { useAuth } from "@/contexts/AuthContext";
 const Index = () => {
   const { user, loading } = useAuth();
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden flex flex-col bg-background">
       <DeetHeader />
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 lg:min-h-0 flex flex-col">
         {!loading && !user && <HeroBanner />}
         <ColumnLayout />
       </main>

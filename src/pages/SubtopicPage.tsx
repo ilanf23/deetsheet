@@ -118,17 +118,17 @@ const SubtopicPage = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <DeetHeader />
       <main className="flex-1">
-        <div className="mx-auto px-4 sm:px-6 lg:px-10 mt-[var(--space-rhythm-block)] mb-[var(--space-rhythm-major)] max-w-[1400px]">
-          <div className="grid grid-cols-1 lg:grid-cols-[300px_minmax(0,var(--middle-col-max-width))_240px] gap-[var(--rail-gap)] justify-center">
+        <div className="mx-auto mt-5 px-6 lg:px-10 mb-20 lg:mb-[var(--space-rhythm-major)]">
+          <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr_240px] gap-5">
             {/* Left rail — site-wide activity */}
-            <aside className="hidden lg:block pt-2">
+            <aside className="hidden lg:block pt-4">
               <div className="sticky top-24">
                 <TopicRecentlyAdded topicId={topic.id} topicName={topic.name} />
               </div>
             </aside>
 
             {/* Middle column — the read */}
-            <article className="min-w-0 pt-2 space-y-[var(--space-rhythm-block)]">
+            <article className="min-w-0 pt-4 space-y-[var(--space-rhythm-block)]">
               {post ? (
                 <>
                   <div className="space-y-[var(--space-rhythm-tight)]">
@@ -191,7 +191,7 @@ const SubtopicPage = () => {
             </article>
 
             {/* Right rail — topic discovery */}
-            <aside className="hidden lg:block pt-2">
+            <aside className="hidden lg:block lg:border-l lg:border-border lg:pl-5 pt-4">
               <div className="sticky top-24">
                 <TopicRecommendations currentTopic={topic as unknown as Topic} />
               </div>

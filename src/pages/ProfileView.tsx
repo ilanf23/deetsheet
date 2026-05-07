@@ -12,7 +12,6 @@ import {
   Reply,
   Forward,
   Trash2,
-  Loader2,
   Plus,
   Hash,
   Bookmark,
@@ -104,18 +103,24 @@ const EDUCATION_LABELS: Record<string, string> = {
   doctorate: "Doctorate",
 };
 
+// Profile columns this page actually reads. Selecting only what we render
+// shaves a meaningful chunk of bytes off each profile fetch.
+const PROFILE_COLUMNS =
+  "id, name, username, email, avatar_url, bio, sex, birth_year, birth_month, birth_day, city, state, education, college, degree, job, favorite_movie, reading, city_born, created_at";
+
 const ProfileView = () => {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("posts");
-  const [loading, setLoading] = useState(true);
 
   // Determine which profile to view: URL param or logged-in user
   const targetUserId = userId || user?.id;
   const isOwnProfile = !userId || userId === user?.id;
 
-  // Profile data from DB
+  // Profile data from DB. We don't gate the page on a single `loading` flag
+  // anymore — each section paints as soon as its query resolves so the user
+  // sees structure (avatar slot, name slot, tabs) on first paint.
   const [profile, setProfile] = useState<Record<string, unknown> | null>(null);
 
   // Posts & counts from DB
@@ -123,78 +128,88 @@ const ProfileView = () => {
   const [postCount, setPostCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
 
-  // Topics created by user
+  // Topics list — fetched lazily the first time the Topics tab is opened.
   const [userTopics, setUserTopics] = useState<UserTopic[]>([]);
   const [topicCount, setTopicCount] = useState(0);
+  const [topicsRequested, setTopicsRequested] = useState(false);
   const [createTopicOpen, setCreateTopicOpen] = useState(false);
 
-  // Follow data — denormalized counts on profile + full lists for the tabs
+  // Follow data — denormalized counts on profile + full lists for the tabs.
+  // The full lists do heavy multi-table joins, so we only enable them when
+  // the user actually opens the Following / Followers tab. The cheap counts
+  // hook drives the badge above the tabs.
+  const [followingRequested, setFollowingRequested] = useState(false);
+  const [followersRequested, setFollowersRequested] = useState(false);
   const { data: followCounts } = useProfileFollowCounts(targetUserId);
-  const { data: followingData } = useFollowing(targetUserId);
-  const { data: followersData } = useFollowers(targetUserId);
+  const { data: followingData } = useFollowing(targetUserId, { enabled: followingRequested });
+  const { data: followersData } = useFollowers(targetUserId, { enabled: followersRequested });
   const followingTotal = followingData?.total ?? followCounts?.followingCount ?? 0;
   const followerTotal = followersData?.length ?? followCounts?.followerCount ?? 0;
+
+  // Mark heavy tab queries as requested the first time the tab is activated.
+  useEffect(() => {
+    if (activeTab === "following") setFollowingRequested(true);
+    if (activeTab === "followers") setFollowersRequested(true);
+    if (activeTab === "topics") setTopicsRequested(true);
+  }, [activeTab]);
 
   useEffect(() => {
     if (!targetUserId) return;
 
-    const fetchData = async () => {
-      setLoading(true);
+    // Profile, posts, and comment-count load eagerly — they drive the always-
+    // visible header, posts tab (default), and tab counters. Topics and
+    // follow lists are deferred until their tabs are actually opened.
+    void supabase
+      .from("profiles")
+      .select(PROFILE_COLUMNS)
+      .eq("id", targetUserId)
+      .single()
+      .then(({ data }) => {
+        if (data) setProfile(data as Record<string, unknown>);
+      });
 
-      // Fetch profile, posts, comment count, and topics in parallel
-      const [profileRes, postsRes, commentsRes, topicsRes] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("*")
-          .eq("id", targetUserId)
-          .single(),
-        supabase
-          .from("posts")
-          .select("id, title, content, created_at, comment_count, score, topic_id, topics(name)")
-          .eq("author_id", targetUserId)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("comments")
-          .select("id", { count: "exact", head: true })
-          .eq("author_id", targetUserId),
-        supabase
-          .from("topics")
-          .select("id, name, slug, description, created_at")
-          .order("created_at", { ascending: false }),
-      ]);
-
-      if (profileRes.data) {
-        setProfile(profileRes.data);
-      }
-
-      if (postsRes.data) {
-        const mapped: UserPost[] = postsRes.data.map((p: Record<string, unknown>) => ({
+    void supabase
+      .from("posts")
+      .select("id, title, content, created_at, comment_count, score, topic_id, topics(name)")
+      .eq("author_id", targetUserId)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (!data) return;
+        const mapped: UserPost[] = data.map((p: Record<string, unknown>) => ({
           id: p.id as string,
           title: p.title as string,
           content: p.content as string,
           created_at: p.created_at as string,
           comment_count: p.comment_count as number,
           score: p.score as number,
-          topic_name: (p.topics as Record<string, unknown>)?.name as string || "General",
+          topic_name: ((p.topics as Record<string, unknown>)?.name as string) || "General",
         }));
         setUserPosts(mapped);
         setPostCount(mapped.length);
-      }
+      });
 
-      if (commentsRes.count !== null) {
-        setCommentCount(commentsRes.count);
-      }
-
-      if (topicsRes.data) {
-        setUserTopics(topicsRes.data as UserTopic[]);
-        setTopicCount(topicsRes.data.length);
-      }
-
-      setLoading(false);
-    };
-
-    fetchData();
+    void supabase
+      .from("comments")
+      .select("id", { count: "exact", head: true })
+      .eq("author_id", targetUserId)
+      .then(({ count }) => {
+        if (count !== null) setCommentCount(count);
+      });
   }, [targetUserId]);
+
+  // Topics fetch fires the first time the user opens the Topics tab.
+  useEffect(() => {
+    if (!topicsRequested) return;
+    void supabase
+      .from("topics")
+      .select("id, name, slug, description, created_at")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (!data) return;
+        setUserTopics(data as UserTopic[]);
+        setTopicCount(data.length);
+      });
+  }, [topicsRequested]);
 
   const username =
     (profile?.name as string) ||
@@ -238,18 +253,6 @@ const ProfileView = () => {
     { value: "following", label: "Following", count: followingTotal },
     { value: "followers", label: "Followers", count: followerTotal },
   ];
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <DeetHeader />
-        <main className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </main>
-        <DeetFooter />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">

@@ -68,11 +68,15 @@ const fetchProfilesByIds = async (
  * Fetch every entity a user follows: other users, topics, and posts.
  * Posts include their per-topic rank so links can deep-link to
  * `/topic/:topicName/post/:rank` (the SubtopicPage route).
+ *
+ * Pass `enabled: false` to defer the (heavy) fetch until it's actually needed
+ * — e.g. only when the user opens the "Following" tab.
  */
-export const useFollowing = (userId: string | undefined) => {
+export const useFollowing = (userId: string | undefined, options?: { enabled?: boolean }) => {
+  const enabled = options?.enabled ?? true;
   return useQuery({
     queryKey: ["following", userId],
-    enabled: !!userId,
+    enabled: !!userId && enabled,
     queryFn: async (): Promise<FollowingPayload> => {
       if (!userId) return { users: [], topics: [], posts: [], total: 0 };
 
@@ -205,12 +209,17 @@ export const useFollowing = (userId: string | undefined) => {
 };
 
 /**
- * Fetch users who follow this profile (the followers list).
+ * Fetch users who follow this profile (the followers list). Pass
+ * `enabled: false` to defer the fetch until the user opens the tab.
  */
-export const useFollowers = (userId: string | undefined) => {
+export const useFollowers = (
+  userId: string | undefined,
+  options?: { enabled?: boolean },
+) => {
+  const enabled = options?.enabled ?? true;
   return useQuery({
     queryKey: ["followers", userId],
-    enabled: !!userId,
+    enabled: !!userId && enabled,
     queryFn: async (): Promise<FollowedUser[]> => {
       if (!userId) return [];
       const { data, error } = await supabase

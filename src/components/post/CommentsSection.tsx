@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import CommentItem, {
   type CommentNode,
@@ -11,24 +11,42 @@ interface CommentsSectionProps {
   postId: string;
 }
 
+const COMMENT_SELECT_BASE =
+  "id, content, created_at, author_id, parent_comment_id" as const;
+
 interface DbComment {
   id: string;
   content: string;
   created_at: string;
   author_id: string;
   parent_comment_id: string | null;
-  like_count: number;
+  like_count?: number | null;
 }
 
 const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
-  const { data, error } = await supabase
+  const withLikes = await supabase
     .from("comments")
-    .select("id, content, created_at, author_id, parent_comment_id, like_count")
+    .select(`${COMMENT_SELECT_BASE}, like_count`)
     .eq("post_id", postId)
     .order("created_at", { ascending: true });
 
-  if (error) throw error;
-  const rows = (data ?? []) as DbComment[];
+  let rows: DbComment[];
+  if (withLikes.error) {
+    // If `like_count` is missing (migration not applied) or the extended select fails for
+    // any transient reason, retry without it so the thread still loads.
+    const baseOnly = await supabase
+      .from("comments")
+      .select(COMMENT_SELECT_BASE)
+      .eq("post_id", postId)
+      .order("created_at", { ascending: true });
+    if (baseOnly.error) throw baseOnly.error;
+    rows = ((baseOnly.data ?? []) as DbComment[]).map((r) => ({
+      ...r,
+      like_count: 0,
+    }));
+  } else {
+    rows = (withLikes.data ?? []) as DbComment[];
+  }
   if (rows.length === 0) return [];
 
   const authorIds = Array.from(new Set(rows.map((r) => r.author_id)));
@@ -97,8 +115,10 @@ const CommentsSection = ({ postId }: CommentsSectionProps) => {
     enabled: !!postId,
   });
 
-  const nowMs = Date.now();
-  const tree = sortByHotScore(buildTree(comments), nowMs);
+  const tree = useMemo(() => {
+    const nowMs = Date.now();
+    return sortByHotScore(buildTree(comments), nowMs);
+  }, [comments]);
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: ["comments", postId] });
 

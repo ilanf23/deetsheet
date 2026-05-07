@@ -123,7 +123,6 @@ const ProfileEdit = () => {
   const { user, refreshProfile } = useAuth();
   const { setLocation, clearLocation } = useLocation();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [profileLoaded, setProfileLoaded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -172,13 +171,17 @@ const ProfileEdit = () => {
     },
   });
 
-  // Load existing profile from DB
+  // Load existing profile from DB. Selecting only the columns this form
+  // actually populates (rather than `*`) cuts the payload meaningfully on
+  // profiles with rich credential / preference fields.
   useEffect(() => {
     if (!user) return;
     const load = async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("*")
+        .select(
+          "name, entity_type, sex, birth_month, birth_day, birth_year, city, state, country, bio, education, high_school, college, degree, major, job, favorite_movie, reading, city_born, avatar_url, email_frequency, email_on_message, email_on_comment, email_on_follow, email_on_post_edit, email_top_posts",
+        )
         .eq("id", user.id)
         .single();
       if (data) {
@@ -213,7 +216,6 @@ const ProfileEdit = () => {
           emailTopPosts: data.email_top_posts ?? false,
         });
       }
-      setProfileLoaded(true);
     };
     load();
   }, [user]);

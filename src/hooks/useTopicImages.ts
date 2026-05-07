@@ -116,5 +116,22 @@ export const useTopicImages = ({ topicId, topicName, categoryName }: UseTopicIma
     },
   });
 
-  return { ...query, rate };
+  const clearRate = useMutation({
+    mutationFn: async ({ imageId }: { imageId: string }) => {
+      if (!userId) throw new Error("Sign in to rate images");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase.from as any)("topic_image_ratings")
+        .delete()
+        .eq("topic_image_id", imageId)
+        .eq("user_id", userId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["topic-images", topicId] });
+      queryClient.invalidateQueries({ queryKey: ["topic", topicName] });
+      queryClient.invalidateQueries({ queryKey: ["topics"] });
+    },
+  });
+
+  return { ...query, rate, clearRate };
 };

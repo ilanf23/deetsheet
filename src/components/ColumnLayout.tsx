@@ -21,7 +21,7 @@ const ColumnLayout = () => {
   const { visible, sentinelRef, hasMore } = useInfiniteList(popularTopics, 4, 4, "0px", middleRef);
 
   return (
-    <div className="flex-1 mx-auto w-full px-6 lg:px-10 mt-5 lg:h-[calc(100vh-4rem)]">
+    <div className="flex-1 lg:min-h-0 mx-auto w-full px-6 lg:px-10 mt-5">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[300px_1fr_240px] gap-5 lg:h-full">
         {/* Left — Recently Added */}
         <div className="lg:h-full lg:overflow-y-auto lg:pr-2">
