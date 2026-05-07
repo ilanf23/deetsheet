@@ -89,8 +89,12 @@ export const buildPostImageUrl = (
 
   const tags = encodeURIComponent(`${topicTag},${primary},${secondary}`);
   const lock = hashString(`${postId}:${primary}:${secondary}`) % 1_000_000;
-  // Tiny dimension jitter forces a fresh image fetch even when tag pools collide.
   const w = 600 + (seedA % 5);
   const h = 600 + (seedB % 5);
-  return `https://loremflickr.com/${w}/${h}/${tags}?lock=${lock}`;
+  // Use picsum (seeded) as the actual image source — Loremflickr frequently
+  // returns the same cached photo for related tag sets, which is why posts in
+  // one topic visually collapsed. Picsum's seed guarantees a unique image per
+  // postId, and we keep the topic tag in the URL fragment for traceability.
+  const seed = encodeURIComponent(`${postId}-${primary}-${secondary}`);
+  return `https://picsum.photos/seed/${seed}/${w}/${h}#${tags}?lock=${lock}`;
 };
