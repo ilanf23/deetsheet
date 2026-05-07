@@ -152,15 +152,17 @@ const TopicPage = () => {
                 categoryName={topic.categoryName}
                 primaryImage={topic.imageUrl}
               />
-              <div
-                aria-hidden
-                className="flex items-baseline gap-4 px-3 -mx-3 pb-2 text-sm md:text-base font-heading text-muted-foreground"
-              >
-                <span className="w-8 shrink-0" />
-                <span className="flex-1 min-w-0" />
-                <span className="shrink-0">Rating</span>
-                <span className="shrink-0 w-8 text-center">You</span>
-              </div>
+              {!!user && (
+                <div
+                  aria-hidden
+                  className="flex items-baseline gap-4 px-3 -mx-3 pb-2 text-sm md:text-base font-heading text-muted-foreground"
+                >
+                  <span className="w-8 shrink-0" />
+                  <span className="flex-1 min-w-0" />
+                  <span className="shrink-0">Rating</span>
+                  <span className="shrink-0 w-8 text-center">You</span>
+                </div>
+              )}
               <div className="divide-y divide-border border-y border-border rounded-t-md">
                 {visiblePosts.map((post, i) => (
                   <TopicPostListItem
@@ -169,6 +171,7 @@ const TopicPage = () => {
                     rank={i + 1}
                     topicName={topic.name}
                     topicId={topic.id}
+                    showRanking={!!user}
                   />
                 ))}
               </div>

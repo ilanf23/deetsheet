@@ -8,11 +8,12 @@ interface TopicPostListItemProps {
   rank: number;
   topicName: string;
   topicId: string;
+  showRanking?: boolean;
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-const TopicPostListItem = ({ post, rank, topicName, topicId }: TopicPostListItemProps) => {
+const TopicPostListItem = ({ post, rank, topicName, topicId, showRanking = true }: TopicPostListItemProps) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -42,32 +43,38 @@ const TopicPostListItem = ({ post, rank, topicName, topicId }: TopicPostListItem
       onKeyDown={handleKeyDown}
       className="group flex items-baseline gap-4 px-3 py-3.5 -mx-3 rounded-md hover:bg-accent/60 transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <span className="w-8 shrink-0 text-right text-sm text-muted-foreground tabular-nums">
-        {rank}.
-      </span>
+      {showRanking && (
+        <span className="w-8 shrink-0 text-right text-sm text-muted-foreground tabular-nums">
+          {rank}.
+        </span>
+      )}
       <h3 className="flex-1 min-w-0 truncate text-sm md:text-base font-heading font-semibold text-primary group-hover:underline">
         {displayTitle}
       </h3>
-      <span className="shrink-0 w-20 flex items-baseline justify-end gap-1 text-sm md:text-base font-heading text-muted-foreground tabular-nums">
-        <span className="text-foreground font-semibold">{seedAvg}</span>
-        <span className="text-xs">({post.ratingCount})</span>
-      </span>
-      {isDbPost ? (
-        <span
-          className="shrink-0 w-8 flex justify-center"
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
-          onMouseDown={(e) => e.stopPropagation()}
-        >
-          <UserRatingIndicator
-            postId={post.id}
-            onRatingChanged={() => {
-              queryClient.invalidateQueries({ queryKey: ["posts-by-topic", topicId] });
-            }}
-          />
-        </span>
-      ) : (
-        <span className="shrink-0 w-8" aria-hidden />
+      {showRanking && (
+        <>
+          <span className="shrink-0 w-20 flex items-baseline justify-end gap-1 text-sm md:text-base font-heading text-muted-foreground tabular-nums">
+            <span className="text-foreground font-semibold">{seedAvg}</span>
+            <span className="text-xs">({post.ratingCount})</span>
+          </span>
+          {isDbPost ? (
+            <span
+              className="shrink-0 w-8 flex justify-center"
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              <UserRatingIndicator
+                postId={post.id}
+                onRatingChanged={() => {
+                  queryClient.invalidateQueries({ queryKey: ["posts-by-topic", topicId] });
+                }}
+              />
+            </span>
+          ) : (
+            <span className="shrink-0 w-8" aria-hidden />
+          )}
+        </>
       )}
     </div>
   );
