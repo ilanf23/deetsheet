@@ -131,7 +131,6 @@ const CommentsSection = ({ postId }: CommentsSectionProps) => {
     <section
       id="discussion"
       aria-label={`Discussion (${comments.length})`}
-      style={{ maxWidth: "var(--reading-max-width)" }}
     >
       {isLoading ? (
         <p className="text-muted-foreground text-sm italic">Loading discussion…</p>

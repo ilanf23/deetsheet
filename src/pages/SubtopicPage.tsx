@@ -19,10 +19,11 @@ import {
   type PostRow,
 } from "@/hooks/useSupabaseTopics";
 import { buildPostImageUrl } from "@/lib/topicImageQueries";
+import { slugifyPostTitle } from "@/lib/postSlug";
 import type { Topic } from "@/data/seedData";
 
 const SubtopicPage = () => {
-  const { topicName, rank } = useParams<{ topicName: string; rank: string }>();
+  const { topicName, slug } = useParams<{ topicName: string; slug: string }>();
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -37,15 +38,28 @@ const SubtopicPage = () => {
     [postsData]
   );
 
-  // The `:rank` slot accepts either a 1-based topic rank or a post UUID,
-  // so links from sidebars (which now pass post.id directly) can avoid the
-  // expensive per-topic rank lookup.
-  const isUuid = !!rank && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(rank);
-  const indexById = isUuid ? posts.findIndex((p) => p.id === rank) : -1;
-  const rankNum = isUuid
-    ? indexById + 1
-    : Math.max(1, parseInt(rank ?? "1", 10) || 1);
-  const post = rankNum > 0 ? posts[rankNum - 1] : undefined;
+  // `:slug` is normally the slugified post title, but legacy links may pass
+  // a UUID (sidebars) or a 1-based topic rank — handle all three.
+  const decodedSlug = slug ? decodeURIComponent(slug) : "";
+  const isUuid =
+    !!decodedSlug &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(decodedSlug);
+  const isNumeric = !!decodedSlug && /^\d+$/.test(decodedSlug);
+
+  let indexInTopic = -1;
+  if (isUuid) {
+    indexInTopic = posts.findIndex((p) => p.id === decodedSlug);
+  } else if (isNumeric) {
+    indexInTopic = Math.max(0, parseInt(decodedSlug, 10) - 1);
+  } else if (decodedSlug) {
+    const target = decodedSlug.toLowerCase();
+    indexInTopic = posts.findIndex(
+      (p) => slugifyPostTitle(p.title || p.content) === target,
+    );
+  }
+
+  const rankNum = indexInTopic >= 0 ? indexInTopic + 1 : 0;
+  const post = indexInTopic >= 0 ? posts[indexInTopic] : undefined;
 
   const seedAvg = post && post.ratingCount > 0
     ? Math.round((post.ratingScore / post.ratingCount) * 10) / 10
@@ -99,7 +113,7 @@ const SubtopicPage = () => {
         <main className="flex-1 container mx-auto px-4 py-20 text-center">
           <h1 className="text-2xl font-bold mb-2">Subtopic not found</h1>
           <p className="text-muted-foreground">
-            {isUuid ? "That post" : `#${rankNum}`} doesn't exist in {topic.name}.
+            {isNumeric ? `#${decodedSlug}` : "That post"} doesn't exist in {topic.name}.
           </p>
           <button
             type="button"
@@ -118,17 +132,18 @@ const SubtopicPage = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <DeetHeader />
       <main className="flex-1">
-        <div className="mx-auto mt-5 px-6 lg:px-10 mb-20 lg:mb-[var(--space-rhythm-major)]">
-          <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr_240px] gap-5">
-            {/* Left rail — site-wide activity */}
-            <aside className="hidden lg:block pt-4">
-              <div className="sticky top-24">
-                <TopicRecentlyAdded topicId={topic.id} topicName={topic.name} />
-              </div>
+        <div className="mx-auto mt-5 px-6 lg:px-10 mb-20 lg:mb-0 lg:h-[calc(100vh-4rem)]">
+          <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-5 lg:h-full">
+            {/* Left rail — scrolls independently */}
+            <aside className="hidden lg:block pt-4 lg:h-full lg:overflow-y-auto lg:pr-2">
+              <TopicRecentlyAdded topicId={topic.id} topicName={topic.name} />
             </aside>
 
-            {/* Middle column — the read */}
-            <article className="min-w-0 pt-4 space-y-[var(--space-rhythm-block)]">
+            {/* Middle + Right share a single scroll container */}
+            <div className="lg:h-full lg:overflow-y-auto lg:pr-2">
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-5">
+                {/* Middle column — the read */}
+                <article className="min-w-0 pt-4 space-y-[var(--space-rhythm-block)]">
               {post ? (
                 <>
                   <div className="space-y-[var(--space-rhythm-tight)]">
@@ -188,14 +203,14 @@ const SubtopicPage = () => {
               ) : (
                 <p className="text-muted-foreground">No posts in this topic yet.</p>
               )}
-            </article>
+                </article>
 
-            {/* Right rail — topic discovery */}
-            <aside className="hidden lg:block lg:border-l lg:border-border lg:pl-5 pt-4">
-              <div className="sticky top-24">
-                <TopicRecommendations currentTopic={topic as unknown as Topic} />
+                {/* Right rail — topic discovery (shares scroll with middle) */}
+                <aside className="hidden lg:block lg:border-l lg:border-border lg:pl-5 pt-4">
+                  <TopicRecommendations currentTopic={topic as unknown as Topic} />
+                </aside>
               </div>
-            </aside>
+            </div>
 
             {/* Mobile-only stacked rails (below the body) */}
             <div className="lg:hidden space-y-[var(--space-rhythm-block)]">

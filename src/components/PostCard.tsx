@@ -4,6 +4,7 @@ import { MessageSquare, Share2 } from "lucide-react";
 import { Post, getTimeAgo } from "@/data/seedData";
 import UserRatingIndicator from "@/components/UserRatingIndicator";
 import { useToast } from "@/hooks/use-toast";
+import { slugifyPostTitle } from "@/lib/postSlug";
 
 interface PostCardProps {
   post: Post;
@@ -14,8 +15,9 @@ const PostCard = ({ post }: PostCardProps) => {
   const { toast } = useToast();
 
   const openTopic = () => navigate(`/topic/${encodeURIComponent(post.topicName)}`);
-  const postHref = `/topic/${encodeURIComponent(post.topicName)}/post/${post.id}`;
   const contentText = post.title || post.content;
+  const postSlug = slugifyPostTitle(contentText) || post.id;
+  const postHref = `/topic/${encodeURIComponent(post.topicName)}/post/${postSlug}`;
   const handleShare = async (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     const url = `${window.location.origin}${postHref}`;
@@ -49,14 +51,14 @@ const PostCard = ({ post }: PostCardProps) => {
           e.stopPropagation();
           openTopic();
         }}
-        className="mb-2.5 block font-heading text-3xl font-bold leading-none text-primary hover:underline"
+        className="mb-2.5 block font-heading text-3xl font-normal leading-tight text-primary hover:underline"
       >
         {post.topicName}
       </button>
 
       <Link
         to={postHref}
-        className="mb-3.5 block text-2xl leading-tight text-primary hover:underline"
+        className="mb-3.5 block text-[15px] leading-snug text-primary hover:underline"
         onClick={(e) => e.stopPropagation()}
       >
         {contentText}
@@ -77,7 +79,13 @@ const PostCard = ({ post }: PostCardProps) => {
       )}
 
       <div className="mb-2 flex flex-wrap items-baseline gap-2 text-base leading-tight">
-        <span className="font-semibold text-foreground/70">{post.username}</span>
+        <Link
+          to={`/profile/${(post as Post & { authorId?: string }).authorId ?? post.username}`}
+          onClick={(e) => e.stopPropagation()}
+          className="font-semibold text-primary hover:underline"
+        >
+          {post.username}
+        </Link>
         <span className="text-muted-foreground">Posted {getTimeAgo(post.createdAt)}</span>
       </div>
 

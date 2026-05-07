@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Topic, getPostsByTopic, getAverageRating } from "@/data/seedData";
 import UserRatingIndicator from "@/components/UserRatingIndicator";
 import { useTopicByName, usePostsByTopic, getTopicSubtitle } from "@/hooks/useSupabaseTopics";
+import { slugifyPostTitle } from "@/lib/postSlug";
 
 interface PopularTopicSectionProps {
   topic: Topic;
@@ -37,25 +38,20 @@ const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
       className="border rounded-xl bg-card cursor-pointer hover:shadow-lg transition-all duration-200 p-5"
       onClick={() => navigate(`/topic/${encodeURIComponent(topic.name)}`)}
     >
-      {/* Header: title + subtitle on the left, Rating|You label on the right */}
-      <div className="flex items-start justify-between gap-4 mb-3">
-        <div className="min-w-0">
-          <h3 className="font-heading text-3xl font-normal text-primary leading-tight truncate">
-            {topic.name}
-          </h3>
-          {subtitle && (
-            <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
-          )}
-        </div>
-        <span className="text-[11px] text-muted-foreground shrink-0 pt-2 whitespace-nowrap">
-          Rating <span className="mx-0.5">|</span> You
-        </span>
+      {/* Header: title + subtitle */}
+      <div className="mb-3 min-w-0">
+        <h3 className="font-heading text-3xl font-normal text-primary leading-tight truncate">
+          {topic.name}
+        </h3>
+        {subtitle && (
+          <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+        )}
       </div>
 
       {/* Body: image on the left, numbered list + ratings on the right */}
       <div className="flex gap-5">
         <img
-          src={topic.imageUrl || "/placeholder.svg"}
+          src={dbTopic?.imageUrl || topic.imageUrl || "/placeholder.svg"}
           alt={topic.name}
           onError={(e) => {
             const img = e.currentTarget;
@@ -65,6 +61,15 @@ const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
           className="w-32 sm:w-36 self-start rounded object-cover shrink-0 aspect-square bg-muted"
         />
         <ol className="flex-1 min-w-0 space-y-2">
+          <li className="flex items-center gap-3 text-[11px] text-muted-foreground">
+            <span className="w-5 shrink-0" aria-hidden />
+            <span className="flex-1 min-w-0" aria-hidden />
+            <span className="flex items-center shrink-0">
+              <span className="w-8 text-right whitespace-nowrap">Rating</span>
+              <span className="w-4 text-center">|</span>
+              <span className="w-8 text-left">You</span>
+            </span>
+          </li>
           {topPosts.map((post, i) => (
             <li key={post.id} className="flex items-center gap-3 text-[15px] min-w-0">
               <span className="text-muted-foreground w-5 shrink-0 text-right">{i + 1}.</span>
@@ -72,16 +77,17 @@ const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  navigate(`/topic/${encodeURIComponent(topic.name)}#post-${i + 1}`);
+                  const slug = slugifyPostTitle(post.content) || String(i + 1);
+                  navigate(`/topic/${encodeURIComponent(topic.name)}/post/${slug}`);
                 }}
                 className="flex-1 min-w-0 text-left text-primary leading-snug truncate hover:underline"
               >
                 {post.content}
               </button>
-              <span className="flex items-center text-secondary shrink-0 tabular-nums">
+              <span className="flex items-center text-secondary shrink-0 tabular-nums text-sm">
                 <span className="font-medium w-8 text-right">{post.avg}</span>
                 <span className="text-muted-foreground/60 w-4 text-center">|</span>
-                <span className="w-8 flex justify-center">
+                <span className="w-8 flex justify-start">
                   <UserRatingIndicator
                     postId={post.id}
                     onRatingChanged={() => {

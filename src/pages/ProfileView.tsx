@@ -31,6 +31,7 @@ import CreateTopicDialog from "@/components/CreateTopicDialog";
 import FollowUserButton from "@/components/FollowUserButton";
 import { useProfileFollowCounts } from "@/hooks/useUserFollow";
 import { useFollowing, useFollowers } from "@/hooks/useFollowLists";
+import { slugifyPostTitle } from "@/lib/postSlug";
 
 const CREDENTIAL_ICON_MAP: Record<string, React.ReactNode> = {
   pencil: <Pencil className="h-4 w-4" />,
@@ -728,7 +729,7 @@ const ProfileView = () => {
                                   <span>followed {getTimeAgo(p.followedAt)}</span>
                                 </div>
                                 <a
-                                  href={`/topic/${encodeURIComponent(p.topicName)}/post/${p.rank}`}
+                                  href={`/topic/${encodeURIComponent(p.topicName)}/post/${slugifyPostTitle(p.title) || p.rank}`}
                                   className="font-semibold text-sm text-primary hover:underline"
                                 >
                                   {p.rank}. {p.title}

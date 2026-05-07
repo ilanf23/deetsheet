@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import PopularTopicSection from "@/components/PopularTopicSection";
 import SubjectsSidebar from "@/components/SubjectsSidebar";
 import RecentlyAddedSidebar from "@/components/RecentlyAddedSidebar";
@@ -7,7 +7,11 @@ import { useInfiniteList } from "@/hooks/useInfiniteList";
 
 const PRIORITY_TOPICS = ["Parent", "Waiter", "Chicago", "Cancer", "College", "Love", "Doctor", "1980s", "New York City", "iPhone", "Married", "20s", "McDonald's"];
 
-const ColumnLayout = () => {
+interface ColumnLayoutProps {
+  onAtBottomChange?: (atBottom: boolean) => void;
+}
+
+const ColumnLayout = ({ onAtBottomChange }: ColumnLayoutProps) => {
   // Show priority topics first, then progressively reveal the rest of the
   // catalog so the middle column scrolls "endlessly" Reddit-style.
   const priority = PRIORITY_TOPICS
@@ -18,13 +22,48 @@ const ColumnLayout = () => {
   // Each column scrolls independently on lg+, so the IntersectionObserver
   // must observe the middle column itself rather than the viewport.
   const middleRef = useRef<HTMLDivElement | null>(null);
+  const leftRef = useRef<HTMLDivElement | null>(null);
+  const rightRef = useRef<HTMLDivElement | null>(null);
   const { visible, sentinelRef, hasMore } = useInfiniteList(popularTopics, 4, 4, "0px", middleRef);
+
+  useEffect(() => {
+    if (!onAtBottomChange) return;
+    const epsilon = 4;
+
+    const check = () => {
+      const cols = [leftRef.current, middleRef.current, rightRef.current];
+      const columnAtBottom = cols.some(
+        (c) =>
+          c &&
+          c.scrollHeight > c.clientHeight &&
+          c.scrollTop + c.clientHeight >= c.scrollHeight - epsilon
+      );
+      const docHeight = document.documentElement.scrollHeight;
+      const windowScrollable = docHeight > window.innerHeight + epsilon;
+      const windowAtBottom =
+        windowScrollable &&
+        window.innerHeight + window.scrollY >= docHeight - epsilon;
+      onAtBottomChange(columnAtBottom || windowAtBottom);
+    };
+
+    const cols = [leftRef.current, middleRef.current, rightRef.current];
+    cols.forEach((c) => c?.addEventListener("scroll", check, { passive: true }));
+    window.addEventListener("scroll", check, { passive: true });
+    window.addEventListener("resize", check);
+    check();
+
+    return () => {
+      cols.forEach((c) => c?.removeEventListener("scroll", check));
+      window.removeEventListener("scroll", check);
+      window.removeEventListener("resize", check);
+    };
+  }, [onAtBottomChange, visible.length]);
 
   return (
     <div className="flex-1 lg:min-h-0 mx-auto w-full px-6 lg:px-10 mt-5">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[300px_1fr_240px] gap-5 lg:h-full">
         {/* Left — Recently Added */}
-        <div className="lg:h-full lg:overflow-y-auto lg:pr-2">
+        <div ref={leftRef} className="lg:h-full lg:overflow-y-auto lg:pr-2">
           <RecentlyAddedSidebar />
         </div>
 
@@ -51,7 +90,7 @@ const ColumnLayout = () => {
         </div>
 
         {/* Right — Subjects */}
-        <div className="hidden lg:block pt-4 lg:h-full lg:overflow-y-auto lg:pr-2">
+        <div ref={rightRef} className="hidden lg:block pt-4 lg:h-full lg:overflow-y-auto lg:pr-2">
           <SubjectsSidebar />
         </div>
       </div>

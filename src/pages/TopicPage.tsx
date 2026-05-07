@@ -105,15 +105,18 @@ const TopicPage = () => {
       <DeetHeader />
       <main className="flex-1">
         <div className="mx-auto mt-5 px-6 lg:px-10 mb-20 lg:mb-0 lg:h-[calc(100vh-4rem)]">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[300px_1fr] gap-5 lg:h-full">
+          <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-5 lg:h-full">
             {/* Left — Recently Added */}
             <div className="hidden lg:block pt-4 lg:h-full lg:overflow-y-auto lg:pr-2">
               <TopicRecentlyAdded topicId={topic.id} topicName={topic.name} />
             </div>
             {/* Main â Topic posts */}
-            <div className="min-w-0 lg:h-full lg:overflow-y-auto lg:pr-2 lg:grid lg:grid-cols-[1fr_240px] lg:gap-5 lg:items-start">
-              <div className="min-w-0 pt-4">
-              <div className="mb-6 flex items-start justify-between gap-4">
+            {/* Middle + Right share a single scroll container */}
+            <div className="lg:h-full lg:overflow-y-auto lg:pr-2">
+              <div className="grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-5">
+                <div className="min-w-0 pt-4">
+              <div className="min-w-0">
+              <div className="mb-3 flex items-start justify-between gap-4">
                 <div className="min-w-0 pl-1.5">
                   <div className="flex items-baseline gap-3">
                     <h1 className="text-3xl md:text-4xl font-heading font-bold">
@@ -195,12 +198,12 @@ const TopicPage = () => {
               />
               </div>
 
-            {/* Right â Recommendations + Email Capture */}
-            <div className="hidden lg:block lg:border-l lg:border-border lg:pl-5 pt-4 space-y-6">
-              {/* TopicRecommendations still reads from seedData for now â
-                  refactor when the homepage flow moves off seed. */}
-              <TopicRecommendations currentTopic={topic as unknown as import("@/data/seedData").Topic} />
-            </div>
+                </div>
+                {/* Right rail — Recommendations (shares scroll with middle) */}
+                <aside className="hidden lg:block lg:border-l lg:border-border lg:pl-5 pt-4 space-y-6">
+                  <TopicRecommendations currentTopic={topic as unknown as import("@/data/seedData").Topic} />
+                </aside>
+              </div>
             </div>
           </div>
         </div>
@@ -232,12 +235,12 @@ const TopicHeaderImage = ({
         <img
           src={src!}
           alt={alt}
-          className="h-28 w-64 object-cover transition-transform group-hover:scale-[1.02]"
+          className="h-[7.7rem] w-[17.6rem] object-cover transition-transform group-hover:scale-[1.02]"
           loading="lazy"
           onError={() => setError(true)}
         />
       ) : (
-        <div className="h-28 w-64 flex items-center justify-center text-xs text-muted-foreground font-medium">
+        <div className="h-[7.7rem] w-[17.6rem] flex items-center justify-center text-xs text-muted-foreground font-medium">
           Rank an image →
         </div>
       )}

@@ -26,7 +26,7 @@ const PostBody = ({ content, imageSrc, imageAlt }: PostBodyProps) => {
   const showImage = !!imageSrc && !imageFailed;
 
   return (
-    <div style={{ maxWidth: "var(--reading-max-width)" }}>
+    <div>
       <div
         ref={bodyRef}
         className="text-card-foreground whitespace-pre-line"
