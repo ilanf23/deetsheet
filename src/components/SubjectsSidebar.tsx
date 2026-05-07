@@ -126,7 +126,7 @@ const SubjectsSidebar = () => {
   };
 
   return (
-    <nav className="space-y-0.5">
+    <nav className="space-y-0.5 rounded-xl border border-border bg-card p-4">
       <h2 className="flex items-center h-8 px-3 pb-2 mb-2 border-b border-border">
         <Link
           to="/topics"

@@ -56,7 +56,7 @@
     --rail-gap: 1.5rem;
 
     /* Editorial type ramp */
-    --font-size-post-title: clamp(1.125rem, 0.95rem + 0.7vw, 1.375rem);
+    --font-size-post-title: clamp(1.5rem, 1.2rem + 1.2vw, 2rem);
     --font-size-section-heading: 1.5rem;
     --font-size-prose-body: 1.0625rem;
     --font-size-byline: 0.875rem;
@@ -83,32 +83,32 @@
   }
 
   .dark {
-    --background: 220 20% 8%;
+    --background: 0 0% 0%;
     --foreground: 0 0% 95%;
-    --card: 220 20% 12%;
+    --card: 220 12% 13%;
     --card-foreground: 0 0% 95%;
-    --popover: 220 20% 12%;
+    --popover: 220 12% 13%;
     --popover-foreground: 0 0% 95%;
     --primary: 157 60% 40%;
     --primary-foreground: 0 0% 100%;
     --secondary: 20 100% 60%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 220 14% 18%;
+    --muted: 220 10% 18%;
     --muted-foreground: 220 10% 60%;
     --accent: 157 60% 15%;
     --accent-foreground: 157 60% 80%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 14% 20%;
-    --input: 220 14% 20%;
+    --border: 220 10% 24%;
+    --input: 220 10% 24%;
     --ring: 157 60% 40%;
-    --sidebar-background: 220 20% 8%;
+    --sidebar-background: 0 0% 0%;
     --sidebar-foreground: 0 0% 95%;
     --sidebar-primary: 157 60% 40%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 14% 18%;
+    --sidebar-accent: 220 10% 18%;
     --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 220 14% 20%;
+    --sidebar-border: 220 10% 24%;
     --sidebar-ring: 157 60% 40%;
 
     /* Editorial layout — post page redesign (dark) */

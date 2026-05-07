@@ -38,10 +38,10 @@ const JudgeThisDialog = ({ open, onOpenChange, value, onChange }: JudgeThisDialo
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>How would you judge this?</DialogTitle>
-          <DialogDescription>Pick up to {MAX_JUDGEMENT_SELECTIONS}.</DialogDescription>
+          <DialogTitle className="text-2xl">How would you judge this?</DialogTitle>
+          <DialogDescription className="text-base">Pick up to {MAX_JUDGEMENT_SELECTIONS}.</DialogDescription>
         </DialogHeader>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-3 py-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 py-2">
           {JUDGEMENT_ORDER.map((j) => {
             const Icon = JUDGEMENT_ICONS[j];
             const checked = value.has(j);
@@ -49,7 +49,7 @@ const JudgeThisDialog = ({ open, onOpenChange, value, onChange }: JudgeThisDialo
             return (
               <label
                 key={j}
-                className={`flex items-center gap-2 rounded-md px-1 py-1.5 text-sm cursor-pointer select-none ${
+                className={`flex items-center gap-3 rounded-md px-1.5 py-2 text-lg cursor-pointer select-none ${
                   disabled ? "opacity-40 cursor-not-allowed" : "hover:bg-accent/40"
                 }`}
               >
@@ -58,8 +58,9 @@ const JudgeThisDialog = ({ open, onOpenChange, value, onChange }: JudgeThisDialo
                   disabled={disabled}
                   onCheckedChange={() => toggle(j)}
                   aria-label={j}
+                  className="h-5 w-5"
                 />
-                <Icon className="h-4 w-4 text-muted-foreground" />
+                <Icon className="h-6 w-6 text-muted-foreground" />
                 <span className="text-foreground">{j}</span>
               </label>
             );

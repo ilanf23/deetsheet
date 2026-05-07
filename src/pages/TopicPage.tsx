@@ -77,7 +77,7 @@ const TopicPage = () => {
 
   if (topicLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-white">
+      <div className="min-h-screen flex flex-col bg-background">
         <DeetHeader />
         <main className="flex-1 container mx-auto px-4 py-20 text-center">
           <p className="text-muted-foreground">Loading topicâ¦</p>
@@ -89,7 +89,7 @@ const TopicPage = () => {
 
   if (topicError || !topic) {
     return (
-      <div className="min-h-screen flex flex-col bg-white">
+      <div className="min-h-screen flex flex-col bg-background">
         <DeetHeader />
         <main className="flex-1 container mx-auto px-4 py-20 text-center">
           <h1 className="text-2xl font-bold mb-2">Topic not found</h1>
@@ -101,7 +101,7 @@ const TopicPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-background">
       <DeetHeader />
       <main className="flex-1">
         <div className="mx-auto mt-5 px-6 lg:px-10 mb-20">

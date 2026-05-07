@@ -44,7 +44,7 @@ const RatingChip = ({
   you: number | null;
 }) => (
   <div className="absolute top-2 right-2 flex items-stretch rounded-md overflow-hidden shadow-md text-[11px] font-semibold leading-none">
-    <div className="flex flex-col items-center bg-white/95 px-2 py-1">
+    <div className="flex flex-col items-center bg-background/95 px-2 py-1">
       <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wide">
         Rank
       </span>
@@ -52,7 +52,7 @@ const RatingChip = ({
         {rank > 0 ? rank.toFixed(1) : "—"}
       </span>
     </div>
-    <div className="flex flex-col items-center bg-white/95 px-2 py-1 border-l border-border/40">
+    <div className="flex flex-col items-center bg-background/95 px-2 py-1 border-l border-border/40">
       <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-wide">
         You
       </span>
@@ -83,7 +83,7 @@ const RatingPicker = ({
             "w-8 h-8 rounded-md text-sm font-semibold transition-colors",
             active
               ? "bg-secondary text-secondary-foreground"
-              : "bg-white/10 text-white/80 hover:bg-white/20"
+              : "bg-background/10 text-white/80 hover:bg-background/20"
           )}
         >
           {v}
@@ -175,7 +175,7 @@ const RankImagesDialog = ({
               <div className="grid grid-cols-6 gap-3 auto-rows-fr">
                 {/* Hero */}
                 {featured && heroSrc && (
-                  <div className="col-span-3 row-span-2 relative rounded-lg overflow-hidden aspect-square bg-white/5">
+                  <div className="col-span-3 row-span-2 relative rounded-lg overflow-hidden aspect-square bg-background/5">
                     <ImageTile src={heroSrc} alt={topicName} />
                     <RatingChip rank={featured.averageRating} you={featured.yourRating} />
                   </div>
@@ -188,7 +188,7 @@ const RankImagesDialog = ({
                     type="button"
                     onClick={() => setSelectedId(img.id)}
                     className={cn(
-                      "relative rounded-lg overflow-hidden group focus:outline-none focus:ring-2 focus:ring-primary aspect-[2/3] bg-white/5",
+                      "relative rounded-lg overflow-hidden group focus:outline-none focus:ring-2 focus:ring-primary aspect-[2/3] bg-background/5",
                       selectedId === img.id && "ring-2 ring-primary"
                     )}
                   >

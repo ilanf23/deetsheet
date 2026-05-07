@@ -61,10 +61,10 @@ type DbTopicRaw = {
 type DbPostRaw = {
   id: string;
   title: string;
-  content: string;
+  content?: string;
   topic_id: string;
   author_id: string;
-  score: number;
+  score?: number;
   average_rating: number | null;
   rating_count: number | null;
   comment_count: number | null;
@@ -86,7 +86,7 @@ const mapTopic = (row: DbTopicRaw, postCount: number): TopicRow => ({
 const mapPost = (row: DbPostRaw): PostRow => ({
   id: row.id,
   title: row.title,
-  content: row.content,
+  content: row.content ?? "",
   topicId: row.topic_id,
   topicName: row.topics?.name ?? "",
   categoryName: row.topics?.category_name ?? "Life",
@@ -95,7 +95,7 @@ const mapPost = (row: DbPostRaw): PostRow => ({
   ratingScore: Number(row.average_rating ?? 0),
   ratingCount: row.rating_count ?? 0,
   commentCount: row.comment_count ?? 0,
-  score: row.score,
+  score: row.score ?? 0,
   createdAt: new Date(row.created_at),
   imageUrl: buildPostImageUrl(
     row.id,
@@ -194,11 +194,12 @@ export const usePostsByTopic = (topicId: string | undefined) => {
 export const useRecentPosts = (limit = 8) => {
   return useQuery({
     queryKey: ["recent-posts", limit],
+    staleTime: 60_000,
     queryFn: async (): Promise<PostRow[]> => {
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, content, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, " +
+          "id, title, topic_id, author_id, average_rating, rating_count, comment_count, created_at, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             "profiles!posts_author_id_profiles_fkey(username), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
@@ -225,6 +226,7 @@ export const usePostRanksForTopics = (topicIds: string[]) => {
   return useQuery({
     queryKey: ["post-ranks-for-topics", sortedKey],
     enabled: topicIds.length > 0,
+    staleTime: 60_000,
     queryFn: async (): Promise<Map<string, number>> => {
       const { data, error } = await supabase
         .from("posts")

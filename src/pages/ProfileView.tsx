@@ -15,6 +15,8 @@ import {
   Loader2,
   Plus,
   Hash,
+  Bookmark,
+  UserCircle2,
 } from "lucide-react";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
@@ -27,6 +29,9 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import CreateTopicDialog from "@/components/CreateTopicDialog";
+import FollowUserButton from "@/components/FollowUserButton";
+import { useProfileFollowCounts } from "@/hooks/useUserFollow";
+import { useFollowing, useFollowers } from "@/hooks/useFollowLists";
 
 const CREDENTIAL_ICON_MAP: Record<string, React.ReactNode> = {
   pencil: <Pencil className="h-4 w-4" />,
@@ -122,6 +127,13 @@ const ProfileView = () => {
   const [userTopics, setUserTopics] = useState<UserTopic[]>([]);
   const [topicCount, setTopicCount] = useState(0);
   const [createTopicOpen, setCreateTopicOpen] = useState(false);
+
+  // Follow data — denormalized counts on profile + full lists for the tabs
+  const { data: followCounts } = useProfileFollowCounts(targetUserId);
+  const { data: followingData } = useFollowing(targetUserId);
+  const { data: followersData } = useFollowers(targetUserId);
+  const followingTotal = followingData?.total ?? followCounts?.followingCount ?? 0;
+  const followerTotal = followersData?.length ?? followCounts?.followerCount ?? 0;
 
   useEffect(() => {
     if (!targetUserId) return;
@@ -223,13 +235,13 @@ const ProfileView = () => {
     { value: "topics", label: "Topics", count: topicCount },
     { value: "comments", label: "Comments", count: commentCount },
     { value: "favorites", label: "Favorites", count: 0 },
-    { value: "following", label: "Following", count: 0 },
-    { value: "followers", label: "Followers", count: 0 },
+    { value: "following", label: "Following", count: followingTotal },
+    { value: "followers", label: "Followers", count: followerTotal },
   ];
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-white">
+      <div className="min-h-screen flex flex-col bg-background">
         <DeetHeader />
         <main className="flex-1 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -240,7 +252,7 @@ const ProfileView = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-white overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
       <DeetHeader />
       <main className="flex-1 py-8 px-4">
         <div className="container mx-auto max-w-5xl overflow-hidden">
@@ -269,7 +281,7 @@ const ProfileView = () => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <h1 className="text-2xl font-bold truncate">{username}</h1>
                     {isOwnProfile && (
                       <button
@@ -280,8 +292,31 @@ const ProfileView = () => {
                         <Pencil className="h-4 w-4" />
                       </button>
                     )}
+                    {!isOwnProfile && targetUserId && (
+                      <FollowUserButton targetUserId={targetUserId} />
+                    )}
                   </div>
                   <p className="text-sm text-muted-foreground">{email}</p>
+                  <div className="flex items-center gap-4 mt-2 text-sm">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("followers")}
+                      className="hover:underline"
+                    >
+                      <span className="font-semibold tabular-nums">{followerTotal}</span>
+                      <span className="text-muted-foreground ml-1">
+                        {followerTotal === 1 ? "follower" : "followers"}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("following")}
+                      className="hover:underline"
+                    >
+                      <span className="font-semibold tabular-nums">{followingTotal}</span>
+                      <span className="text-muted-foreground ml-1">following</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -379,7 +414,7 @@ const ProfileView = () => {
             {/* Right sidebar */}
             <div className="space-y-6">
               {/* Credentials & Highlights */}
-              <Card className="bg-background">
+              <Card className="bg-card">
                 <CardContent className="pt-5">
                   <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
                     Credentials & Highlights
@@ -436,7 +471,7 @@ const ProfileView = () => {
 
               <TabsContent value="posts" className="mt-4">
                 {userPosts.length === 0 ? (
-                  <Card className="bg-background">
+                  <Card className="bg-card">
                     <CardContent className="py-12 text-center text-muted-foreground">
                       <p className="text-sm">No posts yet.</p>
                     </CardContent>
@@ -444,7 +479,7 @@ const ProfileView = () => {
                 ) : (
                   <div className="space-y-4">
                     {userPosts.map((post) => (
-                      <Card key={post.id} className="bg-background hover:shadow-md transition-shadow">
+                      <Card key={post.id} className="bg-card hover:shadow-md transition-shadow">
                         <CardContent className="pt-4 pb-3">
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex-1 min-w-0">
@@ -533,7 +568,7 @@ const ProfileView = () => {
                   </div>
                 )}
                 {userTopics.length === 0 ? (
-                  <Card className="bg-background">
+                  <Card className="bg-card">
                     <CardContent className="py-12 text-center text-muted-foreground">
                       <p className="text-sm">No topics created yet.</p>
                     </CardContent>
@@ -541,7 +576,7 @@ const ProfileView = () => {
                 ) : (
                   <div className="space-y-4">
                     {userTopics.map((topic) => (
-                      <Card key={topic.id} className="bg-background hover:shadow-md transition-shadow">
+                      <Card key={topic.id} className="bg-card hover:shadow-md transition-shadow">
                         <CardContent className="pt-4 pb-3">
                           <div className="flex items-start gap-3">
                             <Hash className="h-5 w-5 text-primary mt-0.5 shrink-0" />
@@ -571,17 +606,197 @@ const ProfileView = () => {
                 )}
               </TabsContent>
 
-              {["comments", "favorites", "following", "followers"].map(
-                (tab) => (
-                  <TabsContent key={tab} value={tab} className="mt-4">
-                    <Card className="bg-background">
-                      <CardContent className="py-12 text-center text-muted-foreground">
-                        <p className="text-sm">Coming soon</p>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                )
-              )}
+              {["comments", "favorites"].map((tab) => (
+                <TabsContent key={tab} value={tab} className="mt-4">
+                  <Card className="bg-card">
+                    <CardContent className="py-12 text-center text-muted-foreground">
+                      <p className="text-sm">Coming soon</p>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              ))}
+
+              <TabsContent value="following" className="mt-4">
+                {followingTotal === 0 ? (
+                  <Card className="bg-card">
+                    <CardContent className="py-12 text-center text-muted-foreground">
+                      <p className="text-sm">
+                        {isOwnProfile ? "You aren't" : `${username} isn't`} following anything yet.
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-8">
+                    {followingData?.users.length ? (
+                      <section>
+                        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
+                          <UserCircle2 className="h-4 w-4" />
+                          People ({followingData.users.length})
+                        </h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {followingData.users.map((u) => (
+                            <Card key={u.id} className="bg-card hover:shadow-md transition-shadow">
+                              <CardContent className="py-3 px-4">
+                                <a
+                                  href={`/profile/${u.id}`}
+                                  className="flex items-center gap-3 min-w-0"
+                                >
+                                  <Avatar className="h-10 w-10 shrink-0">
+                                    {u.avatarUrl && <AvatarImage src={u.avatarUrl} />}
+                                    <AvatarFallback>
+                                      <User className="h-5 w-5 text-muted-foreground" />
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="font-semibold text-sm text-primary hover:underline truncate">
+                                      {u.name || u.username || "User"}
+                                    </p>
+                                    {u.username && u.name && (
+                                      <p className="text-xs text-muted-foreground truncate">
+                                        @{u.username}
+                                      </p>
+                                    )}
+                                  </div>
+                                </a>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </section>
+                    ) : null}
+
+                    {followingData?.topics.length ? (
+                      <section>
+                        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
+                          <Hash className="h-4 w-4" />
+                          Topics ({followingData.topics.length})
+                        </h3>
+                        <div className="space-y-3">
+                          {followingData.topics.map((t) => (
+                            <Card key={t.id} className="bg-card hover:shadow-md transition-shadow">
+                              <CardContent className="py-3 px-4">
+                                <a
+                                  href={`/topic/${encodeURIComponent(t.name)}`}
+                                  className="font-semibold text-sm text-primary hover:underline"
+                                >
+                                  {t.name}
+                                </a>
+                                {t.description && (
+                                  <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">
+                                    {t.description}
+                                  </p>
+                                )}
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </section>
+                    ) : null}
+
+                    {followingData?.posts.length ? (
+                      <section>
+                        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
+                          <Bookmark className="h-4 w-4" />
+                          Posts ({followingData.posts.length})
+                        </h3>
+                        <div className="space-y-3">
+                          {followingData.posts.map((p) => (
+                            <Card key={p.id} className="bg-card hover:shadow-md transition-shadow">
+                              <CardContent className="py-3 px-4">
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+                                  <a
+                                    href={`/topic/${encodeURIComponent(p.topicName)}`}
+                                    className="text-primary hover:underline"
+                                  >
+                                    {p.topicName}
+                                  </a>
+                                  {p.authorUsername && (
+                                    <>
+                                      <span>·</span>
+                                      <a
+                                        href={`/profile/${p.authorId}`}
+                                        className="text-primary hover:underline"
+                                      >
+                                        @{p.authorUsername}
+                                      </a>
+                                    </>
+                                  )}
+                                  <span>·</span>
+                                  <span>followed {getTimeAgo(p.followedAt)}</span>
+                                </div>
+                                <a
+                                  href={`/topic/${encodeURIComponent(p.topicName)}/post/${p.rank}`}
+                                  className="font-semibold text-sm text-primary hover:underline"
+                                >
+                                  {p.rank}. {p.title}
+                                </a>
+                                {p.content && (
+                                  <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                                    {p.content}
+                                  </p>
+                                )}
+                                <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2">
+                                  <span className="tabular-nums">
+                                    ★ {p.averageRating.toFixed(1)} ({p.ratingCount})
+                                  </span>
+                                  <span className="tabular-nums">
+                                    {p.commentCount} comment{p.commentCount === 1 ? "" : "s"}
+                                  </span>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </section>
+                    ) : null}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="followers" className="mt-4">
+                {followerTotal === 0 ? (
+                  <Card className="bg-card">
+                    <CardContent className="py-12 text-center text-muted-foreground">
+                      <p className="text-sm">
+                        {isOwnProfile ? "You don't" : `${username} doesn't`} have any followers yet.
+                      </p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {followersData?.map((u) => (
+                      <Card key={u.id} className="bg-card hover:shadow-md transition-shadow">
+                        <CardContent className="py-3 px-4">
+                          <a
+                            href={`/profile/${u.id}`}
+                            className="flex items-center gap-3 min-w-0"
+                          >
+                            <Avatar className="h-10 w-10 shrink-0">
+                              {u.avatarUrl && <AvatarImage src={u.avatarUrl} />}
+                              <AvatarFallback>
+                                <User className="h-5 w-5 text-muted-foreground" />
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold text-sm text-primary hover:underline truncate">
+                                {u.name || u.username || "User"}
+                              </p>
+                              {u.username && u.name && (
+                                <p className="text-xs text-muted-foreground truncate">
+                                  @{u.username}
+                                </p>
+                              )}
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                Followed {getTimeAgo(u.followedAt)}
+                              </p>
+                            </div>
+                          </a>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
             </Tabs>
           </div>
         </div>

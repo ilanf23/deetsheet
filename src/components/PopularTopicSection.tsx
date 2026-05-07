@@ -34,7 +34,7 @@ const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
 
   return (
     <div
-      className="border rounded-xl bg-background cursor-pointer hover:shadow-lg transition-all duration-200 p-5"
+      className="border rounded-xl bg-card cursor-pointer hover:shadow-lg transition-all duration-200 p-5"
       onClick={() => navigate(`/topic/${encodeURIComponent(topic.name)}`)}
     >
       {/* Header: title + subtitle on the left, Rating|You label on the right */}

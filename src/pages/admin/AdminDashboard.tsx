@@ -199,8 +199,10 @@ export default function AdminDashboard() {
   const [activeMetrics, setActiveMetrics] = useState<MetricKey[]>(["signups", "posts"]);
   const [hovered, setHovered] = useState<string | null>(null);
 
+  // KPIs + activity feed: independent of the (heavier) time-series fetch
+  // so the page paints as soon as these resolve.
   useEffect(() => {
-    const fetchAll = async () => {
+    const fetchKpisAndActivity = async () => {
       const last24 = subDays(new Date(), 1).toISOString();
       const prev48 = subDays(new Date(), 2).toISOString();
 
@@ -209,11 +211,8 @@ export default function AdminDashboard() {
         uPrev,
         p24,
         pPrev,
-        reports,
-        profilesAll,
-        postsAll,
-        commentsAll,
-        reportsAll,
+        reportsCount,
+        reasonsSample,
         recentPosts,
         recentComments,
         recentReports,
@@ -230,11 +229,8 @@ export default function AdminDashboard() {
           .select("id", { count: "exact", head: true })
           .gte("created_at", prev48)
           .lt("created_at", last24),
-        supabase.from("reports").select("reasons", { count: "exact" }),
-        supabase.from("profiles").select("created_at"),
-        supabase.from("posts").select("created_at"),
-        supabase.from("comments").select("created_at"),
-        supabase.from("reports").select("created_at"),
+        supabase.from("reports").select("id", { count: "exact", head: true }),
+        supabase.from("reports").select("reasons").order("created_at", { ascending: false }).limit(200),
         supabase.from("posts").select("title, created_at").order("created_at", { ascending: false }).limit(5),
         supabase.from("comments").select("content, created_at").order("created_at", { ascending: false }).limit(5),
         supabase.from("reports").select("reasons, created_at").order("created_at", { ascending: false }).limit(5),
@@ -245,10 +241,10 @@ export default function AdminDashboard() {
       setPosts24h(p24.count ?? 0);
       setPostsDelta(formatDelta(p24.count ?? 0, pPrev.count ?? 0));
 
-      setOpenReports(reports.count ?? 0);
-      if (reports.data && reports.data.length) {
+      setOpenReports(reportsCount.count ?? 0);
+      if (reasonsSample.data && reasonsSample.data.length) {
         const tally: Record<string, number> = {};
-        reports.data.forEach((r) => {
+        reasonsSample.data.forEach((r) => {
           (r.reasons as string[] | null)?.forEach((reason) => {
             tally[reason] = (tally[reason] ?? 0) + 1;
           });
@@ -262,11 +258,6 @@ export default function AdminDashboard() {
       } else {
         setReportBreakdown("No open reports");
       }
-
-      setSignupTs((profilesAll.data ?? []).map((r) => r.created_at));
-      setPostTs((postsAll.data ?? []).map((r) => r.created_at));
-      setCommentTs((commentsAll.data ?? []).map((r) => r.created_at));
-      setReportTs((reportsAll.data ?? []).map((r) => r.created_at));
 
       const merged: ActivityRow[] = [
         ...(recentPosts.data ?? []).map((p) => ({
@@ -292,8 +283,46 @@ export default function AdminDashboard() {
       setLoading(false);
     };
 
-    fetchAll();
+    fetchKpisAndActivity();
   }, []);
+
+  // Time-series: scoped to the current range so we never fetch more rows than
+  // the chart actually needs, and refetched when the range changes.
+  useEffect(() => {
+    const fetchSeries = async () => {
+      const rangeDef = RANGES.find((r) => r.key === range)!;
+      const baseStart =
+        rangeDef.days === "all"
+          ? null
+          : subDays(new Date(), (rangeDef.days as number) * 2).toISOString(); // *2 to also cover the prev-period delta
+
+      const profilesQ = supabase.from("profiles").select("created_at");
+      const postsQ = supabase.from("posts").select("created_at");
+      const commentsQ = supabase.from("comments").select("created_at");
+      const reportsQ = supabase.from("reports").select("created_at");
+
+      if (baseStart) {
+        profilesQ.gte("created_at", baseStart);
+        postsQ.gte("created_at", baseStart);
+        commentsQ.gte("created_at", baseStart);
+        reportsQ.gte("created_at", baseStart);
+      }
+
+      const [profilesAll, postsAll, commentsAll, reportsAll] = await Promise.all([
+        profilesQ,
+        postsQ,
+        commentsQ,
+        reportsQ,
+      ]);
+
+      setSignupTs((profilesAll.data ?? []).map((r) => r.created_at));
+      setPostTs((postsAll.data ?? []).map((r) => r.created_at));
+      setCommentTs((commentsAll.data ?? []).map((r) => r.created_at));
+      setReportTs((reportsAll.data ?? []).map((r) => r.created_at));
+    };
+
+    fetchSeries();
+  }, [range]);
 
   // Derived chart data
   const chartData = useMemo(() => {

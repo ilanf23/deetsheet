@@ -51,7 +51,7 @@ const ColumnLayout = () => {
         </div>
 
         {/* Right — Subjects */}
-        <div className="hidden lg:block lg:border-l lg:border-border lg:pl-5 pt-4">
+        <div className="hidden lg:block pt-4">
           <SubjectsSidebar />
         </div>
       </div>

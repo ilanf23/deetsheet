@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Menu, X, List, User, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminMode } from "@/hooks/useAdminMode";
@@ -16,8 +17,26 @@ const DeetHeader = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   const username = user?.user_metadata?.username || user?.email?.split("@")[0] || "User";
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    const shouldUseDark = savedTheme === "dark";
+
+    document.documentElement.classList.toggle("dark", shouldUseDark);
+    setIsDarkMode(shouldUseDark);
+  }, []);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode((current) => {
+      const next = !current;
+      document.documentElement.classList.toggle("dark", next);
+      localStorage.setItem("theme", next ? "dark" : "light");
+      return next;
+    });
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
@@ -56,20 +75,50 @@ const DeetHeader = () => {
                   )}
                 </button>
               )}
-              <button onClick={() => navigate("/profile")} className="flex items-center gap-2 mr-2 hover:opacity-80 transition-opacity">
-                <Avatar className="h-7 w-7">
-                  {avatarUrl && <AvatarImage src={avatarUrl} alt={username} />}
-                  <AvatarFallback className="text-xs bg-muted">
-                    <User className="h-3.5 w-3.5" />
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm text-muted-foreground">{username}</span>
-              </button>
+              <HoverCard openDelay={150} closeDelay={100}>
+                <HoverCardTrigger asChild>
+                  <button
+                    onClick={() => navigate("/profile")}
+                    className="mr-2 flex items-center gap-2 rounded-full hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    title="View your profile"
+                    aria-label="View your profile"
+                  >
+                    <Avatar className="h-7 w-7">
+                      {avatarUrl && <AvatarImage src={avatarUrl} alt={username} />}
+                      <AvatarFallback className="text-xs bg-muted">
+                        <User className="h-3.5 w-3.5" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm text-muted-foreground">{username}</span>
+                  </button>
+                </HoverCardTrigger>
+                <HoverCardContent align="end" className="w-44 p-1">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/profile")}
+                    className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                  >
+                    Profile
+                  </button>
+                  <button
+                    type="button"
+                    onClick={toggleDarkMode}
+                    className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                  >
+                    {isDarkMode ? "Light mode" : "Dark mode"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => signOut()}
+                    className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                  >
+                    Log out
+                  </button>
+                </HoverCardContent>
+              </HoverCard>
               {adminModeActive && isAdmin && (
                 <Button variant="outline" size="sm" onClick={() => navigate("/admin")}>Admin Panel</Button>
               )}
-              <Button variant="outline" size="sm" onClick={() => navigate("/profile")}>Profile</Button>
-              <Button variant="ghost" size="sm" onClick={() => signOut()}>Sign Out</Button>
             </>
           ) : (
             <>
