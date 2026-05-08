@@ -48,6 +48,13 @@ const TopicPage = () => {
 
   const [rendered, setRendered] = useState<number>(size);
   const [rankOpen, setRankOpen] = useState(false);
+  const [mobileTab, setMobileTab] = useState<MobileTab>("posts");
+
+  const mobileTabs: { id: MobileTab; label: string }[] = [
+    { id: "posts", label: "Posts" },
+    { id: "recent", label: "Recently Added" },
+    { id: "recommended", label: "Recommended" },
+  ];
 
   useEffect(() => {
     setRendered((prev) =>
