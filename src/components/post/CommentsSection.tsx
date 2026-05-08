@@ -45,7 +45,7 @@ const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
       like_count: 0,
     }));
   } else {
-    rows = (withLikes.data ?? []) as DbComment[];
+    rows = (withLikes.data ?? []) as unknown as DbComment[];
   }
   if (rows.length === 0) return [];
 
