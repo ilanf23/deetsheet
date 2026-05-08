@@ -139,13 +139,25 @@ const TopicPage = () => {
                     {getTopicSubtitle(topic.name, topic.categoryName)}
                   </p>
                 </div>
-                <div className="flex items-start gap-4">
+                <div className="hidden md:flex items-start gap-4">
                   <FollowTopicButton topicId={topic.id} />
                   <TopicHeaderImage
                     src={topic.imageUrl}
                     alt={topic.name}
                     onClick={() => setRankOpen(true)}
                   />
+                </div>
+              </div>
+              {/* Mobile: image + follow under the topic title */}
+              <div className="md:hidden mb-4 flex flex-col gap-2">
+                <TopicHeaderImage
+                  src={topic.imageUrl}
+                  alt={topic.name}
+                  onClick={() => setRankOpen(true)}
+                  fullWidth
+                />
+                <div className="flex justify-end">
+                  <FollowTopicButton topicId={topic.id} />
                 </div>
               </div>
               <RankImagesDialog
