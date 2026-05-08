@@ -61,11 +61,11 @@ const ColumnLayout = ({ onAtBottomChange }: ColumnLayoutProps) => {
     };
   }, [onAtBottomChange, visible.length]);
 
-  const [mobileTab, setMobileTab] = useState<MobileTab>("popular");
+  const [mobileTab, setMobileTab] = useState<MobileTab>("recent");
 
   const tabs: { id: MobileTab; label: string }[] = [
-    { id: "popular", label: "Most Popular" },
     { id: "recent", label: "Recently Added" },
+    { id: "popular", label: "Most Popular" },
     { id: "subjects", label: "Subjects/Topics" },
   ];
 
