@@ -130,10 +130,10 @@ const SubtopicPage = () => {
     );
   }
 
-  const [mobileTab, setMobileTab] = useState<MobileTab>("post");
+  const [mobileTab, setMobileTab] = useState<MobileTab>("recent");
   const mobileTabs: { id: MobileTab; label: string }[] = [
-    { id: "post", label: "Post" },
     { id: "recent", label: "Recently Added" },
+    { id: "post", label: "Post" },
     { id: "recommended", label: "Recommended" },
   ];
 
