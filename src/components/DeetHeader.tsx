@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Menu, X, List, User, Shield } from "lucide-react";
+import { Search, Menu, X, List, User, UserCircle2, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -141,12 +141,16 @@ const DeetHeader = () => {
             title={user ? "View your profile" : "Log in"}
             aria-label={user ? "View your profile" : "Log in"}
           >
-            <Avatar className="h-8 w-8">
-              {user && avatarUrl && <AvatarImage src={avatarUrl} alt={username} />}
-              <AvatarFallback className="text-xs bg-muted">
-                <User className="h-4 w-4" />
-              </AvatarFallback>
-            </Avatar>
+            {user && avatarUrl ? (
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={avatarUrl} alt={username} />
+                <AvatarFallback className="text-xs bg-muted">
+                  <User className="h-4 w-4" />
+                </AvatarFallback>
+              </Avatar>
+            ) : (
+              <UserCircle2 className="h-7 w-7 text-muted-foreground" strokeWidth={1.75} />
+            )}
           </button>
           <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
