@@ -237,7 +237,7 @@ const TopicPage = () => {
 
                 </div>
                 {/* Right rail — Recommendations (shares scroll with middle) */}
-                <aside className="hidden lg:block lg:border-l lg:border-border lg:pl-5 pt-4 space-y-6">
+                <aside className={`${mobileTab === "recommended" ? "block" : "hidden"} lg:block lg:border-l lg:border-border lg:pl-5 pt-4 space-y-6`}>
                   <TopicRecommendations currentTopic={topic as unknown as import("@/data/seedData").Topic} />
                 </aside>
               </div>
