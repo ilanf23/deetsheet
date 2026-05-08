@@ -1,9 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import PopularTopicSection from "@/components/PopularTopicSection";
 import SubjectsSidebar from "@/components/SubjectsSidebar";
 import RecentlyAddedSidebar from "@/components/RecentlyAddedSidebar";
 import { topics } from "@/data/seedData";
 import { useInfiniteList } from "@/hooks/useInfiniteList";
+
+type MobileTab = "popular" | "recent" | "subjects";
 
 const PRIORITY_TOPICS = ["Parent", "Waiter", "Chicago", "Cancer", "College", "Love", "Doctor", "1980s", "New York City", "iPhone", "Married", "20s", "McDonald's"];
 
@@ -59,16 +61,48 @@ const ColumnLayout = ({ onAtBottomChange }: ColumnLayoutProps) => {
     };
   }, [onAtBottomChange, visible.length]);
 
+  const [mobileTab, setMobileTab] = useState<MobileTab>("popular");
+
+  const tabs: { id: MobileTab; label: string }[] = [
+    { id: "popular", label: "Most Popular" },
+    { id: "recent", label: "Recently Added" },
+    { id: "subjects", label: "Subjects/Topics" },
+  ];
+
   return (
-    <div className="flex-1 lg:min-h-0 mx-auto w-full px-6 lg:px-10 mt-5">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[300px_1fr_240px] gap-5 lg:h-full">
+    <div className="flex-1 lg:min-h-0 mx-auto w-full px-4 lg:px-10 mt-3 lg:mt-5">
+      {/* Mobile tab switcher */}
+      <div className="lg:hidden mb-4 flex gap-1 rounded-lg bg-muted p-1">
+        {tabs.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setMobileTab(t.id)}
+            className={`flex-1 px-2 py-2 text-xs font-semibold rounded-md transition-colors ${
+              mobileTab === t.id
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr_240px] gap-5 lg:h-full">
         {/* Left — Recently Added */}
-        <div ref={leftRef} className="lg:h-full lg:overflow-y-auto lg:pr-2">
+        <div
+          ref={leftRef}
+          className={`${mobileTab === "recent" ? "block" : "hidden"} lg:block lg:h-full lg:overflow-y-auto lg:pr-2`}
+        >
           <RecentlyAddedSidebar />
         </div>
 
         {/* Middle — Most Popular */}
-        <div ref={middleRef} className="min-w-0 pt-4 lg:h-full lg:overflow-y-auto lg:pr-2">
+        <div
+          ref={middleRef}
+          className={`${mobileTab === "popular" ? "block" : "hidden"} lg:block min-w-0 pt-4 lg:h-full lg:overflow-y-auto lg:pr-2`}
+        >
           <div className="flex items-center justify-between h-8 mb-4 px-1 pb-2 border-b border-border">
             <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Most Popular</h2>
             <select className="text-xs border rounded px-2 py-1 bg-background text-muted-foreground">
@@ -90,7 +124,10 @@ const ColumnLayout = ({ onAtBottomChange }: ColumnLayoutProps) => {
         </div>
 
         {/* Right — Subjects */}
-        <div ref={rightRef} className="hidden lg:block pt-4 lg:h-full lg:overflow-y-auto lg:pr-2">
+        <div
+          ref={rightRef}
+          className={`${mobileTab === "subjects" ? "block" : "hidden"} lg:block pt-4 lg:h-full lg:overflow-y-auto lg:pr-2`}
+        >
           <SubjectsSidebar />
         </div>
       </div>
