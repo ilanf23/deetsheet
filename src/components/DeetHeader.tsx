@@ -42,7 +42,7 @@ const DeetHeader = () => {
     <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 items-center justify-between gap-4 px-6 lg:px-10">
         <a href="/" className="flex items-center shrink-0">
-          <img src="/logo.png" alt="DeetSheet" className="h-[166px] mt-5" />
+          <img src="/logo.png" alt="DeetSheet" className="h-20 md:h-[166px] mt-1 md:mt-5" />
         </a>
 
         <div className="hidden md:flex flex-1 max-w-md mx-4 items-center gap-2">
@@ -152,9 +152,6 @@ const DeetHeader = () => {
               <UserCircle2 className="h-7 w-7 text-muted-foreground" strokeWidth={1.75} />
             )}
           </button>
-          <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
         </div>
       </div>
 
@@ -167,24 +164,6 @@ const DeetHeader = () => {
         </div>
       )}
 
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t p-4 flex flex-col gap-2 bg-card">
-          {user ? (
-            <div className="flex flex-col gap-2">
-              <span className="text-sm text-muted-foreground">Signed in as {username}</span>
-              <div className="flex gap-2">
-                <Button className="flex-1" onClick={() => { navigate("/profile"); setMobileMenuOpen(false); }}>Profile</Button>
-                <Button variant="outline" className="flex-1" onClick={() => { signOut(); setMobileMenuOpen(false); }}>Sign Out</Button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <Button className="flex-1 bg-primary text-primary-foreground" onClick={() => { navigate("/signup"); setMobileMenuOpen(false); }}>Sign Up</Button>
-              <Button variant="outline" className="flex-1" onClick={() => { navigate("/login"); setMobileMenuOpen(false); }}>Log In</Button>
-            </div>
-          )}
-        </div>
-      )}
     </header>
   );
 };
