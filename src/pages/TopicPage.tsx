@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+
+type MobileTab = "posts" | "recent" | "recommended";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import DeetHeader from "@/components/DeetHeader";
