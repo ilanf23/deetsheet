@@ -114,16 +114,32 @@ const TopicPage = () => {
       <DeetHeader />
       <main className="flex-1">
         <div className="mx-auto mt-5 px-6 lg:px-10 mb-20 lg:mb-0 lg:h-[calc(100vh-4rem)]">
+          {/* Mobile tab switcher */}
+          <div className="lg:hidden mb-4 flex gap-1 rounded-lg bg-muted p-1">
+            {mobileTabs.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setMobileTab(t.id)}
+                className={`flex-1 px-2 py-2 text-xs font-semibold rounded-md transition-colors ${
+                  mobileTab === t.id
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-5 lg:h-full">
-            {/* Left — Recently Added */}
-            <div className="hidden lg:block pt-4 lg:h-full lg:overflow-y-auto lg:pr-2">
+            {/* Left - Recently Added */}
+            <div className={`${mobileTab === "recent" ? "block" : "hidden"} lg:block pt-4 lg:h-full lg:overflow-y-auto lg:pr-2`}>
               <TopicRecentlyAdded topicId={topic.id} topicName={topic.name} />
             </div>
-            {/* Main â Topic posts */}
             {/* Middle + Right share a single scroll container */}
             <div className="lg:h-full lg:overflow-y-auto lg:pr-2">
               <div className="grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-5">
-                <div className="min-w-0 pt-4">
+                <div className={`${mobileTab === "posts" ? "block" : "hidden"} lg:block min-w-0 pt-4`}>
               <div className="min-w-0">
               <div className="mb-3 flex items-start justify-between gap-4">
                 <div className="min-w-0 pl-1.5">
