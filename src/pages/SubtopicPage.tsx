@@ -130,22 +130,46 @@ const SubtopicPage = () => {
     );
   }
 
+  const [mobileTab, setMobileTab] = useState<MobileTab>("post");
+  const mobileTabs: { id: MobileTab; label: string }[] = [
+    { id: "post", label: "Post" },
+    { id: "recent", label: "Recently Added" },
+    { id: "recommended", label: "Recommended" },
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <DeetHeader />
       <main className="flex-1">
         <div className="mx-auto mt-5 px-6 lg:px-10 mb-20 lg:mb-0 lg:h-[calc(100vh-4rem)]">
+          {/* Mobile tab switcher */}
+          <div className="lg:hidden mb-4 flex gap-1 rounded-lg bg-muted p-1">
+            {mobileTabs.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setMobileTab(t.id)}
+                className={`flex-1 px-2 py-2 text-xs font-semibold rounded-md transition-colors ${
+                  mobileTab === t.id
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-5 lg:h-full">
-            {/* Left rail — scrolls independently */}
-            <aside className="hidden lg:block pt-4 lg:h-full lg:overflow-y-auto lg:pr-2">
+            {/* Left rail - Recently Added */}
+            <aside className={`${mobileTab === "recent" ? "block" : "hidden"} lg:block pt-4 lg:h-full lg:overflow-y-auto lg:pr-2`}>
               <TopicRecentlyAdded topicId={topic.id} topicName={topic.name} />
             </aside>
 
             {/* Middle + Right share a single scroll container */}
             <div className="lg:h-full lg:overflow-y-auto lg:pr-2">
               <div className="grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-5">
-                {/* Middle column — the read */}
-                <article className="min-w-0 pt-4 space-y-[var(--space-rhythm-block)]">
+                {/* Middle column - the read */}
+                <article className={`${mobileTab === "post" ? "block" : "hidden"} lg:block min-w-0 pt-4 space-y-[var(--space-rhythm-block)]`}>
               {post ? (
                 <>
                   <div className="space-y-[var(--space-rhythm-tight)]">
@@ -207,17 +231,11 @@ const SubtopicPage = () => {
               )}
                 </article>
 
-                {/* Right rail — topic discovery (shares scroll with middle) */}
-                <aside className="hidden lg:block lg:border-l lg:border-border lg:pl-5 pt-4">
+                {/* Right rail - topic discovery */}
+                <aside className={`${mobileTab === "recommended" ? "block" : "hidden"} lg:block lg:border-l lg:border-border lg:pl-5 pt-4`}>
                   <TopicRecommendations currentTopic={topic as unknown as Topic} />
                 </aside>
               </div>
-            </div>
-
-            {/* Mobile-only stacked rails (below the body) */}
-            <div className="lg:hidden space-y-[var(--space-rhythm-block)]">
-              <TopicRecentlyAdded topicId={topic.id} topicName={topic.name} />
-              <TopicRecommendations currentTopic={topic as unknown as Topic} />
             </div>
           </div>
         </div>
