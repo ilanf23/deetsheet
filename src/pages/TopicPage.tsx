@@ -229,30 +229,35 @@ const TopicHeaderImage = ({
   src,
   alt,
   onClick,
+  fullWidth = false,
 }: {
   src: string | null;
   alt: string;
   onClick?: () => void;
+  fullWidth?: boolean;
 }) => {
   const [error, setError] = useState(false);
   const showImage = !!src && !error;
+  const sizeCls = fullWidth
+    ? "h-40 w-full"
+    : "h-[7.7rem] w-[17.6rem]";
   return (
     <button
       type="button"
       onClick={onClick}
-      className="shrink-0 rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary group bg-muted"
+      className={`shrink-0 rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary group bg-muted ${fullWidth ? "w-full" : ""}`}
       aria-label={`Rank images for ${alt}`}
     >
       {showImage ? (
         <img
           src={src!}
           alt={alt}
-          className="h-[7.7rem] w-[17.6rem] object-cover transition-transform group-hover:scale-[1.02]"
+          className={`${sizeCls} object-cover transition-transform group-hover:scale-[1.02]`}
           loading="lazy"
           onError={() => setError(true)}
         />
       ) : (
-        <div className="h-[7.7rem] w-[17.6rem] flex items-center justify-center text-xs text-muted-foreground font-medium">
+        <div className={`${sizeCls} flex items-center justify-center text-xs text-muted-foreground font-medium`}>
           Rank an image →
         </div>
       )}
