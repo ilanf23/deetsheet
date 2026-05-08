@@ -139,13 +139,25 @@ const TopicPage = () => {
                     {getTopicSubtitle(topic.name, topic.categoryName)}
                   </p>
                 </div>
-                <div className="flex items-start gap-4">
+                <div className="hidden md:flex items-start gap-4">
                   <FollowTopicButton topicId={topic.id} />
                   <TopicHeaderImage
                     src={topic.imageUrl}
                     alt={topic.name}
                     onClick={() => setRankOpen(true)}
                   />
+                </div>
+              </div>
+              {/* Mobile: image + follow under the topic title */}
+              <div className="md:hidden mb-4 flex flex-col gap-2">
+                <TopicHeaderImage
+                  src={topic.imageUrl}
+                  alt={topic.name}
+                  onClick={() => setRankOpen(true)}
+                  fullWidth
+                />
+                <div className="flex justify-end">
+                  <FollowTopicButton topicId={topic.id} />
                 </div>
               </div>
               <RankImagesDialog
@@ -217,30 +229,35 @@ const TopicHeaderImage = ({
   src,
   alt,
   onClick,
+  fullWidth = false,
 }: {
   src: string | null;
   alt: string;
   onClick?: () => void;
+  fullWidth?: boolean;
 }) => {
   const [error, setError] = useState(false);
   const showImage = !!src && !error;
+  const sizeCls = fullWidth
+    ? "h-40 w-full"
+    : "h-[7.7rem] w-[17.6rem]";
   return (
     <button
       type="button"
       onClick={onClick}
-      className="shrink-0 rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary group bg-muted"
+      className={`shrink-0 rounded-lg overflow-hidden focus:outline-none focus:ring-2 focus:ring-primary group bg-muted ${fullWidth ? "w-full" : ""}`}
       aria-label={`Rank images for ${alt}`}
     >
       {showImage ? (
         <img
           src={src!}
           alt={alt}
-          className="h-[7.7rem] w-[17.6rem] object-cover transition-transform group-hover:scale-[1.02]"
+          className={`${sizeCls} object-cover transition-transform group-hover:scale-[1.02]`}
           loading="lazy"
           onError={() => setError(true)}
         />
       ) : (
-        <div className="h-[7.7rem] w-[17.6rem] flex items-center justify-center text-xs text-muted-foreground font-medium">
+        <div className={`${sizeCls} flex items-center justify-center text-xs text-muted-foreground font-medium`}>
           Rank an image →
         </div>
       )}
