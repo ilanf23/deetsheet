@@ -135,6 +135,21 @@ const DeetHeader = () => {
           <Button variant="ghost" size="icon" onClick={() => setSearchOpen(!searchOpen)}>
             <Search className="h-5 w-5" />
           </Button>
+          {user && (
+            <button
+              onClick={() => navigate("/profile")}
+              className="rounded-full hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              title="View your profile"
+              aria-label="View your profile"
+            >
+              <Avatar className="h-8 w-8">
+                {avatarUrl && <AvatarImage src={avatarUrl} alt={username} />}
+                <AvatarFallback className="text-xs bg-muted">
+                  <User className="h-4 w-4" />
+                </AvatarFallback>
+              </Avatar>
+            </button>
+          )}
           <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
             {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
