@@ -1,9 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import PopularTopicSection from "@/components/PopularTopicSection";
 import SubjectsSidebar from "@/components/SubjectsSidebar";
 import RecentlyAddedSidebar from "@/components/RecentlyAddedSidebar";
 import { topics } from "@/data/seedData";
 import { useInfiniteList } from "@/hooks/useInfiniteList";
+
+type MobileTab = "popular" | "recent" | "subjects";
 
 const PRIORITY_TOPICS = ["Parent", "Waiter", "Chicago", "Cancer", "College", "Love", "Doctor", "1980s", "New York City", "iPhone", "Married", "20s", "McDonald's"];
 
