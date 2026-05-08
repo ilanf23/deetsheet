@@ -166,7 +166,7 @@ const ProfileView = () => {
       .eq("id", targetUserId)
       .single()
       .then(({ data }) => {
-        if (data) setProfile(data as Record<string, unknown>);
+        if (data) setProfile(data as unknown as Record<string, unknown>);
       });
 
     void supabase
