@@ -61,6 +61,13 @@ const DeetHeader = () => {
         </div>
 
         <nav className="hidden md:flex items-center gap-1">
+          <button
+            onClick={() => navigate("/about")}
+            className="mr-2 px-2 py-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            About
+          </button>
+
           {user ? (
             <>
               {isAdmin && (
