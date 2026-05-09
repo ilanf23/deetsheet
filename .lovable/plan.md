@@ -1,24 +1,13 @@
-## Problem
+## Goal
+Make the "Rating / You" column header on the Topic page match the font used on the Home page (Inter, 11px, muted gray).
 
-On the homepage's "Recent Posts" sidebar, every post card shows what looks like the same image. The code in `buildPostImageUrl` already derives a per-post seed, but it only varies the `lock` query parameter while keeping the image tags identical (`topic,modifier`) across posts in the same topic. Loremflickr frequently returns the same "hero" photo for identical tag sets regardless of `lock`, so posts in the same topic collapse to one image.
+## Current state
+- **Home page** (`src/components/PopularTopicSection.tsx`): header uses `text-[11px] text-muted-foreground` (Inter body font).
+- **Topic page** (`src/pages/TopicPage.tsx` line 199): this was already updated last turn from `text-sm md:text-base font-heading` to `text-[11px] text-muted-foreground` so it now matches the Home page.
 
-## Fix
+## Plan
+1. Visually verify on `/topic/:topicName` that the Rating/You header now renders in the same Inter 11px muted style as the Home page cards.
+2. If anything still looks off (size, weight, or color), tighten the classes to exactly mirror the Home page header (`text-[11px] text-muted-foreground`, no `font-heading`).
+3. No other pages currently render a "Rating / You" header that needs changing (the Topics directory page does not have one).
 
-Update `buildPostImageUrl` in `src/lib/topicImageQueries.ts` so each post produces a meaningfully different URL:
-
-1. Pick **two** modifiers per post (a primary + a secondary), chosen via two independent hashes of the `postId`. This changes the actual tag set per post, not just a numeric seed.
-2. Use a much larger `lock` range (e.g. `% 1_000_000`) and incorporate `postId` directly into the hash so collisions are rare.
-3. Add a tiny dimension jitter (e.g. width 600 vs 601 vs 602) derived from the seed, which forces Loremflickr to treat the request as a distinct image fetch.
-4. Keep the function signature unchanged so `mapPost` in `src/hooks/useSupabaseTopics.ts` and the Recent Posts / Recently Added / PostCard / SubtopicPage call sites need no edits.
-
-## Verification
-
-- Reload `/` and confirm the 8 cards in "Recent Posts" each show a visibly different image.
-- Confirm posts in the same topic still look on-theme but differ from one another.
-- Confirm topic pages' "Recently Added" sidebar and individual post detail pages also pick up the new variety automatically (same helper).
-
-## Files
-
-- `src/lib/topicImageQueries.ts` — update `buildPostImageUrl` only.
-
-No DB migration, no schema changes, no other call sites need edits.
+No new files, no schema changes — purely a Tailwind class tweak if a follow-up is needed.
