@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Search, Menu, X, List, User, UserCircle2, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,12 @@ import { useAdminMode } from "@/hooks/useAdminMode";
 
 const DeetHeader = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const onTopics = location.pathname === "/topics";
+  const toggleTopics = () => {
+    if (onTopics) navigate(-1);
+    else navigate("/topics");
+  };
   const { user, signOut, avatarUrl } = useAuth();
   const { isAdmin } = useAdminAuth();
   const { adminModeActive, toggleAdminMode } = useAdminMode();
@@ -46,8 +52,8 @@ const DeetHeader = () => {
         </a>
 
         <div className="hidden md:flex flex-1 max-w-md mx-4 items-center gap-2">
-          <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground" title="Topics Directory" onClick={() => navigate("/topics")}>
-            <List className="h-5 w-5" />
+          <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground" title={onTopics ? "Close Topics" : "Topics Directory"} onClick={toggleTopics}>
+            {onTopics ? <X className="h-5 w-5" /> : <List className="h-5 w-5" />}
           </Button>
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -150,8 +156,8 @@ const DeetHeader = () => {
         </nav>
 
         <div className="flex md:hidden items-center gap-2">
-          <Button variant="ghost" size="icon" title="Topics Directory" onClick={() => navigate("/topics")}>
-            <List className="h-5 w-5" />
+          <Button variant="ghost" size="icon" title={onTopics ? "Close Topics" : "Topics Directory"} onClick={toggleTopics}>
+            {onTopics ? <X className="h-5 w-5" /> : <List className="h-5 w-5" />}
           </Button>
           <Button variant="ghost" size="icon" onClick={() => setSearchOpen(!searchOpen)}>
             <Search className="h-5 w-5" />
