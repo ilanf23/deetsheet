@@ -69,6 +69,7 @@ type DbPostRaw = {
   rating_count: number | null;
   comment_count: number | null;
   created_at: string;
+  image_url?: string | null;
   profiles?: { username: string | null } | null;
   topics?: { name: string; category_name: string | null; image_url: string | null } | null;
 };
@@ -97,11 +98,13 @@ const mapPost = (row: DbPostRaw): PostRow => ({
   commentCount: row.comment_count ?? 0,
   score: row.score ?? 0,
   createdAt: new Date(row.created_at),
-  imageUrl: buildPostImageUrl(
-    row.id,
-    row.topics?.name ?? "",
-    row.topics?.category_name ?? "Life"
-  ),
+  imageUrl:
+    row.image_url ??
+    buildPostImageUrl(
+      row.id,
+      row.topics?.name ?? "",
+      row.topics?.category_name ?? "Life"
+    ),
 });
 
 /**
