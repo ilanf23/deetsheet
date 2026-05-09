@@ -52,7 +52,7 @@ const DeetHeader = () => {
         </a>
 
         <div className="hidden md:flex flex-1 max-w-md mx-4 items-center gap-2">
-          <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground" title="Topics Directory" onClick={() => navigate("/topics")}>
+          <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground" title="Topics Directory" onClick={toggleTopics}>
             <List className="h-5 w-5" />
           </Button>
           <div className="relative w-full">
@@ -156,7 +156,7 @@ const DeetHeader = () => {
         </nav>
 
         <div className="flex md:hidden items-center gap-2">
-          <Button variant="ghost" size="icon" title="Topics Directory" onClick={() => navigate("/topics")}>
+          <Button variant="ghost" size="icon" title="Topics Directory" onClick={toggleTopics}>
             <List className="h-5 w-5" />
           </Button>
           <Button variant="ghost" size="icon" onClick={() => setSearchOpen(!searchOpen)}>
