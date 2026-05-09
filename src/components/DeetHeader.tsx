@@ -156,8 +156,8 @@ const DeetHeader = () => {
         </nav>
 
         <div className="flex md:hidden items-center gap-2">
-          <Button variant="ghost" size="icon" title="Topics Directory" onClick={toggleTopics}>
-            <List className="h-5 w-5" />
+          <Button variant="ghost" size="icon" title={onTopics ? "Close Topics" : "Topics Directory"} onClick={toggleTopics}>
+            {onTopics ? <X className="h-5 w-5" /> : <List className="h-5 w-5" />}
           </Button>
           <Button variant="ghost" size="icon" onClick={() => setSearchOpen(!searchOpen)}>
             <Search className="h-5 w-5" />
