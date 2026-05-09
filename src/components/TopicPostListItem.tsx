@@ -43,10 +43,10 @@ const TopicPostListItem = ({ post, rank, topicName, topicId, showRanking = true 
       tabIndex={0}
       onClick={goToPost}
       onKeyDown={handleKeyDown}
-      className="group flex items-baseline gap-4 px-3 py-3.5 -mx-3 rounded-md hover:bg-accent/60 transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="group flex items-baseline gap-3 px-3 py-3.5 -mx-3 rounded-md hover:bg-accent/60 transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {showRanking && (
-        <span className="w-8 shrink-0 text-right text-sm text-muted-foreground tabular-nums">
+        <span className="w-6 shrink-0 text-left text-sm text-muted-foreground tabular-nums">
           {rank}.
         </span>
       )}

@@ -196,9 +196,9 @@ const TopicPage = () => {
               {!!user && (
                 <div
                   aria-hidden
-                  className="flex items-baseline gap-4 px-3 -mx-3 pb-2 text-[11px] text-muted-foreground"
+                  className="flex items-baseline gap-3 px-3 -mx-3 pb-2 text-[11px] text-muted-foreground"
                 >
-                  <span className="w-8 shrink-0" />
+                  <span className="w-6 shrink-0" />
                   <span className="flex-1 min-w-0" />
                   <span className="shrink-0 w-8 text-right">Rating</span>
                   <span className="shrink-0 text-muted-foreground/60" aria-hidden>|</span>
