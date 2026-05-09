@@ -11,6 +11,12 @@ import { useAdminMode } from "@/hooks/useAdminMode";
 
 const DeetHeader = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const onTopics = location.pathname === "/topics";
+  const toggleTopics = () => {
+    if (onTopics) navigate(-1);
+    else navigate("/topics");
+  };
   const { user, signOut, avatarUrl } = useAuth();
   const { isAdmin } = useAdminAuth();
   const { adminModeActive, toggleAdminMode } = useAdminMode();
