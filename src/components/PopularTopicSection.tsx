@@ -35,16 +35,16 @@ const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
 
   return (
     <div
-      className="border rounded-xl bg-card cursor-pointer hover:shadow-lg transition-all duration-200 p-5"
+      className="border rounded-xl bg-card cursor-pointer hover:shadow-lg transition-all duration-200 px-5 py-4"
       onClick={() => navigate(`/topic/${encodeURIComponent(topic.name)}`)}
     >
       {/* Header: title + subtitle */}
-      <div className="mb-3 min-w-0">
+      <div className="mb-2 min-w-0">
         <h3 className="font-heading text-3xl font-normal text-primary leading-tight truncate">
           {topic.name}
         </h3>
         {subtitle && (
-          <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+          <p className="text-sm text-muted-foreground">{subtitle}</p>
         )}
       </div>
 
