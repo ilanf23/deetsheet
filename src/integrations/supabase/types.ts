@@ -241,6 +241,8 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          image_url: string | null
+          is_anonymous: boolean
           is_national: boolean
           location_id: string | null
           rating_count: number
@@ -255,6 +257,8 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          image_url?: string | null
+          is_anonymous?: boolean
           is_national?: boolean
           location_id?: string | null
           rating_count?: number
@@ -269,6 +273,8 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          image_url?: string | null
+          is_anonymous?: boolean
           is_national?: boolean
           location_id?: string | null
           rating_count?: number
