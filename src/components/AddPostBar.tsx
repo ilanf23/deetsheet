@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import CreatePostDialog, { type LocationChoice } from "./CreatePostDialog";
+import CreatePostDialog from "./CreatePostDialog";
 import { useCreatePost } from "@/hooks/useCreatePost";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,14 +17,15 @@ const AddPostBar = ({ topicId, topicName, categoryName, onPostAdded }: AddPostBa
   const createPost = useCreatePost();
   const { toast } = useToast();
 
-  const handleSubmit = async (detail: string, _category: string, locationChoice: LocationChoice) => {
+  const handleSubmit = async (detail: string, image: File | null, anonymous: boolean) => {
     try {
       await createPost.mutateAsync({
         topicId,
         topicName,
         title: detail,
         content: detail,
-        locationChoice,
+        image,
+        anonymous,
       });
       toast({ title: "Post created!", description: "Your post is now live." });
       onPostAdded();
