@@ -35,19 +35,19 @@ const PostHeader = ({
             letterSpacing: "-0.01em",
           }}
         >
+          <span
+            className="tabular-nums mr-2 text-muted-foreground"
+            style={{
+              fontSize: "var(--font-size-post-title)",
+              lineHeight: "var(--line-height-post-title)",
+            }}
+          >
+            {rank}.
+          </span>
           <Link
             to={postHref}
             className="text-primary hover:underline"
           >
-            <span
-              className="tabular-nums mr-2"
-              style={{
-                fontSize: "var(--font-size-post-title)",
-                lineHeight: "var(--line-height-post-title)",
-              }}
-            >
-              {rank}.
-            </span>
             {title}
           </Link>
         </h1>
