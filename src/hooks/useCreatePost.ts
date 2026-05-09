@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "@/contexts/LocationContext";
-import type { LocationChoice } from "@/components/CreatePostDialog";
 
 interface CreatePostInput {
   topicId: string;
@@ -10,22 +9,9 @@ interface CreatePostInput {
   title: string;
   content: string;
   anonymous?: boolean;
-  /** Location choice from the post dialog. Defaults to author's location when omitted. */
-  locationChoice?: LocationChoice;
+  image?: File | null;
 }
 
-/**
- * Hook to create a new post in Supabase.
- *
- * Resolves the post's location_id / is_national flag from the user's
- * `LocationChoice`:
- *   - "author"   → author's saved profile location (national if none)
- *   - "national" → location_id null, is_national true
- *   - "custom"   → resolve city/state via get_or_create_location
- *
- * On success it invalidates the posts-by-topic query so the feed
- * re-renders immediately and bumps the topic caches.
- */
 export const useCreatePost = () => {
   const { user } = useAuth();
   const { location } = useLocation();
@@ -35,39 +21,35 @@ export const useCreatePost = () => {
     mutationFn: async (input: CreatePostInput) => {
       if (!user) throw new Error("You must be signed in to post.");
 
-      // Resolve location_id / is_national from the choice.
+      // Default location: use author's saved location if available, otherwise national.
       let locationId: string | null = null;
       let isNational = false;
 
-      const choice: LocationChoice = input.locationChoice ?? { kind: "author" };
-      if (choice.kind === "national") {
-        isNational = true;
-      } else if (choice.kind === "custom") {
+      if (location?.id) {
+        locationId = location.id;
+      } else if (location?.city && location?.state) {
         const { data, error } = await supabase.rpc("get_or_create_location", {
-          _city: choice.city,
-          _state: choice.state.toUpperCase(),
+          _city: location.city,
+          _state: location.state,
           _country: "US",
         });
-        if (error) throw error;
-        locationId = (data as string) ?? null;
+        if (!error) locationId = (data as string) ?? null;
         if (!locationId) isNational = true;
       } else {
-        // "author"
-        if (location?.id) {
-          locationId = location.id;
-        } else if (location?.city && location?.state) {
-          // Anonymous-style location (no DB row yet) — resolve & save.
-          const { data, error } = await supabase.rpc("get_or_create_location", {
-            _city: location.city,
-            _state: location.state,
-            _country: "US",
-          });
-          if (!error) locationId = (data as string) ?? null;
-          if (!locationId) isNational = true;
-        } else {
-          // No saved location → fall back to national.
-          isNational = true;
-        }
+        isNational = true;
+      }
+
+      // Upload image if provided
+      let imageUrl: string | null = null;
+      if (input.image) {
+        const ext = input.image.name.split(".").pop() || "jpg";
+        const path = `${user.id}/${Date.now()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("post-images")
+          .upload(path, input.image, { upsert: false });
+        if (uploadError) throw uploadError;
+        const { data: pub } = supabase.storage.from("post-images").getPublicUrl(path);
+        imageUrl = pub.publicUrl;
       }
 
       const { data, error } = await supabase
@@ -83,6 +65,8 @@ export const useCreatePost = () => {
           comment_count: 0,
           location_id: locationId,
           is_national: isNational,
+          is_anonymous: input.anonymous ?? false,
+          image_url: imageUrl,
         })
         .select("id")
         .single();
