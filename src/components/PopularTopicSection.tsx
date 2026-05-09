@@ -49,17 +49,23 @@ const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
       </div>
 
       {/* Body: image on the left, numbered list + ratings on the right */}
-      <div className="flex gap-5">
-        <img
-          src={dbTopic?.imageUrl || topic.imageUrl || "/placeholder.svg"}
-          alt={topic.name}
-          onError={(e) => {
-            const img = e.currentTarget;
-            if (img.src.endsWith("/placeholder.svg")) return;
-            img.src = "/placeholder.svg";
-          }}
-          className="w-32 sm:w-36 self-start rounded object-cover shrink-0 aspect-square bg-muted"
-        />
+      <div className="flex gap-5 items-stretch">
+        <div className="w-32 sm:w-36 shrink-0 flex flex-col">
+          {/* Spacer matching the "Rating | You" header row so the image aligns with row 1 */}
+          <div className="text-[11px] leading-none invisible mb-2" aria-hidden>
+            Rating
+          </div>
+          <img
+            src={dbTopic?.imageUrl || topic.imageUrl || "/placeholder.svg"}
+            alt={topic.name}
+            onError={(e) => {
+              const img = e.currentTarget;
+              if (img.src.endsWith("/placeholder.svg")) return;
+              img.src = "/placeholder.svg";
+            }}
+            className="flex-1 w-full rounded object-cover bg-muted"
+          />
+        </div>
         <ol className="flex-1 min-w-0 space-y-2">
           <li className="flex items-center gap-3 text-[11px] text-muted-foreground">
             <span className="w-5 shrink-0" aria-hidden />
