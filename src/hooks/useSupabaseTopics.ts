@@ -69,6 +69,7 @@ type DbPostRaw = {
   rating_count: number | null;
   comment_count: number | null;
   created_at: string;
+  image_url?: string | null;
   profiles?: { username: string | null } | null;
   topics?: { name: string; category_name: string | null; image_url: string | null } | null;
 };
@@ -97,11 +98,13 @@ const mapPost = (row: DbPostRaw): PostRow => ({
   commentCount: row.comment_count ?? 0,
   score: row.score ?? 0,
   createdAt: new Date(row.created_at),
-  imageUrl: buildPostImageUrl(
-    row.id,
-    row.topics?.name ?? "",
-    row.topics?.category_name ?? "Life"
-  ),
+  imageUrl:
+    row.image_url ??
+    buildPostImageUrl(
+      row.id,
+      row.topics?.name ?? "",
+      row.topics?.category_name ?? "Life"
+    ),
 });
 
 /**
@@ -172,7 +175,7 @@ export const usePostsByTopic = (topicId: string | undefined) => {
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, content, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, " +
+          "id, title, content, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, image_url, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             "profiles!posts_author_id_profiles_fkey(username), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
@@ -200,7 +203,7 @@ export const useRecentPosts = (limit = 8) => {
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, topic_id, author_id, average_rating, rating_count, comment_count, created_at, " +
+          "id, title, topic_id, author_id, average_rating, rating_count, comment_count, created_at, image_url, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             "profiles!posts_author_id_profiles_fkey(username), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
@@ -276,7 +279,7 @@ export const useRecentPostsByTopic = (topicId: string | undefined, limit = 5) =>
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, content, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, " +
+          "id, title, content, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, image_url, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             "profiles!posts_author_id_profiles_fkey(username), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
