@@ -40,13 +40,13 @@ const TopicRecommendations = ({ currentTopic }: TopicRecommendationsProps) => {
             to={`/topic/${encodeURIComponent(topic.name)}`}
             className="block rounded-[var(--radius)] border bg-background overflow-hidden hover:bg-accent/40 transition-colors duration-150"
           >
+            <div className="p-3">
+              <h3 className="text-lg font-semibold text-primary group-hover:underline">{topic.name}</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">{topic.categoryName}</p>
+            </div>
             {topic.imageUrl && (
               <TopicImage src={topic.imageUrl} alt={topic.name} />
             )}
-            <div className="p-3">
-              <h3 className="text-sm font-semibold text-primary group-hover:underline">{topic.name}</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">{topic.categoryName} · {topic.postCount} posts</p>
-            </div>
           </Link>
         ))}
       </div>
