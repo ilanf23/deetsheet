@@ -43,11 +43,20 @@ const Contact = () => {
 
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle className="text-lg">Email Us</CardTitle>
+            <CardTitle className="text-lg">Send Us a Message</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ContactForm />
+          </CardContent>
+        </Card>
+
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="text-lg">Email Us Directly</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-2">
-              The best way to reach us is by email. We aim to respond within 24–48 hours.
+              Prefer email? We aim to respond within 24–48 hours.
             </p>
             <a
               href="mailto:support@deetsheet.com"
