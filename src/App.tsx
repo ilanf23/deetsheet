@@ -52,6 +52,7 @@ const AdminComments = lazy(() => import("./pages/admin/AdminComments"));
 const AdminTopics = lazy(() => import("./pages/admin/AdminTopics"));
 const AdminReports = lazy(() => import("./pages/admin/AdminReports"));
 const AdminAuditLog = lazy(() => import("./pages/admin/AdminAuditLog"));
+const AdminContactMessages = lazy(() => import("./pages/admin/AdminContactMessages"));
 
 function AdminChunkFallback() {
   return (
@@ -129,6 +130,7 @@ const App = () => (
                 <Route path="topics" element={<AdminTopics />} />
                 <Route path="reports" element={<AdminReports />} />
                 <Route path="audit" element={<AdminAuditLog />} />
+                <Route path="contact-messages" element={<AdminContactMessages />} />
               </Route>
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

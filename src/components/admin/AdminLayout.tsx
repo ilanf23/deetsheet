@@ -8,6 +8,7 @@ import {
   Hash,
   Flag,
   History,
+  Mail,
   ArrowLeft,
   LogOut,
 } from "lucide-react";
@@ -19,6 +20,7 @@ const navItems = [
   { to: "/admin/comments", label: "Comments", icon: MessageSquare },
   { to: "/admin/topics", label: "Topics", icon: Hash },
   { to: "/admin/reports", label: "Reports", icon: Flag },
+  { to: "/admin/contact-messages", label: "Contact Messages", icon: Mail },
   { to: "/admin/audit", label: "Audit Log", icon: History },
 ];
 
