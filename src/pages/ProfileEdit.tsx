@@ -528,8 +528,8 @@ const ProfileEdit = () => {
                   </div>
                 </div>
 
-                <nav className="space-y-1">
-                  <h2 className="px-4 mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+                <nav className="space-y-2">
+                  <h2 className="px-4 mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground/70">
                     Profile Settings
                   </h2>
                   {SECTIONS.map((s) => {
@@ -568,16 +568,16 @@ const ProfileEdit = () => {
                           requestAnimationFrame(step);
                         }}
                         className={cn(
-                          "group flex items-center justify-between px-4 py-2.5 rounded-xl text-sm transition-all duration-200",
+                          "group flex items-center justify-between px-5 py-4 rounded-xl text-lg transition-all duration-200",
                           isActive
                             ? "bg-primary text-primary-foreground shadow-lg shadow-primary/15 font-semibold"
                             : "hover:bg-card hover:shadow-sm text-muted-foreground hover:text-foreground font-medium",
                         )}
                       >
-                        <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex items-center gap-3.5 min-w-0">
                           <span
                             className={cn(
-                              "flex items-center justify-center h-5 w-5 rounded-md shrink-0 transition-colors",
+                              "flex items-center justify-center h-7 w-7 rounded-md shrink-0 transition-colors",
                               isActive
                                 ? "border-2 border-primary-foreground/40"
                                 : complete
@@ -588,13 +588,13 @@ const ProfileEdit = () => {
                             )}
                           >
                             {!isActive && complete && (
-                              <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                              <Check className="h-5 w-5" strokeWidth={3} />
                             )}
                           </span>
                           <span className="truncate">{s.label}</span>
                         </div>
                         {warning > 0 && !isActive && (
-                          <span className="shrink-0 ml-2 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 text-[10px] font-bold text-secondary-foreground bg-secondary rounded-full">
+                          <span className="shrink-0 ml-2 inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 text-xs font-bold text-secondary-foreground bg-secondary rounded-full">
                             {warning}
                           </span>
                         )}

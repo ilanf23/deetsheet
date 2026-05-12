@@ -207,7 +207,7 @@ const CommentItem = ({
         <div hidden={collapsed}>
           <div
             ref={contentRef}
-            className={`text-[0.95rem] text-card-foreground mt-2 leading-relaxed [&_p]:my-1 [&_a]:text-primary [&_a]:underline ${
+            className={`text-[1.0125rem] text-card-foreground mt-2 leading-relaxed [&_p]:my-1 [&_a]:text-primary [&_a]:underline ${
               expanded ? "" : "line-clamp-3"
             }`}
             dangerouslySetInnerHTML={{ __html: node.content }}
