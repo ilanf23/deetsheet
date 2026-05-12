@@ -494,14 +494,6 @@ const ProfileEdit = () => {
                         {handleText}
                       </div>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => setLinkedInDialogOpen(true)}
-                      className="mt-3 inline-flex items-center gap-2 text-sm text-primary hover:underline font-medium"
-                    >
-                      <Linkedin className="h-4 w-4" />
-                      Import from LinkedIn
-                    </button>
                   </div>
                 </div>
 
