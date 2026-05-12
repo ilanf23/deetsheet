@@ -4,6 +4,14 @@
 @tailwind components;
 @tailwind utilities;
 
+.home-theme {
+  --primary: 151 39% 20%;
+  --ring: 151 39% 20%;
+  --accent: 151 39% 95%;
+  --accent-foreground: 151 39% 15%;
+  --sidebar-ring: 151 39% 20%;
+}
+
 @layer base {
   :root {
     --background: 0 0% 98%;
