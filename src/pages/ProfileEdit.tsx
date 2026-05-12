@@ -498,10 +498,14 @@ const ProfileEdit = () => {
                   </div>
                 </div>
 
-                <nav className="space-y-2">
+                <nav className="space-y-1">
+                  <h2 className="px-4 mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 font-heading">
+                    Profile Settings
+                  </h2>
                   {SECTIONS.map((s) => {
                     const isActive = activeSection === s.id;
                     const warning = sectionState[s.id].warning;
+                    const complete = sectionState[s.id].complete;
                     return (
                       <a
                         key={s.id}
@@ -534,27 +538,34 @@ const ProfileEdit = () => {
                           requestAnimationFrame(step);
                         }}
                         className={cn(
-                          "group flex items-center gap-2.5 px-4 py-3 rounded-2xl border bg-card text-sm transition-all",
+                          "group flex items-center justify-between px-4 py-2.5 rounded-xl text-sm transition-all duration-200",
                           isActive
-                            ? "border-primary/40 bg-primary/10 text-foreground font-medium shadow-sm"
-                            : "border-border text-foreground/80 hover:bg-muted hover:border-muted-foreground/20",
+                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/15 font-semibold"
+                            : "hover:bg-card hover:shadow-sm text-muted-foreground hover:text-foreground font-medium",
                         )}
                       >
-                        <span
-                          className={cn(
-                            "h-4 w-4 rounded shrink-0",
-                            isActive ? "bg-primary" : "bg-muted-foreground/25",
-                          )}
-                        />
-                        <span className="flex-1 truncate">{s.label}</span>
-                        {warning > 0 && (
+                        <div className="flex items-center gap-3 min-w-0">
                           <span
                             className={cn(
-                              "shrink-0 inline-flex items-center justify-center text-[10px] font-semibold text-secondary-foreground bg-secondary rounded-full",
-                              warning === 1 ? "h-2 w-2" : "h-4 min-w-4 px-1",
+                              "flex items-center justify-center h-5 w-5 rounded-md shrink-0 transition-colors",
+                              isActive
+                                ? "border-2 border-primary-foreground/40"
+                                : complete
+                                  ? "bg-primary/10 text-primary"
+                                  : warning > 0
+                                    ? "border-2 border-secondary/50 group-hover:border-secondary"
+                                    : "border-2 border-muted-foreground/25 group-hover:border-muted-foreground/40",
                             )}
                           >
-                            {warning > 1 ? warning : ""}
+                            {!isActive && complete && (
+                              <Check className="h-3.5 w-3.5" strokeWidth={3} />
+                            )}
+                          </span>
+                          <span className="truncate">{s.label}</span>
+                        </div>
+                        {warning > 0 && !isActive && (
+                          <span className="shrink-0 ml-2 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 text-[10px] font-bold text-secondary-foreground bg-secondary rounded-full">
+                            {warning}
                           </span>
                         )}
                       </a>
