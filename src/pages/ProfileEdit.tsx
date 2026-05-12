@@ -455,119 +455,119 @@ const ProfileEdit = () => {
             <form
               id="profile-form"
               onSubmit={form.handleSubmit(onSubmit)}
-              className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-10"
-            >
-              {/* ── Sidebar ── */}
-              <aside className="lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-6rem)]">
-                <div className="bg-card rounded-2xl border p-8 space-y-7 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
-                  <div className="flex flex-col items-center text-center">
-                    <div className="relative">
-                      <Avatar className="h-40 w-40 ring-4 ring-card">
-                        {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile avatar" />}
-                        <AvatarFallback className="bg-primary/15 text-primary text-3xl">
-                          {initials || <User className="h-12 w-12" />}
-                        </AvatarFallback>
-                      </Avatar>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleFileSelect}
-                      />
-                      <button
-                        type="button"
-                        disabled={uploadingAvatar}
-                        onClick={() => fileInputRef.current?.click()}
-                        className="absolute bottom-1 right-1 h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:opacity-90 transition-opacity"
-                        aria-label="Change avatar"
-                      >
-                        <Camera className="h-5 w-5" />
-                      </button>
-                    </div>
-                    <div className="mt-5 text-2xl font-semibold text-foreground truncate w-full">
-                      {displayName}
-                    </div>
-                    {handleText && (
-                      <div className="text-lg text-muted-foreground truncate w-full">
-                        {handleText}
-                      </div>
-                    )}
+            className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6"
+          >
+            {/* ── Sidebar ── */}
+            <aside className="lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-6rem)]">
+              <div className="bg-card rounded-2xl border p-5 space-y-5 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
+                <div className="flex flex-col items-center text-center">
+                  <div className="relative">
+                    <Avatar className="h-24 w-24 ring-2 ring-card">
+                      {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile avatar" />}
+                      <AvatarFallback className="bg-primary/15 text-primary text-lg">
+                        {initials || <User className="h-8 w-8" />}
+                      </AvatarFallback>
+                    </Avatar>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileSelect}
+                    />
                     <button
                       type="button"
-                      onClick={() => setLinkedInDialogOpen(true)}
-                      className="mt-4 inline-flex items-center gap-2 text-lg text-primary hover:underline font-medium"
+                      disabled={uploadingAvatar}
+                      onClick={() => fileInputRef.current?.click()}
+                      className="absolute bottom-0 right-0 h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:opacity-90 transition-opacity"
+                      aria-label="Change avatar"
                     >
-                      <Linkedin className="h-5 w-5" />
-                      Import from LinkedIn
+                      <Camera className="h-3.5 w-3.5" />
                     </button>
                   </div>
+                  <div className="mt-3 text-base font-semibold text-foreground truncate w-full">
+                    {displayName}
+                  </div>
+                  {handleText && (
+                    <div className="text-sm text-muted-foreground truncate w-full">
+                      {handleText}
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setLinkedInDialogOpen(true)}
+                    className="mt-3 inline-flex items-center gap-2 text-sm text-primary hover:underline font-medium"
+                  >
+                    <Linkedin className="h-4 w-4" />
+                    Import from LinkedIn
+                  </button>
+                </div>
 
-                  <nav className="space-y-1">
-                    {SECTIONS.map((s) => {
-                      const isActive = activeSection === s.id;
-                      const warning = sectionState[s.id].warning;
-                      return (
-                        <a
-                          key={s.id}
-                          href={`#${s.id}`}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            const el = document.getElementById(s.id);
-                            if (el) {
-                              el.scrollIntoView({ behavior: "smooth", block: "start" });
-                              setActiveSection(s.id);
-                            }
-                          }}
+                <nav className="space-y-1">
+                  {SECTIONS.map((s) => {
+                    const isActive = activeSection === s.id;
+                    const warning = sectionState[s.id].warning;
+                    return (
+                      <a
+                        key={s.id}
+                        href={`#${s.id}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const el = document.getElementById(s.id);
+                          if (el) {
+                            el.scrollIntoView({ behavior: "smooth", block: "start" });
+                            setActiveSection(s.id);
+                          }
+                        }}
+                        className={cn(
+                          "group flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors",
+                          isActive
+                            ? "bg-primary/10 text-foreground font-medium"
+                            : "text-foreground/80 hover:bg-muted",
+                        )}
+                      >
+                        <span
                           className={cn(
-                            "group flex items-center gap-3.5 px-4 py-3.5 rounded-lg text-lg transition-colors",
-                            isActive
-                              ? "bg-primary/10 text-foreground font-medium"
-                              : "text-foreground/80 hover:bg-muted",
+                            "h-4 w-4 rounded shrink-0",
+                            isActive ? "bg-primary" : "bg-muted-foreground/25",
                           )}
-                        >
+                        />
+                        <span className="flex-1 truncate">{s.label}</span>
+                        {warning > 0 && (
                           <span
                             className={cn(
-                              "h-6 w-6 rounded shrink-0",
-                              isActive ? "bg-primary" : "bg-muted-foreground/25",
+                              "shrink-0 inline-flex items-center justify-center text-[10px] font-semibold text-secondary-foreground bg-secondary rounded-full",
+                              warning === 1 ? "h-2 w-2" : "h-4 min-w-4 px-1",
                             )}
-                          />
-                          <span className="flex-1 truncate">{s.label}</span>
-                          {warning > 0 && (
-                            <span
-                              className={cn(
-                                "shrink-0 inline-flex items-center justify-center text-[10px] font-semibold text-secondary-foreground bg-secondary rounded-full",
-                                warning === 1 ? "h-2 w-2" : "h-4 min-w-4 px-1",
-                              )}
-                            >
-                              {warning > 1 ? warning : ""}
-                            </span>
-                          )}
-                        </a>
-                      );
-                    })}
-                  </nav>
+                          >
+                            {warning > 1 ? warning : ""}
+                          </span>
+                        )}
+                      </a>
+                    );
+                  })}
+                </nav>
 
-                  <Button
-                    type="submit"
-                    disabled={saving}
-                    className="w-full h-14 text-xl font-semibold"
-                  >
-                    {saving ? "Saving..." : "Save Profile"}
-                  </Button>
+                <Button
+                  type="submit"
+                  disabled={saving}
+                  className="w-full"
+                >
+                  {saving ? "Saving..." : "Save Profile"}
+                </Button>
+              </div>
+            </aside>
+
+            {/* ── Main content ── */}
+            <div className="space-y-4 min-w-0">
+              {profileIncomplete && (
+                <div className="flex items-center gap-2.5 rounded-xl border border-secondary/30 bg-secondary/10 px-4 py-3 text-sm">
+                  <AlertCircle className="h-4 w-4 text-secondary shrink-0" />
+                  <span className="text-foreground/90">
+                    Complete your profile to unlock all features
+                  </span>
                 </div>
-              </aside>
-
-              {/* ── Main content ── */}
-              <div className="space-y-6 min-w-0">
-                {profileIncomplete && (
-                  <div className="flex items-center gap-3.5 rounded-xl border border-secondary/30 bg-secondary/10 px-6 py-5 text-lg">
-                    <AlertCircle className="h-6 w-6 text-secondary shrink-0" />
-                    <span className="text-foreground/90">
-                      Complete your profile to unlock all features
-                    </span>
-                  </div>
-                )}
+              )}
 
                 <div className="space-y-8">
                   {/* ── Personal Information ── */}
