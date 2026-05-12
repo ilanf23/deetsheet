@@ -87,12 +87,12 @@ const CategoryRow = ({ category, icon: Icon, expanded, onToggle }: CategoryRowPr
       </button>
 
       {expanded && (
-        <ul className="mt-1 mb-2 ml-9 pl-3 space-y-0.5">
+        <ul className="mt-0.5 mb-1 ml-9 pl-3">
           {catTopics.map((topic) => (
             <li key={topic.id}>
               <Link
                 to={`/topic/${encodeURIComponent(topic.name)}`}
-                className="block px-3 py-1.5 text-sm rounded-md text-primary hover:bg-muted hover:underline truncate"
+                className="block px-3 py-0.5 text-sm rounded-md text-primary hover:bg-muted hover:underline truncate"
               >
                 {topic.name}
               </Link>
@@ -101,7 +101,7 @@ const CategoryRow = ({ category, icon: Icon, expanded, onToggle }: CategoryRowPr
           <li>
             <Link
               to={`/topics?category=${encodeURIComponent(category)}`}
-              className="flex items-center gap-2 w-full px-3 py-1.5 text-sm rounded-md text-primary hover:bg-muted hover:underline"
+              className="flex items-center gap-2 w-full px-3 py-0.5 text-sm rounded-md text-primary hover:bg-muted hover:underline"
             >
               <ChevronRight className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
               <span className="truncate">View more</span>

@@ -5,11 +5,13 @@
 @tailwind utilities;
 
 .home-theme {
-  --primary: 146 38% 20%;
-  --ring: 146 38% 20%;
+  --primary: 146 38% 25%;
+  --ring: 146 38% 25%;
   --accent: 146 38% 95%;
   --accent-foreground: 146 38% 15%;
-  --sidebar-ring: 146 38% 20%;
+  --sidebar-ring: 146 38% 25%;
+  --border: 220 13% 78%;
+  --sidebar-border: 220 13% 78%;
 }
 
 @layer base {

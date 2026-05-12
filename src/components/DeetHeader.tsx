@@ -69,7 +69,7 @@ const DeetHeader = () => {
         <nav className="hidden md:flex items-center gap-1">
           <button
             onClick={() => navigate("/about")}
-            className="mr-2 px-2 py-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="mr-2 px-2 py-1 text-sm text-foreground/80 hover:text-foreground transition-colors"
           >
             About
           </button>
@@ -102,7 +102,7 @@ const DeetHeader = () => {
                         <User className="h-3.5 w-3.5" />
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-sm text-muted-foreground">{username}</span>
+                    <span className="text-sm text-foreground/80">{username}</span>
                   </button>
                 </HoverCardTrigger>
                 <HoverCardContent align="end" className="w-44 p-1">

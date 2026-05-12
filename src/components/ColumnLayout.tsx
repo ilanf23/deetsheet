@@ -105,7 +105,7 @@ const ColumnLayout = ({ onAtBottomChange }: ColumnLayoutProps) => {
         >
           <div className="flex items-center justify-between h-8 mb-4 px-1 pb-2 border-b border-border">
             <h2 className="text-[11px] font-semibold uppercase tracking-wider text-foreground">Most Popular</h2>
-            <select className="text-xs border rounded px-2 py-1 bg-background text-muted-foreground">
+            <select className="text-xs border border-foreground/40 rounded px-2 py-1 bg-background text-muted-foreground">
               <option>This Year</option>
               <option>All Time</option>
               <option>This Month</option>
