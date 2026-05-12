@@ -269,16 +269,23 @@ const ProfileEdit = () => {
     const aboutComplete = Boolean(bio.trim());
     const credentialsComplete = credentials.length > 0 || expertiseTopics.length > 0;
     const emailComplete = Object.values(prefs).some(Boolean);
-    const accountIssues = 2; // 2FA + password rotation reminders — surface as a default nudge
+    const securityChecks = [
+      security.email_verified,
+      security.strong_password_set,
+      security.two_factor_enabled,
+      Boolean(security.recovery_email),
+    ];
+    const accountIssues = securityChecks.filter((c) => !c).length;
+    const accountComplete = accountIssues === 0;
     return {
       "personal-info": { complete: personalComplete, warning: !personalComplete ? 0 : 0 },
       education: { complete: educationComplete, warning: 0 },
       "about-me": { complete: aboutComplete, warning: 0 },
       credentials: { complete: credentialsComplete, warning: 0 },
       "email-preferences": { complete: emailComplete, warning: emailComplete ? 0 : 1 },
-      account: { complete: false, warning: accountIssues },
+      account: { complete: accountComplete, warning: accountIssues },
     } as Record<SectionId, { complete: boolean; warning: number }>;
-  }, [formValues, education, job, bio, credentials, expertiseTopics, prefs]);
+  }, [formValues, education, job, bio, credentials, expertiseTopics, prefs, security]);
 
   const profileIncomplete = !sectionState["personal-info"].complete;
 
