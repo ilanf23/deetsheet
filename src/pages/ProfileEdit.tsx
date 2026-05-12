@@ -14,6 +14,7 @@ import {
   Linkedin,
   AlertCircle,
   Eye,
+  Check,
 } from "lucide-react";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
