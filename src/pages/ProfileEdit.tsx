@@ -459,51 +459,53 @@ const ProfileEdit = () => {
           >
             {/* ── Sidebar ── */}
             <aside className="lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-6rem)]">
-              <div className="bg-card rounded-2xl border p-5 space-y-5 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
-                <div className="flex flex-col items-center text-center">
-                  <div className="relative">
-                    <Avatar className="h-24 w-24 ring-2 ring-card">
-                      {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile avatar" />}
-                      <AvatarFallback className="bg-primary/15 text-primary text-lg">
-                        {initials || <User className="h-8 w-8" />}
-                      </AvatarFallback>
-                    </Avatar>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleFileSelect}
-                    />
+              <div className="space-y-3 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto pr-1">
+                <div className="bg-card rounded-2xl border p-5">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="relative">
+                      <Avatar className="h-24 w-24 ring-2 ring-card">
+                        {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile avatar" />}
+                        <AvatarFallback className="bg-primary/15 text-primary text-lg">
+                          {initials || <User className="h-8 w-8" />}
+                        </AvatarFallback>
+                      </Avatar>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFileSelect}
+                      />
+                      <button
+                        type="button"
+                        disabled={uploadingAvatar}
+                        onClick={() => fileInputRef.current?.click()}
+                        className="absolute bottom-0 right-0 h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:opacity-90 transition-opacity"
+                        aria-label="Change avatar"
+                      >
+                        <Camera className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <div className="mt-3 text-base font-semibold text-foreground truncate w-full">
+                      {displayName}
+                    </div>
+                    {handleText && (
+                      <div className="text-sm text-muted-foreground truncate w-full">
+                        {handleText}
+                      </div>
+                    )}
                     <button
                       type="button"
-                      disabled={uploadingAvatar}
-                      onClick={() => fileInputRef.current?.click()}
-                      className="absolute bottom-0 right-0 h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:opacity-90 transition-opacity"
-                      aria-label="Change avatar"
+                      onClick={() => setLinkedInDialogOpen(true)}
+                      className="mt-3 inline-flex items-center gap-2 text-sm text-primary hover:underline font-medium"
                     >
-                      <Camera className="h-3.5 w-3.5" />
+                      <Linkedin className="h-4 w-4" />
+                      Import from LinkedIn
                     </button>
                   </div>
-                  <div className="mt-3 text-base font-semibold text-foreground truncate w-full">
-                    {displayName}
-                  </div>
-                  {handleText && (
-                    <div className="text-sm text-muted-foreground truncate w-full">
-                      {handleText}
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setLinkedInDialogOpen(true)}
-                    className="mt-3 inline-flex items-center gap-2 text-sm text-primary hover:underline font-medium"
-                  >
-                    <Linkedin className="h-4 w-4" />
-                    Import from LinkedIn
-                  </button>
                 </div>
 
-                <nav className="space-y-1">
+                <nav className="space-y-2">
                   {SECTIONS.map((s) => {
                     const isActive = activeSection === s.id;
                     const warning = sectionState[s.id].warning;
@@ -516,7 +518,7 @@ const ProfileEdit = () => {
                           const el = document.getElementById(s.id);
                           if (!el) return;
                           setActiveSection(s.id);
-                          const offset = 96; // matches scroll-mt-24
+                          const offset = 96;
                           const startY = window.scrollY;
                           const targetY =
                             el.getBoundingClientRect().top + window.scrollY - offset;
@@ -539,10 +541,10 @@ const ProfileEdit = () => {
                           requestAnimationFrame(step);
                         }}
                         className={cn(
-                          "group flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors",
+                          "group flex items-center gap-2.5 px-4 py-3 rounded-2xl border bg-card text-sm transition-all",
                           isActive
-                            ? "bg-primary/10 text-foreground font-medium"
-                            : "text-foreground/80 hover:bg-muted",
+                            ? "border-primary/40 bg-primary/10 text-foreground font-medium shadow-sm"
+                            : "border-border text-foreground/80 hover:bg-muted hover:border-muted-foreground/20",
                         )}
                       >
                         <span
