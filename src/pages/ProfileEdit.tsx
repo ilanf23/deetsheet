@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -8,18 +8,12 @@ import {
   GraduationCap,
   Briefcase,
   Award,
-  BookOpen,
-  Eye,
   Camera,
   Plus,
   X,
-  MapPin,
-  Heart,
-  Mail,
-  Lock,
-  Tag,
-  Save,
   Linkedin,
+  AlertCircle,
+  Eye,
 } from "lucide-react";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
@@ -29,9 +23,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectTrigger,
@@ -54,6 +46,7 @@ import { supabase } from "@/integrations/supabase/client";
 import LinkedInImportDialog from "@/components/LinkedInImportDialog";
 import AvatarCropDialog from "@/components/AvatarCropDialog";
 import type { LinkedInProfileData } from "@/types/linkedin";
+import { cn } from "@/lib/utils";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -76,10 +69,10 @@ const CREDENTIAL_ICONS: { value: string; label: string; icon: React.ReactNode }[
 ];
 
 const EMAIL_PREFS = [
-  { key: "emailOnMessage", label: "Send me an email when someone sends me a message." },
-  { key: "emailOnComment", label: "Email me when someone comments on my posting." },
-  { key: "emailOnFollow", label: "Email me when someone follows me." },
-  { key: "emailOnPostEdit", label: "Send me an email when my post has been moved or edited." },
+  { key: "emailOnFollow", label: "Receive notifications about new connections" },
+  { key: "emailOnMessage", label: "Receive messages from other users" },
+  { key: "emailOnPostEdit", label: "Receive updates about platform features" },
+  { key: "emailOnComment", label: "Receive promotional emails and offers" },
 ] as const;
 
 const profileSchema = z.object({
@@ -96,22 +89,16 @@ const profileSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
-const SectionHeader = ({
-  icon: Icon,
-  title,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  title: string;
-}) => (
-  <div className="flex items-center gap-2 mb-3">
-    <div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center">
-      <Icon className="h-4 w-4 text-primary" />
-    </div>
-    <h3 className="text-sm font-semibold uppercase tracking-wider text-primary">
-      {title}
-    </h3>
-  </div>
-);
+const SECTIONS = [
+  { id: "personal-info", label: "Personal Info" },
+  { id: "education", label: "Education & Career" },
+  { id: "about-me", label: "About Me" },
+  { id: "credentials", label: "Credentials" },
+  { id: "email-preferences", label: "Email Preferences" },
+  { id: "account", label: "Account & Security" },
+] as const;
+
+type SectionId = (typeof SECTIONS)[number]["id"];
 
 function getCredentialIcon(value: string) {
   const found = CREDENTIAL_ICONS.find((c) => c.value === value);
@@ -137,24 +124,27 @@ const ProfileEdit = () => {
   const [reading, setReading] = useState("");
   const [cityBorn, setCityBorn] = useState("");
   const [emailFrequency, setEmailFrequency] = useState("weekly");
+  const [username, setUsername] = useState<string>("");
 
   const [prefs, setPrefs] = useState<Record<string, boolean>>({
     emailOnMessage: true,
     emailOnComment: true,
     emailOnFollow: true,
     emailOnPostEdit: true,
-    emailTopPosts: false,
+    emailTopPosts: true,
   });
 
   const [credentials, setCredentials] = useState<{ id: string; icon: string; text: string }[]>([]);
   const [showCredentialInput, setShowCredentialInput] = useState(false);
   const [newCredentialText, setNewCredentialText] = useState("");
   const [newCredentialIcon, setNewCredentialIcon] = useState("pencil");
+  const [credentialInput, setCredentialInput] = useState("");
   const [expertiseTopics, setExpertiseTopics] = useState<string[]>([]);
   const [topicInput, setTopicInput] = useState("");
   const [linkedInDialogOpen, setLinkedInDialogOpen] = useState(false);
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+  const [activeSection, setActiveSection] = useState<SectionId>("personal-info");
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -171,16 +161,13 @@ const ProfileEdit = () => {
     },
   });
 
-  // Load existing profile from DB. Selecting only the columns this form
-  // actually populates (rather than `*`) cuts the payload meaningfully on
-  // profiles with rich credential / preference fields.
   useEffect(() => {
     if (!user) return;
     const load = async () => {
       const { data } = await supabase
         .from("profiles")
         .select(
-          "name, entity_type, sex, birth_month, birth_day, birth_year, city, state, country, bio, education, high_school, college, degree, major, job, favorite_movie, reading, city_born, avatar_url, email_frequency, email_on_message, email_on_comment, email_on_follow, email_on_post_edit, email_top_posts",
+          "username, name, entity_type, sex, birth_month, birth_day, birth_year, city, state, country, bio, education, high_school, college, degree, major, job, favorite_movie, reading, city_born, avatar_url, email_frequency, email_on_message, email_on_comment, email_on_follow, email_on_post_edit, email_top_posts",
         )
         .eq("id", user.id)
         .single();
@@ -196,6 +183,7 @@ const ProfileEdit = () => {
           state: data.state || "",
           country: data.country || "",
         });
+        setUsername(data.username || "");
         setBio(data.bio || "");
         setEducation(data.education || "");
         setHighSchool(data.high_school || "");
@@ -213,12 +201,62 @@ const ProfileEdit = () => {
           emailOnComment: data.email_on_comment ?? true,
           emailOnFollow: data.email_on_follow ?? true,
           emailOnPostEdit: data.email_on_post_edit ?? true,
-          emailTopPosts: data.email_top_posts ?? false,
+          emailTopPosts: data.email_top_posts ?? true,
         });
       }
     };
     load();
   }, [user]);
+
+  // Scroll-spy: highlight the sidebar nav item for the section currently in view.
+  useEffect(() => {
+    const ids = SECTIONS.map((s) => s.id);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]) setActiveSection(visible[0].target.id as SectionId);
+      },
+      { rootMargin: "-25% 0px -60% 0px", threshold: [0, 0.25, 0.5] },
+    );
+    ids.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  const formValues = form.watch();
+
+  // Per-section completion. Drives the orange warning indicators in the sidebar.
+  const sectionState = useMemo(() => {
+    const personalComplete = Boolean(
+      formValues.name &&
+        formValues.entityType &&
+        formValues.sex &&
+        formValues.birthMonth &&
+        formValues.birthDay &&
+        formValues.birthYear &&
+        formValues.city &&
+        formValues.state,
+    );
+    const educationComplete = Boolean(education && job);
+    const aboutComplete = Boolean(bio.trim());
+    const credentialsComplete = credentials.length > 0 || expertiseTopics.length > 0;
+    const emailComplete = Object.values(prefs).some(Boolean);
+    const accountIssues = 2; // 2FA + password rotation reminders — surface as a default nudge
+    return {
+      "personal-info": { complete: personalComplete, warning: !personalComplete ? 0 : 0 },
+      education: { complete: educationComplete, warning: 0 },
+      "about-me": { complete: aboutComplete, warning: 0 },
+      credentials: { complete: credentialsComplete, warning: 0 },
+      "email-preferences": { complete: emailComplete, warning: emailComplete ? 0 : 1 },
+      account: { complete: false, warning: accountIssues },
+    } as Record<SectionId, { complete: boolean; warning: number }>;
+  }, [formValues, education, job, bio, credentials, expertiseTopics, prefs]);
+
+  const profileIncomplete = !sectionState["personal-info"].complete;
 
   const onSubmit = async (values: ProfileFormValues) => {
     if (!user) return;
@@ -260,8 +298,6 @@ const ProfileEdit = () => {
       return;
     }
 
-    // Keep the header location chip in sync with the city/state the user
-    // just set on their profile.
     const cityTrim = values.city?.trim() ?? "";
     const stateTrim = values.state?.trim() ?? "";
     if (cityTrim && stateTrim) {
@@ -287,14 +323,12 @@ const ProfileEdit = () => {
       return;
     }
 
-    // Revoke previous object URL if any
     if (cropImageSrc) URL.revokeObjectURL(cropImageSrc);
 
     const objectUrl = URL.createObjectURL(file);
     setCropImageSrc(objectUrl);
     setCropDialogOpen(true);
 
-    // Reset input so the same file can be re-selected
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -322,7 +356,6 @@ const ProfileEdit = () => {
     await refreshProfile();
     toast({ title: "Avatar updated!" });
 
-    // Clean up object URL
     if (cropImageSrc) {
       URL.revokeObjectURL(cropImageSrc);
       setCropImageSrc(null);
@@ -339,6 +372,16 @@ const ProfileEdit = () => {
       URL.revokeObjectURL(cropImageSrc);
       setCropImageSrc(null);
     }
+  };
+
+  const addCredentialFromInput = () => {
+    const t = credentialInput.trim();
+    if (!t) return;
+    setCredentials((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), icon: "pencil", text: t },
+    ]);
+    setCredentialInput("");
   };
 
   const addCredential = () => {
@@ -394,82 +437,171 @@ const ProfileEdit = () => {
   const years = Array.from({ length: 100 }, (_, i) => String(currentYear - i));
   const days = Array.from({ length: 31 }, (_, i) => String(i + 1));
 
+  const displayName = formValues.name || username || "Your name";
+  const handleText = username ? `@${username}` : user?.email ?? "";
+  const initials = (formValues.name || username || "U")
+    .split(" ")
+    .map((s) => s[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-accent/30 to-background overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-muted/40 overflow-x-clip">
       <DeetHeader />
-      <main className="flex-1 py-8 px-4">
-        <div className="container mx-auto max-w-2xl">
+      <main className="flex-1 py-8 px-6 lg:px-10">
+        <div className="mx-auto w-full max-w-[1600px]">
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-              {/* ── Section 1: Profile Hero ── */}
-              <div className="relative">
-                <div className="h-28 rounded-xl bg-gradient-to-r from-primary to-primary/70" />
-                <div className="flex flex-col items-center -mt-12">
-                  <div className="relative">
-                    <Avatar className="h-24 w-24 ring-4 ring-card">
-                      {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile avatar" />}
-                      <AvatarFallback className="bg-muted text-muted-foreground">
-                        <User className="h-10 w-10" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleFileSelect}
-                    />
+            <form
+              id="profile-form"
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-10"
+            >
+              {/* ── Sidebar ── */}
+              <aside className="lg:sticky lg:top-20 lg:self-start lg:max-h-[calc(100vh-6rem)]">
+                <div className="bg-card rounded-2xl border p-8 space-y-7 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
+                  <div className="flex flex-col items-center text-center">
+                    <div className="relative">
+                      <Avatar className="h-40 w-40 ring-4 ring-card">
+                        {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile avatar" />}
+                        <AvatarFallback className="bg-primary/15 text-primary text-3xl">
+                          {initials || <User className="h-12 w-12" />}
+                        </AvatarFallback>
+                      </Avatar>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFileSelect}
+                      />
+                      <button
+                        type="button"
+                        disabled={uploadingAvatar}
+                        onClick={() => fileInputRef.current?.click()}
+                        className="absolute bottom-1 right-1 h-11 w-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:opacity-90 transition-opacity"
+                        aria-label="Change avatar"
+                      >
+                        <Camera className="h-5 w-5" />
+                      </button>
+                    </div>
+                    <div className="mt-5 text-2xl font-semibold text-foreground truncate w-full">
+                      {displayName}
+                    </div>
+                    {handleText && (
+                      <div className="text-lg text-muted-foreground truncate w-full">
+                        {handleText}
+                      </div>
+                    )}
                     <button
                       type="button"
-                      disabled={uploadingAvatar}
-                      onClick={() => fileInputRef.current?.click()}
-                      className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center shadow-md hover:opacity-90 transition-opacity"
+                      onClick={() => setLinkedInDialogOpen(true)}
+                      className="mt-4 inline-flex items-center gap-2 text-lg text-primary hover:underline font-medium"
                     >
-                      <Camera className="h-4 w-4" />
+                      <Linkedin className="h-5 w-5" />
+                      Import from LinkedIn
                     </button>
                   </div>
-                  <div className="mt-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setLinkedInDialogOpen(true)}
-                      className="gap-2"
-                    >
-                      <Linkedin className="h-4 w-4" />
-                      Import from LinkedIn
-                    </Button>
-                  </div>
-                  <div className="mt-3 w-full max-w-xs">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-center block">Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} className="text-center" placeholder="Your full name" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-              </div>
 
-              {/* ── Section 2: Personal Details ── */}
-              <Card className="border-l-4 border-l-primary">
-                <CardContent className="pt-5">
-                  <SectionHeader icon={MapPin} title="Personal Details" />
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <nav className="space-y-1">
+                    {SECTIONS.map((s) => {
+                      const isActive = activeSection === s.id;
+                      const warning = sectionState[s.id].warning;
+                      return (
+                        <a
+                          key={s.id}
+                          href={`#${s.id}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const el = document.getElementById(s.id);
+                            if (el) {
+                              el.scrollIntoView({ behavior: "smooth", block: "start" });
+                              setActiveSection(s.id);
+                            }
+                          }}
+                          className={cn(
+                            "group flex items-center gap-3.5 px-4 py-3.5 rounded-lg text-lg transition-colors",
+                            isActive
+                              ? "bg-primary/10 text-foreground font-medium"
+                              : "text-foreground/80 hover:bg-muted",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "h-6 w-6 rounded shrink-0",
+                              isActive ? "bg-primary" : "bg-muted-foreground/25",
+                            )}
+                          />
+                          <span className="flex-1 truncate">{s.label}</span>
+                          {warning > 0 && (
+                            <span
+                              className={cn(
+                                "shrink-0 inline-flex items-center justify-center text-[10px] font-semibold text-secondary-foreground bg-secondary rounded-full",
+                                warning === 1 ? "h-2 w-2" : "h-4 min-w-4 px-1",
+                              )}
+                            >
+                              {warning > 1 ? warning : ""}
+                            </span>
+                          )}
+                        </a>
+                      );
+                    })}
+                  </nav>
+
+                  <Button
+                    type="submit"
+                    disabled={saving}
+                    className="w-full h-14 text-xl font-semibold"
+                  >
+                    {saving ? "Saving..." : "Save Profile"}
+                  </Button>
+                </div>
+              </aside>
+
+              {/* ── Main content ── */}
+              <div className="space-y-6 min-w-0">
+                {profileIncomplete && (
+                  <div className="flex items-center gap-3.5 rounded-xl border border-secondary/30 bg-secondary/10 px-6 py-5 text-lg">
+                    <AlertCircle className="h-6 w-6 text-secondary shrink-0" />
+                    <span className="text-foreground/90">
+                      Complete your profile to unlock all features
+                    </span>
+                  </div>
+                )}
+
+                <div className="space-y-8">
+                  {/* ── Personal Information ── */}
+                  <section id="personal-info" className="scroll-mt-24 bg-card rounded-2xl border p-12 md:p-16 [&_input]:h-12 [&_input]:text-lg [&_textarea]:text-lg [&_[role=combobox]]:h-12 [&_[role=combobox]]:text-base [&_label]:text-base">
+                    <div className="mb-10">
+                      <h2 className="text-5xl font-bold text-foreground tracking-tight">
+                        Personal Information
+                      </h2>
+                      <div className="mt-4 h-1.5 w-24 bg-secondary rounded-full" />
+                      <p className="mt-4 text-xl text-muted-foreground">
+                        Manage your profile details and public information.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Full Name</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Your full name" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       <FormField
                         control={form.control}
                         name="entityType"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>This is a</FormLabel>
+                            <FormLabel>Account Type</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
                                 <SelectTrigger>
@@ -485,6 +617,7 @@ const ProfileEdit = () => {
                           </FormItem>
                         )}
                       />
+
                       <FormField
                         control={form.control}
                         name="sex"
@@ -511,84 +644,67 @@ const ProfileEdit = () => {
                           </FormItem>
                         )}
                       />
-                    </div>
 
-                    <div>
-                      <Label className="text-sm font-medium">Birth Date</Label>
-                      <div className="grid grid-cols-3 gap-2 mt-1.5">
-                        <FormField
-                          control={form.control}
-                          name="birthMonth"
-                          render={({ field }) => (
-                            <FormItem>
-                              <Select onValueChange={field.onChange} value={field.value}>
+                      <div>
+                        <Label className="text-sm">Date of Birth</Label>
+                        <div className="mt-1.5 grid grid-cols-[1fr_64px_80px] gap-2">
+                          <FormField
+                            control={form.control}
+                            name="birthMonth"
+                            render={({ field }) => (
+                              <FormItem>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Month" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {MONTHS.map((m, i) => (
+                                      <SelectItem key={m} value={String(i + 1)}>
+                                        {m}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="birthDay"
+                            render={({ field }) => (
+                              <FormItem>
                                 <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Month" />
-                                  </SelectTrigger>
+                                  <Input
+                                    {...field}
+                                    inputMode="numeric"
+                                    maxLength={2}
+                                    placeholder="DD"
+                                  />
                                 </FormControl>
-                                <SelectContent>
-                                  {MONTHS.map((m, i) => (
-                                    <SelectItem key={m} value={String(i + 1)}>
-                                      {m}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="birthDay"
-                          render={({ field }) => (
-                            <FormItem>
-                              <Select onValueChange={field.onChange} value={field.value}>
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="birthYear"
+                            render={({ field }) => (
+                              <FormItem>
                                 <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Day" />
-                                  </SelectTrigger>
+                                  <Input
+                                    {...field}
+                                    inputMode="numeric"
+                                    maxLength={4}
+                                    placeholder="YYYY"
+                                  />
                                 </FormControl>
-                                <SelectContent>
-                                  {days.map((d) => (
-                                    <SelectItem key={d} value={d}>
-                                      {d}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="birthYear"
-                          render={({ field }) => (
-                            <FormItem>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Year" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {years.map((y) => (
-                                    <SelectItem key={y} value={y}>
-                                      {y}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <FormField
                         control={form.control}
                         name="city"
@@ -626,36 +742,56 @@ const ProfileEdit = () => {
                           </FormItem>
                         )}
                       />
-                    </div>
 
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* ── Section 3: Education & Career ── */}
-              <Card className="border-l-4 border-l-secondary">
-                <CardContent className="pt-5">
-                  <SectionHeader icon={GraduationCap} title="Education & Career" />
-                  <div className="space-y-3">
-                    <div>
-                      <Label className="text-sm font-medium">Education</Label>
-                      <Select value={education} onValueChange={setEducation}>
-                        <SelectTrigger className="mt-1.5">
-                          <SelectValue placeholder="Select level..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="grade-school">Grade School</SelectItem>
-                          <SelectItem value="high-school">High School</SelectItem>
-                          <SelectItem value="trade-school">Trade School</SelectItem>
-                          <SelectItem value="bachelors">Bachelors</SelectItem>
-                          <SelectItem value="masters">Masters</SelectItem>
-                          <SelectItem value="doctorate">Doctorate</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <FormField
+                        control={form.control}
+                        name="country"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Country</FormLabel>
+                            <FormControl>
+                              <Input {...field} placeholder="Your country" />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       <div>
-                        <Label className="text-sm font-medium">High School</Label>
+                        <Label className="text-sm">City of Birth</Label>
+                        <Input
+                          className="mt-1.5"
+                          value={cityBorn}
+                          onChange={(e) => setCityBorn(e.target.value)}
+                          placeholder="Where you were born"
+                        />
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* ── Education ── */}
+                  <section id="education" className="scroll-mt-24 bg-card rounded-2xl border p-12 md:p-16 [&_input]:h-12 [&_input]:text-lg [&_textarea]:text-lg [&_[role=combobox]]:h-12 [&_[role=combobox]]:text-base [&_label]:text-base">
+                    <h3 className="text-3xl font-semibold text-foreground mb-7">
+                      Education
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <Label className="text-sm">Education Level</Label>
+                        <Select value={education} onValueChange={setEducation}>
+                          <SelectTrigger className="mt-1.5">
+                            <SelectValue placeholder="Select level..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="grade-school">Grade School</SelectItem>
+                            <SelectItem value="high-school">High School</SelectItem>
+                            <SelectItem value="trade-school">Trade School</SelectItem>
+                            <SelectItem value="bachelors">Bachelors</SelectItem>
+                            <SelectItem value="masters">Masters</SelectItem>
+                            <SelectItem value="doctorate">Doctorate</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-sm">High School</Label>
                         <Input
                           className="mt-1.5"
                           value={highSchool}
@@ -664,7 +800,7 @@ const ProfileEdit = () => {
                         />
                       </div>
                       <div>
-                        <Label className="text-sm font-medium">College</Label>
+                        <Label className="text-sm">College</Label>
                         <Input
                           className="mt-1.5"
                           value={college}
@@ -672,10 +808,8 @@ const ProfileEdit = () => {
                           placeholder="College name"
                         />
                       </div>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <Label className="text-sm font-medium">Degree</Label>
+                        <Label className="text-sm">Degree</Label>
                         <Input
                           className="mt-1.5"
                           value={degree}
@@ -684,7 +818,7 @@ const ProfileEdit = () => {
                         />
                       </div>
                       <div>
-                        <Label className="text-sm font-medium">Major</Label>
+                        <Label className="text-sm">Major</Label>
                         <Input
                           className="mt-1.5"
                           value={major}
@@ -692,72 +826,150 @@ const ProfileEdit = () => {
                           placeholder="Field of study"
                         />
                       </div>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium">Job</Label>
-                      <Input
-                        className="mt-1.5"
-                        value={job}
-                        onChange={(e) => setJob(e.target.value)}
-                        placeholder="Current role or company"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* ── Section 4: About Me ── */}
-              <Card className="border-l-4 border-l-primary">
-                <CardContent className="pt-5">
-                  <SectionHeader icon={Heart} title="About Me" />
-                  <div className="space-y-3">
-                    <div>
-                      <Label className="text-sm font-medium">Bio</Label>
-                      <Textarea
-                        className="mt-1.5 resize-y"
-                        rows={4}
-                        value={bio}
-                        onChange={(e) => setBio(e.target.value)}
-                        placeholder="Tell people a little about yourself..."
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* ── Section 5: Credentials & Expertise ── */}
-              <Card className="border-l-4 border-l-secondary">
-                <CardContent className="pt-5">
-                  <SectionHeader icon={Award} title="Credentials & Expertise" />
-
-                  {/* Credentials */}
-                  <div className="mb-4">
-                    <Label className="text-sm font-medium">Credentials</Label>
-                    {credentials.length > 0 && (
-                      <div className="mt-2 space-y-1">
-                        {credentials.map((cred) => (
-                          <div
-                            key={cred.id}
-                            className="group flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-muted/50 hover:bg-muted transition-colors"
-                          >
-                            <span className="text-muted-foreground shrink-0">
-                              {getCredentialIcon(cred.icon)}
-                            </span>
-                            <span className="flex-1">{cred.text}</span>
-                            <button
-                              type="button"
-                              onClick={() => removeCredential(cred.id)}
-                              className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        ))}
+                      <div>
+                        <Label className="text-sm">Current Role</Label>
+                        <Input
+                          className="mt-1.5"
+                          value={job}
+                          onChange={(e) => setJob(e.target.value)}
+                          placeholder="Current role or company"
+                        />
                       </div>
-                    )}
+                    </div>
+                  </section>
 
-                    {showCredentialInput ? (
-                      <div className="mt-2 flex items-center gap-2">
+                  {/* ── About Me ── */}
+                  <section id="about-me" className="scroll-mt-24 bg-card rounded-2xl border p-12 md:p-16 [&_input]:h-12 [&_input]:text-lg [&_textarea]:text-lg [&_[role=combobox]]:h-12 [&_[role=combobox]]:text-base [&_label]:text-base">
+                    <h3 className="text-3xl font-semibold text-foreground mb-7">
+                      About Me
+                    </h3>
+                    <div className="space-y-6">
+                      <div>
+                        <Label className="text-sm">Bio</Label>
+                        <Textarea
+                          className="mt-1.5 resize-y"
+                          rows={8}
+                          value={bio}
+                          onChange={(e) => setBio(e.target.value)}
+                          placeholder="Tell people a little about yourself..."
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <Label className="text-sm">Favorite Movie</Label>
+                          <Input
+                            className="mt-1.5"
+                            value={favoriteMovie}
+                            onChange={(e) => setFavoriteMovie(e.target.value)}
+                            placeholder="Your favorite movie"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-sm">Currently Reading</Label>
+                          <Input
+                            className="mt-1.5"
+                            value={reading}
+                            onChange={(e) => setReading(e.target.value)}
+                            placeholder="Book you're reading"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* ── Credentials & Expertise ── */}
+                  <section id="credentials" className="scroll-mt-24 bg-card rounded-2xl border p-12 md:p-16 [&_input]:h-12 [&_input]:text-lg [&_textarea]:text-lg [&_[role=combobox]]:h-12 [&_[role=combobox]]:text-base [&_label]:text-base">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-3xl font-semibold text-foreground">
+                        Credentials & Expertise
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => setShowCredentialInput(true)}
+                        className="inline-flex items-center gap-2 text-base font-medium text-secondary hover:bg-secondary/10 px-4 py-2.5 rounded-lg transition-colors"
+                      >
+                        <Plus className="h-5 w-5" />
+                        Add Credential
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <Label className="text-sm">Credentials</Label>
+                        {credentials.length > 0 && (
+                          <div className="mt-2 space-y-1">
+                            {credentials.map((cred) => (
+                              <div
+                                key={cred.id}
+                                className="group flex items-center gap-2 text-sm px-3 py-2 rounded-md bg-muted/50 hover:bg-muted transition-colors"
+                              >
+                                <span className="text-muted-foreground shrink-0">
+                                  {getCredentialIcon(cred.icon)}
+                                </span>
+                                <span className="flex-1 truncate">{cred.text}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => removeCredential(cred.id)}
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        <Input
+                          className="mt-1.5"
+                          value={credentialInput}
+                          onChange={(e) => setCredentialInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              addCredentialFromInput();
+                            }
+                          }}
+                          placeholder="Add credentials..."
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-sm">Expertise</Label>
+                        {expertiseTopics.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            {expertiseTopics.map((topic) => (
+                              <Badge
+                                key={topic}
+                                className="bg-primary/15 text-primary hover:bg-primary/20 gap-1 pr-1.5"
+                              >
+                                {topic}
+                                <button
+                                  type="button"
+                                  onClick={() => removeTopic(topic)}
+                                  className="ml-0.5 hover:text-destructive"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                        <Input
+                          className="mt-1.5"
+                          value={topicInput}
+                          onChange={(e) => setTopicInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              addTopic();
+                            }
+                          }}
+                          placeholder="Add tags..."
+                        />
+                      </div>
+                    </div>
+
+                    {showCredentialInput && (
+                      <div className="mt-3 flex items-center gap-2 p-3 rounded-md bg-muted/50 border">
                         <Select value={newCredentialIcon} onValueChange={setNewCredentialIcon}>
                           <SelectTrigger className="w-32 shrink-0">
                             <SelectValue />
@@ -789,6 +1001,14 @@ const ProfileEdit = () => {
                         <Button
                           type="button"
                           size="sm"
+                          onClick={addCredential}
+                          disabled={!newCredentialText.trim()}
+                        >
+                          Add
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
                           variant="ghost"
                           onClick={() => {
                             setShowCredentialInput(false);
@@ -798,133 +1018,68 @@ const ProfileEdit = () => {
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setShowCredentialInput(true)}
-                        className="mt-2 w-full flex items-center justify-center gap-2 py-2.5 rounded-md border-2 border-dashed border-primary/40 text-primary text-sm font-medium hover:bg-primary/5 transition-colors"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Add Credential
-                      </button>
                     )}
-                  </div>
+                  </section>
 
-                  <Separator className="my-4" />
-
-                  {/* Expertise / Topics */}
-                  <div>
-                    <Label className="text-sm font-medium">Expertise / Topics</Label>
-                    {expertiseTopics.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {expertiseTopics.map((topic) => (
-                          <Badge
-                            key={topic}
-                            className="bg-primary/15 text-primary hover:bg-primary/20 gap-1 pr-1.5"
-                          >
-                            {topic}
-                            <button
-                              type="button"
-                              onClick={() => removeTopic(topic)}
-                              className="ml-0.5 hover:text-destructive"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        ))}
+                  {/* ── Email Preferences ── */}
+                  <section id="email-preferences" className="scroll-mt-24 bg-card rounded-2xl border p-12 md:p-16 [&_input]:h-12 [&_input]:text-lg [&_textarea]:text-lg [&_[role=combobox]]:h-12 [&_[role=combobox]]:text-base [&_label]:text-base">
+                    <h3 className="text-3xl font-semibold text-foreground mb-7">
+                      Email Preferences
+                    </h3>
+                    <div className="space-y-3">
+                      {EMAIL_PREFS.map((pref) => (
+                        <label
+                          key={pref.key}
+                          className="flex items-center gap-3 cursor-pointer"
+                        >
+                          <Checkbox
+                            className="h-5 w-5"
+                            checked={prefs[pref.key]}
+                            onCheckedChange={(v) =>
+                              setPrefs((p) => ({ ...p, [pref.key]: !!v }))
+                            }
+                          />
+                          <span className="text-lg text-foreground">{pref.label}</span>
+                        </label>
+                      ))}
+                      <div className="flex items-center gap-3">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <Checkbox
+                            className="h-5 w-5"
+                            checked={prefs.emailTopPosts}
+                            onCheckedChange={(v) =>
+                              setPrefs((p) => ({ ...p, emailTopPosts: !!v }))
+                            }
+                          />
+                          <span className="text-lg text-foreground">
+                            Receive digest summary
+                          </span>
+                        </label>
+                        <Select value={emailFrequency} onValueChange={setEmailFrequency}>
+                          <SelectTrigger className="w-32 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="daily">Daily</SelectItem>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="bi-weekly">Bi-Weekly</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
-                    )}
-                    <div className="mt-2 flex items-center gap-2">
-                      <Tag className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <Input
-                        value={topicInput}
-                        onChange={(e) => setTopicInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            addTopic();
-                          }
-                        }}
-                        placeholder="Type a topic and press Enter"
-                        className="flex-1"
-                      />
                     </div>
-                    {expertiseTopics.length === 0 && (
-                      <p className="text-xs text-muted-foreground mt-1.5">
-                        Add topics you're knowledgeable about
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                  </section>
 
-              {/* ── Section 6: Email Preferences ── */}
-              <Card className="border-l-4 border-l-primary">
-                <CardContent className="pt-5">
-                  <SectionHeader icon={Mail} title="Email Preferences" />
-                  <div className="space-y-2.5">
-                    {EMAIL_PREFS.map((pref) => (
-                      <label key={pref.key} className="flex items-start gap-2 cursor-pointer">
-                        <Checkbox
-                          checked={prefs[pref.key]}
-                          onCheckedChange={(v) =>
-                            setPrefs((p) => ({ ...p, [pref.key]: !!v }))
-                          }
-                          className="mt-0.5"
-                        />
-                        <span className="text-xs">{pref.label}</span>
-                      </label>
-                    ))}
-                    <div className="flex items-start gap-2">
-                      <label className="flex items-start gap-2 cursor-pointer flex-1">
-                        <Checkbox
-                          checked={prefs.emailTopPosts}
-                          onCheckedChange={(v) =>
-                            setPrefs((p) => ({ ...p, emailTopPosts: !!v }))
-                          }
-                          className="mt-0.5"
-                        />
-                        <span className="text-xs">
-                          Send me email highlighting some of our top posts.
-                        </span>
-                      </label>
-                      <Select value={emailFrequency} onValueChange={setEmailFrequency}>
-                        <SelectTrigger className="w-28 h-8 text-xs shrink-0">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="weekly">Weekly</SelectItem>
-                          <SelectItem value="daily">Daily</SelectItem>
-                          <SelectItem value="bi-weekly">Bi-Weekly</SelectItem>
-                          <SelectItem value="monthly">Monthly</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* ── Section 7: Account ── */}
-              <Card className="border-l-4 border-l-secondary">
-                <CardContent className="pt-5">
-                  <SectionHeader icon={Lock} title="Account" />
-                  <Button type="button" variant="outline" className="gap-2">
-                    <Lock className="h-4 w-4" />
-                    Change Password
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* ── Save Button ── */}
-              <div className="flex justify-center pt-2 pb-4">
-                <Button
-                  type="submit"
-                  disabled={saving}
-                  className="px-10 py-5 text-base font-semibold bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 gap-2"
-                >
-                  <Save className="h-5 w-5" />
-                  {saving ? "Saving..." : "Save Profile"}
-                </Button>
+                  {/* ── Account & Security ── */}
+                  <section id="account" className="scroll-mt-24 bg-card rounded-2xl border p-12 md:p-16 [&_input]:h-12 [&_input]:text-lg [&_textarea]:text-lg [&_[role=combobox]]:h-12 [&_[role=combobox]]:text-base [&_label]:text-base">
+                    <button
+                      type="button"
+                      className="text-lg font-medium text-secondary hover:underline"
+                    >
+                      Change Password
+                    </button>
+                  </section>
+                </div>
               </div>
             </form>
           </Form>

@@ -259,11 +259,11 @@ const ProfileView = () => {
     <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
       <DeetHeader />
       <main className="flex-1 py-8 px-4">
-        <div className="container mx-auto max-w-5xl overflow-hidden">
+        <div className="container mx-auto max-w-5xl">
           {/* Two-column layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8">
-            {/* Left column */}
-            <div className="min-w-0">
+          <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-x-8 gap-y-6">
+            {/* Top content */}
+            <div className="min-w-0 lg:col-start-1 lg:row-start-1">
               {/* Avatar + basic info */}
               <div className="flex items-start gap-5 mb-6">
                 <div className="relative">
@@ -416,7 +416,7 @@ const ProfileView = () => {
             </div>
 
             {/* Right sidebar */}
-            <div className="space-y-6">
+            <aside className="space-y-6 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-20 lg:self-start">
               {/* Credentials & Highlights */}
               <Card className="bg-card">
                 <CardContent className="pt-5">
@@ -452,11 +452,10 @@ const ProfileView = () => {
               </Card>
 
               {/* Knows About — only show if profile has expertise (future: from DB) */}
-            </div>
-          </div>
+            </aside>
 
           {/* Tabs section */}
-          <div className="mt-8">
+          <div className="mt-8 lg:col-start-1 lg:row-start-2">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="bg-transparent border-b rounded-none w-full justify-start h-auto p-0 gap-0">
                 {TABS.map((tab) => (
@@ -802,6 +801,7 @@ const ProfileView = () => {
                 )}
               </TabsContent>
             </Tabs>
+          </div>
           </div>
         </div>
       </main>
