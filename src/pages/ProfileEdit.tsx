@@ -514,10 +514,29 @@ const ProfileEdit = () => {
                         onClick={(e) => {
                           e.preventDefault();
                           const el = document.getElementById(s.id);
-                          if (el) {
-                            el.scrollIntoView({ behavior: "smooth", block: "start" });
-                            setActiveSection(s.id);
-                          }
+                          if (!el) return;
+                          setActiveSection(s.id);
+                          const offset = 96; // matches scroll-mt-24
+                          const startY = window.scrollY;
+                          const targetY =
+                            el.getBoundingClientRect().top + window.scrollY - offset;
+                          const distance = targetY - startY;
+                          const duration = Math.min(
+                            900,
+                            Math.max(450, Math.abs(distance) * 0.6),
+                          );
+                          const startTime = performance.now();
+                          const easeInOutCubic = (t: number) =>
+                            t < 0.5
+                              ? 4 * t * t * t
+                              : 1 - Math.pow(-2 * t + 2, 3) / 2;
+                          const step = (now: number) => {
+                            const elapsed = now - startTime;
+                            const progress = Math.min(1, elapsed / duration);
+                            window.scrollTo(0, startY + distance * easeInOutCubic(progress));
+                            if (progress < 1) requestAnimationFrame(step);
+                          };
+                          requestAnimationFrame(step);
                         }}
                         className={cn(
                           "group flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors",
