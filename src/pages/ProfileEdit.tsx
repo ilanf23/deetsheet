@@ -571,7 +571,7 @@ const ProfileEdit = () => {
 
                 <div className="space-y-8">
                   {/* ── Personal Information ── */}
-                  <section id="personal-info" className="scroll-mt-24 bg-card rounded-2xl border p-12 md:p-16 [&_input]:h-12 [&_input]:text-lg [&_textarea]:text-lg [&_[role=combobox]]:h-12 [&_[role=combobox]]:text-base [&_label]:text-base">
+                  <section id="personal-info" className="scroll-mt-24 bg-card rounded-2xl border p-6 md:p-8">
                     <div className="mb-10">
                       <h2 className="text-5xl font-bold text-foreground tracking-tight">
                         Personal Information
@@ -769,7 +769,7 @@ const ProfileEdit = () => {
                   </section>
 
                   {/* ── Education ── */}
-                  <section id="education" className="scroll-mt-24 bg-card rounded-2xl border p-12 md:p-16 [&_input]:h-12 [&_input]:text-lg [&_textarea]:text-lg [&_[role=combobox]]:h-12 [&_[role=combobox]]:text-base [&_label]:text-base">
+                  <section id="education" className="scroll-mt-24 bg-card rounded-2xl border p-6 md:p-8">
                     <h3 className="text-3xl font-semibold text-foreground mb-7">
                       Education
                     </h3>
@@ -839,7 +839,7 @@ const ProfileEdit = () => {
                   </section>
 
                   {/* ── About Me ── */}
-                  <section id="about-me" className="scroll-mt-24 bg-card rounded-2xl border p-12 md:p-16 [&_input]:h-12 [&_input]:text-lg [&_textarea]:text-lg [&_[role=combobox]]:h-12 [&_[role=combobox]]:text-base [&_label]:text-base">
+                  <section id="about-me" className="scroll-mt-24 bg-card rounded-2xl border p-6 md:p-8">
                     <h3 className="text-3xl font-semibold text-foreground mb-7">
                       About Me
                     </h3>
@@ -878,7 +878,7 @@ const ProfileEdit = () => {
                   </section>
 
                   {/* ── Credentials & Expertise ── */}
-                  <section id="credentials" className="scroll-mt-24 bg-card rounded-2xl border p-12 md:p-16 [&_input]:h-12 [&_input]:text-lg [&_textarea]:text-lg [&_[role=combobox]]:h-12 [&_[role=combobox]]:text-base [&_label]:text-base">
+                  <section id="credentials" className="scroll-mt-24 bg-card rounded-2xl border p-6 md:p-8">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-3xl font-semibold text-foreground">
                         Credentials & Expertise
@@ -1022,7 +1022,7 @@ const ProfileEdit = () => {
                   </section>
 
                   {/* ── Email Preferences ── */}
-                  <section id="email-preferences" className="scroll-mt-24 bg-card rounded-2xl border p-12 md:p-16 [&_input]:h-12 [&_input]:text-lg [&_textarea]:text-lg [&_[role=combobox]]:h-12 [&_[role=combobox]]:text-base [&_label]:text-base">
+                  <section id="email-preferences" className="scroll-mt-24 bg-card rounded-2xl border p-6 md:p-8">
                     <h3 className="text-3xl font-semibold text-foreground mb-7">
                       Email Preferences
                     </h3>
@@ -1071,7 +1071,7 @@ const ProfileEdit = () => {
                   </section>
 
                   {/* ── Account & Security ── */}
-                  <section id="account" className="scroll-mt-24 bg-card rounded-2xl border p-12 md:p-16 [&_input]:h-12 [&_input]:text-lg [&_textarea]:text-lg [&_[role=combobox]]:h-12 [&_[role=combobox]]:text-base [&_label]:text-base">
+                  <section id="account" className="scroll-mt-24 bg-card rounded-2xl border p-6 md:p-8">
                     <button
                       type="button"
                       className="text-lg font-medium text-secondary hover:underline"
