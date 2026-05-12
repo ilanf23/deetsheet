@@ -213,6 +213,23 @@ const ProfileEdit = () => {
       }
     };
     load();
+
+    const loadSecurity = async () => {
+      const { data } = await supabase
+        .from("account_security")
+        .select("email_verified, strong_password_set, two_factor_enabled, recovery_email")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (data) {
+        setSecurity({
+          email_verified: !!data.email_verified,
+          strong_password_set: !!data.strong_password_set,
+          two_factor_enabled: !!data.two_factor_enabled,
+          recovery_email: data.recovery_email || "",
+        });
+      }
+    };
+    loadSecurity();
   }, [user]);
 
   // Scroll-spy: highlight the sidebar nav item for the section currently in view.
