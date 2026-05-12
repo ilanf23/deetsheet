@@ -572,17 +572,17 @@ const ProfileEdit = () => {
                 <div className="space-y-8">
                   {/* ── Personal Information ── */}
                   <section id="personal-info" className="scroll-mt-24 bg-card rounded-2xl border p-6 md:p-8">
-                    <div className="mb-10">
-                      <h2 className="text-5xl font-bold text-foreground tracking-tight">
+                    <div className="mb-6">
+                      <h2 className="text-2xl font-bold text-foreground tracking-tight">
                         Personal Information
                       </h2>
-                      <div className="mt-4 h-1.5 w-24 bg-secondary rounded-full" />
-                      <p className="mt-4 text-xl text-muted-foreground">
+                      <div className="mt-2 h-1 w-16 bg-secondary rounded-full" />
+                      <p className="mt-2 text-sm text-muted-foreground">
                         Manage your profile details and public information.
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField
                         control={form.control}
                         name="name"
@@ -770,10 +770,10 @@ const ProfileEdit = () => {
 
                   {/* ── Education ── */}
                   <section id="education" className="scroll-mt-24 bg-card rounded-2xl border p-6 md:p-8">
-                    <h3 className="text-3xl font-semibold text-foreground mb-7">
+                    <h3 className="text-xl font-semibold text-foreground mb-4">
                       Education
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label className="text-sm">Education Level</Label>
                         <Select value={education} onValueChange={setEducation}>
@@ -840,7 +840,7 @@ const ProfileEdit = () => {
 
                   {/* ── About Me ── */}
                   <section id="about-me" className="scroll-mt-24 bg-card rounded-2xl border p-6 md:p-8">
-                    <h3 className="text-3xl font-semibold text-foreground mb-7">
+                    <h3 className="text-xl font-semibold text-foreground mb-4">
                       About Me
                     </h3>
                     <div className="space-y-6">
@@ -848,13 +848,13 @@ const ProfileEdit = () => {
                         <Label className="text-sm">Bio</Label>
                         <Textarea
                           className="mt-1.5 resize-y"
-                          rows={8}
+                          rows={5}
                           value={bio}
                           onChange={(e) => setBio(e.target.value)}
                           placeholder="Tell people a little about yourself..."
                         />
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label className="text-sm">Favorite Movie</Label>
                           <Input
@@ -880,20 +880,20 @@ const ProfileEdit = () => {
                   {/* ── Credentials & Expertise ── */}
                   <section id="credentials" className="scroll-mt-24 bg-card rounded-2xl border p-6 md:p-8">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-3xl font-semibold text-foreground">
+                      <h3 className="text-xl font-semibold text-foreground">
                         Credentials & Expertise
                       </h3>
                       <button
                         type="button"
                         onClick={() => setShowCredentialInput(true)}
-                        className="inline-flex items-center gap-2 text-base font-medium text-secondary hover:bg-secondary/10 px-4 py-2.5 rounded-lg transition-colors"
+                        className="inline-flex items-center gap-2 text-sm font-medium text-secondary hover:bg-secondary/10 px-3 py-2 rounded-lg transition-colors"
                       >
-                        <Plus className="h-5 w-5" />
+                        <Plus className="h-4 w-4" />
                         Add Credential
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label className="text-sm">Credentials</Label>
                         {credentials.length > 0 && (
@@ -1023,7 +1023,7 @@ const ProfileEdit = () => {
 
                   {/* ── Email Preferences ── */}
                   <section id="email-preferences" className="scroll-mt-24 bg-card rounded-2xl border p-6 md:p-8">
-                    <h3 className="text-3xl font-semibold text-foreground mb-7">
+                    <h3 className="text-xl font-semibold text-foreground mb-4">
                       Email Preferences
                     </h3>
                     <div className="space-y-3">
@@ -1033,25 +1033,25 @@ const ProfileEdit = () => {
                           className="flex items-center gap-3 cursor-pointer"
                         >
                           <Checkbox
-                            className="h-5 w-5"
+                            className="h-4 w-4"
                             checked={prefs[pref.key]}
                             onCheckedChange={(v) =>
                               setPrefs((p) => ({ ...p, [pref.key]: !!v }))
                             }
                           />
-                          <span className="text-lg text-foreground">{pref.label}</span>
+                          <span className="text-sm text-foreground">{pref.label}</span>
                         </label>
                       ))}
                       <div className="flex items-center gap-3">
                         <label className="flex items-center gap-3 cursor-pointer">
                           <Checkbox
-                            className="h-5 w-5"
+                            className="h-4 w-4"
                             checked={prefs.emailTopPosts}
                             onCheckedChange={(v) =>
                               setPrefs((p) => ({ ...p, emailTopPosts: !!v }))
                             }
                           />
-                          <span className="text-lg text-foreground">
+                          <span className="text-sm text-foreground">
                             Receive digest summary
                           </span>
                         </label>
@@ -1074,7 +1074,7 @@ const ProfileEdit = () => {
                   <section id="account" className="scroll-mt-24 bg-card rounded-2xl border p-6 md:p-8">
                     <button
                       type="button"
-                      className="text-lg font-medium text-secondary hover:underline"
+                      className="text-sm font-medium text-secondary hover:underline"
                     >
                       Change Password
                     </button>
