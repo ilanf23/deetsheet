@@ -104,7 +104,7 @@ const ColumnLayout = ({ onAtBottomChange }: ColumnLayoutProps) => {
           className={`${mobileTab === "popular" ? "block" : "hidden"} lg:block min-w-0 pt-4 lg:h-full lg:overflow-y-auto lg:pr-2`}
         >
           <div className="flex items-center justify-between h-8 mb-4 px-1 pb-2 border-b border-border">
-            <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Most Popular</h2>
+            <h2 className="text-[11px] font-semibold uppercase tracking-wider text-foreground">Most Popular</h2>
             <select className="text-xs border rounded px-2 py-1 bg-background text-muted-foreground">
               <option>This Year</option>
               <option>All Time</option>
