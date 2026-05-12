@@ -1126,10 +1126,63 @@ const ProfileEdit = () => {
                   </section>
 
                   {/* ── Account & Security ── */}
-                  <section id="account" className="scroll-mt-24 bg-card rounded-2xl border p-6 md:p-8">
+                  <section id="account" className="scroll-mt-24 bg-card rounded-2xl border p-6 md:p-8 space-y-4">
+                    <h2 className="text-lg font-semibold">Account & Security</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Complete each item below to secure your account.
+                    </p>
+
+                    {[
+                      { key: "email_verified", label: "Email verified", desc: "Confirm your email address." },
+                      { key: "strong_password_set", label: "Strong password set", desc: "At least 12 characters, with mixed case and a number." },
+                      { key: "two_factor_enabled", label: "Two-factor authentication", desc: "Add an extra layer of security at sign-in." },
+                    ].map((item) => {
+                      const checked = (security as any)[item.key] as boolean;
+                      return (
+                        <div key={item.key} className="flex items-start justify-between gap-4 border rounded-xl p-4">
+                          <div>
+                            <div className="text-sm font-medium">{item.label}</div>
+                            <div className="text-xs text-muted-foreground">{item.desc}</div>
+                          </div>
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={async (v) => {
+                              if (!user) return;
+                              const value = !!v;
+                              setSecurity((s) => ({ ...s, [item.key]: value }));
+                              await supabase
+                                .from("account_security")
+                                .upsert({ user_id: user.id, [item.key]: value }, { onConflict: "user_id" });
+                            }}
+                          />
+                        </div>
+                      );
+                    })}
+
+                    <div className="border rounded-xl p-4 space-y-2">
+                      <Label htmlFor="recovery_email" className="text-sm font-medium">Recovery email</Label>
+                      <p className="text-xs text-muted-foreground">Used to recover your account if you lose access.</p>
+                      <Input
+                        id="recovery_email"
+                        type="email"
+                        placeholder="backup@example.com"
+                        value={security.recovery_email}
+                        onChange={(e) => setSecurity((s) => ({ ...s, recovery_email: e.target.value }))}
+                        onBlur={async () => {
+                          if (!user) return;
+                          await supabase
+                            .from("account_security")
+                            .upsert(
+                              { user_id: user.id, recovery_email: security.recovery_email || null },
+                              { onConflict: "user_id" },
+                            );
+                        }}
+                      />
+                    </div>
+
                     <button
                       type="button"
-                      className="text-sm font-medium text-secondary hover:underline"
+                      className="text-sm font-medium text-primary hover:underline"
                     >
                       Change Password
                     </button>
