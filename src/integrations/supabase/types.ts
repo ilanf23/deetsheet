@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_security: {
+        Row: {
+          created_at: string
+          email_verified: boolean
+          recovery_email: string | null
+          strong_password_set: boolean
+          two_factor_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email_verified?: boolean
+          recovery_email?: string | null
+          strong_password_set?: boolean
+          two_factor_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email_verified?: boolean
+          recovery_email?: string | null
+          strong_password_set?: boolean
+          two_factor_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       comment_likes: {
         Row: {
           comment_id: string

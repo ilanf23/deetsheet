@@ -146,6 +146,12 @@ const ProfileEdit = () => {
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<SectionId>("personal-info");
+  const [security, setSecurity] = useState({
+    email_verified: false,
+    strong_password_set: false,
+    two_factor_enabled: false,
+    recovery_email: "",
+  });
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -207,6 +213,23 @@ const ProfileEdit = () => {
       }
     };
     load();
+
+    const loadSecurity = async () => {
+      const { data } = await supabase
+        .from("account_security")
+        .select("email_verified, strong_password_set, two_factor_enabled, recovery_email")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (data) {
+        setSecurity({
+          email_verified: !!data.email_verified,
+          strong_password_set: !!data.strong_password_set,
+          two_factor_enabled: !!data.two_factor_enabled,
+          recovery_email: data.recovery_email || "",
+        });
+      }
+    };
+    loadSecurity();
   }, [user]);
 
   // Scroll-spy: highlight the sidebar nav item for the section currently in view.
@@ -246,16 +269,23 @@ const ProfileEdit = () => {
     const aboutComplete = Boolean(bio.trim());
     const credentialsComplete = credentials.length > 0 || expertiseTopics.length > 0;
     const emailComplete = Object.values(prefs).some(Boolean);
-    const accountIssues = 2; // 2FA + password rotation reminders — surface as a default nudge
+    const securityChecks = [
+      security.email_verified,
+      security.strong_password_set,
+      security.two_factor_enabled,
+      Boolean(security.recovery_email),
+    ];
+    const accountIssues = securityChecks.filter((c) => !c).length;
+    const accountComplete = accountIssues === 0;
     return {
       "personal-info": { complete: personalComplete, warning: !personalComplete ? 0 : 0 },
       education: { complete: educationComplete, warning: 0 },
       "about-me": { complete: aboutComplete, warning: 0 },
       credentials: { complete: credentialsComplete, warning: 0 },
       "email-preferences": { complete: emailComplete, warning: emailComplete ? 0 : 1 },
-      account: { complete: false, warning: accountIssues },
+      account: { complete: accountComplete, warning: accountIssues },
     } as Record<SectionId, { complete: boolean; warning: number }>;
-  }, [formValues, education, job, bio, credentials, expertiseTopics, prefs]);
+  }, [formValues, education, job, bio, credentials, expertiseTopics, prefs, security]);
 
   const profileIncomplete = !sectionState["personal-info"].complete;
 
@@ -1096,10 +1126,63 @@ const ProfileEdit = () => {
                   </section>
 
                   {/* ── Account & Security ── */}
-                  <section id="account" className="scroll-mt-24 bg-card rounded-2xl border p-6 md:p-8">
+                  <section id="account" className="scroll-mt-24 bg-card rounded-2xl border p-6 md:p-8 space-y-4">
+                    <h2 className="text-lg font-semibold">Account & Security</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Complete each item below to secure your account.
+                    </p>
+
+                    {[
+                      { key: "email_verified", label: "Email verified", desc: "Confirm your email address." },
+                      { key: "strong_password_set", label: "Strong password set", desc: "At least 12 characters, with mixed case and a number." },
+                      { key: "two_factor_enabled", label: "Two-factor authentication", desc: "Add an extra layer of security at sign-in." },
+                    ].map((item) => {
+                      const checked = (security as any)[item.key] as boolean;
+                      return (
+                        <div key={item.key} className="flex items-start justify-between gap-4 border rounded-xl p-4">
+                          <div>
+                            <div className="text-sm font-medium">{item.label}</div>
+                            <div className="text-xs text-muted-foreground">{item.desc}</div>
+                          </div>
+                          <Checkbox
+                            checked={checked}
+                            onCheckedChange={async (v) => {
+                              if (!user) return;
+                              const value = !!v;
+                              setSecurity((s) => ({ ...s, [item.key]: value }));
+                              await supabase
+                                .from("account_security")
+                                .upsert({ user_id: user.id, [item.key]: value }, { onConflict: "user_id" });
+                            }}
+                          />
+                        </div>
+                      );
+                    })}
+
+                    <div className="border rounded-xl p-4 space-y-2">
+                      <Label htmlFor="recovery_email" className="text-sm font-medium">Recovery email</Label>
+                      <p className="text-xs text-muted-foreground">Used to recover your account if you lose access.</p>
+                      <Input
+                        id="recovery_email"
+                        type="email"
+                        placeholder="backup@example.com"
+                        value={security.recovery_email}
+                        onChange={(e) => setSecurity((s) => ({ ...s, recovery_email: e.target.value }))}
+                        onBlur={async () => {
+                          if (!user) return;
+                          await supabase
+                            .from("account_security")
+                            .upsert(
+                              { user_id: user.id, recovery_email: security.recovery_email || null },
+                              { onConflict: "user_id" },
+                            );
+                        }}
+                      />
+                    </div>
+
                     <button
                       type="button"
-                      className="text-sm font-medium text-secondary hover:underline"
+                      className="text-sm font-medium text-primary hover:underline"
                     >
                       Change Password
                     </button>
