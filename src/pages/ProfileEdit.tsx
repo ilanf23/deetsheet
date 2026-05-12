@@ -146,6 +146,12 @@ const ProfileEdit = () => {
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   const [activeSection, setActiveSection] = useState<SectionId>("personal-info");
+  const [security, setSecurity] = useState({
+    email_verified: false,
+    strong_password_set: false,
+    two_factor_enabled: false,
+    recovery_email: "",
+  });
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
