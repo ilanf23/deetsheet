@@ -499,7 +499,7 @@ const ProfileEdit = () => {
                 </div>
 
                 <nav className="space-y-1">
-                  <h2 className="px-4 mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 font-heading">
+                  <h2 className="px-4 mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
                     Profile Settings
                   </h2>
                   {SECTIONS.map((s) => {
