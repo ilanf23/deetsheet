@@ -4,18 +4,19 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { subjectCategories } from "@/data/seedData";
 
 interface Topic {
   id: string;
   name: string;
   slug: string;
   description: string | null;
+  category_name: string;
   created_at: string;
 }
 
@@ -29,7 +30,10 @@ export default function AdminTopics() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Topic | null>(null);
-  const [form, setForm] = useState({ name: "", slug: "", description: "" });
+  const [form, setForm] = useState({ name: "", category_name: "" });
+  const [categoryQuery, setCategoryQuery] = useState("");
+  const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
+  const [showNameSuggestions, setShowNameSuggestions] = useState(false);
   const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
@@ -37,16 +41,15 @@ export default function AdminTopics() {
     setLoading(true);
     const { data, error } = await supabase
       .from("topics")
-      .select("id, name, slug, description, created_at")
+      .select("id, name, slug, description, category_name, created_at")
       .order("name");
 
     if (error) {
       toast({ title: "Error loading topics", description: error.message, variant: "destructive" });
     } else {
-      setTopics(data || []);
+      setTopics((data as Topic[]) || []);
     }
 
-    // Fetch post counts per topic
     const { data: posts } = await supabase.from("posts").select("topic_id");
     if (posts) {
       const counts: Record<string, number> = {};
@@ -61,22 +64,16 @@ export default function AdminTopics() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ name: "", slug: "", description: "" });
+    setForm({ name: "", category_name: "" });
+    setCategoryQuery("");
     setDialogOpen(true);
   };
 
   const openEdit = (topic: Topic) => {
     setEditing(topic);
-    setForm({ name: topic.name, slug: topic.slug, description: topic.description || "" });
+    setForm({ name: topic.name, category_name: topic.category_name || "" });
+    setCategoryQuery(topic.category_name || "");
     setDialogOpen(true);
-  };
-
-  const handleNameChange = (name: string) => {
-    setForm((prev) => ({
-      ...prev,
-      name,
-      slug: editing ? prev.slug : generateSlug(name),
-    }));
   };
 
   const handleSave = async () => {
@@ -84,14 +81,18 @@ export default function AdminTopics() {
       toast({ title: "Name is required", variant: "destructive" });
       return;
     }
+    if (!form.category_name.trim()) {
+      toast({ title: "Subject is required", variant: "destructive" });
+      return;
+    }
 
     setSaving(true);
-    const slug = editing ? (form.slug || generateSlug(form.name)) : generateSlug(form.name);
+    const slug = editing ? generateSlug(form.name) : generateSlug(form.name);
 
     if (editing) {
       const { error } = await supabase
         .from("topics")
-        .update({ name: form.name, slug, description: null })
+        .update({ name: form.name, slug, category_name: form.category_name })
         .eq("id", editing.id);
 
       if (error) {
@@ -104,7 +105,7 @@ export default function AdminTopics() {
     } else {
       const { error } = await supabase
         .from("topics")
-        .insert({ name: form.name, slug, description: null });
+        .insert({ name: form.name, slug, category_name: form.category_name, description: null });
 
       if (error) {
         toast({ title: "Error creating topic", description: error.message, variant: "destructive" });
@@ -128,6 +129,16 @@ export default function AdminTopics() {
     }
   };
 
+  const filteredCategories = subjectCategories.filter((c) =>
+    c.toLowerCase().includes(categoryQuery.toLowerCase())
+  );
+
+  const filteredTopicNames = form.name.trim().length > 0
+    ? topics
+        .filter((t) => t.id !== editing?.id && t.name.toLowerCase().includes(form.name.toLowerCase()))
+        .slice(0, 8)
+    : [];
+
   if (loading) {
     return <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
   }
@@ -147,8 +158,8 @@ export default function AdminTopics() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
+              <TableHead>Subject</TableHead>
               <TableHead>Slug</TableHead>
-              <TableHead>Description</TableHead>
               <TableHead>Posts</TableHead>
               <TableHead>Created</TableHead>
               <TableHead className="w-[100px]">Actions</TableHead>
@@ -163,8 +174,8 @@ export default function AdminTopics() {
               topics.map((t) => (
                 <TableRow key={t.id}>
                   <TableCell className="font-medium text-sm">{t.name}</TableCell>
+                  <TableCell className="text-sm">{t.category_name}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{t.slug}</TableCell>
-                  <TableCell className="text-sm max-w-[200px] truncate">{t.description || "—"}</TableCell>
                   <TableCell className="text-sm">{postCounts[t.id] || 0}</TableCell>
                   <TableCell className="text-sm">{format(parseISO(t.created_at), "MMM d, yyyy")}</TableCell>
                   <TableCell>
@@ -207,14 +218,79 @@ export default function AdminTopics() {
             <DialogTitle>{editing ? "Edit Topic" : "New Topic"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            <div className="space-y-2">
+            {/* Subject (Category) with autocomplete */}
+            <div className="space-y-2 relative">
+              <Label htmlFor="topic-category">Subject</Label>
+              <Input
+                id="topic-category"
+                value={categoryQuery}
+                onChange={(e) => {
+                  setCategoryQuery(e.target.value);
+                  setForm((p) => ({ ...p, category_name: e.target.value }));
+                  setShowCategorySuggestions(true);
+                }}
+                onFocus={() => setShowCategorySuggestions(true)}
+                onBlur={() => setTimeout(() => setShowCategorySuggestions(false), 150)}
+                placeholder="Select or type a subject..."
+                autoComplete="off"
+              />
+              {showCategorySuggestions && filteredCategories.length > 0 && (
+                <ul className="absolute z-50 w-full mt-1 max-h-56 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md">
+                  {filteredCategories.map((c) => (
+                    <li key={c}>
+                      <button
+                        type="button"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setCategoryQuery(c);
+                          setForm((p) => ({ ...p, category_name: c }));
+                          setShowCategorySuggestions(false);
+                        }}
+                      >
+                        {c}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            {/* Topic Name with autocomplete from existing topics */}
+            <div className="space-y-2 relative">
               <Label htmlFor="topic-name">Name</Label>
               <Input
                 id="topic-name"
                 value={form.name}
-                onChange={(e) => handleNameChange(e.target.value)}
+                onChange={(e) => {
+                  setForm((p) => ({ ...p, name: e.target.value }));
+                  setShowNameSuggestions(true);
+                }}
+                onFocus={() => setShowNameSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowNameSuggestions(false), 150)}
                 placeholder="e.g. Machine Learning"
+                autoComplete="off"
               />
+              {showNameSuggestions && filteredTopicNames.length > 0 && (
+                <ul className="absolute z-50 w-full mt-1 max-h-56 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md">
+                  {filteredTopicNames.map((t) => (
+                    <li key={t.id}>
+                      <button
+                        type="button"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground flex items-center justify-between"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setForm((p) => ({ ...p, name: t.name }));
+                          setShowNameSuggestions(false);
+                        }}
+                      >
+                        <span>{t.name}</span>
+                        <span className="text-xs text-muted-foreground">{t.category_name}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
           <DialogFooter>
