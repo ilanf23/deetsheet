@@ -61,7 +61,7 @@ const About = () => {
           </button>
         </div>
 
-        <div className="grid md:grid-cols-[260px_1fr] gap-8 items-start">
+        <div className="grid md:grid-cols-[160px_1fr] gap-8 items-start">
           <figure className="md:sticky md:top-24">
             <div className="overflow-hidden rounded-2xl shadow-lg ring-1 ring-border">
               <img
