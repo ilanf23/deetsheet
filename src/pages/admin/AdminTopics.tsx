@@ -229,7 +229,6 @@ export default function AdminTopics() {
                   setForm((p) => ({ ...p, category_name: e.target.value }));
                   setShowCategorySuggestions(true);
                 }}
-                onFocus={() => setShowCategorySuggestions(true)}
                 onBlur={() => setTimeout(() => setShowCategorySuggestions(false), 150)}
                 placeholder="Select or type a subject..."
                 autoComplete="off"
@@ -266,7 +265,6 @@ export default function AdminTopics() {
                   setForm((p) => ({ ...p, name: e.target.value }));
                   setShowNameSuggestions(true);
                 }}
-                onFocus={() => setShowNameSuggestions(true)}
                 onBlur={() => setTimeout(() => setShowNameSuggestions(false), 150)}
                 placeholder="e.g. Machine Learning"
                 autoComplete="off"
