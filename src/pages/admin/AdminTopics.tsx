@@ -217,7 +217,6 @@ export default function AdminTopics() {
               />
             </div>
           </div>
-          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleSave} disabled={saving}>
