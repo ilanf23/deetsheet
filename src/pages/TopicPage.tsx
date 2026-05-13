@@ -196,7 +196,7 @@ const TopicPage = () => {
               {!!user && (
                 <div
                   aria-hidden
-                  className="flex items-baseline gap-3 px-3 -mx-3 pb-2 text-[11px] text-muted-foreground"
+                  className="flex items-baseline gap-3 px-3 -mx-3 pb-2 text-sm text-muted-foreground"
                 >
                   <span className="w-6 shrink-0" />
                   <span className="flex-1 min-w-0" />
