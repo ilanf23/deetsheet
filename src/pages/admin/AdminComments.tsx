@@ -114,7 +114,7 @@ export default function AdminComments() {
         <AdminSortSelect
           variant="plain"
           value={sort}
-          onChange={setSort}
+          onChange={(v) => setSort(v)}
           options={SORT_OPTIONS}
         />
       </div>
