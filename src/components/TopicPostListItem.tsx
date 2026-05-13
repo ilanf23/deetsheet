@@ -56,9 +56,9 @@ const TopicPostListItem = ({ post, rank, topicName, topicId, showRanking = true 
       </h3>
       {showRanking && (
         <>
-          <span className="shrink-0 w-20 pr-2 flex items-baseline justify-end gap-1 text-base md:text-lg font-heading text-muted-foreground tabular-nums">
-            <span className="text-secondary font-semibold">{seedAvg}</span>
-            <span className="text-sm">({post.ratingCount})</span>
+          <span className="shrink-0 w-20 pr-2 flex items-baseline gap-1 text-base md:text-lg font-heading text-muted-foreground tabular-nums">
+            <span className="flex-1 text-right text-secondary font-semibold">{seedAvg}</span>
+            <span className="w-8 text-left text-sm">({post.ratingCount})</span>
           </span>
           <span className="shrink-0 text-muted-foreground/60 text-base md:text-lg" aria-hidden>|</span>
           {isDbPost ? (
