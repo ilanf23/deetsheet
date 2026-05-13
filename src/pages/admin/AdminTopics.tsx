@@ -80,17 +80,18 @@ export default function AdminTopics() {
   };
 
   const handleSave = async () => {
-    if (!form.name.trim() || !form.slug.trim()) {
-      toast({ title: "Name and slug are required", variant: "destructive" });
+    if (!form.name.trim()) {
+      toast({ title: "Name is required", variant: "destructive" });
       return;
     }
 
     setSaving(true);
+    const slug = editing ? (form.slug || generateSlug(form.name)) : generateSlug(form.name);
 
     if (editing) {
       const { error } = await supabase
         .from("topics")
-        .update({ name: form.name, slug: form.slug, description: form.description || null })
+        .update({ name: form.name, slug, description: null })
         .eq("id", editing.id);
 
       if (error) {
