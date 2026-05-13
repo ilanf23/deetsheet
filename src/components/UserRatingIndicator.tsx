@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { Star, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
