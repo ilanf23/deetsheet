@@ -216,7 +216,8 @@ export const useRecentPosts = (limit = 8) => {
 
       // Keep only the newest post per topic, preserving created_at order.
       const seen = new Set<string>();
-      const unique: typeof data = [] as never;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const unique: any[] = [];
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       for (const row of (data ?? []) as any[]) {
         if (seen.has(row.topic_id)) continue;
