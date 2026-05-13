@@ -2,6 +2,7 @@ import { useState } from "react";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
 import { useSitePages } from "@/hooks/useSitePages";
+import founderImage from "@/assets/founder-fredric-brewer.png";
 
 type Tab = "how-it-works" | "how-it-started";
 
