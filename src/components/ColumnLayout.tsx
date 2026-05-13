@@ -93,7 +93,7 @@ const ColumnLayout = ({ onAtBottomChange }: ColumnLayoutProps) => {
         {/* Left — Recently Added */}
         <div
           ref={leftRef}
-          className={`${mobileTab === "recent" ? "block" : "hidden"} lg:block lg:h-full lg:overflow-y-auto lg:pr-2`}
+          className={`${mobileTab === "recent" ? "block" : "hidden"} lg:block lg:h-full lg:overflow-y-auto lg:pr-2 lg:pb-24`}
         >
           <RecentlyAddedSidebar />
         </div>
