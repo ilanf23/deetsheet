@@ -104,7 +104,7 @@ export default function AdminTopics() {
     } else {
       const { error } = await supabase
         .from("topics")
-        .insert({ name: form.name, slug: form.slug, description: form.description || null });
+        .insert({ name: form.name, slug, description: null });
 
       if (error) {
         toast({ title: "Error creating topic", description: error.message, variant: "destructive" });
