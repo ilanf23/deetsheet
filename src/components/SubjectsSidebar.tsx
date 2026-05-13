@@ -18,7 +18,7 @@ const CategoryRow = ({ category, expanded, onToggle }: CategoryRowProps) => {
         type="button"
         onClick={onToggle}
         aria-expanded={expanded}
-        className={`flex items-center gap-3 px-3 py-2 rounded-full text-lg transition-colors w-full text-primary text-left hover:bg-muted ${
+        className={`flex items-center gap-3 px-3 py-2 rounded-full text-sm transition-colors w-full text-primary text-left hover:bg-muted ${
           expanded ? "font-semibold" : ""
         }`}
       >
@@ -35,7 +35,7 @@ const CategoryRow = ({ category, expanded, onToggle }: CategoryRowProps) => {
             <li key={topic.id}>
               <Link
                 to={`/topic/${encodeURIComponent(topic.name)}`}
-                className="block px-3 py-0.5 text-lg rounded-md text-primary hover:bg-muted hover:underline truncate"
+                className="block px-3 py-0.5 text-sm rounded-md text-primary hover:bg-muted hover:underline truncate"
               >
                 {topic.name}
               </Link>
@@ -44,7 +44,7 @@ const CategoryRow = ({ category, expanded, onToggle }: CategoryRowProps) => {
           <li>
             <Link
               to={`/topics?category=${encodeURIComponent(category)}`}
-              className="flex items-center gap-2 w-full px-3 py-0.5 text-lg rounded-md text-primary hover:bg-muted hover:underline"
+              className="flex items-center gap-2 w-full px-3 py-0.5 text-sm rounded-md text-primary hover:bg-muted hover:underline"
             >
               <ChevronRight className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
               <span className="truncate">View more</span>
