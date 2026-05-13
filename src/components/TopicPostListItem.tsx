@@ -56,7 +56,7 @@ const TopicPostListItem = ({ post, rank, topicName, topicId, showRanking = true 
       </h3>
       {showRanking && (
         <>
-          <span className="shrink-0 w-10 ml-16 text-right text-base md:text-lg font-heading text-secondary font-semibold tabular-nums">
+          <span className="shrink-0 w-10 ml-32 text-right text-base md:text-lg font-heading text-secondary font-semibold tabular-nums">
             {seedAvg}
           </span>
           <span className="shrink-0 w-10 -ml-2 text-left text-sm font-heading text-muted-foreground tabular-nums">
