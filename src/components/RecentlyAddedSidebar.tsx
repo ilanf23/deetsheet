@@ -3,7 +3,7 @@ import type { Post } from "@/data/seedData";
 import { useRecentPosts } from "@/hooks/useSupabaseTopics";
 
 const RecentlyAddedSidebar = () => {
-  const { data: posts, isLoading } = useRecentPosts(8);
+  const { data: posts, isLoading } = useRecentPosts(40);
 
   return (
     <div className="bg-card rounded-xl border border-border p-4">
