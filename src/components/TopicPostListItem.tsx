@@ -56,13 +56,13 @@ const TopicPostListItem = ({ post, rank, topicName, topicId, showRanking = true 
       </h3>
       {showRanking && (
         <>
-          <span className="shrink-0 w-10 ml-72 text-right text-base md:text-lg font-heading text-secondary font-semibold tabular-nums">
+          <span className="shrink-0 w-10 ml-96 text-right text-base md:text-lg font-heading text-secondary font-semibold tabular-nums">
             {seedAvg}
           </span>
           <span className="shrink-0 w-10 -ml-2 text-left text-sm font-heading text-muted-foreground tabular-nums">
             ({post.ratingCount})
           </span>
-          <span className="shrink-0 text-muted-foreground/60 text-base md:text-lg" aria-hidden>|</span>
+          <span className="shrink-0 -ml-4 text-muted-foreground/60 text-base md:text-lg" aria-hidden>|</span>
           {isDbPost ? (
             <span
               className="shrink-0 w-6 flex justify-start"

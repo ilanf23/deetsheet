@@ -200,8 +200,8 @@ const TopicPage = () => {
                 >
                   <span className="w-6 shrink-0" />
                   <span className="flex-1 min-w-0" />
-                  <span className="shrink-0 w-[92px] ml-72 text-center">Rating</span>
-                  <span className="shrink-0 text-muted-foreground/60" aria-hidden>|</span>
+                  <span className="shrink-0 w-[72px] ml-96 text-center">Rating</span>
+                  <span className="shrink-0 -ml-4 text-muted-foreground/60" aria-hidden>|</span>
                   <span className="shrink-0 w-6 text-left">You</span>
                 </div>
               )}
