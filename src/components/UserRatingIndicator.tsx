@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { Star, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,7 +20,16 @@ const UserRatingIndicator = ({ postId, onRatingChanged, size = "sm" }: UserRatin
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [userRating, setUserRating] = useState<number | null>(null);
+
+  const refreshRatingCaches = useCallback(() => {
+    // Server-side trigger updates posts.average_rating; invalidate any list
+    // that surfaces post ratings so the new average appears without reload.
+    ["recent-posts", "posts-by-topic", "topic", "topics", "popular-topics", "user-posts", "post"]
+      .forEach((k) => queryClient.invalidateQueries({ queryKey: [k] }));
+  }, [queryClient]);
+
   const [previewValue, setPreviewValue] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -78,9 +88,10 @@ const UserRatingIndicator = ({ postId, onRatingChanged, size = "sm" }: UserRatin
       }
       setLoading(false);
       setOpen(false);
+      refreshRatingCaches();
       onRatingChanged?.();
     },
-    [user, postId, isDbPost, toast, onRatingChanged],
+    [user, postId, isDbPost, toast, onRatingChanged, refreshRatingCaches],
   );
 
   const clearRating = useCallback(async () => {
@@ -97,8 +108,9 @@ const UserRatingIndicator = ({ postId, onRatingChanged, size = "sm" }: UserRatin
     }
     setLoading(false);
     setOpen(false);
+    refreshRatingCaches();
     onRatingChanged?.();
-  }, [user, postId, isDbPost, toast, onRatingChanged]);
+  }, [user, postId, isDbPost, toast, onRatingChanged, refreshRatingCaches]);
 
   const handleTriggerClick = (e: React.MouseEvent) => {
     e.stopPropagation();
