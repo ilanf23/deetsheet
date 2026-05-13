@@ -191,11 +191,11 @@ export default function AdminTopics() {
     c.toLowerCase().includes(categoryQuery.toLowerCase())
   );
 
-  const filteredTopicNames = form.name.trim().length > 0
-    ? topics
-        .filter((t) => t.id !== editing?.id && t.name.toLowerCase().includes(form.name.toLowerCase()))
-        .slice(0, 8)
-    : [];
+  const filteredTopicNames = topics
+    .filter((t) => t.id !== editing?.id)
+    .filter((t) => !form.category_name || t.category_name === form.category_name)
+    .filter((t) => !form.name.trim() || t.name.toLowerCase().includes(form.name.toLowerCase()))
+    .slice(0, 8);
 
   if (loading) {
     return <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>;
