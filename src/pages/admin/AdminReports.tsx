@@ -245,7 +245,7 @@ export default function AdminReports() {
           <AdminSortSelect
             label="Sort by"
             value={sort}
-            onChange={setSort}
+            onChange={(v) => setSort(v)}
             options={SORT_OPTIONS}
           />
         </div>
