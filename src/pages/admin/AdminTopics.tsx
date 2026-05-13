@@ -216,25 +216,7 @@ export default function AdminTopics() {
                 placeholder="e.g. Machine Learning"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="topic-slug">Slug</Label>
-              <Input
-                id="topic-slug"
-                value={form.slug}
-                onChange={(e) => setForm((prev) => ({ ...prev, slug: e.target.value }))}
-                placeholder="e.g. machine-learning"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="topic-desc">Description</Label>
-              <Textarea
-                id="topic-desc"
-                value={form.description}
-                onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-                placeholder="Optional description..."
-                rows={3}
-              />
-            </div>
+          </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
