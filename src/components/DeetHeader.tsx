@@ -52,7 +52,7 @@ const DeetHeader = () => {
 
         <div className="hidden md:flex flex-1 max-w-md mx-4 items-center gap-2">
           <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground" title={onTopics ? "Close Topics" : "Topics Directory"} onClick={toggleTopics}>
-            {onTopics ? <X className="h-[35px] w-[35px]" /> : <List className="h-[41px] w-[41px]" />}
+            {onTopics ? <X className="h-[35px] w-[35px]" /> : <List className="h-[25px] w-[25px]" />}
           </Button>
           <SearchBar />
         </div>
