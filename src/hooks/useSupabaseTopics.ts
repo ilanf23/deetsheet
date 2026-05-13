@@ -200,6 +200,8 @@ export const useRecentPosts = (limit = 8) => {
     queryKey: ["recent-posts", limit],
     staleTime: 60_000,
     queryFn: async (): Promise<PostRow[]> => {
+      // Fetch a wider window so we can dedupe by topic and surface variety
+      // (seed data often shares timestamps within a single topic).
       const { data, error } = await supabase
         .from("posts")
         .select(
@@ -208,11 +210,23 @@ export const useRecentPosts = (limit = 8) => {
             "profiles!posts_author_id_profiles_fkey(username), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
         .order("created_at", { ascending: false })
-        .limit(limit);
+        .limit(Math.max(limit * 10, 100));
 
       if (error) throw error;
+
+      // Keep only the newest post per topic, preserving created_at order.
+      const seen = new Set<string>();
+      const unique: typeof data = [] as never;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (data ?? []).map((row: any) => mapPost(row as DbPostRaw));
+      for (const row of (data ?? []) as any[]) {
+        if (seen.has(row.topic_id)) continue;
+        seen.add(row.topic_id);
+        unique.push(row);
+        if (unique.length >= limit) break;
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return unique.map((row: any) => mapPost(row as DbPostRaw));
     },
   });
 };
