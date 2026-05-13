@@ -209,7 +209,7 @@ export default function AdminTopics() {
           <AdminSortSelect
             variant="plain"
             value={sort}
-            onChange={(v) => setSort(v)}
+            onChange={(v) => setSort(v as SortKey)}
             options={SORT_OPTIONS}
           />
           <Button onClick={openCreate}>
