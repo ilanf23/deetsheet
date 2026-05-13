@@ -88,9 +88,10 @@ const UserRatingIndicator = ({ postId, onRatingChanged, size = "sm" }: UserRatin
       }
       setLoading(false);
       setOpen(false);
+      refreshRatingCaches();
       onRatingChanged?.();
     },
-    [user, postId, isDbPost, toast, onRatingChanged],
+    [user, postId, isDbPost, toast, onRatingChanged, refreshRatingCaches],
   );
 
   const clearRating = useCallback(async () => {
