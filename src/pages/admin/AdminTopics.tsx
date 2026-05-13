@@ -80,17 +80,18 @@ export default function AdminTopics() {
   };
 
   const handleSave = async () => {
-    if (!form.name.trim() || !form.slug.trim()) {
-      toast({ title: "Name and slug are required", variant: "destructive" });
+    if (!form.name.trim()) {
+      toast({ title: "Name is required", variant: "destructive" });
       return;
     }
 
     setSaving(true);
+    const slug = editing ? (form.slug || generateSlug(form.name)) : generateSlug(form.name);
 
     if (editing) {
       const { error } = await supabase
         .from("topics")
-        .update({ name: form.name, slug: form.slug, description: form.description || null })
+        .update({ name: form.name, slug, description: null })
         .eq("id", editing.id);
 
       if (error) {
@@ -103,7 +104,7 @@ export default function AdminTopics() {
     } else {
       const { error } = await supabase
         .from("topics")
-        .insert({ name: form.name, slug: form.slug, description: form.description || null });
+        .insert({ name: form.name, slug, description: null });
 
       if (error) {
         toast({ title: "Error creating topic", description: error.message, variant: "destructive" });
@@ -213,25 +214,6 @@ export default function AdminTopics() {
                 value={form.name}
                 onChange={(e) => handleNameChange(e.target.value)}
                 placeholder="e.g. Machine Learning"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="topic-slug">Slug</Label>
-              <Input
-                id="topic-slug"
-                value={form.slug}
-                onChange={(e) => setForm((prev) => ({ ...prev, slug: e.target.value }))}
-                placeholder="e.g. machine-learning"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="topic-desc">Description</Label>
-              <Textarea
-                id="topic-desc"
-                value={form.description}
-                onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-                placeholder="Optional description..."
-                rows={3}
               />
             </div>
           </div>
