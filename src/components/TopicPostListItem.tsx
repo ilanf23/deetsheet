@@ -59,7 +59,7 @@ const TopicPostListItem = ({ post, rank, topicName, topicId, showRanking = true 
           <span className="shrink-0 w-10 ml-3 text-right text-base md:text-lg font-heading text-secondary font-semibold tabular-nums">
             {seedAvg}
           </span>
-          <span className="shrink-0 w-10 text-left text-sm font-heading text-muted-foreground tabular-nums">
+          <span className="shrink-0 w-10 text-right text-sm font-heading text-muted-foreground tabular-nums">
             ({post.ratingCount})
           </span>
           <span className="shrink-0 text-muted-foreground/60 text-base md:text-lg" aria-hidden>|</span>
