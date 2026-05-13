@@ -37,7 +37,7 @@ const About = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <DeetHeader />
-      <main className="flex-1 container mx-auto px-4 py-12 max-w-3xl">
+      <main className="flex-1 container mx-auto px-4 py-12 max-w-5xl">
         <div className="flex items-center gap-4 mb-8">
           <button
             onClick={() => setActiveTab("how-it-works")}
@@ -61,9 +61,34 @@ const About = () => {
           </button>
         </div>
 
-        {activeTab === "how-it-works" && renderPageContent(works.content)}
+        <div className="grid md:grid-cols-[260px_1fr] gap-8 items-start">
+          <figure className="md:sticky md:top-24">
+            <div className="overflow-hidden rounded-2xl shadow-lg ring-1 ring-border">
+              <img
+                src={founderImage}
+                alt="Fredric Brewer, Founder of DeetSheet"
+                className="w-full h-auto object-cover"
+                loading="lazy"
+              />
+            </div>
+            <figcaption className="mt-3 text-center">
+              <p className="font-heading text-lg font-bold text-foreground leading-tight">
+                Fredric Brewer
+              </p>
+              <p className="text-sm text-secondary font-semibold uppercase tracking-wider mt-1">
+                Founder & Author
+              </p>
+              <p className="text-xs text-muted-foreground mt-1 italic">
+                The voice behind DeetSheet
+              </p>
+            </figcaption>
+          </figure>
 
-        {activeTab === "how-it-started" && renderPageContent(started.content)}
+          <div>
+            {activeTab === "how-it-works" && renderPageContent(works.content)}
+            {activeTab === "how-it-started" && renderPageContent(started.content)}
+          </div>
+        </div>
       </main>
       <DeetFooter />
     </div>
