@@ -20,7 +20,16 @@ const UserRatingIndicator = ({ postId, onRatingChanged, size = "sm" }: UserRatin
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [userRating, setUserRating] = useState<number | null>(null);
+
+  const refreshRatingCaches = useCallback(() => {
+    // Server-side trigger updates posts.average_rating; invalidate any list
+    // that surfaces post ratings so the new average appears without reload.
+    ["recent-posts", "posts-by-topic", "topic", "topics", "popular-topics", "user-posts", "post"]
+      .forEach((k) => queryClient.invalidateQueries({ queryKey: [k] }));
+  }, [queryClient]);
+
   const [previewValue, setPreviewValue] = useState<number | null>(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
