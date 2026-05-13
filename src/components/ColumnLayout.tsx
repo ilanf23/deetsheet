@@ -126,7 +126,7 @@ const ColumnLayout = ({ onAtBottomChange }: ColumnLayoutProps) => {
         {/* Right — Subjects */}
         <div
           ref={rightRef}
-          className={`${mobileTab === "subjects" ? "block" : "hidden"} lg:block pt-4 lg:h-full lg:overflow-y-auto lg:pr-2`}
+          className={`${mobileTab === "subjects" ? "block" : "hidden"} lg:block lg:h-full lg:overflow-y-auto lg:pr-2`}
         >
           <SubjectsSidebar />
         </div>

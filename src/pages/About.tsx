@@ -7,8 +7,27 @@ type Tab = "how-it-works" | "how-it-started";
 
 const SLUGS = ["about_how_it_works", "about_how_it_started"];
 
+const renderPageContent = (content: string | undefined) => {
+  if (!content) return null;
+  const blocks = content.split(/\n{2,}/);
+  return (
+    <div className="text-foreground leading-relaxed space-y-4">
+      {blocks.map((block, i) => {
+        const lines = block.split("\n");
+        const [first, ...rest] = lines;
+        return (
+          <p key={i} className="whitespace-pre-wrap">
+            <span className="font-bold">{first}</span>
+            {rest.length > 0 && "\n" + rest.join("\n")}
+          </p>
+        );
+      })}
+    </div>
+  );
+};
+
 const About = () => {
-  const [activeTab, setActiveTab] = useState<Tab>("how-it-started");
+  const [activeTab, setActiveTab] = useState<Tab>("how-it-works");
   const { get } = useSitePages(SLUGS);
 
   const works = get("about_how_it_works");
@@ -21,7 +40,7 @@ const About = () => {
         <div className="flex items-center gap-4 mb-8">
           <button
             onClick={() => setActiveTab("how-it-works")}
-            className={`text-lg font-bold px-4 py-1.5 rounded transition ${
+            className={`text-lg font-heading font-bold px-4 py-1.5 rounded transition ${
               activeTab === "how-it-works"
                 ? "bg-primary text-white"
                 : "text-muted-foreground hover:text-foreground"
@@ -31,7 +50,7 @@ const About = () => {
           </button>
           <button
             onClick={() => setActiveTab("how-it-started")}
-            className={`text-lg font-bold px-4 py-1.5 rounded transition ${
+            className={`text-lg font-heading font-bold px-4 py-1.5 rounded transition ${
               activeTab === "how-it-started"
                 ? "bg-primary text-white"
                 : "text-muted-foreground hover:text-foreground"
@@ -41,17 +60,9 @@ const About = () => {
           </button>
         </div>
 
-        {activeTab === "how-it-works" && (
-          <div className="text-foreground leading-relaxed whitespace-pre-wrap">
-            {works.content}
-          </div>
-        )}
+        {activeTab === "how-it-works" && renderPageContent(works.content)}
 
-        {activeTab === "how-it-started" && (
-          <div className="text-foreground leading-relaxed whitespace-pre-wrap">
-            {started.content}
-          </div>
-        )}
+        {activeTab === "how-it-started" && renderPageContent(started.content)}
       </main>
       <DeetFooter />
     </div>

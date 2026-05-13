@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import type { Post } from "@/data/seedData";
 import UserRatingIndicator from "@/components/UserRatingIndicator";
 import { slugifyPostTitle } from "@/lib/postSlug";
+import { formatTitle } from "@/lib/formatTitle";
 
 interface TopicPostListItemProps {
   post: Post;
@@ -22,7 +23,7 @@ const TopicPostListItem = ({ post, rank, topicName, topicId, showRanking = true 
     post.ratingCount > 0
       ? Math.round((post.ratingScore / post.ratingCount) * 10) / 10
       : 0;
-  const displayTitle = post.title || post.content;
+  const displayTitle = formatTitle(post.title || post.content);
   const isDbPost = UUID_RE.test(post.id);
 
   const goToPost = () => {
@@ -46,7 +47,7 @@ const TopicPostListItem = ({ post, rank, topicName, topicId, showRanking = true 
       className="group flex items-baseline gap-3 px-3 py-3.5 -mx-3 rounded-md hover:bg-accent/60 transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {showRanking && (
-        <span className="w-6 shrink-0 text-left text-base text-muted-foreground tabular-nums">
+        <span className="w-6 shrink-0 text-left text-base md:text-lg text-muted-foreground tabular-nums">
           {rank}.
         </span>
       )}

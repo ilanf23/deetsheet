@@ -5,6 +5,7 @@ import { Post, getTimeAgo } from "@/data/seedData";
 import UserRatingIndicator from "@/components/UserRatingIndicator";
 import { useToast } from "@/hooks/use-toast";
 import { slugifyPostTitle } from "@/lib/postSlug";
+import { formatTitle } from "@/lib/formatTitle";
 
 interface PostCardProps {
   post: Post;
@@ -15,7 +16,7 @@ const PostCard = ({ post }: PostCardProps) => {
   const { toast } = useToast();
 
   const openTopic = () => navigate(`/topic/${encodeURIComponent(post.topicName)}`);
-  const contentText = post.title || post.content;
+  const contentText = formatTitle(post.title || post.content);
   const postSlug = slugifyPostTitle(contentText) || post.id;
   const postHref = `/topic/${encodeURIComponent(post.topicName)}/post/${postSlug}`;
   const handleShare = async (e: MouseEvent<HTMLButtonElement>) => {
@@ -43,8 +44,24 @@ const PostCard = ({ post }: PostCardProps) => {
     }
   };
 
+  const handleCardClick = (e: MouseEvent<HTMLDivElement>) => {
+    if ((e.target as HTMLElement).closest("a,button")) return;
+    navigate(postHref);
+  };
+
   return (
-    <div className="group py-4 border-b border-border last:border-b-0">
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={handleCardClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          navigate(postHref);
+        }
+      }}
+      className="group py-4 border-b border-border last:border-b-0 cursor-pointer"
+    >
       <button
         type="button"
         onClick={(e) => {
@@ -65,7 +82,11 @@ const PostCard = ({ post }: PostCardProps) => {
       </Link>
 
       {post.imageUrl && (
-        <div className="mb-3.5 aspect-square w-full overflow-hidden bg-muted">
+        <Link
+          to={postHref}
+          onClick={(e) => e.stopPropagation()}
+          className="mb-3.5 block aspect-square w-full overflow-hidden bg-muted"
+        >
           <img
             src={post.imageUrl}
             alt={post.topicName}
@@ -75,7 +96,7 @@ const PostCard = ({ post }: PostCardProps) => {
             decoding="async"
             className="h-full w-full object-cover"
           />
-        </div>
+        </Link>
       )}
 
       <div className="mb-2 flex flex-wrap items-baseline gap-2 text-base leading-tight">
@@ -89,28 +110,45 @@ const PostCard = ({ post }: PostCardProps) => {
         <span className="text-muted-foreground">Posted {getTimeAgo(post.createdAt)}</span>
       </div>
 
-      <div className="flex items-center gap-4 text-base text-foreground/70">
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`${postHref}#comments`);
-          }}
-          className="flex items-center gap-2 hover:text-foreground"
+      <div className="flex items-center justify-between gap-3 text-sm text-foreground/70">
+        <div className="flex items-center gap-3 min-w-0">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`${postHref}#comments`);
+            }}
+            className="flex items-center gap-1.5 hover:text-foreground"
+          >
+            <MessageSquare className="h-4 w-4 fill-current" />
+            <span>{post.commentCount}</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleShare}
+            className="flex items-center gap-1 hover:text-foreground"
+          >
+            <Share2 className="h-4 w-4 fill-current" />
+            <span>Share</span>
+          </button>
+        </div>
+        <span
+          onClick={(e) => e.stopPropagation()}
+          className="flex items-center shrink-0 tabular-nums"
         >
-          <MessageSquare className="h-5 w-5 fill-current" />
-          <span>{post.commentCount} comments</span>
-        </button>
-        <button
-          type="button"
-          onClick={handleShare}
-          className="flex items-center gap-1 hover:text-foreground"
-        >
-          <Share2 className="h-5 w-5 fill-current" />
-          <span>Share</span>
-        </button>
-        <span onClick={(e) => e.stopPropagation()}>
-          <UserRatingIndicator postId={post.id} size="sm" />
+          <span className="flex flex-col items-center">
+            <span className="text-secondary font-semibold leading-none">
+              {post.ratingCount > 0 ? post.ratingScore : "—"}
+            </span>
+          </span>
+          <span className="mx-2 text-muted-foreground/60" aria-hidden>
+            |
+          </span>
+          <span className="flex flex-col items-center">
+            <span className="flex items-center justify-center min-h-[1rem]">
+              <UserRatingIndicator postId={post.id} size="sm" />
+            </span>
+          </span>
         </span>
       </div>
     </div>

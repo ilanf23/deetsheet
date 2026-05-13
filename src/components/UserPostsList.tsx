@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Star, MessageSquare, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { formatTitle } from "@/lib/formatTitle";
 
 interface UserPost {
   id: string;
@@ -71,7 +72,7 @@ const UserPostsList = ({ userId }: { userId: string }) => {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <h4 className="text-sm font-semibold text-card-foreground truncate">
-                      {post.title}
+                      {formatTitle(post.title)}
                     </h4>
                     <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                       {post.content}

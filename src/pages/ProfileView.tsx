@@ -32,6 +32,7 @@ import FollowUserButton from "@/components/FollowUserButton";
 import { useProfileFollowCounts } from "@/hooks/useUserFollow";
 import { useFollowing, useFollowers } from "@/hooks/useFollowLists";
 import { slugifyPostTitle } from "@/lib/postSlug";
+import { formatTitle } from "@/lib/formatTitle";
 
 const CREDENTIAL_ICON_MAP: Record<string, React.ReactNode> = {
   pencil: <Pencil className="h-4 w-4" />,
@@ -494,7 +495,7 @@ const ProfileView = () => {
                               </div>
                               {post.title && (
                                 <h4 className="font-semibold text-sm mb-1 line-clamp-1">
-                                  {post.title}
+                                  {formatTitle(post.title)}
                                 </h4>
                               )}
                               <p className="text-sm text-muted-foreground line-clamp-2">

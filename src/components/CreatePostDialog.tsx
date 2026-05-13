@@ -47,7 +47,7 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
     <div className="space-y-5">
       {/* Header */}
       <div>
-        <h2 className="text-lg font-semibold text-orange-500 italic">
+        <h2 className="text-lg font-semibold text-orange-500">
           You're About to Create a New Sub-Topic
         </h2>
         <ul className="mt-2 text-sm text-muted-foreground list-disc pl-5 space-y-1">
@@ -66,13 +66,14 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
         <Input
           id="subject"
           value={subject}
-          onChange={(e) => setSubject(e.target.value)}
+          readOnly
+          className="bg-muted cursor-not-allowed"
         />
       </div>
 
       {/* Preview */}
       <div className="rounded-md bg-muted/50 px-3 py-2">
-        <p className="text-sm text-muted-foreground italic">
+        <p className="text-sm text-muted-foreground">
           {subject ? getTopicSubtitle(subject, categoryName) : "What are the most important details of being a ..."}
         </p>
       </div>

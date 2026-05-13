@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Search, Menu, X, List, User, UserCircle2, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminMode } from "@/hooks/useAdminMode";
+import SearchBar from "@/components/SearchBar";
 
 const DeetHeader = () => {
   const navigate = useNavigate();
@@ -22,7 +22,6 @@ const DeetHeader = () => {
   const { adminModeActive, toggleAdminMode } = useAdminMode();
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   const username = user?.user_metadata?.username || user?.email?.split("@")[0] || "User";
@@ -46,24 +45,16 @@ const DeetHeader = () => {
 
   return (
     <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 items-center justify-between gap-4 px-6 lg:px-10">
-        <a href="/" className="flex items-center shrink-0">
+      <div className="mx-auto flex h-16 items-center justify-between gap-4 px-4 lg:px-10">
+        <a href="/" className="flex items-center shrink-0 pl-3">
           <img src="/logo.png" alt="DeetSheet" className="h-4 md:h-[33px] -mt-1 md:mt-0" />
         </a>
 
         <div className="hidden md:flex flex-1 max-w-md mx-4 items-center gap-2">
           <Button variant="ghost" size="icon" className="shrink-0 text-muted-foreground hover:text-foreground" title={onTopics ? "Close Topics" : "Topics Directory"} onClick={toggleTopics}>
-            {onTopics ? <X className="h-5 w-5" /> : <List className="h-5 w-5" />}
+            {onTopics ? <X className="h-[29px] w-[29px]" /> : <List className="h-[34px] w-[34px]" />}
           </Button>
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search topics or posts..."
-              className="pl-10 bg-muted border-0 focus-visible:ring-primary"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+          <SearchBar />
         </div>
 
         <nav className="hidden md:flex items-center gap-1">
@@ -157,7 +148,7 @@ const DeetHeader = () => {
 
         <div className="flex md:hidden items-center gap-2">
           <Button variant="ghost" size="icon" title={onTopics ? "Close Topics" : "Topics Directory"} onClick={toggleTopics}>
-            {onTopics ? <X className="h-5 w-5" /> : <List className="h-5 w-5" />}
+            {onTopics ? <X className="h-[29px] w-[29px]" /> : <List className="h-[34px] w-[34px]" />}
           </Button>
           <Button variant="ghost" size="icon" onClick={() => setSearchOpen(!searchOpen)}>
             <Search className="h-5 w-5" />
@@ -184,10 +175,7 @@ const DeetHeader = () => {
 
       {searchOpen && (
         <div className="md:hidden border-t p-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search topics or posts..." className="pl-10 bg-muted border-0" autoFocus value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-          </div>
+          <SearchBar autoFocus onNavigated={() => setSearchOpen(false)} />
         </div>
       )}
 

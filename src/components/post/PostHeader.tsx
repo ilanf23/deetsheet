@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import PostRatingBox from "@/components/post/PostRatingBox";
 import FollowPostButton from "@/components/FollowPostButton";
+import { formatTitle } from "@/lib/formatTitle";
 
 interface PostHeaderProps {
   title: string;
@@ -28,27 +29,21 @@ const PostHeader = ({
     <header className="flex flex-col md:flex-row md:items-start gap-4">
       <div className="flex-1 min-w-0 space-y-3">
         <h1
-          className="font-heading font-bold break-words"
+          className="font-heading font-bold break-words flex items-start gap-2"
           style={{
             fontSize: "var(--font-size-post-title)",
             lineHeight: "var(--line-height-post-title)",
             letterSpacing: "-0.01em",
           }}
         >
-          <span
-            className="tabular-nums mr-2 text-muted-foreground"
-            style={{
-              fontSize: "var(--font-size-post-title)",
-              lineHeight: "var(--line-height-post-title)",
-            }}
-          >
+          <span className="tabular-nums text-muted-foreground shrink-0">
             {rank}.
           </span>
           <Link
             to={postHref}
-            className="text-primary hover:underline"
+            className="text-primary hover:underline min-w-0 flex-1"
           >
-            {title}
+            {formatTitle(title)}
           </Link>
         </h1>
         <FollowPostButton postId={postId} initialCount={followerCount} />

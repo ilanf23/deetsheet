@@ -950,7 +950,7 @@ const topicPosts: Record<string, { titles: string[]; contents: string[] }> = {
   },
 };
 
-// Expand a short headline-style title into a longer, more descriptive subtopic header.
+// Expand a short headline-style title into a longer, more descriptive post header.
 // Pulls a deterministic descriptor based on the title + topic so the same post
 // always gets the same expanded header across reseeds.
 function expandTitle(title: string, topicName: string, rank: number): string {
@@ -1090,8 +1090,8 @@ Deno.serve(async (req) => {
           title += suffixes[cycleNum % suffixes.length];
         }
 
-        // Make subtopic headers longer and more descriptive, and the body
-        // copy more detailed, so each ranked subtopic feels like a real
+        // Make post headers longer and more descriptive, and the body
+        // copy more detailed, so each ranked post feels like a real
         // long-form post rather than a one-liner.
         const expandedTitle = expandTitle(title, topic.name, rank);
         const expandedContent = expandContent(

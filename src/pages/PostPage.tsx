@@ -24,7 +24,7 @@ import { buildPostImageUrl } from "@/lib/topicImageQueries";
 import { slugifyPostTitle } from "@/lib/postSlug";
 import type { Topic } from "@/data/seedData";
 
-const SubtopicPage = () => {
+const PostPage = () => {
   const { topicName, slug } = useParams<{ topicName: string; slug: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -83,6 +83,13 @@ const SubtopicPage = () => {
     el.scrollIntoView({ behavior: prefersReduced ? "auto" : "smooth", block: "start" });
   }, [post, location.hash]);
 
+  const [mobileTab, setMobileTab] = useState<MobileTab>("recent");
+  const mobileTabs: { id: MobileTab; label: string }[] = [
+    { id: "recent", label: "Recently Added" },
+    { id: "post", label: "Post" },
+    { id: "recommended", label: "Recommended" },
+  ];
+
   if (topicLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
@@ -113,7 +120,7 @@ const SubtopicPage = () => {
       <div className="min-h-screen flex flex-col bg-background">
         <DeetHeader />
         <main className="flex-1 container mx-auto px-4 py-20 text-center">
-          <h1 className="text-2xl font-bold mb-2">Subtopic not found</h1>
+          <h1 className="text-2xl font-bold mb-2">Post not found</h1>
           <p className="text-muted-foreground">
             {isNumeric ? `#${decodedSlug}` : "That post"} doesn't exist in {topic.name}.
           </p>
@@ -129,13 +136,6 @@ const SubtopicPage = () => {
       </div>
     );
   }
-
-  const [mobileTab, setMobileTab] = useState<MobileTab>("recent");
-  const mobileTabs: { id: MobileTab; label: string }[] = [
-    { id: "recent", label: "Recently Added" },
-    { id: "post", label: "Post" },
-    { id: "recommended", label: "Recommended" },
-  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -245,4 +245,4 @@ const SubtopicPage = () => {
   );
 };
 
-export default SubtopicPage;
+export default PostPage;

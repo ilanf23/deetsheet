@@ -95,7 +95,6 @@ const SECTIONS = [
   { id: "education", label: "Education & Career" },
   { id: "about-me", label: "About Me" },
   { id: "credentials", label: "Credentials" },
-  { id: "email-preferences", label: "Email Preferences" },
   { id: "account", label: "Account & Security" },
 ] as const;
 
@@ -282,7 +281,6 @@ const ProfileEdit = () => {
       education: { complete: educationComplete, warning: 0 },
       "about-me": { complete: aboutComplete, warning: 0 },
       credentials: { complete: credentialsComplete, warning: 0 },
-      "email-preferences": { complete: emailComplete, warning: emailComplete ? 0 : 1 },
       account: { complete: accountComplete, warning: accountIssues },
     } as Record<SectionId, { complete: boolean; warning: number }>;
   }, [formValues, education, job, bio, credentials, expertiseTopics, prefs, security]);
@@ -1074,55 +1072,6 @@ const ProfileEdit = () => {
                         </Button>
                       </div>
                     )}
-                  </section>
-
-                  {/* ── Email Preferences ── */}
-                  <section id="email-preferences" className="scroll-mt-24 bg-card rounded-2xl border p-6 md:p-8">
-                    <h3 className="text-xl font-semibold text-foreground mb-4">
-                      Email Preferences
-                    </h3>
-                    <div className="space-y-3">
-                      {EMAIL_PREFS.map((pref) => (
-                        <label
-                          key={pref.key}
-                          className="flex items-center gap-3 cursor-pointer"
-                        >
-                          <Checkbox
-                            className="h-4 w-4"
-                            checked={prefs[pref.key]}
-                            onCheckedChange={(v) =>
-                              setPrefs((p) => ({ ...p, [pref.key]: !!v }))
-                            }
-                          />
-                          <span className="text-sm text-foreground">{pref.label}</span>
-                        </label>
-                      ))}
-                      <div className="flex items-center gap-3">
-                        <label className="flex items-center gap-3 cursor-pointer">
-                          <Checkbox
-                            className="h-4 w-4"
-                            checked={prefs.emailTopPosts}
-                            onCheckedChange={(v) =>
-                              setPrefs((p) => ({ ...p, emailTopPosts: !!v }))
-                            }
-                          />
-                          <span className="text-sm text-foreground">
-                            Receive digest summary
-                          </span>
-                        </label>
-                        <Select value={emailFrequency} onValueChange={setEmailFrequency}>
-                          <SelectTrigger className="w-32 text-sm">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="daily">Daily</SelectItem>
-                            <SelectItem value="weekly">Weekly</SelectItem>
-                            <SelectItem value="bi-weekly">Bi-Weekly</SelectItem>
-                            <SelectItem value="monthly">Monthly</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
                   </section>
 
                   {/* ── Account & Security ── */}

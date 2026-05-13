@@ -67,7 +67,7 @@ const fetchProfilesByIds = async (
 /**
  * Fetch every entity a user follows: other users, topics, and posts.
  * Posts include their per-topic rank so links can deep-link to
- * `/topic/:topicName/post/:rank` (the SubtopicPage route).
+ * `/topic/:topicName/post/:rank` (the PostPage route).
  *
  * Pass `enabled: false` to defer the (heavy) fetch until it's actually needed
  * — e.g. only when the user opens the "Following" tab.
