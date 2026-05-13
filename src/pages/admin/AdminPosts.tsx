@@ -3,11 +3,28 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
+import AdminSortSelect from "@/components/admin/AdminSortSelect";
 
 type Post = Tables<"posts">;
 type Profile = Tables<"profiles">;
 
 type PostTab = "pending" | "published" | "reported" | "rejected" | "deleted";
+type SortKey =
+  | "newest"
+  | "oldest"
+  | "title_asc"
+  | "title_desc"
+  | "author_asc"
+  | "author_desc";
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: "newest", label: "Submitted — Newest" },
+  { value: "oldest", label: "Submitted — Oldest" },
+  { value: "title_asc", label: "Title — A to Z" },
+  { value: "title_desc", label: "Title — Z to A" },
+  { value: "author_asc", label: "Author — A to Z" },
+  { value: "author_desc", label: "Author — Z to A" },
+];
 
 const PAGE_SIZE = 12;
 
@@ -57,6 +74,7 @@ export default function AdminPosts() {
   const [reportedIds, setReportedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [sort, setSort] = useState<SortKey>("newest");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -88,12 +106,45 @@ export default function AdminPosts() {
 
   // No `status` field on posts yet, so "pending" is empty by design until the schema lands.
   const visiblePosts = useMemo(() => {
-    if (tab === "pending") return [];
-    if (tab === "rejected") return [];
-    if (tab === "deleted") return [];
-    if (tab === "reported") return posts.filter((p) => reportedIds.has(p.id));
-    return posts;
-  }, [posts, reportedIds, tab]);
+    let rows: Post[];
+    if (tab === "pending") rows = [];
+    else if (tab === "rejected") rows = [];
+    else if (tab === "deleted") rows = [];
+    else if (tab === "reported") rows = posts.filter((p) => reportedIds.has(p.id));
+    else rows = posts;
+
+    const cmpStr = (a: string, b: string) =>
+      a.localeCompare(b, undefined, { sensitivity: "base" });
+    const cmpDate = (a?: string | null, b?: string | null) =>
+      new Date(a ?? 0).getTime() - new Date(b ?? 0).getTime();
+    const authorLabel = (p: Post) => {
+      const a = authors.get(p.author_id);
+      return (a?.name ?? a?.username ?? "").toLowerCase();
+    };
+
+    const sorted = [...rows];
+    switch (sort) {
+      case "newest":
+        sorted.sort((a, b) => cmpDate(b.created_at, a.created_at));
+        break;
+      case "oldest":
+        sorted.sort((a, b) => cmpDate(a.created_at, b.created_at));
+        break;
+      case "title_asc":
+        sorted.sort((a, b) => cmpStr(a.title ?? "", b.title ?? ""));
+        break;
+      case "title_desc":
+        sorted.sort((a, b) => cmpStr(b.title ?? "", a.title ?? ""));
+        break;
+      case "author_asc":
+        sorted.sort((a, b) => cmpStr(authorLabel(a), authorLabel(b)));
+        break;
+      case "author_desc":
+        sorted.sort((a, b) => cmpStr(authorLabel(b), authorLabel(a)));
+        break;
+    }
+    return sorted;
+  }, [posts, reportedIds, tab, sort, authors]);
 
   const tabCounts = {
     pending: 0,
@@ -169,6 +220,18 @@ export default function AdminPosts() {
             </button>
           );
         })}
+      </div>
+
+      <div className="flex items-end gap-4">
+        <AdminSortSelect
+          label="Sort by"
+          value={sort}
+          onChange={(v) => {
+            setSort(v);
+            setPage(1);
+          }}
+          options={SORT_OPTIONS}
+        />
       </div>
 
       <div

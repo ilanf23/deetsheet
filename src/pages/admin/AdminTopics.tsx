@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { subjectCategories } from "@/data/seedData";
+import AdminSortSelect from "@/components/admin/AdminSortSelect";
 
 interface Topic {
   id: string;
@@ -19,6 +20,27 @@ interface Topic {
   category_name: string;
   created_at: string;
 }
+
+type SortKey =
+  | "name_asc"
+  | "name_desc"
+  | "subject_asc"
+  | "subject_desc"
+  | "posts_desc"
+  | "posts_asc"
+  | "newest"
+  | "oldest";
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: "name_asc", label: "Name — A to Z" },
+  { value: "name_desc", label: "Name — Z to A" },
+  { value: "subject_asc", label: "Subject — A to Z" },
+  { value: "subject_desc", label: "Subject — Z to A" },
+  { value: "posts_desc", label: "Posts — Most first" },
+  { value: "posts_asc", label: "Posts — Fewest first" },
+  { value: "newest", label: "Created — Newest" },
+  { value: "oldest", label: "Created — Oldest" },
+];
 
 function generateSlug(name: string) {
   return name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
@@ -35,7 +57,43 @@ export default function AdminTopics() {
   const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
   const [showNameSuggestions, setShowNameSuggestions] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [sort, setSort] = useState<SortKey>("name_asc");
   const { toast } = useToast();
+
+  const sortedTopics = useMemo(() => {
+    const cmpStr = (a: string, b: string) =>
+      a.localeCompare(b, undefined, { sensitivity: "base" });
+    const cmpDate = (a?: string | null, b?: string | null) =>
+      new Date(a ?? 0).getTime() - new Date(b ?? 0).getTime();
+    const arr = [...topics];
+    switch (sort) {
+      case "name_asc":
+        arr.sort((a, b) => cmpStr(a.name ?? "", b.name ?? ""));
+        break;
+      case "name_desc":
+        arr.sort((a, b) => cmpStr(b.name ?? "", a.name ?? ""));
+        break;
+      case "subject_asc":
+        arr.sort((a, b) => cmpStr(a.category_name ?? "", b.category_name ?? ""));
+        break;
+      case "subject_desc":
+        arr.sort((a, b) => cmpStr(b.category_name ?? "", a.category_name ?? ""));
+        break;
+      case "posts_desc":
+        arr.sort((a, b) => (postCounts[b.id] ?? 0) - (postCounts[a.id] ?? 0));
+        break;
+      case "posts_asc":
+        arr.sort((a, b) => (postCounts[a.id] ?? 0) - (postCounts[b.id] ?? 0));
+        break;
+      case "newest":
+        arr.sort((a, b) => cmpDate(b.created_at, a.created_at));
+        break;
+      case "oldest":
+        arr.sort((a, b) => cmpDate(a.created_at, b.created_at));
+        break;
+    }
+    return arr;
+  }, [topics, postCounts, sort]);
 
   const fetchTopics = async () => {
     setLoading(true);
@@ -145,12 +203,20 @@ export default function AdminTopics() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-2xl font-bold">Topics</h1>
-        <Button onClick={openCreate}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Topic
-        </Button>
+        <div className="flex items-center gap-3">
+          <AdminSortSelect
+            variant="plain"
+            value={sort}
+            onChange={setSort}
+            options={SORT_OPTIONS}
+          />
+          <Button onClick={openCreate}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Topic
+          </Button>
+        </div>
       </div>
 
       <div className="border rounded-md overflow-x-auto">
@@ -166,12 +232,12 @@ export default function AdminTopics() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {topics.length === 0 ? (
+            {sortedTopics.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center text-muted-foreground py-8">No topics found.</TableCell>
               </TableRow>
             ) : (
-              topics.map((t) => (
+              sortedTopics.map((t) => (
                 <TableRow key={t.id}>
                   <TableCell className="font-medium text-sm">{t.name}</TableCell>
                   <TableCell className="text-sm">{t.category_name}</TableCell>

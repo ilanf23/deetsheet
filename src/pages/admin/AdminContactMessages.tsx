@@ -1,9 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, Mail, MailOpen } from "lucide-react";
+import AdminSortSelect from "@/components/admin/AdminSortSelect";
+
+type SortKey =
+  | "newest"
+  | "oldest"
+  | "name_asc"
+  | "name_desc"
+  | "unread_first"
+  | "read_first";
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: "newest", label: "Date — Newest" },
+  { value: "oldest", label: "Date — Oldest" },
+  { value: "name_asc", label: "Name — A to Z" },
+  { value: "name_desc", label: "Name — Z to A" },
+  { value: "unread_first", label: "Unread first" },
+  { value: "read_first", label: "Read first" },
+];
 
 interface ContactMessage {
   id: string;
@@ -21,6 +39,42 @@ export default function AdminContactMessages() {
   const { toast } = useToast();
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sort, setSort] = useState<SortKey>("newest");
+
+  const sortedMessages = useMemo(() => {
+    const cmpStr = (a: string, b: string) =>
+      a.localeCompare(b, undefined, { sensitivity: "base" });
+    const cmpDate = (a?: string | null, b?: string | null) =>
+      new Date(a ?? 0).getTime() - new Date(b ?? 0).getTime();
+    const arr = [...messages];
+    switch (sort) {
+      case "newest":
+        arr.sort((a, b) => cmpDate(b.created_at, a.created_at));
+        break;
+      case "oldest":
+        arr.sort((a, b) => cmpDate(a.created_at, b.created_at));
+        break;
+      case "name_asc":
+        arr.sort((a, b) => cmpStr(a.name ?? "", b.name ?? ""));
+        break;
+      case "name_desc":
+        arr.sort((a, b) => cmpStr(b.name ?? "", a.name ?? ""));
+        break;
+      case "unread_first":
+        arr.sort((a, b) => {
+          if (a.is_read !== b.is_read) return a.is_read ? 1 : -1;
+          return cmpDate(b.created_at, a.created_at);
+        });
+        break;
+      case "read_first":
+        arr.sort((a, b) => {
+          if (a.is_read !== b.is_read) return a.is_read ? -1 : 1;
+          return cmpDate(b.created_at, a.created_at);
+        });
+        break;
+    }
+    return arr;
+  }, [messages, sort]);
 
   useEffect(() => {
     let mounted = true;
@@ -85,13 +139,19 @@ export default function AdminContactMessages() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold">Contact Messages</h1>
           <p className="text-sm text-muted-foreground">
             {loading ? "Loading…" : `${messages.length} total · ${unreadCount} unread`}
           </p>
         </div>
+        <AdminSortSelect
+          variant="plain"
+          value={sort}
+          onChange={setSort}
+          options={SORT_OPTIONS}
+        />
       </div>
 
       {!loading && messages.length === 0 && (
@@ -101,7 +161,7 @@ export default function AdminContactMessages() {
       )}
 
       <div className="space-y-3">
-        {messages.map((msg) => (
+        {sortedMessages.map((msg) => (
           <div
             key={msg.id}
             className={`rounded-lg border p-4 ${msg.is_read ? "bg-card" : "bg-muted/40 border-primary/30"}`}

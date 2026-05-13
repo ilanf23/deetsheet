@@ -2,12 +2,29 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { Tables } from "@/integrations/supabase/types";
+import AdminSortSelect from "@/components/admin/AdminSortSelect";
 
 type Report = Tables<"reports">;
 type Post = Tables<"posts">;
 type Profile = Tables<"profiles">;
 
 type ReportTab = "open" | "resolved" | "dismissed";
+type SortKey =
+  | "newest"
+  | "oldest"
+  | "count_desc"
+  | "count_asc"
+  | "post_asc"
+  | "post_desc";
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: "newest", label: "Latest report — Newest" },
+  { value: "oldest", label: "Latest report — Oldest" },
+  { value: "count_desc", label: "Report count — Most first" },
+  { value: "count_asc", label: "Report count — Fewest first" },
+  { value: "post_asc", label: "Post title — A to Z" },
+  { value: "post_desc", label: "Post title — Z to A" },
+];
 
 type ReportGroup = {
   postId: string;
@@ -96,6 +113,7 @@ export default function AdminReports() {
   const [posts, setPosts] = useState<Map<string, Post>>(new Map());
   const [authors, setAuthors] = useState<Map<string, Profile>>(new Map());
   const [loading, setLoading] = useState(true);
+  const [sort, setSort] = useState<SortKey>("newest");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -129,7 +147,7 @@ export default function AdminReports() {
       list.push(r);
       byPost.set(r.post_id, list);
     });
-    return Array.from(byPost.entries()).map(([postId, list]) => {
+    const built: ReportGroup[] = Array.from(byPost.entries()).map(([postId, list]) => {
       const reasons: Record<string, number> = {};
       list.forEach((r) => {
         (r.reasons ?? []).forEach((reason) => {
@@ -140,7 +158,36 @@ export default function AdminReports() {
         Object.entries(reasons).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "Other";
       return { postId, reports: list, reasons, primaryReason };
     });
-  }, [reports, tab]);
+
+    const cmpStr = (a: string, b: string) =>
+      a.localeCompare(b, undefined, { sensitivity: "base" });
+    const latestTs = (g: ReportGroup) =>
+      Math.max(...g.reports.map((r) => new Date(r.created_at ?? 0).getTime()));
+    const postTitle = (g: ReportGroup) =>
+      (posts.get(g.postId)?.title ?? "").toLowerCase();
+
+    switch (sort) {
+      case "newest":
+        built.sort((a, b) => latestTs(b) - latestTs(a));
+        break;
+      case "oldest":
+        built.sort((a, b) => latestTs(a) - latestTs(b));
+        break;
+      case "count_desc":
+        built.sort((a, b) => b.reports.length - a.reports.length);
+        break;
+      case "count_asc":
+        built.sort((a, b) => a.reports.length - b.reports.length);
+        break;
+      case "post_asc":
+        built.sort((a, b) => cmpStr(postTitle(a), postTitle(b)));
+        break;
+      case "post_desc":
+        built.sort((a, b) => cmpStr(postTitle(b), postTitle(a)));
+        break;
+    }
+    return built;
+  }, [reports, tab, sort, posts]);
 
   const openCount = groups.length;
 
@@ -192,6 +239,17 @@ export default function AdminReports() {
           );
         })}
       </div>
+
+      {tab === "open" && (
+        <div className="flex items-end gap-4">
+          <AdminSortSelect
+            label="Sort by"
+            value={sort}
+            onChange={setSort}
+            options={SORT_OPTIONS}
+          />
+        </div>
+      )}
 
       {tab !== "open" ? (
         <div

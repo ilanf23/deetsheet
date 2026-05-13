@@ -3,12 +3,29 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Search, ChevronDown, Plus } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
+import AdminSortSelect from "@/components/admin/AdminSortSelect";
 
 type Profile = Tables<"profiles">;
 type RoleRow = Tables<"user_roles">;
 
 type RoleFilter = "all" | "admin" | "moderator" | "user";
 type StatusFilter = "all" | "active" | "suspended" | "banned";
+type SortKey =
+  | "newest"
+  | "oldest"
+  | "name_asc"
+  | "name_desc"
+  | "username_asc"
+  | "username_desc";
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: "newest", label: "Date joined — Newest" },
+  { value: "oldest", label: "Date joined — Oldest" },
+  { value: "name_asc", label: "Name — A to Z" },
+  { value: "name_desc", label: "Name — Z to A" },
+  { value: "username_asc", label: "Username — A to Z" },
+  { value: "username_desc", label: "Username — Z to A" },
+];
 
 const PAGE_SIZE = 25;
 
@@ -34,6 +51,7 @@ export default function AdminUsers() {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sort, setSort] = useState<SortKey>("newest");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -71,7 +89,7 @@ export default function AdminUsers() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return users.filter((u) => {
+    const rows = users.filter((u) => {
       const name = (u.name ?? "").toLowerCase();
       const username = (u.username ?? "").toLowerCase();
       const email = ((u as any).email ?? "").toLowerCase();
@@ -83,7 +101,35 @@ export default function AdminUsers() {
       if (statusFilter !== "all" && status !== statusFilter) return false;
       return true;
     });
-  }, [users, roles, search, roleFilter, statusFilter]);
+
+    const sorted = [...rows];
+    const cmpStr = (a: string, b: string) =>
+      a.localeCompare(b, undefined, { sensitivity: "base" });
+    const cmpDate = (a?: string | null, b?: string | null) =>
+      new Date(a ?? 0).getTime() - new Date(b ?? 0).getTime();
+
+    switch (sort) {
+      case "newest":
+        sorted.sort((a, b) => cmpDate(b.created_at, a.created_at));
+        break;
+      case "oldest":
+        sorted.sort((a, b) => cmpDate(a.created_at, b.created_at));
+        break;
+      case "name_asc":
+        sorted.sort((a, b) => cmpStr(a.name ?? "", b.name ?? ""));
+        break;
+      case "name_desc":
+        sorted.sort((a, b) => cmpStr(b.name ?? "", a.name ?? ""));
+        break;
+      case "username_asc":
+        sorted.sort((a, b) => cmpStr(a.username ?? "", b.username ?? ""));
+        break;
+      case "username_desc":
+        sorted.sort((a, b) => cmpStr(b.username ?? "", a.username ?? ""));
+        break;
+    }
+    return sorted;
+  }, [users, roles, search, roleFilter, statusFilter, sort]);
 
   const total = filtered.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -181,6 +227,15 @@ export default function AdminUsers() {
             { value: "suspended", label: "Suspended" },
             { value: "banned", label: "Banned" },
           ]}
+        />
+        <AdminSortSelect
+          label="Sort by"
+          value={sort}
+          onChange={(v) => {
+            setSort(v);
+            setPage(1);
+          }}
+          options={SORT_OPTIONS}
         />
       </div>
 

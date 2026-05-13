@@ -3,6 +3,24 @@ import { Search, ChevronDown } from "lucide-react";
 import { format, parseISO, subDays } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import AdminSortSelect from "@/components/admin/AdminSortSelect";
+
+type SortKey =
+  | "newest"
+  | "oldest"
+  | "user_asc"
+  | "user_desc"
+  | "action_asc"
+  | "action_desc";
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: "newest", label: "Timestamp — Newest" },
+  { value: "oldest", label: "Timestamp — Oldest" },
+  { value: "user_asc", label: "User — A to Z" },
+  { value: "user_desc", label: "User — Z to A" },
+  { value: "action_asc", label: "Action — A to Z" },
+  { value: "action_desc", label: "Action — Z to A" },
+];
 
 type Profile = Tables<"profiles">;
 type Post = Tables<"posts">;
@@ -51,6 +69,7 @@ export default function AdminAuditLog() {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [sort, setSort] = useState<SortKey>("newest");
 
   useEffect(() => {
     const load = async () => {
@@ -116,7 +135,7 @@ export default function AdminAuditLog() {
       rangeFilter === "all"
         ? null
         : subDays(new Date(), parseInt(rangeFilter, 10)).getTime();
-    return entries.filter((e) => {
+    const rows = entries.filter((e) => {
       if (cutoff && new Date(e.timestamp).getTime() < cutoff) return false;
       if (actionFilter !== "all" && e.action !== actionFilter) return false;
       if (
@@ -130,7 +149,34 @@ export default function AdminAuditLog() {
         return false;
       return true;
     });
-  }, [entries, search, actionFilter, rangeFilter]);
+
+    const cmpStr = (a: string, b: string) =>
+      a.localeCompare(b, undefined, { sensitivity: "base" });
+    const cmpDate = (a: string, b: string) =>
+      new Date(a).getTime() - new Date(b).getTime();
+    const sorted = [...rows];
+    switch (sort) {
+      case "newest":
+        sorted.sort((a, b) => cmpDate(b.timestamp, a.timestamp));
+        break;
+      case "oldest":
+        sorted.sort((a, b) => cmpDate(a.timestamp, b.timestamp));
+        break;
+      case "user_asc":
+        sorted.sort((a, b) => cmpStr(a.user, b.user));
+        break;
+      case "user_desc":
+        sorted.sort((a, b) => cmpStr(b.user, a.user));
+        break;
+      case "action_asc":
+        sorted.sort((a, b) => cmpStr(a.action, b.action));
+        break;
+      case "action_desc":
+        sorted.sort((a, b) => cmpStr(b.action, a.action));
+        break;
+    }
+    return sorted;
+  }, [entries, search, actionFilter, rangeFilter, sort]);
 
   const total = filtered.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -210,6 +256,16 @@ export default function AdminAuditLog() {
             { value: "90", label: "Last 90 days" },
             { value: "all", label: "All time" },
           ]}
+        />
+
+        <AdminSortSelect
+          label="Sort by"
+          value={sort}
+          onChange={(v) => {
+            setSort(v);
+            setPage(1);
+          }}
+          options={SORT_OPTIONS}
         />
       </div>
 

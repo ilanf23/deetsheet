@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Trash2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import AdminSortSelect from "@/components/admin/AdminSortSelect";
 
 interface Comment {
   id: string;
@@ -16,10 +17,57 @@ interface Comment {
   posts: { title: string } | null;
 }
 
+type SortKey =
+  | "newest"
+  | "oldest"
+  | "post_asc"
+  | "post_desc"
+  | "content_asc"
+  | "content_desc";
+
+const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: "newest", label: "Created — Newest" },
+  { value: "oldest", label: "Created — Oldest" },
+  { value: "post_asc", label: "Post — A to Z" },
+  { value: "post_desc", label: "Post — Z to A" },
+  { value: "content_asc", label: "Content — A to Z" },
+  { value: "content_desc", label: "Content — Z to A" },
+];
+
 export default function AdminComments() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sort, setSort] = useState<SortKey>("newest");
   const { toast } = useToast();
+
+  const sortedComments = useMemo(() => {
+    const cmpStr = (a: string, b: string) =>
+      a.localeCompare(b, undefined, { sensitivity: "base" });
+    const cmpDate = (a?: string | null, b?: string | null) =>
+      new Date(a ?? 0).getTime() - new Date(b ?? 0).getTime();
+    const arr = [...comments];
+    switch (sort) {
+      case "newest":
+        arr.sort((a, b) => cmpDate(b.created_at, a.created_at));
+        break;
+      case "oldest":
+        arr.sort((a, b) => cmpDate(a.created_at, b.created_at));
+        break;
+      case "post_asc":
+        arr.sort((a, b) => cmpStr(a.posts?.title ?? "", b.posts?.title ?? ""));
+        break;
+      case "post_desc":
+        arr.sort((a, b) => cmpStr(b.posts?.title ?? "", a.posts?.title ?? ""));
+        break;
+      case "content_asc":
+        arr.sort((a, b) => cmpStr(a.content ?? "", b.content ?? ""));
+        break;
+      case "content_desc":
+        arr.sort((a, b) => cmpStr(b.content ?? "", a.content ?? ""));
+        break;
+    }
+    return arr;
+  }, [comments, sort]);
 
   const fetchComments = async () => {
     setLoading(true);
@@ -61,7 +109,15 @@ export default function AdminComments() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Comments</h1>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <h1 className="text-2xl font-bold">Comments</h1>
+        <AdminSortSelect
+          variant="plain"
+          value={sort}
+          onChange={setSort}
+          options={SORT_OPTIONS}
+        />
+      </div>
 
       <div className="border rounded-md overflow-x-auto">
         <Table>
@@ -75,12 +131,12 @@ export default function AdminComments() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {comments.length === 0 ? (
+            {sortedComments.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center text-muted-foreground py-8">No comments found.</TableCell>
               </TableRow>
             ) : (
-              comments.map((c) => (
+              sortedComments.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell className="text-sm max-w-[300px] truncate">{c.content}</TableCell>
                   <TableCell className="text-sm max-w-[200px] truncate">{c.posts?.title || "—"}</TableCell>
