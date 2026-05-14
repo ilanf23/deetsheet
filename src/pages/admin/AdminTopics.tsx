@@ -237,27 +237,47 @@ export default function AdminTopics() {
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Subject</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Slug</TableHead>
               <TableHead>Posts</TableHead>
               <TableHead>Created</TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
+              <TableHead className="w-[160px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {sortedTopics.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">No topics found.</TableCell>
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">No topics found.</TableCell>
               </TableRow>
             ) : (
               sortedTopics.map((t) => (
-                <TableRow key={t.id}>
+                <TableRow key={t.id} className={t.status === "pending" ? "bg-secondary/5" : undefined}>
                   <TableCell className="font-medium text-sm">{t.name}</TableCell>
                   <TableCell className="text-sm">{t.category_name}</TableCell>
+                  <TableCell className="text-sm">
+                    <Badge
+                      variant={
+                        t.status === "approved" ? "default" : t.status === "rejected" ? "destructive" : "secondary"
+                      }
+                    >
+                      {t.status}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{t.slug}</TableCell>
                   <TableCell className="text-sm">{postCounts[t.id] || 0}</TableCell>
                   <TableCell className="text-sm">{format(parseISO(t.created_at), "MMM d, yyyy")}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
+                      {t.status !== "approved" && (
+                        <Button variant="ghost" size="icon" title="Approve" onClick={() => handleSetStatus(t.id, "approved")}>
+                          <Check className="h-4 w-4 text-primary" />
+                        </Button>
+                      )}
+                      {t.status !== "rejected" && (
+                        <Button variant="ghost" size="icon" title="Reject" onClick={() => handleSetStatus(t.id, "rejected")}>
+                          <X className="h-4 w-4 text-destructive" />
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon" onClick={() => openEdit(t)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
