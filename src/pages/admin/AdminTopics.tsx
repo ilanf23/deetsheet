@@ -19,6 +19,7 @@ interface Topic {
   description: string | null;
   category_name: string;
   created_at: string;
+  status: "pending" | "approved" | "rejected";
 }
 
 type SortKey =
@@ -99,7 +100,7 @@ export default function AdminTopics() {
     setLoading(true);
     const { data, error } = await supabase
       .from("topics")
-      .select("id, name, slug, description, category_name, created_at")
+      .select("id, name, slug, description, category_name, created_at, status")
       .order("name");
 
     if (error) {
@@ -163,7 +164,7 @@ export default function AdminTopics() {
     } else {
       const { error } = await supabase
         .from("topics")
-        .insert({ name: form.name, slug, category_name: form.category_name, description: null });
+        .insert({ name: form.name, slug, category_name: form.category_name, description: null, status: "approved" });
 
       if (error) {
         toast({ title: "Error creating topic", description: error.message, variant: "destructive" });
