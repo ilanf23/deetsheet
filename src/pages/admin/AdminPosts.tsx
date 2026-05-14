@@ -85,7 +85,7 @@ export default function AdminPosts() {
       const [postsRes, profilesRes, reportsRes] = await Promise.all([
         supabase
           .from("posts")
-          .select("id, title, author_id, created_at")
+          .select("id, title, author_id, created_at, status")
           .order("created_at", { ascending: false }),
         supabase.from("profiles").select("id, name, username, avatar_url"),
         supabase.from("reports").select("post_id"),
@@ -104,14 +104,13 @@ export default function AdminPosts() {
     fetchAll();
   }, []);
 
-  // No `status` field on posts yet, so "pending" is empty by design until the schema lands.
   const visiblePosts = useMemo(() => {
     let rows: Post[];
-    if (tab === "pending") rows = [];
-    else if (tab === "rejected") rows = [];
+    if (tab === "pending") rows = posts.filter((p) => (p as any).status === "pending");
+    else if (tab === "rejected") rows = posts.filter((p) => (p as any).status === "rejected");
     else if (tab === "deleted") rows = [];
     else if (tab === "reported") rows = posts.filter((p) => reportedIds.has(p.id));
-    else rows = posts;
+    else rows = posts.filter((p) => (p as any).status === "approved");
 
     const cmpStr = (a: string, b: string) =>
       a.localeCompare(b, undefined, { sensitivity: "base" });
@@ -147,10 +146,10 @@ export default function AdminPosts() {
   }, [posts, reportedIds, tab, sort, authors]);
 
   const tabCounts = {
-    pending: 0,
-    published: posts.length,
+    pending: posts.filter((p) => (p as any).status === "pending").length,
+    published: posts.filter((p) => (p as any).status === "approved").length,
     reported: posts.filter((p) => reportedIds.has(p.id)).length,
-    rejected: 0,
+    rejected: posts.filter((p) => (p as any).status === "rejected").length,
     deleted: 0,
   };
 
@@ -160,14 +159,20 @@ export default function AdminPosts() {
   const visibleStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const visibleEnd = Math.min(page * PAGE_SIZE, total);
 
-  const handleApprove = (id: string) =>
-    toast({ title: "Approved", description: `Post ${id.slice(0, 8)} approved.` });
-  const handleReject = (id: string) =>
+  const updateStatus = async (id: string, status: "approved" | "rejected") => {
+    const { error } = await supabase.from("posts").update({ status }).eq("id", id);
+    if (error) {
+      toast({ title: `Error ${status === "approved" ? "approving" : "rejecting"} post`, description: error.message, variant: "destructive" });
+      return;
+    }
+    setPosts((prev) => prev.map((p) => (p.id === id ? ({ ...p, status } as Post) : p)));
     toast({
-      title: "Rejected",
-      description: `Post ${id.slice(0, 8)} rejected.`,
-      variant: "destructive",
+      title: status === "approved" ? "Post approved" : "Post rejected",
+      variant: status === "rejected" ? "destructive" : undefined,
     });
+  };
+  const handleApprove = (id: string) => updateStatus(id, "approved");
+  const handleReject = (id: string) => updateStatus(id, "rejected");
 
   if (loading) {
     return (
