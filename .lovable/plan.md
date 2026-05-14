@@ -1,51 +1,61 @@
-## Goal
-Make topic creation work end-to-end, give admins real moderation power, and close the trigger/column gaps that leave `post_count`, `comment_count`, `score`, and `like_count` permanently stale.
+## Unified Admin Review Queue
 
-## Scope
+Add a single inbox at `/admin/review` where the admin sees every pending topic and pending post in one chronological list and approves/rejects from the same screen. Author visibility stays as it is today (only author + admin can see their pending item).
 
-### 1. Topics — unblock creation & admin management
-- Add column `topics.created_by uuid` (nullable, references `auth.users(id)` on delete set null) so the existing `CreateTopicDialog` payload matches the schema and ProfileView can later show "topics I created."
-- Add RLS policies on `public.topics`:
-  - INSERT: any authenticated user (`auth.uid() is not null`), with `created_by = auth.uid()` enforced in WITH CHECK.
-  - UPDATE: admins only (`has_role(auth.uid(), 'admin')`).
-  - DELETE: admins only.
-- Add trigger `update_topic_post_count` on `public.posts` (AFTER INSERT/DELETE) that recomputes `topics.post_count` for the affected `topic_id`. Mirrors the existing `update_post_comment_count` pattern.
-- Backfill `topics.post_count` once from current `posts` rows.
+### Scope
 
-### 2. Comments — make counters real
-- Verify and (re)create the trigger that binds `update_post_comment_count` to `public.comments` AFTER INSERT/DELETE. The function exists; the trigger appears to be missing, so `posts.comment_count` doesn't update on new comments.
-- Add column `comments.like_count integer not null default 0`.
-- Add trigger function + trigger on `public.comment_likes` (AFTER INSERT/DELETE) that recomputes `comments.like_count` for the affected `comment_id`. Backfill once.
-- Remove the defensive fallback in `src/components/post/CommentsSection.tsx` once the column is guaranteed present (keep the select clean).
+In scope:
+- New "Review" admin page combining pending topics and pending posts.
+- Sidebar entry with a live count badge for total pending items.
+- Approve / Reject actions that write to the existing `status` column on `topics` and `posts`.
+- A small preview of each item (title, author, category/topic, body excerpt, image thumb) so the admin can decide without leaving the page.
 
-### 3. Posts — make `score` real
-- Add trigger function + trigger on `public.votes` (AFTER INSERT/UPDATE/DELETE) that recomputes `posts.score = SUM(value)` for the affected `post_id`. Backfill once.
+Out of scope (per your answers):
+- Comments review.
+- Email notifications to admin or author.
+- Author-facing "My pending submissions" page.
 
-### 4. Topic images — admin moderation
-- Add RLS policies on `public.topic_images`:
-  - UPDATE: admins only.
-  - DELETE: admins only (also covers removing offensive uploads).
+### UX
 
-### 5. Auth security triggers (verification only — no code change unless missing)
-- Confirm `handle_new_user`, `handle_new_user_security`, and `sync_email_verified` are actually attached as triggers on `auth.users`. If any are missing, attach them in this same migration.
+Route: `/admin/review` (new). Becomes the default landing tab inside Admin.
 
-## Out of scope (flag only, don't change now)
-- Adding FK from `posts.author_id` / `comments.author_id` to `profiles` (would let us use Supabase nested selects). Larger refactor — call out in summary, ship separately if you want it.
-- `post_follows` table existence check — verify in passing; only act if it's truly missing.
+Layout:
+- Header: "Review queue" + total pending count.
+- Filter pills: `All` · `Topics (N)` · `Posts (N)`.
+- Sort: Newest / Oldest.
+- List of cards, each showing:
+  - Type badge (Topic | Post), submitted-time, author name + avatar.
+  - For topics: name, category, description.
+  - For posts: title, parent topic (linked), body excerpt, image thumb if any.
+  - Right side: green `Approve` and red `Reject` buttons.
+- Empty state: "Inbox zero — nothing waiting for review."
+- Sidebar `Review` nav item shows a small coral pill with the pending count (auto-refreshes when items are approved/rejected).
 
-## Deliverables
-1. **One Supabase migration** containing all schema changes, policies, trigger functions, triggers, and backfills above.
-2. **One small client edit**: `src/components/post/CommentsSection.tsx` — drop the `like_count` fallback path now that the column is guaranteed.
+The existing `/admin/topics` and `/admin/posts` pages stay as-is for browsing/filtering by status — Review is just the focused inbox.
 
-## Validation after apply
-- Create a topic from `/profile` → succeeds, appears in `/topics` with `post_count = 0`.
-- Create a post in that topic → `topics.post_count` increments; `posts.comment_count` is 0.
-- Add a comment → `posts.comment_count` increments.
-- Like a comment → `comments.like_count` increments.
-- Cast a vote → `posts.score` updates.
-- Non-admin attempting `topics.update`/`delete` → blocked. Admin → succeeds.
+### Data
 
-## Technical notes
-- All new policies use the existing `has_role(_user_id, _role)` security-definer function — no recursion risk.
-- All new trigger functions follow the project pattern: `LANGUAGE plpgsql SECURITY DEFINER SET search_path = public`, handling `TG_OP = 'DELETE'` to read `OLD`.
-- `created_by` is added as nullable so existing topic rows remain valid; new rows get it from `auth.uid()` via WITH CHECK.
+No schema changes required. Both tables already have:
+- `topics.status` ('pending' | 'approved' | 'rejected') with RLS gating public visibility.
+- `posts.status` ('pending' | 'approved' | 'rejected') with RLS gating public visibility.
+
+Approve/reject = `UPDATE … SET status = 'approved' | 'rejected' WHERE id = …` (admin-only, already covered by existing RLS).
+
+### Technical notes
+
+- New file: `src/pages/admin/AdminReview.tsx`.
+- New hook (or inline query): fetch pending rows in parallel:
+  - `supabase.from("topics").select("id, name, slug, category_name, description, created_at, created_by").eq("status", "pending")`
+  - `supabase.from("posts").select("id, title, content, image_url, topic_id, author_id, created_at").eq("status", "pending")`
+  - Join authors via `profiles` (name, username, avatar_url) and topic names via `topics` for posts.
+- Merge into a discriminated union `{ kind: "topic" | "post", ... }`, sort by `created_at`.
+- Approve/Reject mutations invalidate the queue and the per-type admin pages.
+- Sidebar badge: lightweight count query (`select id … status=pending` on both tables) with a 30s `refetchInterval`, or refetch on review-page mutations.
+- App routing: register the new route under the admin layout in `src/App.tsx`; add nav entry in `src/components/admin/AdminLayout.tsx` (top of the list, with `Inbox` icon from lucide).
+- Reuse `StatusPill`, `AdminSortSelect`, and the existing admin design tokens (`--admin-*`).
+
+### Files touched
+
+- New: `src/pages/admin/AdminReview.tsx`
+- Edited: `src/App.tsx` (lazy import + route)
+- Edited: `src/components/admin/AdminLayout.tsx` (nav entry + count badge)
