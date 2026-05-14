@@ -47,7 +47,9 @@ const TopicPostListItem = ({ post, rank, topicName, topicId, showRanking = true 
       className="group flex items-baseline gap-3 px-3 py-3.5 -mx-3 rounded-md hover:bg-accent/60 transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {showRanking && (
-        <span className="w-6 shrink-0 text-left text-base md:text-lg text-muted-foreground tabular-nums">
+        <span
+          className={`${rank >= 100 ? "w-10" : "w-6"} shrink-0 text-left text-base md:text-lg text-muted-foreground tabular-nums`}
+        >
           {rank}.
         </span>
       )}
