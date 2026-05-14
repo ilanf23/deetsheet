@@ -280,6 +280,7 @@ export type Database = {
           location_id: string | null
           rating_count: number
           score: number
+          status: string
           title: string
           topic_id: string
         }
@@ -296,6 +297,7 @@ export type Database = {
           location_id?: string | null
           rating_count?: number
           score?: number
+          status?: string
           title: string
           topic_id: string
         }
@@ -312,6 +314,7 @@ export type Database = {
           location_id?: string | null
           rating_count?: number
           score?: number
+          status?: string
           title?: string
           topic_id?: string
         }

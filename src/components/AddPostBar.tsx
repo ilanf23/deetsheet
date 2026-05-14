@@ -27,7 +27,10 @@ const AddPostBar = ({ topicId, topicName, categoryName, onPostAdded }: AddPostBa
         image,
         anonymous,
       });
-      toast({ title: "Post created!", description: "Your post is now live." });
+      toast({
+        title: "Post submitted for review",
+        description: "An admin will approve it before it appears on the site.",
+      });
       onPostAdded();
       setOpen(false);
     } catch (err: unknown) {
