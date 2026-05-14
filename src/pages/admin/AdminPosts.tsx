@@ -265,9 +265,7 @@ export default function AdminPosts() {
             className="px-6 py-16 text-center text-[14px]"
             style={{ color: "hsl(var(--admin-fg-muted))" }}
           >
-            {tab === "pending"
-              ? "No pending posts. The post-approval workflow activates once the status field lands on the schema."
-              : `No ${tab} posts.`}
+            {`No ${tab} posts.`}
           </div>
         ) : (
           pageRows.map((p) => {
