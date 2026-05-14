@@ -32,6 +32,25 @@ const navItems = [
 
 export default function AdminLayout() {
   const { user, signOut } = useAuth();
+  const location = useLocation();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const [t, p] = await Promise.all([
+        supabase.from("topics").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("posts").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      ]);
+      if (!cancelled) setPendingCount((t.count ?? 0) + (p.count ?? 0));
+    };
+    load();
+    const id = setInterval(load, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [location.pathname]);
 
   return (
     <div className="admin-shell min-h-screen flex">
