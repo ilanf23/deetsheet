@@ -641,6 +641,7 @@ export type Database = {
           name: string
           post_count: number
           slug: string
+          status: string
         }
         Insert: {
           category_name?: string
@@ -652,6 +653,7 @@ export type Database = {
           name: string
           post_count?: number
           slug: string
+          status?: string
         }
         Update: {
           category_name?: string
@@ -663,6 +665,7 @@ export type Database = {
           name?: string
           post_count?: number
           slug?: string
+          status?: string
         }
         Relationships: []
       }

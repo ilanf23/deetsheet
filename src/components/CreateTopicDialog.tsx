@@ -72,7 +72,10 @@ export default function CreateTopicDialog({ open, onOpenChange, onTopicCreated, 
         toast({ title: "Error creating topic", description: error.message, variant: "destructive" });
       }
     } else {
-      toast({ title: "Topic created successfully!" });
+      toast({
+        title: "Topic submitted for review",
+        description: "An admin will approve it before it appears on the site.",
+      });
       resetForm();
       onOpenChange(false);
       onTopicCreated?.();
