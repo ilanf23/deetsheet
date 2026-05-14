@@ -20,7 +20,7 @@ import {
   usePostsByTopic,
   type PostRow,
 } from "@/hooks/useSupabaseTopics";
-import { buildPostImageUrl } from "@/lib/topicImageQueries";
+
 import { slugifyPostTitle } from "@/lib/postSlug";
 import type { Topic } from "@/data/seedData";
 
@@ -211,7 +211,7 @@ const PostPage = () => {
                   </div>
                   <PostBody
                     content={post.content}
-                    imageSrc={buildPostImageUrl(post.id, topic.name, topic.categoryName)}
+                    imageSrc={post.imageUrl ?? undefined}
                     imageAlt={post.title || topic.name}
                   />
                   <div id="comments" className="border-t border-border pt-[var(--space-rhythm-block)] scroll-mt-24">

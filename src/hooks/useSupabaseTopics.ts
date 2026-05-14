@@ -98,13 +98,7 @@ const mapPost = (row: DbPostRaw): PostRow => ({
   commentCount: row.comment_count ?? 0,
   score: row.score ?? 0,
   createdAt: new Date(row.created_at),
-  imageUrl:
-    row.image_url ??
-    buildPostImageUrl(
-      row.id,
-      row.topics?.name ?? "",
-      row.topics?.category_name ?? "Life"
-    ),
+  imageUrl: row.image_url ?? null,
 });
 
 /**
