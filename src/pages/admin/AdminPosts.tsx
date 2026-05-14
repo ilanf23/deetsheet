@@ -283,7 +283,7 @@ export default function AdminPosts() {
                   {author?.name ?? author?.username ?? "Unknown"}
                 </span>
                 <span>
-                  <StatusPill status={tab === "reported" ? "reported" : "published"} />
+                  <StatusPill status={tab === "reported" ? "reported" : ((((p as any).status === "approved" ? "published" : (p as any).status) as PostTab) ?? "published")} />
                 </span>
                 <span style={{ color: "hsl(var(--admin-fg-muted))" }}>
                   {formatDistanceToNow(parseISO(p.created_at))} ago
