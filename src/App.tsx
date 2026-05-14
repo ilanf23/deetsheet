@@ -48,6 +48,7 @@ const AdminRouteGuard = lazy(() => import("./components/admin/AdminRouteGuard"))
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminPosts = lazy(() => import("./pages/admin/AdminPosts"));
+const AdminReview = lazy(() => import("./pages/admin/AdminReview"));
 const AdminComments = lazy(() => import("./pages/admin/AdminComments"));
 const AdminTopics = lazy(() => import("./pages/admin/AdminTopics"));
 const AdminReports = lazy(() => import("./pages/admin/AdminReports"));
@@ -126,6 +127,7 @@ const App = () => (
               <Route element={<AdminRouteGuard />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="users" element={<AdminUsers />} />
+                <Route path="review" element={<AdminReview />} />
                 <Route path="posts" element={<AdminPosts />} />
                 <Route path="comments" element={<AdminComments />} />
                 <Route path="topics" element={<AdminTopics />} />

@@ -1,5 +1,7 @@
-import { Outlet, NavLink, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Outlet, NavLink, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutGrid,
   Users,
@@ -10,12 +12,14 @@ import {
   History,
   Mail,
   FileEdit,
+  Inbox,
   ArrowLeft,
   LogOut,
 } from "lucide-react";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutGrid, end: true },
+  { to: "/admin/review", label: "Review", icon: Inbox, badgeKey: "review" as const },
   { to: "/admin/users", label: "Users", icon: Users },
   { to: "/admin/posts", label: "Posts", icon: FileText },
   { to: "/admin/comments", label: "Comments", icon: MessageSquare },
@@ -28,6 +32,25 @@ const navItems = [
 
 export default function AdminLayout() {
   const { user, signOut } = useAuth();
+  const location = useLocation();
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const [t, p] = await Promise.all([
+        supabase.from("topics").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("posts").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      ]);
+      if (!cancelled) setPendingCount((t.count ?? 0) + (p.count ?? 0));
+    };
+    load();
+    const id = setInterval(load, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [location.pathname]);
 
   return (
     <div className="admin-shell min-h-screen flex">
@@ -82,7 +105,18 @@ export default function AdminLayout() {
                     className="h-[17px] w-[17px]"
                     style={{ color: isActive ? "#ffffff" : "hsl(var(--admin-fg))" }}
                   />
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {item.badgeKey === "review" && pendingCount > 0 && (
+                    <span
+                      className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-semibold"
+                      style={{
+                        backgroundColor: isActive ? "#ffffff" : "hsl(var(--secondary))",
+                        color: isActive ? "hsl(var(--admin-primary))" : "hsl(var(--secondary-foreground))",
+                      }}
+                    >
+                      {pendingCount}
+                    </span>
+                  )}
                 </>
               )}
             </NavLink>
