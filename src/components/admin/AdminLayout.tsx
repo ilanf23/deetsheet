@@ -1,5 +1,7 @@
-import { Outlet, NavLink, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Outlet, NavLink, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutGrid,
   Users,
@@ -10,12 +12,14 @@ import {
   History,
   Mail,
   FileEdit,
+  Inbox,
   ArrowLeft,
   LogOut,
 } from "lucide-react";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutGrid, end: true },
+  { to: "/admin/review", label: "Review", icon: Inbox, badgeKey: "review" as const },
   { to: "/admin/users", label: "Users", icon: Users },
   { to: "/admin/posts", label: "Posts", icon: FileText },
   { to: "/admin/comments", label: "Comments", icon: MessageSquare },
