@@ -127,6 +127,7 @@ const App = () => (
               <Route element={<AdminRouteGuard />}>
                 <Route index element={<AdminDashboard />} />
                 <Route path="users" element={<AdminUsers />} />
+                <Route path="review" element={<AdminReview />} />
                 <Route path="posts" element={<AdminPosts />} />
                 <Route path="comments" element={<AdminComments />} />
                 <Route path="topics" element={<AdminTopics />} />
