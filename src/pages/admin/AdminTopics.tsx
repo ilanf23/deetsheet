@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { subjectCategories } from "@/data/seedData";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
@@ -184,6 +185,16 @@ export default function AdminTopics() {
       toast({ title: "Error deleting topic", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Topic deleted" });
+      fetchTopics();
+    }
+  };
+
+  const handleSetStatus = async (topicId: string, status: "approved" | "rejected") => {
+    const { error } = await supabase.from("topics").update({ status }).eq("id", topicId);
+    if (error) {
+      toast({ title: `Error ${status === "approved" ? "approving" : "rejecting"} topic`, description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: status === "approved" ? "Topic approved" : "Topic rejected" });
       fetchTopics();
     }
   };
