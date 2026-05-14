@@ -247,7 +247,7 @@ export default function AdminReview() {
           })}
         </div>
 
-        <AdminSortSelect label="Sort by" value={sort} onChange={setSort} options={SORT_OPTIONS} />
+        <AdminSortSelect label="Sort by" value={sort} onChange={(v) => setSort(v as SortKey)} options={SORT_OPTIONS} />
       </div>
 
       {visible.length === 0 ? (
