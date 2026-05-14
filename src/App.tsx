@@ -48,6 +48,7 @@ const AdminRouteGuard = lazy(() => import("./components/admin/AdminRouteGuard"))
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminPosts = lazy(() => import("./pages/admin/AdminPosts"));
+const AdminReview = lazy(() => import("./pages/admin/AdminReview"));
 const AdminComments = lazy(() => import("./pages/admin/AdminComments"));
 const AdminTopics = lazy(() => import("./pages/admin/AdminTopics"));
 const AdminReports = lazy(() => import("./pages/admin/AdminReports"));
