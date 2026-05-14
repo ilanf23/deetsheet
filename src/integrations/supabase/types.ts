@@ -79,6 +79,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          like_count: number
           parent_comment_id: string | null
           post_id: string
         }
@@ -87,6 +88,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          like_count?: number
           parent_comment_id?: string | null
           post_id: string
         }
@@ -95,6 +97,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          like_count?: number
           parent_comment_id?: string | null
           post_id?: string
         }
@@ -631,6 +634,7 @@ export type Database = {
         Row: {
           category_name: string
           created_at: string
+          created_by: string | null
           description: string | null
           id: string
           image_url: string | null
@@ -641,6 +645,7 @@ export type Database = {
         Insert: {
           category_name?: string
           created_at?: string
+          created_by?: string | null
           description?: string | null
           id?: string
           image_url?: string | null
@@ -651,6 +656,7 @@ export type Database = {
         Update: {
           category_name?: string
           created_at?: string
+          created_by?: string | null
           description?: string | null
           id?: string
           image_url?: string | null

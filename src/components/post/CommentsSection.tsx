@@ -11,42 +11,23 @@ interface CommentsSectionProps {
   postId: string;
 }
 
-const COMMENT_SELECT_BASE =
-  "id, content, created_at, author_id, parent_comment_id" as const;
-
 interface DbComment {
   id: string;
   content: string;
   created_at: string;
   author_id: string;
   parent_comment_id: string | null;
-  like_count?: number | null;
+  like_count: number | null;
 }
 
 const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
-  const withLikes = await supabase
+  const { data, error } = await supabase
     .from("comments")
-    .select(`${COMMENT_SELECT_BASE}, like_count`)
+    .select("id, content, created_at, author_id, parent_comment_id, like_count")
     .eq("post_id", postId)
     .order("created_at", { ascending: true });
-
-  let rows: DbComment[];
-  if (withLikes.error) {
-    // If `like_count` is missing (migration not applied) or the extended select fails for
-    // any transient reason, retry without it so the thread still loads.
-    const baseOnly = await supabase
-      .from("comments")
-      .select(COMMENT_SELECT_BASE)
-      .eq("post_id", postId)
-      .order("created_at", { ascending: true });
-    if (baseOnly.error) throw baseOnly.error;
-    rows = ((baseOnly.data ?? []) as DbComment[]).map((r) => ({
-      ...r,
-      like_count: 0,
-    }));
-  } else {
-    rows = (withLikes.data ?? []) as unknown as DbComment[];
-  }
+  if (error) throw error;
+  const rows = (data ?? []) as unknown as DbComment[];
   if (rows.length === 0) return [];
 
   const authorIds = Array.from(new Set(rows.map((r) => r.author_id)));
