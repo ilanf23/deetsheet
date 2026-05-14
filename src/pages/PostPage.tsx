@@ -20,7 +20,7 @@ import {
   usePostsByTopic,
   type PostRow,
 } from "@/hooks/useSupabaseTopics";
-import { buildPostImageUrl } from "@/lib/topicImageQueries";
+
 import { slugifyPostTitle } from "@/lib/postSlug";
 import type { Topic } from "@/data/seedData";
 
