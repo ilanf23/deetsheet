@@ -105,7 +105,18 @@ export default function AdminLayout() {
                     className="h-[17px] w-[17px]"
                     style={{ color: isActive ? "#ffffff" : "hsl(var(--admin-fg))" }}
                   />
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {item.badgeKey === "review" && pendingCount > 0 && (
+                    <span
+                      className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-semibold"
+                      style={{
+                        backgroundColor: isActive ? "#ffffff" : "hsl(var(--secondary))",
+                        color: isActive ? "hsl(var(--admin-primary))" : "hsl(var(--secondary-foreground))",
+                      }}
+                    >
+                      {pendingCount}
+                    </span>
+                  )}
                 </>
               )}
             </NavLink>
