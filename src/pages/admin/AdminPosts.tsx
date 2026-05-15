@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
+import AdminEditPostDialog from "@/components/admin/AdminEditPostDialog";
+import { logAdminAction } from "@/lib/auditLog";
 
 type Post = Tables<"posts">;
 type Profile = Tables<"profiles">;
