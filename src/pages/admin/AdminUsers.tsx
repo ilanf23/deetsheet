@@ -240,16 +240,16 @@ export default function AdminUsers() {
       </div>
 
       <div
-        className="rounded-xl overflow-hidden"
+        className="rounded-xl overflow-hidden shadow-sm"
         style={{
-          backgroundColor: "hsl(var(--admin-surface))",
+          backgroundColor: "#ffffff",
           border: "1px solid hsl(var(--admin-border))",
         }}
       >
         <div
-          className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr] px-6 py-3 text-[12px]"
+          className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr] bg-slate-50 px-6 py-3 text-[11px] font-semibold uppercase tracking-wide"
           style={{
-            color: "hsl(var(--admin-fg-muted))",
+            color: "rgb(100 116 139)",
             borderBottom: "1px solid hsl(var(--admin-border))",
           }}
         >
@@ -272,12 +272,12 @@ export default function AdminUsers() {
             return (
               <div
                 key={u.id}
-                className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr] items-center px-6 py-4 text-[14px]"
+                className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr] items-center bg-white px-6 py-4 text-[14px] transition-colors hover:bg-slate-50/80"
                 style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}
               >
-                <span style={{ color: "hsl(var(--admin-fg))" }}>{displayName}</span>
-                <span style={{ color: "hsl(var(--admin-fg-muted))" }}>{email}</span>
-                <span style={{ color: "hsl(var(--admin-fg))", textTransform: "capitalize" }}>{role}</span>
+                <span className="truncate font-medium text-slate-900">{displayName}</span>
+                <span className="truncate text-slate-600">{email}</span>
+                <span className="capitalize text-slate-900">{role}</span>
                 <span>
                   <StatusPill status={status} />
                 </span>

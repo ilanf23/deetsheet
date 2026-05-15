@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 interface RichTextEditorProps {
+  initialContent?: string;
   placeholder?: string;
   onUpdate?: (html: string) => void;
   onSubmit?: () => void;
@@ -26,6 +27,7 @@ interface RichTextEditorProps {
 }
 
 const RichTextEditor = ({
+  initialContent,
   placeholder = "Add a comment...",
   onUpdate,
   editorRef,
@@ -39,6 +41,7 @@ const RichTextEditor = ({
       Underline,
       Placeholder.configure({ placeholder }),
     ],
+    content: initialContent,
     editorProps: {
       attributes: {
         class:

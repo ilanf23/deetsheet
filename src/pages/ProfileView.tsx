@@ -39,10 +39,11 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import CreateTopicDialog from "@/components/CreateTopicDialog";
+import EditPostDialog from "@/components/EditPostDialog";
 import FollowUserButton from "@/components/FollowUserButton";
 import { useProfileFollowCounts } from "@/hooks/useUserFollow";
 import { useFollowing, useFollowers } from "@/hooks/useFollowLists";
-import { slugifyPostTitle } from "@/lib/postSlug";
+import { buildPostSlug } from "@/lib/postSlug";
 import { formatTitle } from "@/lib/formatTitle";
 
 const CREDENTIAL_ICON_MAP: Record<string, React.ReactNode> = {
@@ -146,6 +147,8 @@ const ProfileView = () => {
   const [topicCount, setTopicCount] = useState(0);
   const [topicsRequested, setTopicsRequested] = useState(false);
   const [createTopicOpen, setCreateTopicOpen] = useState(false);
+  const [editPostId, setEditPostId] = useState<string | null>(null);
+  const [postsRefreshKey, setPostsRefreshKey] = useState(0);
 
   // Follow data — denormalized counts on profile + full lists for the tabs.
   // The full lists do heavy multi-table joins, so we only enable them when
@@ -208,7 +211,7 @@ const ProfileView = () => {
       .then(({ count }) => {
         if (count !== null) setCommentCount(count);
       });
-  }, [targetUserId]);
+  }, [targetUserId, postsRefreshKey]);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -546,7 +549,7 @@ const ProfileView = () => {
                               className="h-7 text-xs gap-1 text-muted-foreground"
                               onClick={() =>
                                 navigate(
-                                  `/topic/${encodeURIComponent(post.topic_name)}/post/${slugifyPostTitle(post.title || post.content) || post.id}#comments`
+                                  `/topic/${encodeURIComponent(post.topic_name)}/post/${buildPostSlug(post.title || post.content, post.id) || post.id}#comments`
                                 )
                               }
                             >
@@ -554,12 +557,23 @@ const ProfileView = () => {
                               {post.comment_count}
                             </Button>
                             {isOwnProfile && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-xs gap-1 text-muted-foreground ml-auto hover:text-primary"
+                                onClick={() => setEditPostId(post.id)}
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                                Edit
+                              </Button>
+                            )}
+                            {isOwnProfile && (
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-7 text-xs gap-1 text-muted-foreground ml-auto hover:text-destructive"
+                                    className="h-7 text-xs gap-1 text-muted-foreground hover:text-destructive"
                                   >
                                     <Trash2 className="h-3.5 w-3.5" />
                                     Delete
@@ -776,7 +790,7 @@ const ProfileView = () => {
                                   <span>followed {getTimeAgo(p.followedAt)}</span>
                                 </div>
                                 <a
-                                  href={`/topic/${encodeURIComponent(p.topicName)}/post/${slugifyPostTitle(p.title) || p.rank}`}
+                                  href={`/topic/${encodeURIComponent(p.topicName)}/post/${buildPostSlug(p.title, p.id) || p.rank}`}
                                   className="font-semibold text-sm text-primary hover:underline"
                                 >
                                   {p.rank}. {p.title}
@@ -854,6 +868,14 @@ const ProfileView = () => {
         </div>
       </main>
       <DeetFooter />
+      <EditPostDialog
+        postId={editPostId}
+        open={!!editPostId}
+        onOpenChange={(open) => {
+          if (!open) setEditPostId(null);
+        }}
+        onSaved={() => setPostsRefreshKey((k) => k + 1)}
+      />
     </div>
   );
 };

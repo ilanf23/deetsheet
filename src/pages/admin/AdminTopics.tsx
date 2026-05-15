@@ -289,17 +289,24 @@ export default function AdminTopics() {
         </div>
       </div>
 
-      <div className="border rounded-md overflow-x-auto">
+      <div
+        className="overflow-hidden rounded-xl shadow-sm"
+        style={{
+          backgroundColor: "#ffffff",
+          border: "1px solid hsl(var(--admin-border))",
+        }}
+      >
+        <div className="overflow-x-auto">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-slate-50">
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Subject</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Slug</TableHead>
-              <TableHead>Posts</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="w-[160px]">Actions</TableHead>
+              <TableHead className="h-11 px-5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Name</TableHead>
+              <TableHead className="h-11 px-5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Subject</TableHead>
+              <TableHead className="h-11 px-5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Status</TableHead>
+              <TableHead className="h-11 px-5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Slug</TableHead>
+              <TableHead className="h-11 px-5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Posts</TableHead>
+              <TableHead className="h-11 px-5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Created</TableHead>
+              <TableHead className="h-11 w-[180px] px-5 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -309,10 +316,10 @@ export default function AdminTopics() {
               </TableRow>
             ) : (
               sortedTopics.map((t) => (
-                <TableRow key={t.id} className={t.status === "pending" ? "bg-secondary/5" : undefined}>
-                  <TableCell className="font-medium text-sm">{t.name}</TableCell>
-                  <TableCell className="text-sm">{t.category_name}</TableCell>
-                  <TableCell className="text-sm">
+                <TableRow key={t.id} className="bg-white transition-colors hover:bg-slate-50/80">
+                  <TableCell className="px-5 py-4 text-sm font-semibold text-slate-900">{t.name}</TableCell>
+                  <TableCell className="px-5 py-4 text-sm text-slate-700">{t.category_name}</TableCell>
+                  <TableCell className="px-5 py-4 text-sm">
                     <Badge
                       variant={
                         t.status === "approved" ? "default" : t.status === "rejected" ? "destructive" : "secondary"
@@ -321,27 +328,28 @@ export default function AdminTopics() {
                       {t.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{t.slug}</TableCell>
-                  <TableCell className="text-sm">{postCounts[t.id] || 0}</TableCell>
-                  <TableCell className="text-sm">{format(parseISO(t.created_at), "MMM d, yyyy")}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
+                  <TableCell className="px-5 py-4 font-mono text-xs text-slate-500">{t.slug}</TableCell>
+                  <TableCell className="px-5 py-4 text-sm font-medium text-slate-900">{postCounts[t.id] || 0}</TableCell>
+                  <TableCell className="px-5 py-4 text-sm text-slate-700">{format(parseISO(t.created_at), "MMM d, yyyy")}</TableCell>
+                  <TableCell className="px-5 py-4">
+                    <div className="flex justify-end gap-1">
                       {t.status !== "approved" && (
-                        <Button variant="ghost" size="icon" title="Approve" onClick={() => handleSetStatus(t.id, "approved")}>
+                        <Button variant="outline" size="icon" className="h-8 w-8 border-slate-200 bg-white" title="Approve" onClick={() => handleSetStatus(t.id, "approved")}>
                           <Check className="h-4 w-4 text-primary" />
                         </Button>
                       )}
                       {t.status !== "rejected" && (
-                        <Button variant="ghost" size="icon" title="Reject" onClick={() => handleSetStatus(t.id, "rejected")}>
+                        <Button variant="outline" size="icon" className="h-8 w-8 border-slate-200 bg-white" title="Reject" onClick={() => handleSetStatus(t.id, "rejected")}>
                           <X className="h-4 w-4 text-destructive" />
                         </Button>
                       )}
-                      <Button variant="ghost" size="icon" onClick={() => openEdit(t)}>
+                      <Button variant="outline" size="icon" className="h-8 w-8 border-slate-200 bg-white" onClick={() => openEdit(t)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="icon"
+                        className="h-8 w-8 border-slate-200 bg-white"
                         title={t.image_url ? "Replace image" : "Upload image"}
                         onClick={() => {
                           const inp = document.createElement("input");
@@ -358,8 +366,9 @@ export default function AdminTopics() {
                       </Button>
                       {t.image_url && (
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="icon"
+                          className="h-8 w-8 border-slate-200 bg-white"
                           title="Clear image"
                           onClick={() => void handleClearImage(t)}
                         >
@@ -368,7 +377,7 @@ export default function AdminTopics() {
                       )}
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                          <Button variant="outline" size="icon" className="h-8 w-8 border-red-100 bg-white text-destructive hover:bg-red-50 hover:text-destructive">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>
@@ -392,6 +401,7 @@ export default function AdminTopics() {
             )}
           </TableBody>
         </Table>
+        </div>
       </div>
 
       {/* Create / Edit Dialog */}

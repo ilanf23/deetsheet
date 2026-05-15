@@ -7,7 +7,7 @@ interface PostBodyProps {
   imageAlt?: string;
 }
 
-const COLLAPSED_LINES = 8;
+const COLLAPSED_LINES = 10;
 
 const PostBody = ({ content, imageSrc, imageAlt }: PostBodyProps) => {
   const [expanded, setExpanded] = useState(false);
@@ -27,18 +27,9 @@ const PostBody = ({ content, imageSrc, imageAlt }: PostBodyProps) => {
 
   return (
     <div>
-      {showImage && (
-        <img
-          src={imageSrc!}
-          alt={imageAlt || ""}
-          loading="lazy"
-          onError={() => setImageFailed(true)}
-          className="mb-3 block w-full max-w-[480px] rounded-lg border border-border object-cover aspect-[4/3] bg-muted"
-        />
-      )}
       <div
         ref={bodyRef}
-        className="text-card-foreground whitespace-pre-line"
+        className="text-card-foreground whitespace-pre-line break-words"
         style={{
           fontSize: "var(--font-size-prose-body)",
           lineHeight: "var(--line-height-prose-body)",
@@ -48,6 +39,15 @@ const PostBody = ({ content, imageSrc, imageAlt }: PostBodyProps) => {
           }),
         }}
       >
+        {showImage && (
+          <img
+            src={imageSrc!}
+            alt={imageAlt || ""}
+            loading="lazy"
+            onError={() => setImageFailed(true)}
+            className="float-right ml-4 mb-2 w-full max-w-[480px] rounded-lg border border-border object-cover aspect-[4/3] bg-muted"
+          />
+        )}
         {content}
       </div>
       {showToggle && (

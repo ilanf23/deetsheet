@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Topic, getPostsByTopic, getAverageRating } from "@/data/seedData";
 import UserRatingIndicator from "@/components/UserRatingIndicator";
 import { useTopicByName, usePostsByTopic, getTopicSubtitle } from "@/hooks/useSupabaseTopics";
-import { slugifyPostTitle } from "@/lib/postSlug";
+import { buildPostSlug } from "@/lib/postSlug";
 
 interface PopularTopicSectionProps {
   topic: Topic;
@@ -83,7 +83,7 @@ const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  const slug = slugifyPostTitle(post.content) || String(i + 1);
+                  const slug = buildPostSlug(post.content, post.id) || String(i + 1);
                   navigate(`/topic/${encodeURIComponent(topic.name)}/post/${slug}`);
                 }}
                 className="flex-1 min-w-0 text-left text-primary leading-snug truncate hover:underline"

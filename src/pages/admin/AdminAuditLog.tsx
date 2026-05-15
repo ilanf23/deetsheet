@@ -305,16 +305,16 @@ export default function AdminAuditLog() {
       </div>
 
       <div
-        className="rounded-xl overflow-hidden"
+        className="rounded-xl overflow-hidden shadow-sm"
         style={{
-          backgroundColor: "hsl(var(--admin-surface))",
+          backgroundColor: "#ffffff",
           border: "1px solid hsl(var(--admin-border))",
         }}
       >
         <div
-          className="grid grid-cols-[1.3fr_1.4fr_1fr_3fr_1fr] px-6 py-3 text-[12px]"
+          className="grid grid-cols-[1.3fr_1.4fr_1fr_3fr_1fr] bg-slate-50 px-6 py-3 text-[11px] font-semibold uppercase tracking-wide"
           style={{
-            color: "hsl(var(--admin-fg-muted))",
+            color: "rgb(100 116 139)",
             borderBottom: "1px solid hsl(var(--admin-border))",
           }}
         >
@@ -336,18 +336,18 @@ export default function AdminAuditLog() {
           pageRows.map((e) => (
             <div
               key={e.id}
-              className="grid grid-cols-[1.3fr_1.4fr_1fr_3fr_1fr] items-center px-6 py-4 text-[14px]"
+              className="grid grid-cols-[1.3fr_1.4fr_1fr_3fr_1fr] items-center bg-white px-6 py-4 text-[14px] transition-colors hover:bg-slate-50/80"
               style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}
             >
-              <span style={{ color: "hsl(var(--admin-fg-muted))" }}>
+              <span className="text-slate-600">
                 {format(parseISO(e.timestamp), "MMM d, h:mm a")}
               </span>
-              <span style={{ color: "hsl(var(--admin-fg))" }}>{e.user}</span>
+              <span className="truncate font-medium text-slate-900">{e.user}</span>
               <span>
                 <ActionPill action={e.action} />
               </span>
-              <span style={{ color: "hsl(var(--admin-fg))" }}>{e.details}</span>
-              <span className="text-right" style={{ color: "hsl(var(--admin-fg-muted))" }}>
+              <span className="truncate text-slate-900">{e.details}</span>
+              <span className="text-right text-slate-600">
                 {e.ip}
               </span>
             </div>

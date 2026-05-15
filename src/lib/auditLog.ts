@@ -5,8 +5,16 @@ type AuditAction =
   | "post.approve"
   | "post.reject"
   | "post.delete"
+  | "comment.edit"
+  | "comment.delete"
   | "topic.approve"
-  | "topic.reject";
+  | "topic.reject"
+  | "topic.image.pin"
+  | "topic.image.unpin"
+  | "topic.image.approve"
+  | "topic.image.hide"
+  | "topic.image.upload"
+  | "topic.image.delete";
 
 export async function logAdminAction(params: {
   actorId: string;

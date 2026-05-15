@@ -51,6 +51,7 @@ const AdminPosts = lazy(() => import("./pages/admin/AdminPosts"));
 const AdminReview = lazy(() => import("./pages/admin/AdminReview"));
 const AdminComments = lazy(() => import("./pages/admin/AdminComments"));
 const AdminTopics = lazy(() => import("./pages/admin/AdminTopics"));
+const AdminTopicImages = lazy(() => import("./pages/admin/AdminTopicImages"));
 const AdminReports = lazy(() => import("./pages/admin/AdminReports"));
 const AdminAuditLog = lazy(() => import("./pages/admin/AdminAuditLog"));
 const AdminContactMessages = lazy(() => import("./pages/admin/AdminContactMessages"));
@@ -131,6 +132,7 @@ const App = () => (
                 <Route path="posts" element={<AdminPosts />} />
                 <Route path="comments" element={<AdminComments />} />
                 <Route path="topics" element={<AdminTopics />} />
+                <Route path="topic-images" element={<AdminTopicImages />} />
                 <Route path="reports" element={<AdminReports />} />
                 <Route path="audit" element={<AdminAuditLog />} />
                 <Route path="contact-messages" element={<AdminContactMessages />} />

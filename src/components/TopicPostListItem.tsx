@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Post } from "@/data/seedData";
 import UserRatingIndicator from "@/components/UserRatingIndicator";
-import { slugifyPostTitle } from "@/lib/postSlug";
+import { buildPostSlug } from "@/lib/postSlug";
 import { formatTitle } from "@/lib/formatTitle";
 
 interface TopicPostListItemProps {
@@ -27,7 +27,7 @@ const TopicPostListItem = ({ post, rank, topicName, topicId, showRanking = true 
   const isDbPost = UUID_RE.test(post.id);
 
   const goToPost = () => {
-    const slug = slugifyPostTitle(displayTitle) || String(rank);
+    const slug = buildPostSlug(displayTitle, post.id) || String(rank);
     navigate(`/topic/${encodeURIComponent(topicName)}/post/${slug}`);
   };
 

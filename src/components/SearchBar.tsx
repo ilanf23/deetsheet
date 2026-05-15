@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Search, Clock, Hash, FileText, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { slugifyPostTitle } from "@/lib/postSlug";
+import { buildPostSlug } from "@/lib/postSlug";
 
 type SuggestionType = "topic" | "post";
 
@@ -104,7 +104,7 @@ const SearchBar = ({ placeholder = "Search topics or posts...", autoFocus, class
       const postSugs: Suggestion[] = ((postRes.data ?? []) as PostRow[]).map((p) => {
         const topicRel = Array.isArray(p.topics) ? p.topics[0] : p.topics;
         const topicName: string = topicRel?.name ?? "";
-        const slug = slugifyPostTitle(p.title) || p.id;
+        const slug = buildPostSlug(p.title, p.id) || p.id;
         return {
           id: p.id,
           type: "post",

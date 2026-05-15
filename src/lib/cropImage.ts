@@ -16,7 +16,7 @@ export async function getCroppedImageBlob(
   imageSrc: string,
   pixelCrop: { x: number; y: number; width: number; height: number },
   rotation: number = 0,
-  outputSize: number = 400,
+  outputSize: number | { width: number; height: number } = 400,
   mimeType: string = "image/jpeg",
   quality: number = 0.92,
 ): Promise<Blob> {
@@ -43,8 +43,10 @@ export async function getCroppedImageBlob(
   // Extract the cropped area into a second canvas at the desired output size
   const outputCanvas = document.createElement("canvas");
   const outputCtx = outputCanvas.getContext("2d")!;
-  outputCanvas.width = outputSize;
-  outputCanvas.height = outputSize;
+  const outputWidth = typeof outputSize === "number" ? outputSize : outputSize.width;
+  const outputHeight = typeof outputSize === "number" ? outputSize : outputSize.height;
+  outputCanvas.width = outputWidth;
+  outputCanvas.height = outputHeight;
 
   outputCtx.drawImage(
     canvas,
@@ -54,8 +56,8 @@ export async function getCroppedImageBlob(
     pixelCrop.height,
     0,
     0,
-    outputSize,
-    outputSize,
+    outputWidth,
+    outputHeight,
   );
 
   return new Promise((resolve, reject) => {

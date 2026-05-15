@@ -1,10 +1,11 @@
-import { useState, useRef } from "react";
-import { ImagePlus, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ImagePlus, Pencil, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { getTopicSubtitle } from "@/hooks/useSupabaseTopics";
+import PostImageEditorDialog from "@/components/PostImageEditorDialog";
 
 interface CreatePostDialogProps {
   topicName: string;
@@ -19,27 +20,61 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
   const [detail, setDetail] = useState("");
   const [comment, setComment] = useState("");
   const [image, setImage] = useState<File | null>(null);
+  const [sourceImagePreview, setSourceImagePreview] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageEditorOpen, setImageEditorOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const sourceImagePreviewRef = useRef<string | null>(null);
+  const imagePreviewRef = useRef<string | null>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setImage(file);
-    setImagePreview(URL.createObjectURL(file));
+    clearImage();
+    setSourceImagePreview(URL.createObjectURL(file));
+    setImageEditorOpen(true);
   };
 
   const clearImage = () => {
     setImage(null);
+    if (sourceImagePreview) URL.revokeObjectURL(sourceImagePreview);
+    setSourceImagePreview(null);
     if (imagePreview) URL.revokeObjectURL(imagePreview);
     setImagePreview(null);
+    setImageEditorOpen(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleApplyImage = (file: File, previewUrl: string) => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImage(file);
+    setImagePreview(previewUrl);
+  };
+
+  const chooseDifferentImage = () => {
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    fileInputRef.current?.click();
   };
 
   const handleSubmit = () => {
     if (!detail.trim()) return;
     onSubmit(detail.trim(), image);
   };
+
+  useEffect(() => {
+    sourceImagePreviewRef.current = sourceImagePreview;
+  }, [sourceImagePreview]);
+
+  useEffect(() => {
+    imagePreviewRef.current = imagePreview;
+  }, [imagePreview]);
+
+  useEffect(() => {
+    return () => {
+      if (sourceImagePreviewRef.current) URL.revokeObjectURL(sourceImagePreviewRef.current);
+      if (imagePreviewRef.current) URL.revokeObjectURL(imagePreviewRef.current);
+    };
+  }, []);
 
   return (
     <div className="space-y-5">
@@ -109,25 +144,43 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
       <div className="space-y-1.5">
         <Label>Photo (optional)</Label>
         {imagePreview ? (
-          <div className="relative inline-block">
-            <img
-              src={imagePreview}
-              alt="Preview"
-              className="max-h-48 rounded-md border"
-            />
-            <button
-              type="button"
-              onClick={clearImage}
-              className="absolute -top-2 -right-2 bg-background border rounded-full p-1 shadow-sm hover:bg-accent"
-              aria-label="Remove image"
-            >
-              <X className="w-4 h-4" />
-            </button>
+          <div className="space-y-3">
+            <div className="relative max-w-md overflow-hidden rounded-lg border bg-muted">
+              <img
+                src={imagePreview}
+                alt="Selected post preview"
+                className="aspect-[4/3] w-full object-cover"
+              />
+              <button
+                type="button"
+                onClick={clearImage}
+                className="absolute right-2 top-2 rounded-full border bg-background p-1.5 shadow-sm hover:bg-accent"
+                aria-label="Remove image"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setImageEditorOpen(true)}
+                disabled={!sourceImagePreview}
+              >
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit crop
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={chooseDifferentImage}>
+                <ImagePlus className="mr-2 h-4 w-4" />
+                Replace photo
+              </Button>
+            </div>
           </div>
         ) : (
           <button
             type="button"
-            onClick={() => fileInputRef.current?.click()}
+            onClick={chooseDifferentImage}
             className="flex items-center gap-2 px-4 py-2 border border-dashed rounded-md text-sm text-muted-foreground hover:bg-accent/40"
           >
             <ImagePlus className="w-4 h-4" />
@@ -142,6 +195,30 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
           onChange={handleImageChange}
         />
       </div>
+
+      {(detail.trim() || imagePreview) && (
+        <div className="space-y-2">
+          <Label>Preview</Label>
+          <div className="rounded-lg border bg-card p-4 shadow-sm">
+            <div className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {subject}
+            </div>
+            <h3 className="mb-3 text-lg font-heading font-semibold text-primary">
+              {detail.trim() || "Your post detail will appear here"}
+            </h3>
+            {imagePreview && (
+              <img
+                src={imagePreview}
+                alt=""
+                className="mb-3 aspect-[4/3] w-full max-w-[480px] rounded-lg border object-cover"
+              />
+            )}
+            <p className="whitespace-pre-line text-sm leading-6 text-card-foreground">
+              {detail.trim() || "Add a detail to preview the finished post."}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Submit */}
       <Button
@@ -164,6 +241,14 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
           <li>Think about what you wish you knew earlier</li>
         </ul>
       </div>
+
+      <PostImageEditorDialog
+        open={imageEditorOpen}
+        imageSrc={sourceImagePreview}
+        onOpenChange={setImageEditorOpen}
+        onApply={handleApplyImage}
+        onReselect={chooseDifferentImage}
+      />
     </div>
   );
 };

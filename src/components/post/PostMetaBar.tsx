@@ -1,16 +1,31 @@
-import { MessageSquare, Share2 } from "lucide-react";
+import { useState } from "react";
+import { MessageSquare, Share2, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import PostActionMenu from "@/components/PostActionMenu";
+import EditPostDialog from "@/components/EditPostDialog";
 
 interface PostMetaBarProps {
   commentCount: number;
   postTitle: string;
   postId?: string;
   topicName?: string;
+  authorId?: string | null;
+  onPostUpdated?: () => void;
 }
 
-const PostMetaBar = ({ commentCount, postTitle, postId, topicName }: PostMetaBarProps) => {
+const PostMetaBar = ({
+  commentCount,
+  postTitle,
+  postId,
+  topicName,
+  authorId,
+  onPostUpdated,
+}: PostMetaBarProps) => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [editOpen, setEditOpen] = useState(false);
+  const isAuthor = !!user && !!authorId && user.id === authorId;
 
   const scrollToDiscussion = () => {
     const el = document.getElementById("discussion");
@@ -57,7 +72,28 @@ const PostMetaBar = ({ commentCount, postTitle, postId, topicName }: PostMetaBar
         <Share2 className="h-4 w-4" />
         <span>Share</span>
       </button>
-      <PostActionMenu postId={postId} topicName={topicName} />
+      {isAuthor && postId && (
+        <button
+          type="button"
+          onClick={() => setEditOpen(true)}
+          className="inline-flex items-center gap-1.5 text-primary hover:underline transition-colors"
+          aria-label="Edit this post"
+        >
+          <Pencil className="h-4 w-4" />
+          <span>Edit</span>
+        </button>
+      )}
+      <PostActionMenu
+        postId={postId}
+        topicName={topicName}
+        onPostUpdated={onPostUpdated}
+      />
+      <EditPostDialog
+        postId={postId ?? null}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSaved={onPostUpdated}
+      />
     </div>
   );
 };

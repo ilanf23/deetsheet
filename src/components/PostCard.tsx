@@ -4,7 +4,7 @@ import { MessageSquare, Share2 } from "lucide-react";
 import { Post, getTimeAgo } from "@/data/seedData";
 import UserRatingIndicator from "@/components/UserRatingIndicator";
 import { useToast } from "@/hooks/use-toast";
-import { slugifyPostTitle } from "@/lib/postSlug";
+import { buildPostSlug } from "@/lib/postSlug";
 import { formatTitle } from "@/lib/formatTitle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -18,7 +18,7 @@ const PostCard = ({ post }: PostCardProps) => {
 
   const openTopic = () => navigate(`/topic/${encodeURIComponent(post.topicName)}`);
   const contentText = formatTitle(post.title || post.content);
-  const postSlug = slugifyPostTitle(contentText) || post.id;
+  const postSlug = buildPostSlug(contentText, post.id) || post.id;
   const postHref = `/topic/${encodeURIComponent(post.topicName)}/post/${postSlug}`;
   const authorId = (post as Post & { authorId?: string }).authorId;
   const avatarUrl = (post as Post & { avatarUrl?: string | null }).avatarUrl;

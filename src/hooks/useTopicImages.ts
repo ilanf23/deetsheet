@@ -37,6 +37,7 @@ export const useTopicImages = ({ topicId, topicName, categoryName }: UseTopicIma
         .from("topic_images")
         .select("id, url, average_rating, rating_count")
         .eq("topic_id", topicId)
+        .eq("is_approved", true)
         .order("average_rating", { ascending: false })
         .order("created_at", { ascending: true });
 

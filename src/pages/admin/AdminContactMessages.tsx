@@ -155,7 +155,7 @@ export default function AdminContactMessages() {
       </div>
 
       {!loading && messages.length === 0 && (
-        <div className="rounded-md border p-8 text-center text-sm text-muted-foreground">
+        <div className="rounded-xl border bg-white p-8 text-center text-sm text-muted-foreground shadow-sm">
           No contact messages yet.
         </div>
       )}
@@ -164,7 +164,9 @@ export default function AdminContactMessages() {
         {sortedMessages.map((msg) => (
           <div
             key={msg.id}
-            className={`rounded-lg border p-4 ${msg.is_read ? "bg-card" : "bg-muted/40 border-primary/30"}`}
+            className={`rounded-xl border bg-white p-4 shadow-sm transition-colors hover:bg-slate-50/80 ${
+              msg.is_read ? "border-border" : "border-primary/30 ring-1 ring-primary/10"
+            }`}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">

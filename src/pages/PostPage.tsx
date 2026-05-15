@@ -22,7 +22,7 @@ import {
   type PostRow,
 } from "@/hooks/useSupabaseTopics";
 
-import { slugifyPostTitle } from "@/lib/postSlug";
+import { slugifyPostTitle, parsePostSlug } from "@/lib/postSlug";
 import type { Topic } from "@/data/seedData";
 
 const POST_ROUTE_SETTLE_DELAY_MS = 450;
@@ -59,10 +59,16 @@ const PostPage = () => {
   } else if (isNumeric) {
     indexInTopic = Math.max(0, parseInt(decodedSlug, 10) - 1);
   } else if (decodedSlug) {
-    const target = decodedSlug.toLowerCase();
-    indexInTopic = posts.findIndex(
-      (p) => slugifyPostTitle(p.title || p.content) === target,
-    );
+    const { titleSlug, shortId } = parsePostSlug(decodedSlug);
+    if (shortId) {
+      indexInTopic = posts.findIndex((p) => p.id.toLowerCase().startsWith(shortId));
+    }
+    if (indexInTopic < 0) {
+      const target = (titleSlug || decodedSlug).toLowerCase();
+      indexInTopic = posts.findIndex(
+        (p) => slugifyPostTitle(p.title || p.content) === target,
+      );
+    }
   }
 
   const rankNum = indexInTopic >= 0 ? indexInTopic + 1 : 0;
@@ -224,6 +230,8 @@ const PostPage = () => {
                       postTitle={post.title || post.content}
                       postId={post.id}
                       topicName={topic.name}
+                      authorId={post.authorId}
+                      onPostUpdated={refreshRatings}
                     />
                     <JudgementReactionsRow />
                   </div>

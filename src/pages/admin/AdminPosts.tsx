@@ -254,16 +254,16 @@ export default function AdminPosts() {
       </div>
 
       <div
-        className="rounded-xl overflow-hidden"
+        className="rounded-xl overflow-hidden shadow-sm"
         style={{
-          backgroundColor: "hsl(var(--admin-surface))",
+          backgroundColor: "#ffffff",
           border: "1px solid hsl(var(--admin-border))",
         }}
       >
         <div
-          className="grid grid-cols-[3fr_1fr_1fr_1fr_1fr] px-6 py-3 text-[12px]"
+          className="grid grid-cols-[3fr_1fr_1fr_1fr_1fr] bg-slate-50 px-6 py-3 text-[11px] font-semibold uppercase tracking-wide"
           style={{
-            color: "hsl(var(--admin-fg-muted))",
+            color: "rgb(100 116 139)",
             borderBottom: "1px solid hsl(var(--admin-border))",
           }}
         >
@@ -287,23 +287,23 @@ export default function AdminPosts() {
             return (
               <div
                 key={p.id}
-                className="grid grid-cols-[3fr_1fr_1fr_1fr_1fr] items-center px-6 py-4 text-[14px]"
+                className="grid grid-cols-[3fr_1fr_1fr_1fr_1fr] items-center bg-white px-6 py-4 text-[14px] transition-colors hover:bg-slate-50/80"
                 style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}
               >
-                <span style={{ color: "hsl(var(--admin-fg))" }}>{p.title}</span>
-                <span style={{ color: "hsl(var(--admin-fg-muted))" }}>
+                <span className="truncate font-medium text-slate-900">{p.title}</span>
+                <span className="truncate text-slate-600">
                   {author?.name ?? author?.username ?? "Unknown"}
                 </span>
                 <span>
                   <StatusPill status={tab === "reported" ? "reported" : ((p.status === "approved" ? "published" : (p.status as PostTab)) ?? "published")} />
                 </span>
-                <span style={{ color: "hsl(var(--admin-fg-muted))" }}>
+                <span className="text-slate-600">
                   {formatDistanceToNow(parseISO(p.created_at))} ago
                 </span>
                 <span className="flex items-center justify-end gap-4">
                   <button
                     onClick={() => setEditingPostId(p.id)}
-                    style={{ color: "hsl(var(--admin-fg-muted))" }}
+                    className="text-slate-600 hover:text-slate-900"
                   >
                     Edit
                   </button>

@@ -24,9 +24,10 @@ const REPORT_OPTIONS = [
 interface PostActionMenuProps {
   postId?: string;
   topicName?: string;
+  onPostUpdated?: () => void;
 }
 
-const PostActionMenu = ({ postId, topicName }: PostActionMenuProps) => {
+const PostActionMenu = ({ postId, topicName, onPostUpdated }: PostActionMenuProps) => {
   const { user } = useAuth();
   const { isAdmin } = useAdminAuth();
   const { adminModeActive } = useAdminMode();
@@ -263,6 +264,7 @@ const PostActionMenu = ({ postId, topicName }: PostActionMenuProps) => {
         postId={postId ?? null}
         open={editOpen}
         onOpenChange={setEditOpen}
+        onSaved={onPostUpdated}
       />
     </Popover>
   );
