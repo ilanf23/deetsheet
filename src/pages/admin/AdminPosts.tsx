@@ -108,7 +108,7 @@ export default function AdminPosts() {
       setLoading(false);
     };
     fetchAll();
-  }, []);
+  }, [refreshKey]);
 
   const visiblePosts = useMemo(() => {
     let rows: Post[];
