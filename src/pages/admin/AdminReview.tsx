@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
+import AdminEditPostDialog from "@/components/admin/AdminEditPostDialog";
 import { Hash, FileText } from "lucide-react";
 
 type Author = { id: string; name: string | null; username: string | null; avatar_url: string | null };
