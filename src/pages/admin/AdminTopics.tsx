@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Check, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, X, Image as ImageIcon } from "lucide-react";
+import { useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { subjectCategories } from "@/data/seedData";
@@ -200,6 +201,44 @@ export default function AdminTopics() {
     }
   };
 
+  const handleReplaceImage = async (topic: Topic, file: File) => {
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      toast({ title: "Use JPEG, PNG, or WebP", variant: "destructive" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Image must be 5MB or smaller", variant: "destructive" });
+      return;
+    }
+    const ext = file.name.split(".").pop() || "jpg";
+    const path = `admin/topics/${topic.id}-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage
+      .from("post-images")
+      .upload(path, file, { upsert: false });
+    if (upErr) {
+      toast({ title: "Upload failed", description: upErr.message, variant: "destructive" });
+      return;
+    }
+    const url = supabase.storage.from("post-images").getPublicUrl(path).data.publicUrl;
+    const { error } = await supabase.from("topics").update({ image_url: url }).eq("id", topic.id);
+    if (error) {
+      toast({ title: "Couldn't update image", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Topic image updated" });
+    fetchTopics();
+  };
+
+  const handleClearImage = async (topic: Topic) => {
+    const { error } = await supabase.from("topics").update({ image_url: null }).eq("id", topic.id);
+    if (error) {
+      toast({ title: "Couldn't clear image", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Topic image cleared" });
+    fetchTopics();
+  };
+
   const filteredCategories = subjectCategories.filter((c) =>
     c.toLowerCase().includes(categoryQuery.toLowerCase())
   );
@@ -282,6 +321,33 @@ export default function AdminTopics() {
                       <Button variant="ghost" size="icon" onClick={() => openEdit(t)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        title={t.image_url ? "Replace image" : "Upload image"}
+                        onClick={() => {
+                          const inp = document.createElement("input");
+                          inp.type = "file";
+                          inp.accept = "image/jpeg,image/png,image/webp";
+                          inp.onchange = () => {
+                            const f = inp.files?.[0];
+                            if (f) void handleReplaceImage(t, f);
+                          };
+                          inp.click();
+                        }}
+                      >
+                        <ImageIcon className="h-4 w-4" />
+                      </Button>
+                      {t.image_url && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          title="Clear image"
+                          onClick={() => void handleClearImage(t)}
+                        >
+                          <X className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      )}
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
