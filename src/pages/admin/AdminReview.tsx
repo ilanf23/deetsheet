@@ -327,7 +327,8 @@ export default function AdminReview() {
                     alt=""
                     className="w-32 h-32 object-cover rounded-lg shrink-0"
                     onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                      const img = e.currentTarget as HTMLImageElement;
+                      if (!img.src.endsWith("/placeholder.svg")) img.src = "/placeholder.svg";
                     }}
                   />
                 )}

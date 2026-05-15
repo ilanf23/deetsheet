@@ -9,14 +9,25 @@ import {
   Calendar,
   User,
   MessageSquare,
-  Reply,
-  Forward,
   Trash2,
   Plus,
   Hash,
   Bookmark,
   UserCircle2,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -198,6 +209,30 @@ const ProfileView = () => {
         if (count !== null) setCommentCount(count);
       });
   }, [targetUserId]);
+
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const handleDeletePost = async (postId: string) => {
+    const { error } = await supabase
+      .from("posts")
+      .update({ status: "deleted" })
+      .eq("id", postId);
+    if (error) {
+      toast({
+        title: "Couldn't delete post",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+    setUserPosts((prev) => prev.filter((p) => p.id !== postId));
+    setPostCount((c) => Math.max(0, c - 1));
+    queryClient.invalidateQueries({ queryKey: ["recent-posts"] });
+    queryClient.invalidateQueries({ queryKey: ["posts-by-topic"] });
+    queryClient.invalidateQueries({ queryKey: ["topics"] });
+    toast({ title: "Post deleted" });
+  };
 
   // Topics fetch fires the first time the user opens the Topics tab.
   useEffect(() => {
@@ -509,34 +544,46 @@ const ProfileView = () => {
                               variant="ghost"
                               size="sm"
                               className="h-7 text-xs gap-1 text-muted-foreground"
+                              onClick={() =>
+                                navigate(
+                                  `/topic/${encodeURIComponent(post.topic_name)}/post/${slugifyPostTitle(post.title || post.content) || post.id}#comments`
+                                )
+                              }
                             >
                               <MessageSquare className="h-3.5 w-3.5" />
                               {post.comment_count}
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-xs gap-1 text-muted-foreground"
-                            >
-                              <Reply className="h-3.5 w-3.5" />
-                              Reply
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-xs gap-1 text-muted-foreground"
-                            >
-                              <Forward className="h-3.5 w-3.5" />
-                              Forward
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-xs gap-1 text-muted-foreground ml-auto"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                              Delete
-                            </Button>
+                            {isOwnProfile && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 text-xs gap-1 text-muted-foreground ml-auto hover:text-destructive"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                    Delete
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete this post?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      The post will be removed from public view. This cannot be undone from your profile.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDeletePost(post.id)}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
                           </div>
                         </CardContent>
                       </Card>

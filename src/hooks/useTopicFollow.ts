@@ -53,6 +53,8 @@ export const useTopicFollow = (topicId: string | undefined) => {
       queryClient.invalidateQueries({
         queryKey: ["topic-follow", topicId, user?.id],
       });
+      queryClient.invalidateQueries({ queryKey: ["topics"] });
+      queryClient.invalidateQueries({ queryKey: ["topic-follows", user?.id] });
     },
   });
 

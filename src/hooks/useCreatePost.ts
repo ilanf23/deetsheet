@@ -82,6 +82,11 @@ export const useCreatePost = () => {
       queryClient.invalidateQueries({
         queryKey: ["topic", variables.topicName],
       });
+      queryClient.invalidateQueries({ queryKey: ["recent-posts"] });
+      queryClient.invalidateQueries({
+        queryKey: ["recent-posts-by-topic", variables.topicId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["post-ranks-for-topics"] });
     },
   });
 };

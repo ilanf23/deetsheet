@@ -94,6 +94,9 @@ const PostCard = ({ post }: PostCardProps) => {
             height={600}
             loading="lazy"
             decoding="async"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
             className="h-full w-full object-cover"
           />
         </Link>
