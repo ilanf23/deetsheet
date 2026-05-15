@@ -144,14 +144,8 @@ const TopicPage = () => {
               <div className="mb-3 flex items-start justify-between gap-4">
                 <div className="min-w-0 pl-1.5">
                   <div className="flex items-baseline gap-3">
-                    <h1 className="text-3xl md:text-4xl font-heading font-bold">
-                      <button
-                        type="button"
-                        onClick={() => window.location.reload()}
-                        className="text-primary hover:underline bg-transparent border-0 p-0 text-left cursor-pointer"
-                      >
-                        {topic.name}
-                      </button>
+                    <h1 className="text-3xl md:text-4xl font-heading font-bold text-primary">
+                      {topic.name}
                     </h1>
                     <Link
                       to={`/topics#${encodeURIComponent(topic.categoryName)}`}
