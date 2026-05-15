@@ -370,6 +370,12 @@ export default function AdminPosts() {
           </div>
         </div>
       </div>
+      <AdminEditPostDialog
+        postId={editingPostId}
+        open={!!editingPostId}
+        onOpenChange={(o) => { if (!o) setEditingPostId(null); }}
+        onSaved={() => setRefreshKey((k) => k + 1)}
+      />
     </div>
   );
 }
