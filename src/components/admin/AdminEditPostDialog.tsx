@@ -322,14 +322,8 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
                   />
                 </div>
               )}
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="edit-anon"
-                  checked={isAnonymous}
-                  onCheckedChange={(v) => setIsAnonymous(!!v)}
-                />
-                <Label htmlFor="edit-anon" className="font-normal">Anonymous author</Label>
-              </div>
+
+
             </div>
           </div>
         )}
