@@ -15,6 +15,7 @@ import { getTimeAgo } from "@/data/seedData";
 export interface DisplayComment {
   id: string;
   username: string;
+  avatarUrl: string | null;
   content: string;
   createdAt: Date;
   likeCount: number;
@@ -94,7 +95,12 @@ const CommentItem = ({
       <article id={`comment-${node.id}`}>
         <header className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-2 min-w-0">
-            <UserAvatar username={node.username} size="lg" showName={false} />
+            <UserAvatar
+              username={node.username}
+              avatarUrl={node.avatarUrl ?? undefined}
+              size="lg"
+              showName={false}
+            />
             <div className="flex flex-col leading-tight min-w-0">
               <div className="flex items-baseline gap-2 flex-wrap">
                 <Link

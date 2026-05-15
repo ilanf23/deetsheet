@@ -6,6 +6,7 @@ import UserRatingIndicator from "@/components/UserRatingIndicator";
 import { useToast } from "@/hooks/use-toast";
 import { slugifyPostTitle } from "@/lib/postSlug";
 import { formatTitle } from "@/lib/formatTitle";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface PostCardProps {
   post: Post;
@@ -19,6 +20,11 @@ const PostCard = ({ post }: PostCardProps) => {
   const contentText = formatTitle(post.title || post.content);
   const postSlug = slugifyPostTitle(contentText) || post.id;
   const postHref = `/topic/${encodeURIComponent(post.topicName)}/post/${postSlug}`;
+  const authorId = (post as Post & { authorId?: string }).authorId;
+  const avatarUrl = (post as Post & { avatarUrl?: string | null }).avatarUrl;
+  const status = (post as Post & { status?: string }).status;
+  const isPending = status === "pending";
+  const profileHref = `/profile/${authorId ?? post.username}`;
   const handleShare = async (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     const url = `${window.location.origin}${postHref}`;
@@ -73,6 +79,15 @@ const PostCard = ({ post }: PostCardProps) => {
         {post.topicName}
       </button>
 
+      {isPending && (
+        <span
+          className="mb-2 inline-flex items-center rounded-full border border-secondary/40 bg-secondary/10 px-2 py-0.5 text-xs font-medium text-secondary"
+          title="Visible only to you and admins until an admin approves it"
+        >
+          Pending review
+        </span>
+      )}
+
       <Link
         to={postHref}
         className="mb-3.5 block text-[15px] leading-snug text-primary hover:underline"
@@ -102,9 +117,21 @@ const PostCard = ({ post }: PostCardProps) => {
         </Link>
       )}
 
-      <div className="mb-2 flex flex-wrap items-baseline gap-2 text-base leading-tight">
+      <div className="mb-2 flex flex-wrap items-center gap-2 text-base leading-tight">
         <Link
-          to={`/profile/${(post as Post & { authorId?: string }).authorId ?? post.username}`}
+          to={profileHref}
+          onClick={(e) => e.stopPropagation()}
+          className="shrink-0"
+        >
+          <Avatar className="h-5 w-5">
+            {avatarUrl && <AvatarImage src={avatarUrl} alt={post.username} />}
+            <AvatarFallback className="text-[9px] font-semibold bg-primary/10 text-primary">
+              {post.username[0]?.toUpperCase() ?? "?"}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
+        <Link
+          to={profileHref}
           onClick={(e) => e.stopPropagation()}
           className="font-semibold text-primary hover:underline"
         >

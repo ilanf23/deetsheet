@@ -47,6 +47,8 @@ export interface PostRow {
   score: number;
   createdAt: Date;
   imageUrl: string | null;
+  avatarUrl: string | null;
+  status: "pending" | "approved" | "rejected";
 }
 
 type DbTopicRaw = {
@@ -70,7 +72,8 @@ type DbPostRaw = {
   comment_count: number | null;
   created_at: string;
   image_url?: string | null;
-  profiles?: { username: string | null } | null;
+  status?: string | null;
+  profiles?: { username: string | null; avatar_url: string | null } | null;
   topics?: { name: string; category_name: string | null; image_url: string | null } | null;
 };
 
@@ -84,22 +87,29 @@ const mapTopic = (row: DbTopicRaw, postCount: number): TopicRow => ({
   imageUrl: row.image_url ?? null,
 });
 
-const mapPost = (row: DbPostRaw): PostRow => ({
-  id: row.id,
-  title: row.title,
-  content: row.content ?? "",
-  topicId: row.topic_id,
-  topicName: row.topics?.name ?? "",
-  categoryName: row.topics?.category_name ?? "Life",
-  authorId: row.author_id,
-  username: row.profiles?.username ?? "anonymous",
-  ratingScore: Number(row.average_rating ?? 0),
-  ratingCount: row.rating_count ?? 0,
-  commentCount: row.comment_count ?? 0,
-  score: row.score ?? 0,
-  createdAt: new Date(row.created_at),
-  imageUrl: row.image_url ?? null,
-});
+const mapPost = (row: DbPostRaw): PostRow => {
+  const rawStatus = row.status ?? "approved";
+  const status: PostRow["status"] =
+    rawStatus === "pending" || rawStatus === "rejected" ? rawStatus : "approved";
+  return {
+    id: row.id,
+    title: row.title,
+    content: row.content ?? "",
+    topicId: row.topic_id,
+    topicName: row.topics?.name ?? "",
+    categoryName: row.topics?.category_name ?? "Life",
+    authorId: row.author_id,
+    username: row.profiles?.username ?? "anonymous",
+    ratingScore: Number(row.average_rating ?? 0),
+    ratingCount: row.rating_count ?? 0,
+    commentCount: row.comment_count ?? 0,
+    score: row.score ?? 0,
+    createdAt: new Date(row.created_at),
+    imageUrl: row.image_url ?? null,
+    avatarUrl: row.profiles?.avatar_url ?? null,
+    status,
+  };
+};
 
 /**
  * Fetch every topic plus a derived post count. Uses a single round trip
@@ -167,9 +177,9 @@ export const usePostsByTopic = (topicId: string | undefined) => {
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, content, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, image_url, " +
+          "id, title, content, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, image_url, status, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            "profiles!posts_author_id_profiles_fkey(username), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
+            "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
         .eq("topic_id", topicId)
         .order("average_rating", { ascending: false, nullsFirst: false })
@@ -177,7 +187,20 @@ export const usePostsByTopic = (topicId: string | undefined) => {
 
       if (error) throw error;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (data ?? []).map((row: any) => mapPost(row as DbPostRaw));
+      const mapped = (data ?? []).map((row: any) => mapPost(row as DbPostRaw));
+      // Surface the viewer's own pending posts at the top of the feed so a
+      // newly-created post is immediately visible to its author (RLS already
+      // restricts pending visibility to author + admins).
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return mapped;
+      const isOwnPending = (p: PostRow) =>
+        p.status === "pending" && p.authorId === user.id;
+      const own = mapped.filter(isOwnPending);
+      const rest = mapped.filter((p) => !isOwnPending(p));
+      own.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      return [...own, ...rest];
     },
   });
 };
@@ -197,9 +220,9 @@ export const useRecentPosts = (limit = 8) => {
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, topic_id, author_id, average_rating, rating_count, comment_count, created_at, image_url, " +
+          "id, title, topic_id, author_id, average_rating, rating_count, comment_count, created_at, image_url, status, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            "profiles!posts_author_id_profiles_fkey(username), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
+            "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
         .order("created_at", { ascending: false })
         .limit(Math.max(limit * 10, 100));
@@ -286,9 +309,9 @@ export const useRecentPostsByTopic = (topicId: string | undefined, limit = 5) =>
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, content, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, image_url, " +
+          "id, title, content, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, image_url, status, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            "profiles!posts_author_id_profiles_fkey(username), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
+            "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
         .eq("topic_id", topicId)
         .order("created_at", { ascending: false })

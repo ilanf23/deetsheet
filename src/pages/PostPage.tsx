@@ -8,6 +8,7 @@ import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
 import TopicRecentlyAdded from "@/components/TopicRecentlyAdded";
 import TopicRecommendations from "@/components/TopicRecommendations";
+import { Skeleton } from "@/components/ui/skeleton";
 import PostHeader from "@/components/post/PostHeader";
 import AuthorByline from "@/components/post/AuthorByline";
 import PostMetaBar from "@/components/post/PostMetaBar";
@@ -24,6 +25,8 @@ import {
 import { slugifyPostTitle } from "@/lib/postSlug";
 import type { Topic } from "@/data/seedData";
 
+const POST_ROUTE_SETTLE_DELAY_MS = 450;
+
 const PostPage = () => {
   const { topicName, slug } = useParams<{ topicName: string; slug: string }>();
   const navigate = useNavigate();
@@ -34,11 +37,13 @@ const PostPage = () => {
 
   const { data: topic, isLoading: topicLoading, isError: topicError } =
     useTopicByName(topicName);
-  const { data: postsData } = usePostsByTopic(topic?.id);
+  const { data: postsData, isLoading: postsLoading } = usePostsByTopic(topic?.id);
   const posts = useMemo<PostRow[]>(
     () => postsData ?? [],
     [postsData]
   );
+  const postRouteKey = `${topicName ?? ""}/${slug ?? ""}`;
+  const [settledPostRouteKey, setSettledPostRouteKey] = useState(postRouteKey);
 
   // `:slug` is normally the slugified post title, but legacy links may pass
   // a UUID (sidebars) or a 1-based topic rank — handle all three.
@@ -62,6 +67,8 @@ const PostPage = () => {
 
   const rankNum = indexInTopic >= 0 ? indexInTopic + 1 : 0;
   const post = indexInTopic >= 0 ? posts[indexInTopic] : undefined;
+  const postRouteSettling = settledPostRouteKey !== postRouteKey;
+  const postContentLoading = postsLoading || postRouteSettling;
 
   const seedAvg = post && post.ratingCount > 0
     ? Math.round((post.ratingScore / post.ratingCount) * 10) / 10
@@ -74,14 +81,22 @@ const PostPage = () => {
   };
 
   useEffect(() => {
-    if (!post) return;
+    const timeoutId = window.setTimeout(() => {
+      setSettledPostRouteKey(postRouteKey);
+    }, POST_ROUTE_SETTLE_DELAY_MS);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [postRouteKey]);
+
+  useEffect(() => {
+    if (!post || postContentLoading) return;
     if (!location.hash) return;
     const id = location.hash.slice(1);
     const el = document.getElementById(id);
     if (!el) return;
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     el.scrollIntoView({ behavior: prefersReduced ? "auto" : "smooth", block: "start" });
-  }, [post, location.hash]);
+  }, [post, postContentLoading, location.hash]);
 
   const [mobileTab, setMobileTab] = useState<MobileTab>("recent");
   const mobileTabs: { id: MobileTab; label: string }[] = [
@@ -115,7 +130,7 @@ const PostPage = () => {
     );
   }
 
-  if (posts.length > 0 && !post) {
+  if (!postContentLoading && posts.length > 0 && !post) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <DeetHeader />
@@ -170,7 +185,9 @@ const PostPage = () => {
               <div className="grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-5">
                 {/* Middle column - the read */}
                 <article className={`${mobileTab === "post" ? "block" : "hidden"} lg:block min-w-0 pt-4 space-y-[var(--space-rhythm-block)]`}>
-              {post ? (
+              {postContentLoading ? (
+                <PostPageSkeleton />
+              ) : post ? (
                 <>
                   <div className="space-y-[var(--space-rhythm-tight)]">
                     <div className="space-y-[var(--space-rhythm-tight)] border-b border-border pb-[var(--space-rhythm-tight)]">
@@ -199,6 +216,7 @@ const PostPage = () => {
                     <AuthorByline
                       username={post.username}
                       authorId={post.authorId}
+                      avatarUrl={post.avatarUrl}
                       createdAt={post.createdAt instanceof Date ? post.createdAt : new Date(post.createdAt)}
                     />
                     <PostMetaBar
@@ -244,5 +262,35 @@ const PostPage = () => {
     </div>
   );
 };
+
+const PostPageSkeleton = () => (
+  <div className="space-y-[var(--space-rhythm-block)]" aria-label="Loading post">
+    <div className="space-y-[var(--space-rhythm-tight)]">
+      <div className="space-y-[var(--space-rhythm-tight)] border-b border-border pb-[var(--space-rhythm-tight)]">
+        <div className="flex items-baseline gap-3">
+          <Skeleton className="h-10 w-44" />
+          <Skeleton className="h-4 w-24" />
+        </div>
+      </div>
+      <div className="space-y-4">
+        <Skeleton className="h-9 w-24" />
+        <Skeleton className="h-12 w-full max-w-3xl" />
+        <Skeleton className="h-5 w-64" />
+        <Skeleton className="h-8 w-full max-w-xl" />
+      </div>
+    </div>
+    <div className="space-y-3">
+      <Skeleton className="h-5 w-full" />
+      <Skeleton className="h-5 w-11/12" />
+      <Skeleton className="h-5 w-10/12" />
+      <Skeleton className="h-5 w-full" />
+      <Skeleton className="h-5 w-8/12" />
+    </div>
+    <div className="border-t border-border pt-[var(--space-rhythm-block)] space-y-3">
+      <Skeleton className="h-24 w-full" />
+      <Skeleton className="h-10 w-32" />
+    </div>
+  </div>
+);
 
 export default PostPage;

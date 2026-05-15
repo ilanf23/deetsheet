@@ -17,7 +17,7 @@ const AddPostBar = ({ topicId, topicName, categoryName, onPostAdded }: AddPostBa
   const createPost = useCreatePost();
   const { toast } = useToast();
 
-  const handleSubmit = async (detail: string, image: File | null, anonymous: boolean) => {
+  const handleSubmit = async (detail: string, image: File | null) => {
     try {
       await createPost.mutateAsync({
         topicId,
@@ -25,11 +25,11 @@ const AddPostBar = ({ topicId, topicName, categoryName, onPostAdded }: AddPostBa
         title: detail,
         content: detail,
         image,
-        anonymous,
       });
       toast({
-        title: "Post submitted for review",
-        description: "An admin will approve it before it appears on the site.",
+        title: "Post submitted",
+        description:
+          "You'll see it at the top of this topic, marked 'Pending review' until an admin approves it for everyone else.",
       });
       onPostAdded();
       setOpen(false);

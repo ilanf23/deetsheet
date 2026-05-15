@@ -8,7 +8,6 @@ interface CreatePostInput {
   topicName: string;
   title: string;
   content: string;
-  anonymous?: boolean;
   image?: File | null;
 }
 
@@ -65,7 +64,7 @@ export const useCreatePost = () => {
           comment_count: 0,
           location_id: locationId,
           is_national: isNational,
-          is_anonymous: input.anonymous ?? false,
+          is_anonymous: false,
           image_url: imageUrl,
         })
         .select("id")

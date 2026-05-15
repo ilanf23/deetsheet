@@ -27,6 +27,15 @@ const PostBody = ({ content, imageSrc, imageAlt }: PostBodyProps) => {
 
   return (
     <div>
+      {showImage && (
+        <img
+          src={imageSrc!}
+          alt={imageAlt || ""}
+          loading="lazy"
+          onError={() => setImageFailed(true)}
+          className="mb-3 block w-full max-w-[480px] rounded-lg border border-border object-cover aspect-[4/3] bg-muted"
+        />
+      )}
       <div
         ref={bodyRef}
         className="text-card-foreground whitespace-pre-line"
@@ -39,15 +48,6 @@ const PostBody = ({ content, imageSrc, imageAlt }: PostBodyProps) => {
           }),
         }}
       >
-        {showImage && (
-          <img
-            src={imageSrc!}
-            alt={imageAlt || ""}
-            loading="lazy"
-            onError={() => setImageFailed(true)}
-            className="float-right ml-4 mb-2 w-2/5 max-w-[260px] rounded-lg border border-border object-cover aspect-[4/3]"
-          />
-        )}
         {content}
       </div>
       {showToggle && (

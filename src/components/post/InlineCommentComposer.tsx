@@ -26,7 +26,7 @@ const InlineCommentComposer = ({
   onCancel,
   autoFocus = false,
 }: InlineCommentComposerProps) => {
-  const { user } = useAuth();
+  const { user, avatarUrl } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const location = useLocation();
@@ -46,10 +46,8 @@ const InlineCommentComposer = ({
     : "Share a comment.";
 
   const userMeta = (user?.user_metadata ?? {}) as {
-    avatar_url?: string;
     username?: string;
   };
-  const avatarUrl = userMeta.avatar_url;
   const identityForInitial = userMeta.username || user?.email || "Y";
   const initial = identityForInitial[0]?.toUpperCase() ?? "Y";
 
@@ -131,7 +129,7 @@ const InlineCommentComposer = ({
   return (
     <div className="flex gap-3 items-start">
       <div className="flex flex-col items-center gap-1 pt-1 shrink-0">
-        <Avatar className="h-8 w-8">
+        <Avatar className="h-10 w-10">
           {avatarUrl && <AvatarImage src={avatarUrl} alt="Your avatar" />}
           <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
             {initial}

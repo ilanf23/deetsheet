@@ -20,6 +20,12 @@ interface DbComment {
   like_count: number | null;
 }
 
+interface DbProfile {
+  id: string;
+  username: string | null;
+  avatar_url: string | null;
+}
+
 const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
   const { data, error } = await supabase
     .from("comments")
@@ -33,13 +39,13 @@ const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
   const authorIds = Array.from(new Set(rows.map((r) => r.author_id)));
   const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
-    .select("id, username")
+    .select("id, username, avatar_url")
     .in("id", authorIds);
   if (profilesError) throw profilesError;
 
-  const usernameByAuthorId = new Map<string, string>();
-  for (const p of profiles ?? []) {
-    usernameByAuthorId.set(p.id, p.username || "anonymous");
+  const profileByAuthorId = new Map<string, DbProfile>();
+  for (const p of (profiles ?? []) as DbProfile[]) {
+    profileByAuthorId.set(p.id, p);
   }
 
   const authorIdByCommentId = new Map<string, string>();
@@ -51,13 +57,14 @@ const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
       : null;
     return {
       id: c.id,
-      username: usernameByAuthorId.get(c.author_id) || "anonymous",
+      username: profileByAuthorId.get(c.author_id)?.username || "anonymous",
+      avatarUrl: profileByAuthorId.get(c.author_id)?.avatar_url ?? null,
       content: c.content,
       createdAt: new Date(c.created_at),
       likeCount: c.like_count ?? 0,
       parentCommentId: c.parent_comment_id,
       parentUsername: parentAuthorId
-        ? usernameByAuthorId.get(parentAuthorId) ?? null
+        ? profileByAuthorId.get(parentAuthorId)?.username ?? null
         : null,
     };
   });

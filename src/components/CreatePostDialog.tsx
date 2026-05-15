@@ -3,14 +3,13 @@ import { ImagePlus, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { getTopicSubtitle } from "@/hooks/useSupabaseTopics";
 
 interface CreatePostDialogProps {
   topicName: string;
   categoryName: string;
-  onSubmit: (detail: string, image: File | null, anonymous: boolean) => void;
+  onSubmit: (detail: string, image: File | null) => void;
 }
 
 const DETAIL_CHAR_LIMIT = 200;
@@ -19,7 +18,6 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
   const [subject, setSubject] = useState(topicName);
   const [detail, setDetail] = useState("");
   const [comment, setComment] = useState("");
-  const [anonymous, setAnonymous] = useState(true);
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -40,7 +38,7 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
 
   const handleSubmit = () => {
     if (!detail.trim()) return;
-    onSubmit(detail.trim(), image, anonymous);
+    onSubmit(detail.trim(), image);
   };
 
   return (
@@ -143,18 +141,6 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
           className="hidden"
           onChange={handleImageChange}
         />
-      </div>
-
-      {/* Anonymous checkbox */}
-      <div className="flex items-center gap-2">
-        <Checkbox
-          id="anonymous"
-          checked={anonymous}
-          onCheckedChange={(checked) => setAnonymous(checked === true)}
-        />
-        <Label htmlFor="anonymous" className="text-sm cursor-pointer">
-          Create post anonymously
-        </Label>
       </div>
 
       {/* Submit */}
