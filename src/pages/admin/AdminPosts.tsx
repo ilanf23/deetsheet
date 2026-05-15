@@ -78,6 +78,9 @@ export default function AdminPosts() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<SortKey>("newest");
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
