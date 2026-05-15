@@ -21,6 +21,7 @@ interface Topic {
   category_name: string;
   created_at: string;
   status: "pending" | "approved" | "rejected";
+  image_url: string | null;
 }
 
 type SortKey =
@@ -101,7 +102,7 @@ export default function AdminTopics() {
     setLoading(true);
     const { data, error } = await supabase
       .from("topics")
-      .select("id, name, slug, description, category_name, created_at, status")
+      .select("id, name, slug, description, category_name, created_at, status, image_url")
       .order("name");
 
     if (error) {
