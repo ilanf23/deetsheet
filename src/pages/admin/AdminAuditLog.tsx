@@ -26,7 +26,7 @@ type Profile = Tables<"profiles">;
 type Post = Tables<"posts">;
 type Report = Tables<"reports">;
 
-type Action = "Approved" | "Banned" | "Rejected" | "Role Change" | "Reported";
+type Action = "Approved" | "Banned" | "Rejected" | "Role Change" | "Reported" | "Edited";
 
 type Entry = {
   id: string;
@@ -46,6 +46,7 @@ const ACTION_PALETTE: Record<Action, { bg: string; fg: string }> = {
     fg: "hsl(var(--admin-success))",
   },
   Reported: { bg: "hsl(var(--admin-danger-soft))", fg: "hsl(var(--admin-danger))" },
+  Edited: { bg: "hsl(var(--admin-info-soft))", fg: "hsl(var(--admin-info))" },
 };
 
 const PAGE_SIZE = 50;
