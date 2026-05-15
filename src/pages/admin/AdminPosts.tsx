@@ -302,6 +302,12 @@ export default function AdminPosts() {
                 </span>
                 <span className="flex items-center justify-end gap-4">
                   <button
+                    onClick={() => setEditingPostId(p.id)}
+                    style={{ color: "hsl(var(--admin-fg-muted))" }}
+                  >
+                    Edit
+                  </button>
+                  <button
                     onClick={() => handleApprove(p.id)}
                     style={{ color: "hsl(var(--admin-primary))" }}
                   >
