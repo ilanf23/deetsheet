@@ -68,6 +68,7 @@ export default function AdminReview() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<FilterTab>("all");
   const [sort, setSort] = useState<SortKey>("newest");
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchAll = async () => {
