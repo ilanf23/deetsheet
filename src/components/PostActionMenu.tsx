@@ -28,7 +28,10 @@ interface PostActionMenuProps {
 
 const PostActionMenu = ({ postId, topicName }: PostActionMenuProps) => {
   const { user } = useAuth();
+  const { isAdmin } = useAdminAuth();
+  const { adminModeActive } = useAdminMode();
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [favorited, setFavorited] = useState(false);
   const [loadingFav, setLoadingFav] = useState(false);
   const [reportChecks, setReportChecks] = useState<Record<string, boolean>>({});
