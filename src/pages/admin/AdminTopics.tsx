@@ -105,7 +105,7 @@ export default function AdminTopics() {
         break;
     }
     return arr;
-  }, [topics, postCounts, sort]);
+  }, [topics, postCounts, sort, search]);
 
   const fetchTopics = async () => {
     setLoading(true);
