@@ -106,11 +106,11 @@ export default function AdminPosts() {
 
   const visiblePosts = useMemo(() => {
     let rows: Post[];
-    if (tab === "pending") rows = posts.filter((p) => (p as any).status === "pending");
-    else if (tab === "rejected") rows = posts.filter((p) => (p as any).status === "rejected");
+    if (tab === "pending") rows = posts.filter((p) => p.status === "pending");
+    else if (tab === "rejected") rows = posts.filter((p) => p.status === "rejected");
     else if (tab === "deleted") rows = [];
     else if (tab === "reported") rows = posts.filter((p) => reportedIds.has(p.id));
-    else rows = posts.filter((p) => (p as any).status === "approved");
+    else rows = posts.filter((p) => p.status === "approved");
 
     const cmpStr = (a: string, b: string) =>
       a.localeCompare(b, undefined, { sensitivity: "base" });
@@ -146,10 +146,10 @@ export default function AdminPosts() {
   }, [posts, reportedIds, tab, sort, authors]);
 
   const tabCounts = {
-    pending: posts.filter((p) => (p as any).status === "pending").length,
-    published: posts.filter((p) => (p as any).status === "approved").length,
+    pending: posts.filter((p) => p.status === "pending").length,
+    published: posts.filter((p) => p.status === "approved").length,
     reported: posts.filter((p) => reportedIds.has(p.id)).length,
-    rejected: posts.filter((p) => (p as any).status === "rejected").length,
+    rejected: posts.filter((p) => p.status === "rejected").length,
     deleted: 0,
   };
 
@@ -281,7 +281,7 @@ export default function AdminPosts() {
                   {author?.name ?? author?.username ?? "Unknown"}
                 </span>
                 <span>
-                  <StatusPill status={tab === "reported" ? "reported" : ((((p as any).status === "approved" ? "published" : (p as any).status) as PostTab) ?? "published")} />
+                  <StatusPill status={tab === "reported" ? "reported" : ((p.status === "approved" ? "published" : (p.status as PostTab)) ?? "published")} />
                 </span>
                 <span style={{ color: "hsl(var(--admin-fg-muted))" }}>
                   {formatDistanceToNow(parseISO(p.created_at))} ago

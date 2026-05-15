@@ -110,8 +110,7 @@ export const useTopics = () => {
     queryKey: ["topics"],
     queryFn: async (): Promise<TopicRow[]> => {
       const { data, error } = await supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from("topics" as any)
+        .from("topics")
         .select("id, slug, name, category_name, description, image_url, posts(count)")
         .order("name", { ascending: true });
 
@@ -138,8 +137,7 @@ export const useTopicByName = (topicName: string | undefined) => {
       if (!topicName) return null;
       const decoded = decodeURIComponent(topicName);
       const { data, error } = await supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from("topics" as any)
+        .from("topics")
         .select("id, slug, name, category_name, description, image_url, posts(count)")
         .or(`name.eq.${decoded},slug.eq.${decoded.toLowerCase()}`)
         .limit(1)

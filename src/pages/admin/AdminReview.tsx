@@ -98,10 +98,10 @@ export default function AdminReview() {
             .from("profiles")
             .select("id, name, username, avatar_url")
             .in("id", Array.from(authorIds))
-        : Promise.resolve({ data: [] as any[] }),
+        : Promise.resolve({ data: [] }),
       topicIds.size > 0
         ? supabase.from("topics").select("id, name, slug").in("id", Array.from(topicIds))
-        : Promise.resolve({ data: [] as any[] }),
+        : Promise.resolve({ data: [] }),
     ]);
 
     const authorMap = new Map<string, Author>();
