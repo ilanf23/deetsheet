@@ -219,6 +219,19 @@ const PostActionMenu = ({ postId, topicName }: PostActionMenuProps) => {
           {favorited ? "Remove from Favorites" : "Add to Favorites"}
         </button>
 
+        {isAdmin && adminModeActive && postId && (
+          <>
+            <Separator />
+            <button
+              onClick={() => { setOpen(false); setEditOpen(true); }}
+              className="flex items-center gap-2 w-full py-2 text-sm text-primary hover:underline"
+            >
+              <Pencil className="h-4 w-4" />
+              Edit post (admin)
+            </button>
+          </>
+        )}
+
         <Separator />
 
         {/* Report it */}
