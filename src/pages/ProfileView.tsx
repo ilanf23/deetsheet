@@ -210,6 +210,30 @@ const ProfileView = () => {
       });
   }, [targetUserId]);
 
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const handleDeletePost = async (postId: string) => {
+    const { error } = await supabase
+      .from("posts")
+      .update({ status: "deleted" })
+      .eq("id", postId);
+    if (error) {
+      toast({
+        title: "Couldn't delete post",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+    setUserPosts((prev) => prev.filter((p) => p.id !== postId));
+    setPostCount((c) => Math.max(0, c - 1));
+    queryClient.invalidateQueries({ queryKey: ["recent-posts"] });
+    queryClient.invalidateQueries({ queryKey: ["posts-by-topic"] });
+    queryClient.invalidateQueries({ queryKey: ["topics"] });
+    toast({ title: "Post deleted" });
+  };
+
   // Topics fetch fires the first time the user opens the Topics tab.
   useEffect(() => {
     if (!topicsRequested) return;
