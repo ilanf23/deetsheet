@@ -61,6 +61,7 @@ export default function AdminTopics() {
   const [showNameSuggestions, setShowNameSuggestions] = useState(false);
   const [saving, setSaving] = useState(false);
   const [sort, setSort] = useState<SortKey>("name_asc");
+  const [search, setSearch] = useState("");
   const { toast } = useToast();
 
   const sortedTopics = useMemo(() => {
