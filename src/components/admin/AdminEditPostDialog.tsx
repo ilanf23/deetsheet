@@ -1,0 +1,348 @@
+import { useEffect, useRef, useState } from "react";
+import { ImagePlus, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import { logAdminAction } from "@/lib/auditLog";
+import type { Tables } from "@/integrations/supabase/types";
+
+type Post = Tables<"posts">;
+type TopicLite = Pick<Tables<"topics">, "id" | "name">;
+
+interface Props {
+  postId: string | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSaved?: () => void;
+}
+
+const STATUS_OPTIONS = ["pending", "approved", "rejected"] as const;
+
+export default function AdminEditPostDialog({ postId, open, onOpenChange, onSaved }: Props) {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [post, setPost] = useState<Post | null>(null);
+  const [topics, setTopics] = useState<TopicLite[]>([]);
+
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [topicId, setTopicId] = useState<string>("");
+  const [status, setStatus] = useState<(typeof STATUS_OPTIONS)[number]>("pending");
+  const [isAnonymous, setIsAnonymous] = useState(false);
+  const [isNational, setIsNational] = useState(false);
+  const [city, setCity] = useState("");
+  const [stateCode, setStateCode] = useState("");
+
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [newImage, setNewImage] = useState<File | null>(null);
+  const [newImagePreview, setNewImagePreview] = useState<string | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
+
+  useEffect(() => {
+    if (!open || !postId) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const [postRes, topicsRes] = await Promise.all([
+        supabase.from("posts").select("*").eq("id", postId).maybeSingle(),
+        supabase.from("topics").select("id, name").order("name"),
+      ]);
+      if (cancelled) return;
+      const p = postRes.data as Post | null;
+      setPost(p);
+      setTopics((topicsRes.data ?? []) as TopicLite[]);
+
+      if (p) {
+        setTitle(p.title ?? "");
+        setContent(p.content ?? "");
+        setTopicId(p.topic_id);
+        setStatus((p.status as typeof status) ?? "pending");
+        setIsAnonymous(!!p.is_anonymous);
+        setIsNational(!!p.is_national);
+        setImageUrl(p.image_url ?? null);
+        setNewImage(null);
+        setNewImagePreview(null);
+        setRemoveImage(false);
+        setCity("");
+        setStateCode("");
+
+        if (p.location_id) {
+          const { data: loc } = await supabase
+            .from("locations")
+            .select("city, state")
+            .eq("id", p.location_id)
+            .maybeSingle();
+          if (!cancelled && loc) {
+            setCity(loc.city ?? "");
+            setStateCode(loc.state ?? "");
+          }
+        }
+      }
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, postId]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Image too large", description: "Max 5 MB.", variant: "destructive" });
+      return;
+    }
+    setNewImage(file);
+    setNewImagePreview(URL.createObjectURL(file));
+    setRemoveImage(false);
+  };
+
+  const clearImageSelection = () => {
+    setNewImage(null);
+    if (newImagePreview) URL.revokeObjectURL(newImagePreview);
+    setNewImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleSave = async () => {
+    if (!post || !user) return;
+    if (!title.trim()) {
+      toast({ title: "Title required", variant: "destructive" });
+      return;
+    }
+    setSaving(true);
+
+    let nextImageUrl: string | null = post.image_url ?? null;
+    try {
+      if (newImage) {
+        const ext = newImage.name.split(".").pop() ?? "jpg";
+        const path = `${post.id}-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("post-images")
+          .upload(path, newImage, { upsert: true });
+        if (upErr) throw upErr;
+        const { data: pub } = supabase.storage.from("post-images").getPublicUrl(path);
+        nextImageUrl = pub.publicUrl;
+      } else if (removeImage) {
+        nextImageUrl = null;
+      }
+
+      let nextLocationId: string | null = post.location_id ?? null;
+      if (isNational) {
+        nextLocationId = null;
+      } else if (city.trim() && stateCode.trim().length === 2) {
+        const { data: locId, error: locErr } = await supabase.rpc("get_or_create_location", {
+          _city: city.trim(),
+          _state: stateCode.trim().toUpperCase(),
+        });
+        if (locErr) throw locErr;
+        nextLocationId = (locId as string) ?? null;
+      } else if (!city.trim()) {
+        nextLocationId = null;
+      }
+
+      const updates = {
+        title: title.trim(),
+        content,
+        topic_id: topicId,
+        status,
+        is_anonymous: isAnonymous,
+        is_national: isNational,
+        image_url: nextImageUrl,
+        location_id: nextLocationId,
+      };
+
+      const { error: updErr } = await supabase.from("posts").update(updates).eq("id", post.id);
+      if (updErr) throw updErr;
+
+      const changed: Record<string, { from: unknown; to: unknown }> = {};
+      const before = post as unknown as Record<string, unknown>;
+      Object.entries(updates).forEach(([k, v]) => {
+        if (before[k] !== v) changed[k] = { from: before[k], to: v };
+      });
+
+      await logAdminAction({
+        actorId: user.id,
+        action: "post.edit",
+        entityType: "post",
+        entityId: post.id,
+        details: { changed },
+      });
+
+      toast({ title: "Post updated" });
+      onSaved?.();
+      onOpenChange(false);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Could not save changes";
+      toast({ title: "Save failed", description: msg, variant: "destructive" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const previewSrc = newImagePreview ?? (removeImage ? null : imageUrl);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit post</DialogTitle>
+        </DialogHeader>
+
+        {loading || !post ? (
+          <div className="py-12 flex justify-center">
+            <div className="h-6 w-6 rounded-full animate-spin border-2 border-primary border-t-transparent" />
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-title">Title</Label>
+              <Input id="edit-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-content">Content</Label>
+              <Textarea
+                id="edit-content"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                rows={8}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label>Topic</Label>
+                <Select value={topicId} onValueChange={setTopicId}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {topics.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Status</Label>
+                <Select value={status} onValueChange={(v) => setStatus(v as typeof status)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {STATUS_OPTIONS.map((s) => (
+                      <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Image</Label>
+              {previewSrc ? (
+                <div className="relative rounded-md overflow-hidden border">
+                  <img src={previewSrc} alt="" className="w-full max-h-64 object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearImageSelection();
+                      setRemoveImage(true);
+                    }}
+                    className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1"
+                    title="Remove image"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="text-xs text-muted-foreground">No image</div>
+              )}
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <ImagePlus className="h-4 w-4 mr-1" />
+                  {previewSrc ? "Replace image" : "Add image"}
+                </Button>
+                {newImage && (
+                  <Button type="button" variant="ghost" size="sm" onClick={clearImageSelection}>
+                    Cancel
+                  </Button>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="edit-national"
+                  checked={isNational}
+                  onCheckedChange={(v) => setIsNational(!!v)}
+                />
+                <Label htmlFor="edit-national" className="font-normal">National (no city)</Label>
+              </div>
+              {!isNational && (
+                <div className="grid grid-cols-[1fr_120px] gap-2">
+                  <Input
+                    placeholder="City"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                  />
+                  <Input
+                    placeholder="ST"
+                    maxLength={2}
+                    value={stateCode}
+                    onChange={(e) => setStateCode(e.target.value.toUpperCase())}
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="edit-anon"
+                  checked={isAnonymous}
+                  onCheckedChange={(v) => setIsAnonymous(!!v)}
+                />
+                <Label htmlFor="edit-anon" className="font-normal">Anonymous author</Label>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={saving || loading}>
+            {saving ? "Saving…" : "Save changes"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
