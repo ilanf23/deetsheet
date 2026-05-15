@@ -171,6 +171,22 @@ export default function CreateTopicDialog({ open, onOpenChange, onTopicCreated, 
                   rows={3}
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="create-topic-image">Banner image (optional)</Label>
+                <Input
+                  id="create-topic-image"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageChange}
+                />
+                {imagePreview && (
+                  <img
+                    src={imagePreview}
+                    alt="Topic preview"
+                    className="mt-2 h-32 w-full object-cover rounded-md border"
+                  />
+                )}
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
