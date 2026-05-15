@@ -172,6 +172,14 @@ export default function AdminPosts() {
       return;
     }
     setPosts((prev) => prev.map((p) => (p.id === id ? ({ ...p, status } as Post) : p)));
+    if (user) {
+      await logAdminAction({
+        actorId: user.id,
+        action: status === "approved" ? "post.approve" : "post.reject",
+        entityType: "post",
+        entityId: id,
+      });
+    }
     toast({
       title: status === "approved" ? "Post approved" : "Post rejected",
       variant: status === "rejected" ? "destructive" : undefined,
