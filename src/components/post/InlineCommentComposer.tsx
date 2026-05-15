@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import type { Editor } from "@tiptap/react";
 import RichTextEditor from "@/components/RichTextEditor";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -27,6 +28,7 @@ const InlineCommentComposer = ({
 }: InlineCommentComposerProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const location = useLocation();
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -112,6 +114,8 @@ const InlineCommentComposer = ({
     editorRef.current?.commands.clearContent();
     editorRef.current?.commands.blur();
     setFocused(false);
+    queryClient.invalidateQueries({ queryKey: ["comments", postId] });
+    queryClient.invalidateQueries({ queryKey: ["post", postId] });
     onSubmitted?.();
     if (isReply) onCancel?.();
   };
