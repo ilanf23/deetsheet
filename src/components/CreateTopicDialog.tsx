@@ -26,9 +26,12 @@ export default function CreateTopicDialog({ open, onOpenChange, onTopicCreated, 
   const [name, setName] = useState("");
   const [categoryName, setCategoryName] = useState(defaultCategory ?? "");
   const [description, setDescription] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (open && defaultCategory) setCategoryName(defaultCategory);
@@ -38,6 +41,25 @@ export default function CreateTopicDialog({ open, onOpenChange, onTopicCreated, 
     setName("");
     setCategoryName("");
     setDescription("");
+    setImageFile(null);
+    setImagePreview(null);
+  };
+
+  const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!ACCEPTED.includes(file.type)) {
+      toast({ title: "Use a JPEG, PNG, or WebP image.", variant: "destructive" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Image must be 5MB or smaller.", variant: "destructive" });
+      return;
+    }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
   };
 
   const handleSubmit = async () => {
@@ -58,12 +80,28 @@ export default function CreateTopicDialog({ open, onOpenChange, onTopicCreated, 
     setSubmitting(true);
     const slug = generateSlug(name.trim());
 
+    let imageUrl: string | null = null;
+    if (imageFile) {
+      const ext = imageFile.name.split(".").pop() || "jpg";
+      const path = `${user.id}/topics/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("post-images")
+        .upload(path, imageFile, { upsert: false });
+      if (upErr) {
+        toast({ title: "Image upload failed", description: upErr.message, variant: "destructive" });
+        setSubmitting(false);
+        return;
+      }
+      imageUrl = supabase.storage.from("post-images").getPublicUrl(path).data.publicUrl;
+    }
+
     const { error } = await supabase.from("topics").insert({
       name: name.trim(),
       slug,
       category_name: categoryName,
       description: description.trim(),
       created_by: user.id,
+      image_url: imageUrl,
     });
 
     if (error) {
@@ -77,6 +115,7 @@ export default function CreateTopicDialog({ open, onOpenChange, onTopicCreated, 
         title: "Topic submitted for review",
         description: "An admin will approve it before it appears on the site.",
       });
+      queryClient.invalidateQueries({ queryKey: ["topics"] });
       resetForm();
       onOpenChange(false);
       onTopicCreated?.();
