@@ -44,35 +44,6 @@ export type Database = {
         }
         Relationships: []
       }
-      comment_likes: {
-        Row: {
-          comment_id: string
-          created_at: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          comment_id: string
-          created_at?: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          comment_id?: string
-          created_at?: string
-          id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "comment_likes_comment_id_fkey"
-            columns: ["comment_id"]
-            isOneToOne: false
-            referencedRelation: "comments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       comments: {
         Row: {
           author_id: string
@@ -154,27 +125,6 @@ export type Database = {
         }
         Relationships: []
       }
-      email_captures: {
-        Row: {
-          created_at: string
-          email: string
-          id: string
-          source: string
-        }
-        Insert: {
-          created_at?: string
-          email: string
-          id?: string
-          source?: string
-        }
-        Update: {
-          created_at?: string
-          email?: string
-          id?: string
-          source?: string
-        }
-        Relationships: []
-      }
       favorites: {
         Row: {
           created_at: string
@@ -227,44 +177,6 @@ export type Database = {
           state?: string
         }
         Relationships: []
-      }
-      post_drafts: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          title: string
-          topic_id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          content?: string
-          created_at?: string
-          id?: string
-          title?: string
-          topic_id: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          title?: string
-          topic_id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "post_drafts_topic_id_fkey"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "topics"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       posts: {
         Row: {
@@ -710,38 +622,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      votes: {
-        Row: {
-          created_at: string
-          id: string
-          post_id: string
-          user_id: string
-          value: number
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          post_id: string
-          user_id: string
-          value: number
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          post_id?: string
-          user_id?: string
-          value?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "votes_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
-        ]
       }
     }
     Views: {

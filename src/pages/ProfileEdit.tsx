@@ -1086,7 +1086,7 @@ const ProfileEdit = () => {
                       { key: "strong_password_set", label: "Strong password set", desc: "At least 12 characters, with mixed case and a number." },
                       { key: "two_factor_enabled", label: "Two-factor authentication", desc: "Add an extra layer of security at sign-in." },
                     ].map((item) => {
-                      const checked = (security as any)[item.key] as boolean;
+                      const checked = security[item.key as keyof typeof security] as boolean;
                       return (
                         <div key={item.key} className="flex items-start justify-between gap-4 border rounded-xl p-4">
                           <div>

@@ -17,7 +17,7 @@ export const useTopicFollow = (topicId: string | undefined) => {
     queryFn: async () => {
       if (!topicId || !user) return false;
       const { data, error } = await supabase
-        .from("topic_follows" as any)
+        .from("topic_follows")
         .select("id")
         .eq("user_id", user.id)
         .eq("topic_id", topicId)
@@ -36,7 +36,7 @@ export const useTopicFollow = (topicId: string | undefined) => {
       if (isFollowing) {
         // Unfollow
         const { error } = await supabase
-          .from("topic_follows" as any)
+          .from("topic_follows")
           .delete()
           .eq("user_id", user.id)
           .eq("topic_id", topicId);
@@ -44,7 +44,7 @@ export const useTopicFollow = (topicId: string | undefined) => {
       } else {
         // Follow
         const { error } = await supabase
-          .from("topic_follows" as any)
+          .from("topic_follows")
           .insert({ user_id: user.id, topic_id: topicId });
         if (error) throw error;
       }

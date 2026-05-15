@@ -33,8 +33,8 @@ export const useTopicImages = ({ topicId, topicName, categoryName }: UseTopicIma
     queryFn: async (): Promise<TopicImageRow[]> => {
       if (!topicId) return [];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: existing, error } = await (supabase.from as any)("topic_images")
+      const { data: existing, error } = await supabase
+        .from("topic_images")
         .select("id, url, average_rating, rating_count")
         .eq("topic_id", topicId)
         .order("average_rating", { ascending: false })
@@ -59,8 +59,8 @@ export const useTopicImages = ({ topicId, topicName, categoryName }: UseTopicIma
       // a known-broken host. Anonymous visitors fall back to the empty state.
       if ((rows.length === 0 || allBroken) && userId) {
         const urls = buildTopicImageUrls(topicName, categoryName);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: inserted, error: insertErr } = await (supabase.from as any)("topic_images")
+        const { data: inserted, error: insertErr } = await supabase
+          .from("topic_images")
           .insert(urls.map((url) => ({ topic_id: topicId, url })))
           .select("id, url, average_rating, rating_count");
         if (insertErr) throw insertErr;
@@ -72,8 +72,8 @@ export const useTopicImages = ({ topicId, topicName, categoryName }: UseTopicIma
 
       let yourRatings: Record<string, number> = {};
       if (userId && rows.length > 0) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: ratings } = await (supabase.from as any)("topic_image_ratings")
+        const { data: ratings } = await supabase
+          .from("topic_image_ratings")
           .select("topic_image_id, value")
           .eq("user_id", userId)
           .in(
@@ -101,8 +101,8 @@ export const useTopicImages = ({ topicId, topicName, categoryName }: UseTopicIma
   const rate = useMutation({
     mutationFn: async ({ imageId, value }: { imageId: string; value: number }) => {
       if (!userId) throw new Error("Sign in to rate images");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.from as any)("topic_image_ratings")
+      const { error } = await supabase
+        .from("topic_image_ratings")
         .upsert(
           { topic_image_id: imageId, user_id: userId, value },
           { onConflict: "topic_image_id,user_id" }
@@ -119,8 +119,8 @@ export const useTopicImages = ({ topicId, topicName, categoryName }: UseTopicIma
   const clearRate = useMutation({
     mutationFn: async ({ imageId }: { imageId: string }) => {
       if (!userId) throw new Error("Sign in to rate images");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase.from as any)("topic_image_ratings")
+      const { error } = await supabase
+        .from("topic_image_ratings")
         .delete()
         .eq("topic_image_id", imageId)
         .eq("user_id", userId);
