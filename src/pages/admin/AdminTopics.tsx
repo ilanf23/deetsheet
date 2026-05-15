@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, Check, X, Image as ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, X, Image as ImageIcon, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { subjectCategories } from "@/data/seedData";
@@ -61,6 +61,7 @@ export default function AdminTopics() {
   const [showNameSuggestions, setShowNameSuggestions] = useState(false);
   const [saving, setSaving] = useState(false);
   const [sort, setSort] = useState<SortKey>("name_asc");
+  const [search, setSearch] = useState("");
   const { toast } = useToast();
 
   const sortedTopics = useMemo(() => {
@@ -68,7 +69,15 @@ export default function AdminTopics() {
       a.localeCompare(b, undefined, { sensitivity: "base" });
     const cmpDate = (a?: string | null, b?: string | null) =>
       new Date(a ?? 0).getTime() - new Date(b ?? 0).getTime();
-    const arr = [...topics];
+    const q = search.trim().toLowerCase();
+    const arr = (q
+      ? topics.filter(
+          (t) =>
+            t.name.toLowerCase().includes(q) ||
+            (t.slug ?? "").toLowerCase().includes(q) ||
+            (t.category_name ?? "").toLowerCase().includes(q),
+        )
+      : [...topics]);
     switch (sort) {
       case "name_asc":
         arr.sort((a, b) => cmpStr(a.name ?? "", b.name ?? ""));
@@ -96,7 +105,7 @@ export default function AdminTopics() {
         break;
     }
     return arr;
-  }, [topics, postCounts, sort]);
+  }, [topics, postCounts, sort, search]);
 
   const fetchTopics = async () => {
     setLoading(true);
@@ -257,6 +266,16 @@ export default function AdminTopics() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-2xl font-bold">Topics</h1>
         <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search topics, slugs, subjects…"
+              className="pl-9 w-72"
+            />
+          </div>
           <AdminSortSelect
             variant="plain"
             value={sort}
