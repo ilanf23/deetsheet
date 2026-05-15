@@ -520,34 +520,46 @@ const ProfileView = () => {
                               variant="ghost"
                               size="sm"
                               className="h-7 text-xs gap-1 text-muted-foreground"
+                              onClick={() =>
+                                navigate(
+                                  `/topic/${encodeURIComponent(post.topic_name)}/post/${slugifyPostTitle(post.title || post.content) || post.id}#comments`
+                                )
+                              }
                             >
                               <MessageSquare className="h-3.5 w-3.5" />
                               {post.comment_count}
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-xs gap-1 text-muted-foreground"
-                            >
-                              <Reply className="h-3.5 w-3.5" />
-                              Reply
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-xs gap-1 text-muted-foreground"
-                            >
-                              <Forward className="h-3.5 w-3.5" />
-                              Forward
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-xs gap-1 text-muted-foreground ml-auto"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                              Delete
-                            </Button>
+                            {isOwnProfile && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 text-xs gap-1 text-muted-foreground ml-auto hover:text-destructive"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                    Delete
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete this post?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      The post will be removed from public view. This cannot be undone from your profile.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDeletePost(post.id)}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
                           </div>
                         </CardContent>
                       </Card>
