@@ -259,6 +259,11 @@ const PostActionMenu = ({ postId, topicName }: PostActionMenuProps) => {
           </button>
         </div>
       </PopoverContent>
+      <AdminEditPostDialog
+        postId={postId ?? null}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
     </Popover>
   );
 };
