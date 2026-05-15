@@ -380,11 +380,6 @@ export default function AdminReview() {
         onOpenChange={(o) => { if (!o) setEditingPostId(null); }}
         onSaved={fetchAll}
       />
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }
