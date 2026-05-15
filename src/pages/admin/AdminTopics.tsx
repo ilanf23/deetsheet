@@ -69,7 +69,15 @@ export default function AdminTopics() {
       a.localeCompare(b, undefined, { sensitivity: "base" });
     const cmpDate = (a?: string | null, b?: string | null) =>
       new Date(a ?? 0).getTime() - new Date(b ?? 0).getTime();
-    const arr = [...topics];
+    const q = search.trim().toLowerCase();
+    const arr = (q
+      ? topics.filter(
+          (t) =>
+            t.name.toLowerCase().includes(q) ||
+            (t.slug ?? "").toLowerCase().includes(q) ||
+            (t.category_name ?? "").toLowerCase().includes(q),
+        )
+      : [...topics]);
     switch (sort) {
       case "name_asc":
         arr.sort((a, b) => cmpStr(a.name ?? "", b.name ?? ""));
