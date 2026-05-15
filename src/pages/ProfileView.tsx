@@ -9,14 +9,25 @@ import {
   Calendar,
   User,
   MessageSquare,
-  Reply,
-  Forward,
   Trash2,
   Plus,
   Hash,
   Bookmark,
   UserCircle2,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
