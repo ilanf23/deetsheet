@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
-import { MoreHorizontal, Share2, Facebook, Twitter, Instagram, Mail, Heart, Link2 } from "lucide-react";
+import { MoreHorizontal, Share2, Facebook, Twitter, Instagram, Mail, Heart, Link2, Pencil } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useAdminMode } from "@/hooks/useAdminMode";
+import AdminEditPostDialog from "@/components/admin/AdminEditPostDialog";
 
 const REPORT_OPTIONS = [
   "Junk",
@@ -25,7 +28,10 @@ interface PostActionMenuProps {
 
 const PostActionMenu = ({ postId, topicName }: PostActionMenuProps) => {
   const { user } = useAuth();
+  const { isAdmin } = useAdminAuth();
+  const { adminModeActive } = useAdminMode();
   const [open, setOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [favorited, setFavorited] = useState(false);
   const [loadingFav, setLoadingFav] = useState(false);
   const [reportChecks, setReportChecks] = useState<Record<string, boolean>>({});
@@ -213,6 +219,19 @@ const PostActionMenu = ({ postId, topicName }: PostActionMenuProps) => {
           {favorited ? "Remove from Favorites" : "Add to Favorites"}
         </button>
 
+        {isAdmin && adminModeActive && postId && (
+          <>
+            <Separator />
+            <button
+              onClick={() => { setOpen(false); setEditOpen(true); }}
+              className="flex items-center gap-2 w-full py-2 text-sm text-primary hover:underline"
+            >
+              <Pencil className="h-4 w-4" />
+              Edit post (admin)
+            </button>
+          </>
+        )}
+
         <Separator />
 
         {/* Report it */}
@@ -240,6 +259,11 @@ const PostActionMenu = ({ postId, topicName }: PostActionMenuProps) => {
           </button>
         </div>
       </PopoverContent>
+      <AdminEditPostDialog
+        postId={postId ?? null}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
     </Popover>
   );
 };

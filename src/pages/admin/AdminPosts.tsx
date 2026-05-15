@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
+import AdminEditPostDialog from "@/components/admin/AdminEditPostDialog";
+import { logAdminAction } from "@/lib/auditLog";
 
 type Post = Tables<"posts">;
 type Profile = Tables<"profiles">;
@@ -75,6 +78,9 @@ export default function AdminPosts() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<SortKey>("newest");
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const { user } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -102,7 +108,7 @@ export default function AdminPosts() {
       setLoading(false);
     };
     fetchAll();
-  }, []);
+  }, [refreshKey]);
 
   const visiblePosts = useMemo(() => {
     let rows: Post[];
@@ -166,6 +172,14 @@ export default function AdminPosts() {
       return;
     }
     setPosts((prev) => prev.map((p) => (p.id === id ? ({ ...p, status } as Post) : p)));
+    if (user) {
+      await logAdminAction({
+        actorId: user.id,
+        action: status === "approved" ? "post.approve" : "post.reject",
+        entityType: "post",
+        entityId: id,
+      });
+    }
     toast({
       title: status === "approved" ? "Post approved" : "Post rejected",
       variant: status === "rejected" ? "destructive" : undefined,
@@ -288,6 +302,12 @@ export default function AdminPosts() {
                 </span>
                 <span className="flex items-center justify-end gap-4">
                   <button
+                    onClick={() => setEditingPostId(p.id)}
+                    style={{ color: "hsl(var(--admin-fg-muted))" }}
+                  >
+                    Edit
+                  </button>
+                  <button
                     onClick={() => handleApprove(p.id)}
                     style={{ color: "hsl(var(--admin-primary))" }}
                   >
@@ -350,6 +370,12 @@ export default function AdminPosts() {
           </div>
         </div>
       </div>
+      <AdminEditPostDialog
+        postId={editingPostId}
+        open={!!editingPostId}
+        onOpenChange={(o) => { if (!o) setEditingPostId(null); }}
+        onSaved={() => setRefreshKey((k) => k + 1)}
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
+import AdminEditPostDialog from "@/components/admin/AdminEditPostDialog";
 import { Hash, FileText } from "lucide-react";
 
 type Author = { id: string; name: string | null; username: string | null; avatar_url: string | null };
@@ -67,6 +68,7 @@ export default function AdminReview() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<FilterTab>("all");
   const [sort, setSort] = useState<SortKey>("newest");
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchAll = async () => {
@@ -354,12 +356,30 @@ export default function AdminReview() {
                   >
                     Reject
                   </button>
+                  {item.kind === "post" && (
+                    <button
+                      onClick={() => setEditingPostId(item.id)}
+                      className="px-4 py-2 rounded-md text-[13px] font-semibold border"
+                      style={{
+                        borderColor: "hsl(var(--admin-border))",
+                        color: "hsl(var(--admin-fg))",
+                      }}
+                    >
+                      Edit
+                    </button>
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
       )}
+      <AdminEditPostDialog
+        postId={editingPostId}
+        open={!!editingPostId}
+        onOpenChange={(o) => { if (!o) setEditingPostId(null); }}
+        onSaved={fetchAll}
+      />
     </div>
   );
 }

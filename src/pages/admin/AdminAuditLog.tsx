@@ -26,7 +26,7 @@ type Profile = Tables<"profiles">;
 type Post = Tables<"posts">;
 type Report = Tables<"reports">;
 
-type Action = "Approved" | "Banned" | "Rejected" | "Role Change" | "Reported";
+type Action = "Approved" | "Banned" | "Rejected" | "Role Change" | "Reported" | "Edited";
 
 type Entry = {
   id: string;
@@ -46,6 +46,7 @@ const ACTION_PALETTE: Record<Action, { bg: string; fg: string }> = {
     fg: "hsl(var(--admin-success))",
   },
   Reported: { bg: "hsl(var(--admin-danger-soft))", fg: "hsl(var(--admin-danger))" },
+  Edited: { bg: "hsl(var(--admin-info-soft))", fg: "hsl(var(--admin-info))" },
 };
 
 const PAGE_SIZE = 50;
@@ -74,10 +75,15 @@ export default function AdminAuditLog() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      // Audit log table doesn't exist yet — synthesize entries from existing tables
-      // (posts created → "Approved", reports created → "Reported"). The shape mirrors
-      // a real audit_logs query so swapping it later is a one-line change.
-      const [postsRes, reportsRes, profilesRes] = await Promise.all([
+      // Real audit_logs entries (admin moderation actions) get prepended; the
+      // synthesized post/report entries remain for legacy visibility until the
+      // older history is fully captured by the new table.
+      const [auditRes, postsRes, reportsRes, profilesRes] = await Promise.all([
+        supabase
+          .from("audit_logs")
+          .select("id, actor_id, action, entity_type, entity_id, details, created_at")
+          .order("created_at", { ascending: false })
+          .limit(500),
         supabase
           .from("posts")
           .select("id, title, author_id, created_at")
@@ -92,6 +98,35 @@ export default function AdminAuditLog() {
       ]);
       const profiles = new Map<string, Profile>();
       (profilesRes.data ?? []).forEach((p) => profiles.set(p.id, p as Profile));
+
+      const ACTION_LABEL: Record<string, Action> = {
+        "post.edit": "Edited",
+        "post.approve": "Approved",
+        "post.reject": "Rejected",
+        "post.delete": "Rejected",
+        "topic.approve": "Approved",
+        "topic.reject": "Rejected",
+      };
+
+      const fromAudit: Entry[] = ((auditRes.data ?? []) as any[]).map((a) => {
+        const actor = profiles.get(a.actor_id);
+        const label = ACTION_LABEL[a.action as string] ?? "Edited";
+        const changedKeys = a.details?.changed
+          ? Object.keys(a.details.changed).join(", ")
+          : "";
+        const detailText =
+          a.action === "post.edit"
+            ? `Edited ${a.entity_type}${changedKeys ? ` · ${changedKeys}` : ""}`
+            : `${a.action} on ${a.entity_type}`;
+        return {
+          id: `audit-${a.id}`,
+          timestamp: a.created_at,
+          user: actor?.name ?? actor?.username ?? "Admin",
+          action: label,
+          details: detailText,
+          ip: deriveIp(a.actor_id),
+        };
+      });
 
       const fromPosts: Entry[] = ((postsRes.data ?? []) as Post[]).map((p) => {
         const author = profiles.get(p.author_id);
@@ -120,7 +155,7 @@ export default function AdminAuditLog() {
         };
       });
 
-      const merged = [...fromPosts, ...fromReports].sort(
+      const merged = [...fromAudit, ...fromPosts, ...fromReports].sort(
         (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
       );
       setEntries(merged);
