@@ -266,6 +266,16 @@ export default function AdminTopics() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="text-2xl font-bold">Topics</h1>
         <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search topics, slugs, subjects…"
+              className="pl-9 w-72"
+            />
+          </div>
           <AdminSortSelect
             variant="plain"
             value={sort}
