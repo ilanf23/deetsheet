@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
-import { MoreHorizontal, Share2, Facebook, Twitter, Instagram, Mail, Heart, Link2 } from "lucide-react";
+import { MoreHorizontal, Share2, Facebook, Twitter, Instagram, Mail, Heart, Link2, Pencil } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useAdminMode } from "@/hooks/useAdminMode";
+import AdminEditPostDialog from "@/components/admin/AdminEditPostDialog";
 
 const REPORT_OPTIONS = [
   "Junk",
