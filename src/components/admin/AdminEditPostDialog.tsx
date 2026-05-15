@@ -133,7 +133,7 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
     try {
       if (newImage) {
         const ext = newImage.name.split(".").pop() ?? "jpg";
-        const path = `${post.id}-${Date.now()}.${ext}`;
+        const path = `${user.id}/${post.id}-${Date.now()}.${ext}`;
         const { error: upErr } = await supabase.storage
           .from("post-images")
           .upload(path, newImage, { upsert: true });
