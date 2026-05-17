@@ -33,8 +33,8 @@ export const useTopicImages = ({ topicId, topicName, categoryName }: UseTopicIma
     queryFn: async (): Promise<TopicImageRow[]> => {
       if (!topicId) return [];
 
-      const { data: existing, error } = await supabase
-        .from("topic_images")
+      const { data: existing, error } = await (supabase
+        .from("topic_images") as any)
         .select("id, url, average_rating, rating_count")
         .eq("topic_id", topicId)
         .eq("is_approved", true)
