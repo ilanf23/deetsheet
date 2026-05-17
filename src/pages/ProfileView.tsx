@@ -521,13 +521,12 @@ const ProfileView = () => {
                           {profile?.job && (
                             <p className="font-medium">{profile.job as string}</p>
                           )}
-                          {profile?.entity_type &&
-                            (profile.entity_type as string).toLowerCase() !== "person" && (
-                              <p className="inline-flex items-center gap-1 text-muted-foreground text-xs">
-                                <Building2 className="h-3.5 w-3.5" />
-                                {profile.entity_type as string}
-                              </p>
-                            )}
+                          {profile?.entity_type && (
+                            <p className="inline-flex items-center gap-1 text-muted-foreground text-xs capitalize">
+                              <Building2 className="h-3.5 w-3.5" />
+                              {profile.entity_type as string}
+                            </p>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
