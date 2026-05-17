@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -106,6 +107,7 @@ function getCredentialIcon(value: string) {
 }
 
 const ProfileEdit = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { user, refreshProfile } = useAuth();
   const { setLocation, clearLocation } = useLocation();
@@ -335,8 +337,10 @@ const ProfileEdit = () => {
       await clearLocation();
     }
 
+    await refreshProfile();
     setSaving(false);
     toast({ title: "Profile saved!", description: "Your preferences have been updated." });
+    navigate("/profile", { replace: true });
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -14,6 +14,10 @@ import {
   Hash,
   Bookmark,
   UserCircle2,
+  MapPin,
+  Film,
+  BookOpen,
+  Building2,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -120,7 +124,7 @@ const EDUCATION_LABELS: Record<string, string> = {
 // Profile columns this page actually reads. Selecting only what we render
 // shaves a meaningful chunk of bytes off each profile fetch.
 const PROFILE_COLUMNS =
-  "id, name, username, email, avatar_url, bio, sex, birth_year, birth_month, birth_day, city, state, education, college, degree, job, favorite_movie, reading, city_born, created_at";
+  "id, name, username, email, avatar_url, bio, sex, birth_year, birth_month, birth_day, city, state, country, education, high_school, college, degree, major, job, entity_type, favorite_movie, reading, city_born, created_at";
 
 const ProfileView = () => {
   const navigate = useNavigate();
@@ -263,7 +267,7 @@ const ProfileView = () => {
     profile?.birth_month as string | null,
     profile?.birth_day as string | null
   );
-  const city = [profile?.city, profile?.state].filter(Boolean).join(", ") || null;
+  const city = [profile?.city, profile?.state, profile?.country].filter(Boolean).join(", ") || null;
   const educationLabel = profile?.education
     ? EDUCATION_LABELS[profile.education as string] || (profile.education as string)
     : null;
@@ -271,18 +275,37 @@ const ProfileView = () => {
     ? formatJoinDate(profile.created_at as string)
     : null;
 
+  const profileLoaded = profile !== null;
+  const hasEducation = Boolean(
+    profile?.education || profile?.high_school || profile?.college || profile?.degree || profile?.major
+  );
+  const hasWork = Boolean(profile?.job || profile?.entity_type);
+  const hasInterests = Boolean(profile?.favorite_movie || profile?.reading);
+  const showOwnEmptyState = isOwnProfile && profileLoaded;
+  const collegeLine = [
+    profile?.degree,
+    profile?.major ? `in ${profile.major as string}` : null,
+  ].filter(Boolean).join(" ") || null;
+
   // Build credentials from profile data dynamically
   const credentials: { icon: string; text: string }[] = [];
   if (postCount > 0) {
     credentials.push({ icon: "pencil", text: `Writer — ${postCount} post${postCount !== 1 ? "s" : ""}` });
   }
-  if (profile?.college && profile?.degree) {
-    credentials.push({ icon: "graduation", text: `${profile.degree}, ${profile.college}` });
-  } else if (profile?.college) {
-    credentials.push({ icon: "graduation", text: profile.college as string });
+  if (profile?.college) {
+    const collegeText = profile?.degree
+      ? `${profile.degree}${profile?.major ? ` in ${profile.major as string}` : ""}, ${profile.college as string}`
+      : (profile.college as string);
+    credentials.push({ icon: "graduation", text: collegeText });
+  }
+  if (profile?.high_school) {
+    credentials.push({ icon: "graduation", text: profile.high_school as string });
   }
   if (profile?.job) {
     credentials.push({ icon: "briefcase", text: profile.job as string });
+  }
+  if (profile?.entity_type && (profile.entity_type as string).toLowerCase() !== "person") {
+    credentials.push({ icon: "award", text: `Organization — ${profile.entity_type as string}` });
   }
 
   const TABS = [
@@ -363,79 +386,35 @@ const ProfileView = () => {
                 </div>
               </div>
 
-              {/* Personal details grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3 mb-6 text-sm">
-                {profile?.sex && (
-                  <div>
-                    <span className="text-muted-foreground">Sex</span>
-                    <p className="font-medium capitalize">{profile.sex as string}</p>
-                  </div>
-                )}
-                {age !== null && (
-                  <div>
-                    <span className="text-muted-foreground">Age</span>
-                    <p className="font-medium">{age}</p>
-                  </div>
-                )}
-                {city && (
-                  <div>
-                    <span className="text-muted-foreground">City</span>
-                    <p className="font-medium">{city}</p>
-                  </div>
-                )}
-                {educationLabel && (
-                  <div>
-                    <span className="text-muted-foreground">Education</span>
-                    <p className="font-medium">{educationLabel}</p>
-                  </div>
-                )}
-                {profile?.favorite_movie && (
-                  <div>
-                    <span className="text-muted-foreground">Fav Movie</span>
-                    <p className="font-medium">{profile.favorite_movie as string}</p>
-                  </div>
-                )}
-                {profile?.reading && (
-                  <div>
-                    <span className="text-muted-foreground">Reading</span>
-                    <p className="font-medium">{profile.reading as string}</p>
-                  </div>
-                )}
-                {profile?.city_born && (
-                  <div>
-                    <span className="text-muted-foreground">Hometown</span>
-                    <p className="font-medium">{profile.city_born as string}</p>
-                  </div>
-                )}
-                {profile?.college && (
-                  <div>
-                    <span className="text-muted-foreground">College</span>
-                    <p className="font-medium">{profile.college as string}</p>
-                  </div>
-                )}
-                {profile?.job && (
-                  <div>
-                    <span className="text-muted-foreground">Job</span>
-                    <p className="font-medium">{profile.job as string}</p>
-                  </div>
-                )}
-              </div>
+              {/* Quick facts strip — single line of who/where */}
+              {(profile?.sex || age !== null || city || profile?.city_born) && (
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-6 text-sm text-muted-foreground">
+                  {profile?.sex && (
+                    <span className="capitalize">{profile.sex as string}</span>
+                  )}
+                  {age !== null && <span>{age} years old</span>}
+                  {city && (
+                    <span className="inline-flex items-center gap-1">
+                      <MapPin className="h-3.5 w-3.5" />
+                      {city}
+                    </span>
+                  )}
+                  {profile?.city_born && (
+                    <span>From {profile.city_born as string}</span>
+                  )}
+                </div>
+              )}
 
               <Separator className="mb-6" />
 
-              {/* Bio */}
-              {profile?.bio ? (
-                <div className="mb-6">
-                  <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                    About
-                  </h2>
+              {/* About / Bio */}
+              <section className="mb-6">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                  About
+                </h2>
+                {profile?.bio ? (
                   <p className="text-sm leading-relaxed">{profile.bio as string}</p>
-                </div>
-              ) : (
-                <div className="mb-6">
-                  <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                    About
-                  </h2>
+                ) : profileLoaded ? (
                   <p className="text-sm text-muted-foreground italic">
                     No bio yet.
                     {isOwnProfile && (
@@ -450,7 +429,141 @@ const ProfileView = () => {
                       </>
                     )}
                   </p>
+                ) : null}
+              </section>
+
+              {/* Education + Work — side-by-side cards, each self-hides when empty */}
+              {(hasEducation || hasWork || showOwnEmptyState) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                  {hasEducation ? (
+                    <Card className="bg-card">
+                      <CardContent className="pt-5">
+                        <div className="flex items-center gap-2 mb-3 text-muted-foreground">
+                          <GraduationCap className="h-4 w-4" />
+                          <h3 className="text-xs font-semibold uppercase tracking-wider">
+                            Education
+                          </h3>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          {profile?.college && (
+                            <div>
+                              <p className="font-medium">{profile.college as string}</p>
+                              {collegeLine && (
+                                <p className="text-muted-foreground text-xs">{collegeLine}</p>
+                              )}
+                            </div>
+                          )}
+                          {profile?.high_school && (
+                            <div>
+                              <p className="font-medium">{profile.high_school as string}</p>
+                              <p className="text-muted-foreground text-xs">High school</p>
+                            </div>
+                          )}
+                          {educationLabel && !profile?.college && !profile?.high_school && (
+                            <p className="font-medium">{educationLabel}</p>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : showOwnEmptyState ? (
+                    <Card className="bg-card border-dashed">
+                      <CardContent className="pt-5">
+                        <div className="flex items-center gap-2 mb-2 text-muted-foreground">
+                          <GraduationCap className="h-4 w-4" />
+                          <h3 className="text-xs font-semibold uppercase tracking-wider">
+                            Education
+                          </h3>
+                        </div>
+                        <button
+                          onClick={() => navigate("/profile/edit")}
+                          className="text-sm text-primary hover:underline"
+                        >
+                          Add your education
+                        </button>
+                      </CardContent>
+                    </Card>
+                  ) : null}
+
+                  {hasWork ? (
+                    <Card className="bg-card">
+                      <CardContent className="pt-5">
+                        <div className="flex items-center gap-2 mb-3 text-muted-foreground">
+                          <Briefcase className="h-4 w-4" />
+                          <h3 className="text-xs font-semibold uppercase tracking-wider">
+                            Work
+                          </h3>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          {profile?.job && (
+                            <p className="font-medium">{profile.job as string}</p>
+                          )}
+                          {profile?.entity_type &&
+                            (profile.entity_type as string).toLowerCase() !== "person" && (
+                              <p className="inline-flex items-center gap-1 text-muted-foreground text-xs">
+                                <Building2 className="h-3.5 w-3.5" />
+                                {profile.entity_type as string}
+                              </p>
+                            )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : showOwnEmptyState ? (
+                    <Card className="bg-card border-dashed">
+                      <CardContent className="pt-5">
+                        <div className="flex items-center gap-2 mb-2 text-muted-foreground">
+                          <Briefcase className="h-4 w-4" />
+                          <h3 className="text-xs font-semibold uppercase tracking-wider">
+                            Work
+                          </h3>
+                        </div>
+                        <button
+                          onClick={() => navigate("/profile/edit")}
+                          className="text-sm text-primary hover:underline"
+                        >
+                          Add your work
+                        </button>
+                      </CardContent>
+                    </Card>
+                  ) : null}
                 </div>
+              )}
+
+              {/* Interests — only when at least one field exists */}
+              {hasInterests && (
+                <section className="mb-6">
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                    A little about me
+                  </h2>
+                  <div className="flex flex-wrap gap-2">
+                    {profile?.favorite_movie && (
+                      <Badge variant="secondary" className="font-normal gap-1.5 py-1 px-2.5">
+                        <Film className="h-3.5 w-3.5" />
+                        <span className="text-muted-foreground">Fav movie:</span>
+                        <span className="font-medium">{profile.favorite_movie as string}</span>
+                      </Badge>
+                    )}
+                    {profile?.reading && (
+                      <Badge variant="secondary" className="font-normal gap-1.5 py-1 px-2.5">
+                        <BookOpen className="h-3.5 w-3.5" />
+                        <span className="text-muted-foreground">Reading:</span>
+                        <span className="font-medium">{profile.reading as string}</span>
+                      </Badge>
+                    )}
+                  </div>
+                </section>
+              )}
+              {!hasInterests && showOwnEmptyState && (
+                <section className="mb-6">
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                    A little about me
+                  </h2>
+                  <button
+                    onClick={() => navigate("/profile/edit")}
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Add a favorite movie or what you're reading
+                  </button>
+                </section>
               )}
             </div>
 
