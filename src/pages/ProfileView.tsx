@@ -494,7 +494,7 @@ const ProfileView = () => {
             </aside>
 
           {/* Tabs section */}
-          <div className="mt-8 lg:col-start-1 lg:row-start-2">
+          <div className="mt-8 min-w-0 lg:col-start-1 lg:row-start-2">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="bg-transparent border-b rounded-none w-full justify-start h-auto p-0 gap-0">
                 {TABS.map((tab) => (
