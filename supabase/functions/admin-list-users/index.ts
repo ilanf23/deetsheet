@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2.49.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
     // Paginate through auth users
     const emails: Record<string, string> = {};
     let page = 1;
-    const perPage = 1000;
+    const perPage = 200;
     while (true) {
       const { data, error } = await admin.auth.admin.listUsers({ page, perPage });
       if (error) throw error;
