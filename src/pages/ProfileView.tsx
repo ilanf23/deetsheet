@@ -461,6 +461,12 @@ const ProfileView = () => {
                           </h3>
                         </div>
                         <div className="space-y-2 text-sm">
+                          {educationLabel && (
+                            <div>
+                              <p className="font-medium">{educationLabel}</p>
+                              <p className="text-muted-foreground text-xs">Education level</p>
+                            </div>
+                          )}
                           {profile?.college && (
                             <div>
                               <p className="font-medium">{profile.college as string}</p>
@@ -469,14 +475,16 @@ const ProfileView = () => {
                               )}
                             </div>
                           )}
+                          {!profile?.college && collegeLine && (
+                            <div>
+                              <p className="font-medium capitalize">{collegeLine}</p>
+                            </div>
+                          )}
                           {profile?.high_school && (
                             <div>
                               <p className="font-medium">{profile.high_school as string}</p>
                               <p className="text-muted-foreground text-xs">High school</p>
                             </div>
-                          )}
-                          {educationLabel && !profile?.college && !profile?.high_school && (
-                            <p className="font-medium">{educationLabel}</p>
                           )}
                         </div>
                       </CardContent>
