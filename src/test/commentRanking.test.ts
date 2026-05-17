@@ -16,6 +16,7 @@ function makeNode(
 ): CommentNode {
   return {
     username: "t",
+    avatarUrl: null,
     content: "",
     parentCommentId: null,
     parentUsername: null,
