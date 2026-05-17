@@ -4,6 +4,15 @@ import { useToast } from "@/hooks/use-toast";
 import { Search, ChevronDown, Plus } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 type Profile = Tables<"profiles">;
 type RoleRow = Tables<"user_roles">;
@@ -54,6 +63,8 @@ export default function AdminUsers() {
   const [sort, setSort] = useState<SortKey>("newest");
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [comingSoonOpen, setComingSoonOpen] = useState(false);
+  const [comingSoonFeature, setComingSoonFeature] = useState<"edit" | "add">("edit");
   const { toast } = useToast();
 
   const fetchAll = async () => {
@@ -140,8 +151,13 @@ export default function AdminUsers() {
   const visibleStart = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const visibleEnd = Math.min(page * PAGE_SIZE, total);
 
-  const handleEdit = (id: string) => {
-    toast({ title: "Edit user", description: `Profile editor coming soon for ${id.slice(0, 8)}…` });
+  const handleEdit = (_id: string) => {
+    setComingSoonFeature("edit");
+    setComingSoonOpen(true);
+  };
+  const handleAddUser = () => {
+    setComingSoonFeature("add");
+    setComingSoonOpen(true);
   };
   const handleBan = (name: string) => {
     toast({ title: "Ban user", description: `${name} would be banned (wire up to user_status table).` });
@@ -170,6 +186,7 @@ export default function AdminUsers() {
           Users
         </h1>
         <button
+          onClick={handleAddUser}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-[14px] font-medium"
           style={{ backgroundColor: "hsl(var(--admin-primary))", color: "#ffffff" }}
         >
@@ -346,6 +363,24 @@ export default function AdminUsers() {
           </div>
         </div>
       </div>
+
+      <Dialog open={comingSoonOpen} onOpenChange={setComingSoonOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {comingSoonFeature === "edit" ? "Edit user — coming soon" : "Add user — coming soon"}
+            </DialogTitle>
+            <DialogDescription>
+              {comingSoonFeature === "edit"
+                ? "We're still building the user profile editor. You'll be able to update names, usernames, avatars, roles, and status from here soon."
+                : "We're still building the admin-side account creation flow. You'll be able to invite or create new users from here soon."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setComingSoonOpen(false)}>Got it</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

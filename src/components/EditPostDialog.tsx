@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ImagePlus, X } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -26,8 +26,10 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [authorId, setAuthorId] = useState<string | null>(null);
+  const [currentStatus, setCurrentStatus] = useState<string>("approved");
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [story, setStory] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [newImage, setNewImage] = useState<File | null>(null);
   const [newImagePreview, setNewImagePreview] = useState<string | null>(null);
@@ -40,7 +42,7 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
       setLoading(true);
       const { data, error } = await supabase
         .from("posts")
-        .select("id, title, content, image_url, author_id")
+        .select("id, title, content, story, image_url, author_id, status")
         .eq("id", postId)
         .maybeSingle();
       if (cancelled) return;
@@ -51,8 +53,10 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
         return;
       }
       setAuthorId(data.author_id ?? null);
+      setCurrentStatus((data.status as string) ?? "approved");
       setTitle(data.title ?? "");
       setContent(data.content ?? "");
+      setStory(data.story ?? "");
       setImageUrl(data.image_url ?? null);
       setNewImage(null);
       setNewImagePreview(null);
@@ -109,17 +113,33 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
         nextImageUrl = null;
       }
 
+      // Edits by the author re-enter moderation unless already rejected.
+      const nextStatus = currentStatus === "rejected" ? "rejected" : "pending";
+
+      const trimmedStory = story.trim();
+      const updates: Record<string, unknown> = {
+        title: title.trim(),
+        content,
+        image_url: nextImageUrl,
+        status: nextStatus,
+      };
+      // Only touch `story` if the user typed one — keeps the update working
+      // when the posts.story migration hasn't been applied to the live DB.
+      if (trimmedStory) updates.story = trimmedStory;
+
       const { error: updErr } = await supabase
         .from("posts")
-        .update({
-          title: title.trim(),
-          content,
-          image_url: nextImageUrl,
-        })
+        .update(updates as never)
         .eq("id", postId);
       if (updErr) throw updErr;
 
-      toast({ title: "Post updated" });
+      toast({
+        title: "Post updated",
+        description:
+          nextStatus === "pending"
+            ? "Your edited post will be re-reviewed before going live again."
+            : undefined,
+      });
       onSaved?.();
       onOpenChange(false);
     } catch (e) {
@@ -137,6 +157,11 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit post</DialogTitle>
+          <DialogDescription>
+            {currentStatus === "rejected"
+              ? "This post was rejected. You can revise and resubmit it."
+              : "Changes go back to admin review before they're public again."}
+          </DialogDescription>
         </DialogHeader>
 
         {loading ? (
@@ -160,7 +185,18 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
                 id="edit-post-content"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                rows={8}
+                rows={4}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-post-story">Comment / Story (optional)</Label>
+              <Textarea
+                id="edit-post-story"
+                value={story}
+                onChange={(e) => setStory(e.target.value)}
+                rows={4}
+                placeholder="Share a comment or story regarding your post."
               />
             </div>
 

@@ -10,7 +10,7 @@ import PostImageEditorDialog from "@/components/PostImageEditorDialog";
 interface CreatePostDialogProps {
   topicName: string;
   categoryName: string;
-  onSubmit: (detail: string, image: File | null) => void;
+  onSubmit: (detail: string, story: string, image: File | null) => void;
 }
 
 const DETAIL_CHAR_LIMIT = 200;
@@ -58,7 +58,7 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
 
   const handleSubmit = () => {
     if (!detail.trim()) return;
-    onSubmit(detail.trim(), image);
+    onSubmit(detail.trim(), comment.trim(), image);
   };
 
   useEffect(() => {

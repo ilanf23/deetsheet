@@ -43,6 +43,7 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [story, setStory] = useState("");
   const [topicId, setTopicId] = useState<string>("");
   const [status, setStatus] = useState<(typeof STATUS_OPTIONS)[number]>("pending");
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -72,6 +73,7 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
       if (p) {
         setTitle(p.title ?? "");
         setContent(p.content ?? "");
+        setStory(p.story ?? "");
         setTopicId(p.topic_id);
         setStatus((p.status as typeof status) ?? "pending");
         setIsAnonymous(!!p.is_anonymous);
@@ -158,7 +160,8 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
         nextLocationId = null;
       }
 
-      const updates = {
+      const trimmedStory = story.trim();
+      const updates: Record<string, unknown> = {
         title: title.trim(),
         content,
         topic_id: topicId,
@@ -168,6 +171,9 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
         image_url: nextImageUrl,
         location_id: nextLocationId,
       };
+      // Only include `story` when set — works even if the posts.story
+      // migration isn't live yet.
+      if (trimmedStory) updates.story = trimmedStory;
 
       const { error: updErr } = await supabase.from("posts").update(updates).eq("id", post.id);
       if (updErr) throw updErr;
@@ -224,6 +230,17 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={8}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="edit-story">Comment / Story</Label>
+              <Textarea
+                id="edit-story"
+                value={story}
+                onChange={(e) => setStory(e.target.value)}
+                rows={4}
+                placeholder="Optional long-form context the author shared."
               />
             </div>
 

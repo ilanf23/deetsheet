@@ -8,6 +8,7 @@ interface CreatePostInput {
   topicName: string;
   title: string;
   content: string;
+  story?: string | null;
   image?: File | null;
 }
 
@@ -51,22 +52,31 @@ export const useCreatePost = () => {
         imageUrl = pub.publicUrl;
       }
 
+      const trimmedStory = input.story?.trim() || null;
+      const insertPayload: Record<string, unknown> = {
+        topic_id: input.topicId,
+        title: input.title,
+        content: input.content,
+        author_id: user.id,
+        score: 0,
+        average_rating: 0,
+        rating_count: 0,
+        comment_count: 0,
+        location_id: locationId,
+        is_national: isNational,
+        is_anonymous: false,
+        image_url: imageUrl,
+        // Explicit so an admin client never inherits a different default.
+        status: "pending",
+      };
+      // Only include `story` when the user actually wrote one. This keeps the
+      // insert compatible if the `posts.story` migration hasn't been applied
+      // to the live DB yet (the column is opt-in below).
+      if (trimmedStory) insertPayload.story = trimmedStory;
+
       const { data, error } = await supabase
         .from("posts")
-        .insert({
-          topic_id: input.topicId,
-          title: input.title,
-          content: input.content,
-          author_id: user.id,
-          score: 0,
-          average_rating: 0,
-          rating_count: 0,
-          comment_count: 0,
-          location_id: locationId,
-          is_national: isNational,
-          is_anonymous: false,
-          image_url: imageUrl,
-        })
+        .insert(insertPayload as never)
         .select("id")
         .single();
 

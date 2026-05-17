@@ -17,13 +17,14 @@ const AddPostBar = ({ topicId, topicName, categoryName, onPostAdded }: AddPostBa
   const createPost = useCreatePost();
   const { toast } = useToast();
 
-  const handleSubmit = async (detail: string, image: File | null) => {
+  const handleSubmit = async (detail: string, story: string, image: File | null) => {
     try {
       await createPost.mutateAsync({
         topicId,
         topicName,
         title: detail,
         content: detail,
+        story: story || null,
         image,
       });
       toast({

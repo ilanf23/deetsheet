@@ -6,6 +6,7 @@ import { formatDistanceToNow, parseISO } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
 import AdminEditPostDialog from "@/components/admin/AdminEditPostDialog";
+import AdminPostReviewDialog from "@/components/admin/AdminPostReviewDialog";
 import { logAdminAction } from "@/lib/auditLog";
 
 type Post = Tables<"posts">;
@@ -79,6 +80,7 @@ export default function AdminPosts() {
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<SortKey>("newest");
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [reviewPostId, setReviewPostId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -287,7 +289,16 @@ export default function AdminPosts() {
             return (
               <div
                 key={p.id}
-                className="grid grid-cols-[3fr_1fr_1fr_1fr_1fr] items-center bg-white px-6 py-4 text-[14px] transition-colors hover:bg-slate-50/80"
+                role="button"
+                tabIndex={0}
+                onClick={() => setReviewPostId(p.id)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setReviewPostId(p.id);
+                  }
+                }}
+                className="grid grid-cols-[3fr_1fr_1fr_1fr_1fr] items-center bg-white px-6 py-4 text-[14px] transition-colors hover:bg-slate-50/80 cursor-pointer"
                 style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}
               >
                 <span className="truncate font-medium text-slate-900">{p.title}</span>
@@ -300,7 +311,10 @@ export default function AdminPosts() {
                 <span className="text-slate-600">
                   {formatDistanceToNow(parseISO(p.created_at))} ago
                 </span>
-                <span className="flex items-center justify-end gap-4">
+                <span
+                  className="flex items-center justify-end gap-4"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <button
                     onClick={() => setEditingPostId(p.id)}
                     className="text-slate-600 hover:text-slate-900"
@@ -375,6 +389,13 @@ export default function AdminPosts() {
         open={!!editingPostId}
         onOpenChange={(o) => { if (!o) setEditingPostId(null); }}
         onSaved={() => setRefreshKey((k) => k + 1)}
+      />
+      <AdminPostReviewDialog
+        postId={reviewPostId}
+        open={!!reviewPostId}
+        onOpenChange={(o) => { if (!o) setReviewPostId(null); }}
+        onApprove={handleApprove}
+        onReject={handleReject}
       />
     </div>
   );
