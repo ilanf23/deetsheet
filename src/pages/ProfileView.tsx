@@ -124,7 +124,27 @@ const EDUCATION_LABELS: Record<string, string> = {
 // Profile columns this page actually reads. Selecting only what we render
 // shaves a meaningful chunk of bytes off each profile fetch.
 const PROFILE_COLUMNS =
-  "id, name, username, email, avatar_url, bio, sex, birth_year, birth_month, birth_day, city, state, country, education, high_school, college, degree, major, job, entity_type, favorite_movie, reading, city_born, created_at";
+  "id, name, username, avatar_url, bio, sex, birth_year, birth_month, birth_day, city, state, country, education, high_school, college, degree, major, job, entity_type, favorite_movie, reading, city_born, created_at";
+
+function formatProfileValue(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function formatTitleValue(value: unknown): string | null {
+  const trimmed = formatProfileValue(value);
+  if (!trimmed) return null;
+  return trimmed
+    .split(/[\s-]+/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+type DetailGroup = {
+  title: string;
+  items: { label: string; value: string | number | null }[];
+};
 
 const ProfileView = () => {
   const navigate = useNavigate();
@@ -261,7 +281,7 @@ const ProfileView = () => {
     (isOwnProfile ? user?.user_metadata?.username : null) ||
     (isOwnProfile ? user?.email?.split("@")[0] : null) ||
     "User";
-  const email = isOwnProfile ? (user?.email || "") : (profile?.email as string || "");
+  const email = isOwnProfile ? (user?.email || "") : "";
   const age = calculateAge(
     profile?.birth_year as string | null,
     profile?.birth_month as string | null,
@@ -295,6 +315,46 @@ const ProfileView = () => {
     profile?.degree,
     profile?.major ? `in ${profile.major as string}` : null,
   ].filter(Boolean).join(" ") || null;
+  const detailGroups: DetailGroup[] = [
+    {
+      title: "Personal",
+      items: [
+        { label: "Sex", value: formatTitleValue(profile?.sex) },
+        { label: "Age", value: age !== null ? `${age} years old` : null },
+        { label: "Birthday", value: fullBirthday },
+        { label: "Lives in", value: city },
+        { label: "Born in", value: formatProfileValue(profile?.city_born) },
+        { label: "Account type", value: formatTitleValue(profile?.entity_type) },
+      ],
+    },
+    {
+      title: "Education",
+      items: [
+        { label: "Education level", value: educationLabel },
+        { label: "High school", value: formatProfileValue(profile?.high_school) },
+        { label: "College", value: formatProfileValue(profile?.college) },
+        { label: "Degree", value: formatProfileValue(profile?.degree) },
+        { label: "Major", value: formatProfileValue(profile?.major) },
+      ],
+    },
+    {
+      title: "Career",
+      items: [{ label: "Job", value: formatProfileValue(profile?.job) }],
+    },
+    {
+      title: "Interests",
+      items: [
+        { label: "Favorite movie", value: formatProfileValue(profile?.favorite_movie) },
+        { label: "Reading", value: formatProfileValue(profile?.reading) },
+      ],
+    },
+  ]
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => item.value !== null && item.value !== ""),
+    }))
+    .filter((group) => group.items.length > 0);
+  const hasAboutContent = Boolean(profile?.bio) || detailGroups.length > 0;
 
   // Build credentials from profile data dynamically
   const credentials: { icon: string; text: string }[] = [];
@@ -430,7 +490,7 @@ const ProfileView = () => {
                 </h2>
                 {profile?.bio ? (
                   <p className="text-sm leading-relaxed">{profile.bio as string}</p>
-                ) : profileLoaded ? (
+                ) : profileLoaded && !hasAboutContent ? (
                   <p className="text-sm text-muted-foreground italic">
                     No bio yet.
                     {isOwnProfile && (
@@ -446,6 +506,27 @@ const ProfileView = () => {
                     )}
                   </p>
                 ) : null}
+                {detailGroups.length > 0 && (
+                  <div className="mt-5 space-y-5">
+                    {detailGroups.map((group) => (
+                      <div key={group.title} className="border-t pt-4">
+                        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                          {group.title}
+                        </h3>
+                        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                          {group.items.map((item) => (
+                            <div key={`${group.title}-${item.label}`} className="min-w-0">
+                              <dt className="text-xs text-muted-foreground">{item.label}</dt>
+                              <dd className="mt-0.5 font-medium text-foreground break-words">
+                                {item.value}
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </section>
 
               {/* Education + Work — side-by-side cards, each self-hides when empty */}
