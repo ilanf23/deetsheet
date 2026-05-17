@@ -532,11 +532,11 @@ const ProfileView = () => {
                                 <span>{getTimeAgo(post.created_at)}</span>
                               </div>
                               {post.title && (
-                                <h4 className="font-semibold text-sm mb-1 line-clamp-1">
+                                <h4 className="font-semibold text-sm mb-1 line-clamp-1 break-words">
                                   {formatTitle(post.title)}
                                 </h4>
                               )}
-                              <p className="text-sm text-muted-foreground line-clamp-2">
+                              <p className="text-sm text-muted-foreground line-clamp-2 break-words">
                                 {post.content}
                               </p>
                             </div>
