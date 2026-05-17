@@ -396,12 +396,13 @@ const ProfileView = () => {
               </div>
 
               {/* Quick facts strip — single line of who/where */}
-              {(profile?.sex || age !== null || city || profile?.city_born) && (
+              {(profile?.sex || age !== null || city || profile?.city_born || fullBirthday || profile?.entity_type) && (
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-6 text-sm text-muted-foreground">
                   {profile?.sex && (
                     <span className="capitalize">{profile.sex as string}</span>
                   )}
                   {age !== null && <span>{age} years old</span>}
+                  {fullBirthday && <span>Born {fullBirthday}</span>}
                   {city && (
                     <span className="inline-flex items-center gap-1">
                       <MapPin className="h-3.5 w-3.5" />
@@ -410,6 +411,12 @@ const ProfileView = () => {
                   )}
                   {profile?.city_born && (
                     <span>From {profile.city_born as string}</span>
+                  )}
+                  {profile?.entity_type && (
+                    <span className="inline-flex items-center gap-1 capitalize">
+                      <Building2 className="h-3.5 w-3.5" />
+                      {profile.entity_type as string}
+                    </span>
                   )}
                 </div>
               )}
