@@ -223,6 +223,7 @@ export type Database = {
           rating_count: number
           score: number
           status: string
+          story: string | null
           title: string
           topic_id: string
         }
@@ -240,6 +241,7 @@ export type Database = {
           rating_count?: number
           score?: number
           status?: string
+          story?: string | null
           title: string
           topic_id: string
         }
@@ -257,6 +259,7 @@ export type Database = {
           rating_count?: number
           score?: number
           status?: string
+          story?: string | null
           title?: string
           topic_id?: string
         }
