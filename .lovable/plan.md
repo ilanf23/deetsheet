@@ -1,61 +1,45 @@
-## Unified Admin Review Queue
+# Show all profile-edit content on the profile view
 
-Add a single inbox at `/admin/review` where the admin sees every pending topic and pending post in one chronological list and approves/rejects from the same screen. Author visibility stays as it is today (only author + admin can see their pending item).
+Goal: anything a user fills out in `/profile/edit` should be visible on `/profile` (ProfileView). Today, several fields are collected but never displayed.
 
-### Scope
+## Audit — what's missing on ProfileView
 
-In scope:
-- New "Review" admin page combining pending topics and pending posts.
-- Sidebar entry with a live count badge for total pending items.
-- Approve / Reject actions that write to the existing `status` column on `topics` and `posts`.
-- A small preview of each item (title, author, category/topic, body excerpt, image thumb) so the admin can decide without leaving the page.
+Already shown: name, username, email-ish (avatar/header), bio, sex, age (derived), city, city_born, college, high_school, degree+major (as sub-line), job, entity_type (only when "business"), favorite_movie, reading, joined date, credentials.
 
-Out of scope (per your answers):
-- Comments review.
-- Email notifications to admin or author.
-- Author-facing "My pending submissions" page.
+Missing / partially hidden:
+1. **State** and **Country** — currently mashed into the "city" string only when present; `state` alone (no city) is dropped. Show them as discrete fields.
+2. **Full date of birth** — only `age` is derived; the actual birthday (month/day/year) is never shown.
+3. **Account type (`entity_type`)** — only rendered when value is "business". Should show whenever set (Person / Business / etc.).
+4. **Education level** (`education` enum: bachelors, masters, …) — only rendered when both `college` and `high_school` are blank. Should always show as a labeled line in the Education card.
+5. **Degree** and **Major** — shown only as a sub-line *under* college. If user filled degree/major but no college, they're invisible. Show them regardless.
+6. **Expertise topics** — collected in ProfileEdit (`expertiseTopics`) but not persisted to the DB and not shown. Out of scope unless we add persistence (see Technical notes).
+7. **Credentials** — already shown; values currently only populate from a LinkedIn import (not persisted by the form save). Flagged in Technical notes; no UI change needed.
 
-### UX
+## Changes
 
-Route: `/admin/review` (new). Becomes the default landing tab inside Admin.
+### `src/pages/ProfileView.tsx`
 
-Layout:
-- Header: "Review queue" + total pending count.
-- Filter pills: `All` · `Topics (N)` · `Posts (N)`.
-- Sort: Newest / Oldest.
-- List of cards, each showing:
-  - Type badge (Topic | Post), submitted-time, author name + avatar.
-  - For topics: name, category, description.
-  - For posts: title, parent topic (linked), body excerpt, image thumb if any.
-  - Right side: green `Approve` and red `Reject` buttons.
-- Empty state: "Inbox zero — nothing waiting for review."
-- Sidebar `Review` nav item shows a small coral pill with the pending count (auto-refreshes when items are approved/rejected).
+- **Quick-facts strip (around line 390):** add chips for full DOB (formatted "Month D, YYYY") and account type when not "person".
+- **Location line:** keep the comma-joined "City, State, Country" but also render state-alone or country-alone if city is empty (so nothing filled gets dropped).
+- **Education card (around lines 438-485):**
+  - Always show `education` level (humanized label) as the first row.
+  - Render `degree` / `major` as their own row even when `college` is empty.
+- **Work card (around lines 487-509):** show `entity_type` always (not just when "business").
+- **Bio section:** unchanged (already shows when present).
+- **"A little about me" section:** unchanged (already shows favorite_movie / reading).
 
-The existing `/admin/topics` and `/admin/posts` pages stay as-is for browsing/filtering by status — Review is just the focused inbox.
+No new sections or design changes — just stop hiding filled fields. Empty fields keep self-hiding (existing pattern).
 
-### Data
+## Technical notes
 
-No schema changes required. Both tables already have:
-- `topics.status` ('pending' | 'approved' | 'rejected') with RLS gating public visibility.
-- `posts.status` ('pending' | 'approved' | 'rejected') with RLS gating public visibility.
+- `entity_type`, `birth_month/day/year`, `state`, `country`, `education`, `degree`, `major` already exist on `profiles` and are already selected by `PROFILE_COLUMNS`. No DB or query changes needed.
+- **Expertise & Credentials persistence:** ProfileEdit currently does NOT save `credentials` or `expertiseTopics` to the database — they only get populated transiently from the LinkedIn-import dialog. To make these "visible on the profile" durably we'd need to:
+  - Add `credentials jsonb` and `expertise_topics text[]` columns to `profiles`.
+  - Persist them in `onSubmit` in `ProfileEdit.tsx`.
+  - Read them in `ProfileView`.
+  This is a separate, larger change. **I'll skip it in this pass unless you confirm you want it included.**
 
-Approve/reject = `UPDATE … SET status = 'approved' | 'rejected' WHERE id = …` (admin-only, already covered by existing RLS).
-
-### Technical notes
-
-- New file: `src/pages/admin/AdminReview.tsx`.
-- New hook (or inline query): fetch pending rows in parallel:
-  - `supabase.from("topics").select("id, name, slug, category_name, description, created_at, created_by").eq("status", "pending")`
-  - `supabase.from("posts").select("id, title, content, image_url, topic_id, author_id, created_at").eq("status", "pending")`
-  - Join authors via `profiles` (name, username, avatar_url) and topic names via `topics` for posts.
-- Merge into a discriminated union `{ kind: "topic" | "post", ... }`, sort by `created_at`.
-- Approve/Reject mutations invalidate the queue and the per-type admin pages.
-- Sidebar badge: lightweight count query (`select id … status=pending` on both tables) with a 30s `refetchInterval`, or refetch on review-page mutations.
-- App routing: register the new route under the admin layout in `src/App.tsx`; add nav entry in `src/components/admin/AdminLayout.tsx` (top of the list, with `Inbox` icon from lucide).
-- Reuse `StatusPill`, `AdminSortSelect`, and the existing admin design tokens (`--admin-*`).
-
-### Files touched
-
-- New: `src/pages/admin/AdminReview.tsx`
-- Edited: `src/App.tsx` (lazy import + route)
-- Edited: `src/components/admin/AdminLayout.tsx` (nav entry + count badge)
+## Out of scope
+- Visual redesign of the profile.
+- Persisting credentials / expertise to the database (call out above).
+- Any change to ProfileEdit form itself.

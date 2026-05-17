@@ -268,6 +268,15 @@ const ProfileView = () => {
     profile?.birth_day as string | null
   );
   const city = [profile?.city, profile?.state, profile?.country].filter(Boolean).join(", ") || null;
+  const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const fullBirthday = (() => {
+    const y = profile?.birth_year as string | null | undefined;
+    const m = profile?.birth_month as string | null | undefined;
+    const d = profile?.birth_day as string | null | undefined;
+    if (!y && !m && !d) return null;
+    const mn = m ? MONTH_NAMES[parseInt(m) - 1] : null;
+    return [mn, d, y].filter(Boolean).join(" ").replace(/ (\d{4})$/, ", $1");
+  })();
   const educationLabel = profile?.education
     ? EDUCATION_LABELS[profile.education as string] || (profile.education as string)
     : null;
@@ -387,12 +396,13 @@ const ProfileView = () => {
               </div>
 
               {/* Quick facts strip — single line of who/where */}
-              {(profile?.sex || age !== null || city || profile?.city_born) && (
+              {(profile?.sex || age !== null || city || profile?.city_born || fullBirthday || profile?.entity_type) && (
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-6 text-sm text-muted-foreground">
                   {profile?.sex && (
                     <span className="capitalize">{profile.sex as string}</span>
                   )}
                   {age !== null && <span>{age} years old</span>}
+                  {fullBirthday && <span>Born {fullBirthday}</span>}
                   {city && (
                     <span className="inline-flex items-center gap-1">
                       <MapPin className="h-3.5 w-3.5" />
@@ -401,6 +411,12 @@ const ProfileView = () => {
                   )}
                   {profile?.city_born && (
                     <span>From {profile.city_born as string}</span>
+                  )}
+                  {profile?.entity_type && (
+                    <span className="inline-flex items-center gap-1 capitalize">
+                      <Building2 className="h-3.5 w-3.5" />
+                      {profile.entity_type as string}
+                    </span>
                   )}
                 </div>
               )}
@@ -445,6 +461,12 @@ const ProfileView = () => {
                           </h3>
                         </div>
                         <div className="space-y-2 text-sm">
+                          {educationLabel && (
+                            <div>
+                              <p className="font-medium">{educationLabel}</p>
+                              <p className="text-muted-foreground text-xs">Education level</p>
+                            </div>
+                          )}
                           {profile?.college && (
                             <div>
                               <p className="font-medium">{profile.college as string}</p>
@@ -453,14 +475,16 @@ const ProfileView = () => {
                               )}
                             </div>
                           )}
+                          {!profile?.college && collegeLine && (
+                            <div>
+                              <p className="font-medium capitalize">{collegeLine}</p>
+                            </div>
+                          )}
                           {profile?.high_school && (
                             <div>
                               <p className="font-medium">{profile.high_school as string}</p>
                               <p className="text-muted-foreground text-xs">High school</p>
                             </div>
-                          )}
-                          {educationLabel && !profile?.college && !profile?.high_school && (
-                            <p className="font-medium">{educationLabel}</p>
                           )}
                         </div>
                       </CardContent>
@@ -497,13 +521,12 @@ const ProfileView = () => {
                           {profile?.job && (
                             <p className="font-medium">{profile.job as string}</p>
                           )}
-                          {profile?.entity_type &&
-                            (profile.entity_type as string).toLowerCase() !== "person" && (
-                              <p className="inline-flex items-center gap-1 text-muted-foreground text-xs">
-                                <Building2 className="h-3.5 w-3.5" />
-                                {profile.entity_type as string}
-                              </p>
-                            )}
+                          {profile?.entity_type && (
+                            <p className="inline-flex items-center gap-1 text-muted-foreground text-xs capitalize">
+                              <Building2 className="h-3.5 w-3.5" />
+                              {profile.entity_type as string}
+                            </p>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
