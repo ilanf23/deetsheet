@@ -58,12 +58,13 @@ export default function AdminUsers() {
 
   const fetchAll = async () => {
     setLoading(true);
-    const [usersRes, rolesRes] = await Promise.all([
+    const [usersRes, rolesRes, emailsRes] = await Promise.all([
       supabase
         .from("profiles")
         .select("id, name, username, avatar_url, created_at")
         .order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role"),
+      supabase.functions.invoke<{ emails: Record<string, string> }>("admin-list-users"),
     ]);
     if (usersRes.error) {
       toast({
@@ -72,7 +73,9 @@ export default function AdminUsers() {
         variant: "destructive",
       });
     } else {
-      setUsers((usersRes.data ?? []) as Profile[]);
+      const emailMap = emailsRes.data?.emails ?? {};
+      const rows = (usersRes.data ?? []).map((u: any) => ({ ...u, _email: emailMap[u.id] }));
+      setUsers(rows);
     }
     const map = new Map<string, "admin" | "moderator" | "user">();
     (rolesRes.data as RoleRow[] | null)?.forEach((r) => {
@@ -92,7 +95,7 @@ export default function AdminUsers() {
     const rows = users.filter((u) => {
       const name = (u.name ?? "").toLowerCase();
       const username = (u.username ?? "").toLowerCase();
-      const email = ((u as any).email ?? "").toLowerCase();
+      const email = (u._email ?? "").toLowerCase();
       const matches = !q || name.includes(q) || username.includes(q) || email.includes(q);
       if (!matches) return false;
       const role = roles.get(u.id) ?? "user";
@@ -268,7 +271,7 @@ export default function AdminUsers() {
             const role = (roles.get(u.id) ?? "user") as "admin" | "moderator" | "user";
             const status: "active" | "suspended" | "banned" = "active";
             const displayName = u.name ?? u.username ?? "—";
-            const email = (u as any).email ?? `${u.username ?? "user"}@example.com`;
+            const email = u._email ?? "—";
             return (
               <div
                 key={u.id}
