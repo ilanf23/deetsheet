@@ -121,7 +121,7 @@ Current capabilities:
 - list topics
 - show per-topic post counts
 - create topics
-- edit topic name, slug, description
+- edit topic name and subject
 - delete topics
 
 The delete confirmation warns that associated posts/comments may be cascade-deleted. Confirm actual foreign key behavior before changing this workflow.

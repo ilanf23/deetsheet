@@ -15,7 +15,6 @@ type PendingTopic = {
   created_at: string;
   author?: Author;
   name: string;
-  slug: string;
   category_name: string;
   description: string | null;
 };
@@ -30,7 +29,6 @@ type PendingPost = {
   image_url: string | null;
   topic_id: string;
   topic_name?: string;
-  topic_slug?: string;
 };
 
 type PendingItem = PendingTopic | PendingPost;
@@ -76,7 +74,7 @@ export default function AdminReview() {
     const [topicsRes, postsRes] = await Promise.all([
       supabase
         .from("topics")
-        .select("id, name, slug, category_name, description, created_at, created_by")
+        .select("id, name, category_name, description, created_at, created_by")
         .eq("status", "pending"),
       supabase
         .from("posts")
@@ -102,15 +100,15 @@ export default function AdminReview() {
             .in("id", Array.from(authorIds))
         : Promise.resolve({ data: [] }),
       topicIds.size > 0
-        ? supabase.from("topics").select("id, name, slug").in("id", Array.from(topicIds))
+        ? supabase.from("topics").select("id, name").in("id", Array.from(topicIds))
         : Promise.resolve({ data: [] }),
     ]);
 
     const authorMap = new Map<string, Author>();
     (profilesRes.data ?? []).forEach((p: any) => authorMap.set(p.id, p as Author));
-    const topicMap = new Map<string, { name: string; slug: string }>();
+    const topicMap = new Map<string, { name: string }>();
     (parentTopicsRes.data ?? []).forEach((t: any) =>
-      topicMap.set(t.id, { name: t.name, slug: t.slug }),
+      topicMap.set(t.id, { name: t.name }),
     );
 
     const merged: PendingItem[] = [
@@ -121,7 +119,6 @@ export default function AdminReview() {
           created_at: t.created_at,
           author: t.created_by ? authorMap.get(t.created_by) : undefined,
           name: t.name,
-          slug: t.slug,
           category_name: t.category_name,
           description: t.description,
         }),
@@ -138,7 +135,6 @@ export default function AdminReview() {
           image_url: p.image_url,
           topic_id: p.topic_id,
           topic_name: parent?.name,
-          topic_slug: parent?.slug,
         };
       }),
     ];
@@ -308,7 +304,7 @@ export default function AdminReview() {
                         <div className="text-[12px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>
                           In topic:{" "}
                           <Link
-                            to={`/topic/${item.topic_slug ?? item.topic_name}`}
+                            to={`/topic/${item.topic_name}`}
                             style={{ color: "hsl(var(--admin-primary))" }}
                             className="hover:underline"
                           >

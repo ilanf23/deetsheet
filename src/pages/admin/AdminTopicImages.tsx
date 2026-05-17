@@ -32,7 +32,6 @@ import { logAdminAction } from "@/lib/auditLog";
 interface TopicRow {
   id: string;
   name: string;
-  slug: string;
   category_name: string | null;
   image_url: string | null;
   pinned_image_id: string | null;
@@ -119,14 +118,14 @@ export default function AdminTopicImages() {
     setLoadingTopics(true);
     let { data, error } = await supabase
       .from("topics")
-      .select("id, name, slug, category_name, image_url, pinned_image_id" as never)
+      .select("id, name, category_name, image_url, pinned_image_id" as never)
       .order("name");
 
     if (error?.message.includes("pinned_image_id")) {
       setSupportsPinnedImages(false);
       const fallback = await supabase
         .from("topics")
-        .select("id, name, slug, category_name, image_url")
+        .select("id, name, category_name, image_url")
         .order("name");
       data = fallback.data as never;
       error = fallback.error;
@@ -150,7 +149,6 @@ export default function AdminTopicImages() {
       const rows = ((data ?? []) as unknown as Partial<TopicRow>[]).map((row) => ({
         id: row.id ?? "",
         name: row.name ?? "",
-        slug: row.slug ?? "",
         category_name: row.category_name ?? null,
         image_url: row.image_url ?? null,
         pinned_image_id: row.pinned_image_id ?? null,

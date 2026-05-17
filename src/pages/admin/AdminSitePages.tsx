@@ -93,9 +93,8 @@ export default function AdminSitePages() {
           if (!row) return null;
           return (
             <div key={section.slug} className="rounded-lg border p-5 space-y-3 bg-card">
-              <div className="flex items-center justify-between">
+              <div>
                 <h2 className="text-lg font-semibold">{section.label}</h2>
-                <span className="text-xs text-muted-foreground font-mono">{section.slug}</span>
               </div>
 
               <div className="space-y-1.5">

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2, Check, X, Image as ImageIcon, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +17,6 @@ import AdminSortSelect from "@/components/admin/AdminSortSelect";
 interface Topic {
   id: string;
   name: string;
-  slug: string;
   description: string | null;
   category_name: string;
   created_at: string;
@@ -56,8 +56,6 @@ export default function AdminTopics() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Topic | null>(null);
   const [form, setForm] = useState({ name: "", category_name: "" });
-  const [categoryQuery, setCategoryQuery] = useState("");
-  const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
   const [showNameSuggestions, setShowNameSuggestions] = useState(false);
   const [saving, setSaving] = useState(false);
   const [sort, setSort] = useState<SortKey>("name_asc");
@@ -74,7 +72,6 @@ export default function AdminTopics() {
       ? topics.filter(
           (t) =>
             t.name.toLowerCase().includes(q) ||
-            (t.slug ?? "").toLowerCase().includes(q) ||
             (t.category_name ?? "").toLowerCase().includes(q),
         )
       : [...topics]);
@@ -111,7 +108,7 @@ export default function AdminTopics() {
     setLoading(true);
     const { data, error } = await supabase
       .from("topics")
-      .select("id, name, slug, description, category_name, created_at, status, image_url")
+      .select("id, name, description, category_name, created_at, status, image_url")
       .order("name");
 
     if (error) {
@@ -135,14 +132,12 @@ export default function AdminTopics() {
   const openCreate = () => {
     setEditing(null);
     setForm({ name: "", category_name: "" });
-    setCategoryQuery("");
     setDialogOpen(true);
   };
 
   const openEdit = (topic: Topic) => {
     setEditing(topic);
     setForm({ name: topic.name, category_name: topic.category_name || "" });
-    setCategoryQuery(topic.category_name || "");
     setDialogOpen(true);
   };
 
@@ -155,14 +150,21 @@ export default function AdminTopics() {
       toast({ title: "Subject is required", variant: "destructive" });
       return;
     }
+    if (!subjectCategories.includes(form.category_name)) {
+      toast({
+        title: "Pick a subject from the list",
+        description: "Topics with custom subjects won't appear in the directory.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setSaving(true);
-    const slug = editing ? generateSlug(form.name) : generateSlug(form.name);
 
     if (editing) {
       const { error } = await supabase
         .from("topics")
-        .update({ name: form.name, slug, category_name: form.category_name })
+        .update({ name: form.name, category_name: form.category_name })
         .eq("id", editing.id);
 
       if (error) {
@@ -175,7 +177,7 @@ export default function AdminTopics() {
     } else {
       const { error } = await supabase
         .from("topics")
-        .insert({ name: form.name, slug, category_name: form.category_name, description: null, status: "approved" });
+        .insert({ name: form.name, slug: generateSlug(form.name), category_name: form.category_name, description: null, status: "approved" });
 
       if (error) {
         toast({ title: "Error creating topic", description: error.message, variant: "destructive" });
@@ -247,10 +249,6 @@ export default function AdminTopics() {
     fetchTopics();
   };
 
-  const filteredCategories = subjectCategories.filter((c) =>
-    c.toLowerCase().includes(categoryQuery.toLowerCase())
-  );
-
   const filteredTopicNames = topics
     .filter((t) => t.id !== editing?.id)
     .filter((t) => !form.category_name || t.category_name === form.category_name)
@@ -272,7 +270,7 @@ export default function AdminTopics() {
               type="search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search topics, slugs, subjects…"
+              placeholder="Search topics or subjects…"
               className="pl-9 w-72"
             />
           </div>
@@ -303,7 +301,6 @@ export default function AdminTopics() {
               <TableHead className="h-11 px-5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Name</TableHead>
               <TableHead className="h-11 px-5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Subject</TableHead>
               <TableHead className="h-11 px-5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Status</TableHead>
-              <TableHead className="h-11 px-5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Slug</TableHead>
               <TableHead className="h-11 px-5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Posts</TableHead>
               <TableHead className="h-11 px-5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Created</TableHead>
               <TableHead className="h-11 w-[180px] px-5 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-500">Actions</TableHead>
@@ -312,7 +309,7 @@ export default function AdminTopics() {
           <TableBody>
             {sortedTopics.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">No topics found.</TableCell>
+                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">No topics found.</TableCell>
               </TableRow>
             ) : (
               sortedTopics.map((t) => (
@@ -328,7 +325,6 @@ export default function AdminTopics() {
                       {t.status}
                     </Badge>
                   </TableCell>
-                  <TableCell className="px-5 py-4 font-mono text-xs text-slate-500">{t.slug}</TableCell>
                   <TableCell className="px-5 py-4 text-sm font-medium text-slate-900">{postCounts[t.id] || 0}</TableCell>
                   <TableCell className="px-5 py-4 text-sm text-slate-700">{format(parseISO(t.created_at), "MMM d, yyyy")}</TableCell>
                   <TableCell className="px-5 py-4">
@@ -411,47 +407,28 @@ export default function AdminTopics() {
             <DialogTitle>{editing ? "Edit Topic" : "New Topic"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
-            {/* Subject (Category) with autocomplete */}
-            <div className="space-y-2 relative">
+            <div className="space-y-2">
               <Label htmlFor="topic-category">Subject</Label>
-              <Input
-                id="topic-category"
-                value={categoryQuery}
-                onChange={(e) => {
-                  setCategoryQuery(e.target.value);
-                  setForm((p) => ({ ...p, category_name: e.target.value }));
-                  setShowCategorySuggestions(true);
-                }}
-                onClick={() => setShowCategorySuggestions(true)}
-                onBlur={() => setTimeout(() => setShowCategorySuggestions(false), 150)}
-                placeholder="Select or type a subject..."
-                autoComplete="off"
-              />
-              {showCategorySuggestions && filteredCategories.length > 0 && (
-                <ul className="absolute z-50 w-full mt-1 max-h-56 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md">
-                  {filteredCategories.map((c) => (
-                    <li key={c}>
-                      <button
-                        type="button"
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground"
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          setCategoryQuery(c);
-                          setForm((p) => ({ ...p, category_name: c }));
-                          setShowCategorySuggestions(false);
-                        }}
-                      >
-                        {c}
-                      </button>
-                    </li>
+              <Select
+                value={form.category_name}
+                onValueChange={(v) => setForm((p) => ({ ...p, category_name: v }))}
+              >
+                <SelectTrigger id="topic-category">
+                  <SelectValue placeholder="Select a subject..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {subjectCategories.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
                   ))}
-                </ul>
-              )}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Topic Name with autocomplete from existing topics */}
             <div className="space-y-2 relative">
-              <Label htmlFor="topic-name">Name</Label>
+              <Label htmlFor="topic-name">Topic</Label>
               <Input
                 id="topic-name"
                 value={form.name}
