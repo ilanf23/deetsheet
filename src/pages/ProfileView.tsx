@@ -268,6 +268,15 @@ const ProfileView = () => {
     profile?.birth_day as string | null
   );
   const city = [profile?.city, profile?.state, profile?.country].filter(Boolean).join(", ") || null;
+  const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const fullBirthday = (() => {
+    const y = profile?.birth_year as string | null | undefined;
+    const m = profile?.birth_month as string | null | undefined;
+    const d = profile?.birth_day as string | null | undefined;
+    if (!y && !m && !d) return null;
+    const mn = m ? MONTH_NAMES[parseInt(m) - 1] : null;
+    return [mn, d, y].filter(Boolean).join(" ").replace(/ (\d{4})$/, ", $1");
+  })();
   const educationLabel = profile?.education
     ? EDUCATION_LABELS[profile.education as string] || (profile.education as string)
     : null;
