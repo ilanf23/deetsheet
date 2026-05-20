@@ -163,10 +163,30 @@ export const useTopicByName = (topicName: string | undefined) => {
 };
 
 /**
- * Fetch posts for a topic by topic id. Joins profiles for username
- * and topics for the topic/category name so mapPost has everything it
- * needs without extra round trips. Sorted by average rating desc, then
- * rating count — matches the legacy getPostsByTopic ordering.
+ * Compare two posts for ranked ordering within a topic:
+ *   1. Rated posts (rating_count > 0) come before unrated posts.
+ *   2. Higher average_rating first.
+ *   3. Higher rating_count first.
+ *   4. Older created_at first as the final tie-breaker (stable history).
+ */
+const compareRankedPosts = (
+  a: { ratingScore: number; ratingCount: number; createdAt: Date },
+  b: { ratingScore: number; ratingCount: number; createdAt: Date }
+): number => {
+  const aRated = a.ratingCount > 0 ? 1 : 0;
+  const bRated = b.ratingCount > 0 ? 1 : 0;
+  if (aRated !== bRated) return bRated - aRated;
+  if (b.ratingScore !== a.ratingScore) return b.ratingScore - a.ratingScore;
+  if (b.ratingCount !== a.ratingCount) return b.ratingCount - a.ratingCount;
+  return a.createdAt.getTime() - b.createdAt.getTime();
+};
+
+/**
+ * Fetch approved posts for a topic by topic id. Pending/rejected posts are
+ * excluded from the main ranked list — they remain accessible through user
+ * and admin review surfaces. Sorted deterministically: rated posts first,
+ * then by average_rating desc, rating_count desc, with older created_at as
+ * the final tie-breaker.
  */
 export const usePostsByTopic = (topicId: string | undefined) => {
   return useQuery({
@@ -182,25 +202,13 @@ export const usePostsByTopic = (topicId: string | undefined) => {
             "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
         .eq("topic_id", topicId)
-        .order("average_rating", { ascending: false, nullsFirst: false })
-        .order("rating_count", { ascending: false });
+        .eq("status", "approved");
 
       if (error) throw error;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mapped = (data ?? []).map((row: any) => mapPost(row as DbPostRaw));
-      // Surface the viewer's own pending posts at the top of the feed so a
-      // newly-created post is immediately visible to its author (RLS already
-      // restricts pending visibility to author + admins).
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) return mapped;
-      const isOwnPending = (p: PostRow) =>
-        p.status === "pending" && p.authorId === user.id;
-      const own = mapped.filter(isOwnPending);
-      const rest = mapped.filter((p) => !isOwnPending(p));
-      own.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-      return [...own, ...rest];
+      mapped.sort(compareRankedPosts);
+      return mapped;
     },
   });
 };
@@ -264,30 +272,36 @@ export const usePostRanksForTopics = (topicIds: string[]) => {
     queryFn: async (): Promise<Map<string, number>> => {
       const { data, error } = await supabase
         .from("posts")
-        .select("id, topic_id, average_rating, rating_count")
+        .select("id, topic_id, average_rating, rating_count, created_at")
+        .eq("status", "approved")
         .in("topic_id", topicIds);
 
       if (error) throw error;
 
-      const byTopic = new Map<string, Array<{ id: string; avg: number; count: number }>>();
+      const byTopic = new Map<
+        string,
+        Array<{ id: string; ratingScore: number; ratingCount: number; createdAt: Date }>
+      >();
       for (const row of (data ?? []) as Array<{
         id: string;
         topic_id: string;
         average_rating: number | null;
         rating_count: number | null;
+        created_at: string;
       }>) {
         const arr = byTopic.get(row.topic_id) ?? [];
         arr.push({
           id: row.id,
-          avg: Number(row.average_rating ?? 0),
-          count: row.rating_count ?? 0,
+          ratingScore: Number(row.average_rating ?? 0),
+          ratingCount: row.rating_count ?? 0,
+          createdAt: new Date(row.created_at),
         });
         byTopic.set(row.topic_id, arr);
       }
 
       const ranks = new Map<string, number>();
       for (const arr of byTopic.values()) {
-        arr.sort((a, b) => (b.avg !== a.avg ? b.avg - a.avg : b.count - a.count));
+        arr.sort(compareRankedPosts);
         arr.forEach((row, i) => ranks.set(row.id, i + 1));
       }
       return ranks;
@@ -314,6 +328,7 @@ export const useRecentPostsByTopic = (topicId: string | undefined, limit = 5) =>
             "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
         .eq("topic_id", topicId)
+        .eq("status", "approved")
         .order("created_at", { ascending: false })
         .limit(limit);
 

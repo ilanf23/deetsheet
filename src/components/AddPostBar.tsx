@@ -30,7 +30,7 @@ const AddPostBar = ({ topicId, topicName, categoryName, onPostAdded }: AddPostBa
       toast({
         title: "Post submitted",
         description:
-          "You'll see it at the top of this topic, marked 'Pending review' until an admin approves it for everyone else.",
+          "Your post is pending review and will appear in this topic once an admin approves it.",
       });
       onPostAdded();
       setOpen(false);
