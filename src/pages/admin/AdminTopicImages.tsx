@@ -384,7 +384,7 @@ export default function AdminTopicImages() {
     }
     setUploading(true);
     const ext = file.name.split(".").pop() || "jpg";
-    const path = `admin/topic-images/${selectedTopic.id}-${Date.now()}.${ext}`;
+    const path = `${user?.id ?? "admin"}/topic-images/${selectedTopic.id}-${Date.now()}.${ext}`;
     const { error: upErr } = await supabase.storage
       .from("post-images")
       .upload(path, file, { upsert: false });

@@ -226,7 +226,7 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
                 .eq("created_by", p.author_id),
             ]);
 
-          const profile = profileRes.data as
+          const profile = profileRes.data as unknown as
             | (Record<string, unknown> & {
                 id: string;
                 username: string | null;
