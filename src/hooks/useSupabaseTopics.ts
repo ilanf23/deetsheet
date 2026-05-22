@@ -232,6 +232,7 @@ export const useRecentPosts = (limit = 8) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
+        .eq("status", "approved")
         .order("created_at", { ascending: false })
         .limit(Math.max(limit * 10, 100));
 
