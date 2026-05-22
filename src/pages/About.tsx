@@ -2,7 +2,6 @@ import { useState } from "react";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
 import { useSitePages } from "@/hooks/useSitePages";
-import founderImage from "@/assets/founder-fredric-brewer.png";
 
 type Tab = "how-it-works" | "how-it-started";
 
@@ -61,33 +60,22 @@ const About = () => {
           </button>
         </div>
 
-        <div className="grid md:grid-cols-[420px_1fr] gap-8 items-start">
-          <figure className="md:sticky md:top-24">
-            <div className="overflow-hidden rounded-2xl shadow-lg ring-1 ring-border">
-              <img
-                src={founderImage}
-                alt="Fredric Brewer, Founder of DeetSheet"
-                className="w-full h-auto object-cover"
-                loading="lazy"
-              />
-            </div>
-            <figcaption className="mt-3 text-center">
-              <p className="font-heading text-lg font-bold text-foreground leading-tight">
-                Fredric Brewer
-              </p>
-              <p className="text-sm text-secondary font-semibold uppercase tracking-wider mt-1">
-                Founder & Author
-              </p>
-              <p className="text-xs text-muted-foreground mt-1 italic">
-                The voice behind DeetSheet
-              </p>
-            </figcaption>
-          </figure>
-
-          <div>
-            {activeTab === "how-it-works" && renderPageContent(works.content)}
-            {activeTab === "how-it-started" && renderPageContent(started.content)}
-          </div>
+        <div>
+          {activeTab === "how-it-works" && renderPageContent(works.content)}
+          {activeTab === "how-it-started" && (
+            <>
+              {renderPageContent(started.content)}
+              <blockquote className="mt-12 border-l-4 border-secondary pl-8 italic text-foreground">
+                <p className="text-2xl md:text-3xl leading-relaxed">
+                  &ldquo;What we do for ourselves dies with us. What we do for
+                  others and the world remains and is immortal.&rdquo;
+                </p>
+                <footer className="mt-4 text-base text-muted-foreground not-italic">
+                  &mdash; Albert Pine (English author, d.1851)
+                </footer>
+              </blockquote>
+            </>
+          )}
         </div>
       </main>
       <DeetFooter />
