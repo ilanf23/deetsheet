@@ -28,9 +28,9 @@ const AddPostBar = ({ topicId, topicName, categoryName, onPostAdded }: AddPostBa
         image,
       });
       toast({
-        title: "Post submitted",
+        title: "Pending admin approval",
         description:
-          "Your post is pending review and will appear in this topic once an admin approves it.",
+          "Your post is not visible to others yet. It will appear in this topic once an admin approves it.",
       });
       onPostAdded();
       setOpen(false);
