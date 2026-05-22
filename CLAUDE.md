@@ -45,7 +45,7 @@ src/
 - **No hardcoded data**: Never use hardcoded strings, numbers, or mock data in components or pages. All display data must come from Supabase or be defined in constants/config files. No inline placeholder content, fake users, sample posts, or static lists that should be dynamic.
 
 - **Color-coded interactivity (strict, site-wide)**: Text color signals whether text is interactive. This is a semantic contract — never use color purely for decoration.
-  - **Green (`text-primary`, primary HSL `157 60% 30%`)** = clickable / linkable content. Every green string must navigate, open a dialog, trigger an action, or behave as an `<a>` / `<button>` / router link. Hover state (e.g. `hover:underline`) is expected. Examples: topic titles, post titles, usernames, category names, tag pills, breadcrumbs, "See more" links.
+  - **Green (`text-primary`, primary HSL `146 38% 25%`)** = clickable / linkable content. Every green string must navigate, open a dialog, trigger an action, or behave as an `<a>` / `<button>` / router link. Hover state (e.g. `hover:underline`) is expected. Examples: topic titles, post titles, usernames, category names, tag pills, breadcrumbs, "See more" links.
   - **Black / dark foreground (`text-foreground`, `text-card-foreground`)** = static, non-interactive content. Never wrap in a link. Never apply hover-underline. Examples: post body text, descriptions, numeric stats, timestamps, plain labels.
   - **Muted gray (`text-muted-foreground`)** = supporting/secondary static text (subtitles, captions, metadata). Non-interactive, same rules as black.
   - **Coral/orange (`text-secondary`, secondary HSL `20 100% 60%`)** = rating values and rating icons only. Not interactive. Do not use for links or decorative accents.

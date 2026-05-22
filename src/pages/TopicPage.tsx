@@ -160,11 +160,15 @@ const TopicPage = () => {
                 </div>
                 <div className="hidden md:flex items-start gap-4">
                   <FollowTopicButton topicId={topic.id} />
-                  <TopicHeaderImage
-                    src={topic.imageUrl}
-                    alt={topic.name}
-                    onClick={() => setRankOpen(true)}
-                  />
+                  {/* Image is dropped between md and xl where the layout is too
+                      narrow to fit it without overlapping the Related Topics rail */}
+                  <div className="hidden xl:block">
+                    <TopicHeaderImage
+                      src={topic.imageUrl}
+                      alt={topic.name}
+                      onClick={() => setRankOpen(true)}
+                    />
+                  </div>
                 </div>
               </div>
               {/* Mobile: image + follow under the topic title */}

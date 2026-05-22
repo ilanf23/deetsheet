@@ -10,7 +10,7 @@ const Index = () => {
   const [atBottom, setAtBottom] = useState(false);
 
   return (
-    <div className="home-theme min-h-screen lg:h-screen lg:overflow-hidden flex flex-col bg-background">
+    <div className="min-h-screen lg:h-screen lg:overflow-hidden flex flex-col bg-background">
       <DeetHeader />
       <main className="flex-1 lg:min-h-0 flex flex-col">
         {!loading && !user && <HeroBanner />}
