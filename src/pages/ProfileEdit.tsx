@@ -161,6 +161,7 @@ const ProfileEdit = () => {
       name: "",
       entityType: "",
       sex: "",
+      orientation: "",
       birthMonth: "",
       birthDay: "",
       birthYear: "",
