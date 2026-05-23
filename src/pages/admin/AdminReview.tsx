@@ -449,6 +449,10 @@ export default function AdminReview() {
                     </button>
                   )}
                 </div>
+                </div>
+                {item.kind === "post" && author?.id && (
+                  <AuthorPriorPosts authorId={author.id} excludePostId={item.id} />
+                )}
               </div>
             );
           })}
