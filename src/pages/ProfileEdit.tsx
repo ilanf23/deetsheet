@@ -303,6 +303,7 @@ const ProfileEdit = () => {
         name: values.name,
         entity_type: values.entityType,
         sex: values.sex,
+        orientation: values.orientation,
         birth_month: values.birthMonth,
         birth_day: values.birthDay,
         birth_year: values.birthYear,
