@@ -357,11 +357,6 @@ export default function AdminReview() {
                 }}
               >
                 <div className="flex gap-4">
-                style={{
-                  backgroundColor: "hsl(var(--admin-surface))",
-                  border: "1px solid hsl(var(--admin-border))",
-                }}
-              >
                 <div className="flex-1 min-w-0 space-y-2">
                   <div className="flex items-center gap-3 text-[12px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>
                     <TypeBadge kind={item.kind} />
