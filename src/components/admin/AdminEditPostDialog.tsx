@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Hash, ImagePlus, MessageSquare, User as UserIcon, X } from "lucide-react";
+import { ChevronDown, Hash, ImagePlus, MessageSquare, User as UserIcon, X } from "lucide-react";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -150,14 +150,17 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
   // load lazily the first time their tab is opened; follow lists come from the
   // shared profile hooks, also gated on the active tab.
   const [authorTab, setAuthorTab] = useState("posts");
+  // Sections (Posts/Topics/Comments/Following/Followers) start collapsed so admins
+  // see a compact summary first; expanding is opt-in via the chevron on each tab.
+  const [authorSectionOpen, setAuthorSectionOpen] = useState(false);
   const [authorTopics, setAuthorTopics] = useState<AuthorTopic[] | null>(null);
   const [authorComments, setAuthorComments] = useState<AuthorComment[] | null>(null);
   const { data: followCounts } = useProfileFollowCounts(author?.id);
   const { data: followingData } = useFollowing(author?.id, {
-    enabled: !!author && authorTab === "following",
+    enabled: !!author && authorSectionOpen && authorTab === "following",
   });
   const { data: followersData } = useFollowers(author?.id, {
-    enabled: !!author && authorTab === "followers",
+    enabled: !!author && authorSectionOpen && authorTab === "followers",
   });
 
   useEffect(() => {
@@ -191,6 +194,7 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
         setStateCode("");
         setAuthor(null);
         setAuthorTab("posts");
+        setAuthorSectionOpen(false);
         setAuthorTopics(null);
         setAuthorComments(null);
 
@@ -338,7 +342,7 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
     if (!author) return;
     let cancelled = false;
 
-    if (authorTab === "topics" && authorTopics === null) {
+    if (authorSectionOpen && authorTab === "topics" && authorTopics === null) {
       void supabase
         .from("topics")
         .select("id, name, description, created_at")
@@ -363,7 +367,7 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
         });
     }
 
-    if (authorTab === "comments" && authorComments === null) {
+    if (authorSectionOpen && authorTab === "comments" && authorComments === null) {
       void supabase
         .from("comments")
         .select("id, content, created_at, posts(title)")
@@ -393,7 +397,7 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
     return () => {
       cancelled = true;
     };
-  }, [authorTab, author, authorTopics, authorComments]);
+  }, [authorTab, authorSectionOpen, author, authorTopics, authorComments]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -710,7 +714,9 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
                     </div>
                   </div>
 
-                  {/* Activity tabs — mirrors the public profile page */}
+                  {/* Activity tabs — mirrors the public profile page, but each
+                      section is collapsed by default. Clicking a tab expands it;
+                      clicking the active tab again collapses it. */}
                   <Tabs value={authorTab} onValueChange={setAuthorTab}>
                     <TabsList className="flex h-auto w-full flex-wrap justify-start gap-0 rounded-none border-b bg-transparent p-0">
                       {[
@@ -727,20 +733,44 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
                           label: "Followers",
                           count: followCounts?.followerCount ?? 0,
                         },
-                      ].map((t) => (
-                        <TabsTrigger
-                          key={t.value}
-                          value={t.value}
-                          className="rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-                        >
-                          {t.label}
-                          <span className="ml-1.5 text-xs text-muted-foreground">
-                            {t.count}
-                          </span>
-                        </TabsTrigger>
-                      ))}
+                      ].map((t) => {
+                        const isActive = authorTab === t.value;
+                        const isExpanded = isActive && authorSectionOpen;
+                        return (
+                          <TabsTrigger
+                            key={t.value}
+                            value={t.value}
+                            onClick={(e) => {
+                              // Intercept Tabs' default behavior so the same tab
+                              // can toggle its section open/closed.
+                              e.preventDefault();
+                              if (isActive) {
+                                setAuthorSectionOpen((prev) => !prev);
+                              } else {
+                                setAuthorTab(t.value);
+                                setAuthorSectionOpen(true);
+                              }
+                            }}
+                            aria-expanded={isExpanded}
+                            className="rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+                          >
+                            {t.label}
+                            <span className="ml-1.5 text-xs text-muted-foreground">
+                              {t.count}
+                            </span>
+                            <ChevronDown
+                              className={`ml-1 h-3.5 w-3.5 text-muted-foreground transition-transform ${
+                                isExpanded ? "rotate-180" : ""
+                              }`}
+                              aria-hidden="true"
+                            />
+                          </TabsTrigger>
+                        );
+                      })}
                     </TabsList>
 
+                    {authorSectionOpen && (
+                      <>
                     {/* Posts */}
                     <TabsContent value="posts" className="mt-3">
                       {author.posts.length === 0 ? (
@@ -909,26 +939,13 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
                         </div>
                       )}
                     </TabsContent>
+                      </>
+                    )}
                   </Tabs>
                 </div>
               </div>
             )}
 
-            <div className="space-y-2 pt-1">
-              <Label className="text-xs text-muted-foreground">Location (locked)</Label>
-              <div className="flex items-center gap-2">
-                <Checkbox id="edit-national" checked={isNational} disabled />
-                <Label htmlFor="edit-national" className="font-normal text-muted-foreground">
-                  National (no city)
-                </Label>
-              </div>
-              {!isNational && (
-                <div className="grid grid-cols-[1fr_120px] gap-2">
-                  <Input placeholder="City" value={city} readOnly disabled />
-                  <Input placeholder="ST" maxLength={2} value={stateCode} readOnly disabled />
-                </div>
-              )}
-            </div>
           </div>
         )}
 

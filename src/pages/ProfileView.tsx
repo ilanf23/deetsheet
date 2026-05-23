@@ -18,6 +18,8 @@ import {
   Film,
   BookOpen,
   Building2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -151,6 +153,7 @@ const ProfileView = () => {
   const { userId } = useParams<{ userId: string }>();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("posts");
+  const [moreInfoExpanded, setMoreInfoExpanded] = useState(false);
 
   // Determine which profile to view: URL param or logged-in user
   const targetUserId = userId || user?.id;
@@ -510,8 +513,23 @@ const ProfileView = () => {
                     )}
                   </p>
                 ) : null}
-                {detailGroups.length > 0 && (
-                  <div className="mt-5 space-y-5">
+                {(detailGroups.length > 0 || hasWork || hasInterests || showOwnEmptyState) && (
+                  <button
+                    type="button"
+                    onClick={() => setMoreInfoExpanded((v) => !v)}
+                    aria-expanded={moreInfoExpanded}
+                    className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-5"
+                  >
+                    more info...
+                    {moreInfoExpanded ? (
+                      <ChevronUp className="h-3 w-3" />
+                    ) : (
+                      <ChevronDown className="h-3 w-3" />
+                    )}
+                  </button>
+                )}
+                {moreInfoExpanded && detailGroups.length > 0 && (
+                  <div className="mt-3 space-y-5">
                     {detailGroups.map((group) => (
                       <div key={group.title} className="border-t pt-4">
                         <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -533,66 +551,9 @@ const ProfileView = () => {
                 )}
               </section>
 
-              {/* Education + Work — side-by-side cards, each self-hides when empty */}
-              {(hasEducation || hasWork || showOwnEmptyState) && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                  {hasEducation ? (
-                    <Card className="bg-card">
-                      <CardContent className="pt-5">
-                        <div className="flex items-center gap-2 mb-3 text-muted-foreground">
-                          <GraduationCap className="h-4 w-4" />
-                          <h3 className="text-xs font-semibold uppercase tracking-wider">
-                            Education
-                          </h3>
-                        </div>
-                        <div className="space-y-2 text-sm">
-                          {educationLabel && (
-                            <div>
-                              <p className="font-medium">{educationLabel}</p>
-                              <p className="text-muted-foreground text-xs">Education level</p>
-                            </div>
-                          )}
-                          {profile?.college && (
-                            <div>
-                              <p className="font-medium">{profile.college as string}</p>
-                              {collegeLine && (
-                                <p className="text-muted-foreground text-xs">{collegeLine}</p>
-                              )}
-                            </div>
-                          )}
-                          {!profile?.college && collegeLine && (
-                            <div>
-                              <p className="font-medium capitalize">{collegeLine}</p>
-                            </div>
-                          )}
-                          {profile?.high_school && (
-                            <div>
-                              <p className="font-medium">{profile.high_school as string}</p>
-                              <p className="text-muted-foreground text-xs">High school</p>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ) : showOwnEmptyState ? (
-                    <Card className="bg-card border-dashed">
-                      <CardContent className="pt-5">
-                        <div className="flex items-center gap-2 mb-2 text-muted-foreground">
-                          <GraduationCap className="h-4 w-4" />
-                          <h3 className="text-xs font-semibold uppercase tracking-wider">
-                            Education
-                          </h3>
-                        </div>
-                        <button
-                          onClick={() => navigate("/profile/edit")}
-                          className="text-sm text-primary hover:underline"
-                        >
-                          Add your education
-                        </button>
-                      </CardContent>
-                    </Card>
-                  ) : null}
-
+              {/* Work — single card, self-hides when empty (gated by more info toggle) */}
+              {moreInfoExpanded && (hasWork || showOwnEmptyState) && (
+                <div className="mb-6">
                   {hasWork ? (
                     <Card className="bg-card">
                       <CardContent className="pt-5">
@@ -636,8 +597,8 @@ const ProfileView = () => {
                 </div>
               )}
 
-              {/* Interests — only when at least one field exists */}
-              {hasInterests && (
+              {/* Interests — only when at least one field exists (gated by more info toggle) */}
+              {moreInfoExpanded && hasInterests && (
                 <section className="mb-6">
                   <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
                     A little about me
@@ -660,7 +621,7 @@ const ProfileView = () => {
                   </div>
                 </section>
               )}
-              {!hasInterests && showOwnEmptyState && (
+              {moreInfoExpanded && !hasInterests && showOwnEmptyState && (
                 <section className="mb-6">
                   <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                     A little about me
@@ -676,7 +637,7 @@ const ProfileView = () => {
             </div>
 
             {/* Right sidebar */}
-            <aside className="space-y-6 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:sticky lg:top-20 lg:self-start">
+            <aside className="space-y-6 lg:col-start-2 lg:row-start-1 lg:sticky lg:top-20 lg:self-start">
               {/* Credentials & Highlights */}
               <Card className="bg-card">
                 <CardContent className="pt-5">
@@ -715,7 +676,7 @@ const ProfileView = () => {
             </aside>
 
           {/* Tabs section */}
-          <div className="mt-8 min-w-0 lg:col-start-1 lg:row-start-2">
+          <div className="mt-8 min-w-0 lg:col-span-2 lg:row-start-2">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="bg-transparent border-b rounded-none w-full justify-start h-auto p-0 gap-0">
                 {TABS.map((tab) => (
@@ -740,89 +701,92 @@ const ProfileView = () => {
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="space-y-4">
-                    {userPosts.map((post) => (
-                      <Card key={post.id} className="bg-card hover:shadow-md transition-shadow">
-                        <CardContent className="pt-4 pb-3">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-                                <Badge variant="secondary" className="text-xs font-normal">
-                                  {post.topic_name}
-                                </Badge>
-                                <span>{getTimeAgo(post.created_at)}</span>
+                  <div className="space-y-2">
+                    {userPosts.map((post) => {
+                      const postHref = `/topic/${encodeURIComponent(post.topic_name)}/post/${buildPostSlug(post.title || post.content, post.id) || post.id}`;
+                      return (
+                        <Card key={post.id} className="group bg-card hover:shadow-md transition-shadow">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1 min-w-0">
+                                {post.title && (
+                                  <a
+                                    href={postHref}
+                                    className="block font-semibold text-base text-primary hover:underline truncate mb-1"
+                                  >
+                                    {formatTitle(post.title)}
+                                  </a>
+                                )}
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1.5">
+                                  <a
+                                    href={`/topic/${encodeURIComponent(post.topic_name)}`}
+                                    className="text-primary hover:underline"
+                                  >
+                                    {post.topic_name}
+                                  </a>
+                                  <span aria-hidden>·</span>
+                                  <span>{getTimeAgo(post.created_at)}</span>
+                                  <span aria-hidden>·</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => navigate(`${postHref}#comments`)}
+                                    className="inline-flex items-center gap-1 hover:text-foreground"
+                                  >
+                                    <MessageSquare className="h-3 w-3" />
+                                    <span className="tabular-nums">{post.comment_count}</span>
+                                  </button>
+                                </div>
+                                <p className="text-sm text-muted-foreground line-clamp-2 break-words">
+                                  {post.content}
+                                </p>
                               </div>
-                              {post.title && (
-                                <h4 className="font-semibold text-sm mb-1 line-clamp-1 break-words">
-                                  {formatTitle(post.title)}
-                                </h4>
-                              )}
-                              <p className="text-sm text-muted-foreground line-clamp-2 break-words">
-                                {post.content}
-                              </p>
-                            </div>
-                          </div>
-                          <Separator className="my-3" />
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-xs gap-1 text-muted-foreground"
-                              onClick={() =>
-                                navigate(
-                                  `/topic/${encodeURIComponent(post.topic_name)}/post/${buildPostSlug(post.title || post.content, post.id) || post.id}#comments`
-                                )
-                              }
-                            >
-                              <MessageSquare className="h-3.5 w-3.5" />
-                              {post.comment_count}
-                            </Button>
-                            {isOwnProfile && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 text-xs gap-1 text-muted-foreground ml-auto hover:text-primary"
-                                onClick={() => setEditPostId(post.id)}
-                              >
-                                <Pencil className="h-3.5 w-3.5" />
-                                Edit
-                              </Button>
-                            )}
-                            {isOwnProfile && (
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
+                              {isOwnProfile && (
+                                <div className="flex items-center gap-0.5 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                                   <Button
                                     variant="ghost"
-                                    size="sm"
-                                    className="h-7 text-xs gap-1 text-muted-foreground hover:text-destructive"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                    onClick={() => setEditPostId(post.id)}
+                                    title="Edit"
                                   >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                    Delete
+                                    <Pencil className="h-3.5 w-3.5" />
                                   </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete this post?</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      The post will be removed from public view. This cannot be undone from your profile.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleDeletePost(post.id)}
-                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                    >
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                        title="Delete"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Delete this post?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          The post will be removed from public view. This cannot be undone from your profile.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction
+                                          onClick={() => handleDeletePost(post.id)}
+                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                        >
+                                          Delete
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 )}
               </TabsContent>
@@ -832,7 +796,7 @@ const ProfileView = () => {
                   <div className="mb-4">
                     <Button size="sm" onClick={() => setCreateTopicOpen(true)}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Create Topic
+                      Suggest a Topic
                     </Button>
                     <CreateTopicDialog
                       open={createTopicOpen}
