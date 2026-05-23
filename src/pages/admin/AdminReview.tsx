@@ -5,7 +5,90 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
 import AdminEditPostDialog from "@/components/admin/AdminEditPostDialog";
-import { Hash, FileText } from "lucide-react";
+import { Hash, FileText, ChevronDown, ChevronRight } from "lucide-react";
+
+type PriorPost = {
+  id: string;
+  title: string;
+  status: string;
+  created_at: string;
+  topic_id: string;
+  topic_name?: string | null;
+};
+
+function AuthorPriorPosts({ authorId, excludePostId }: { authorId: string; excludePostId: string }) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [posts, setPosts] = useState<PriorPost[]>([]);
+
+  const toggle = async () => {
+    const next = !open;
+    setOpen(next);
+    if (next && !loaded) {
+      setLoading(true);
+      const { data } = await supabase
+        .from("posts")
+        .select("id, title, status, created_at, topic_id")
+        .eq("author_id", authorId)
+        .neq("id", excludePostId)
+        .order("created_at", { ascending: false })
+        .limit(25);
+      const rows = (data ?? []) as PriorPost[];
+      const topicIds = Array.from(new Set(rows.map((r) => r.topic_id).filter(Boolean)));
+      if (topicIds.length > 0) {
+        const { data: tdata } = await supabase.from("topics").select("id, name").in("id", topicIds);
+        const tmap = new Map<string, string>();
+        (tdata ?? []).forEach((t: any) => tmap.set(t.id, t.name));
+        rows.forEach((r) => (r.topic_name = tmap.get(r.topic_id) ?? null));
+      }
+      setPosts(rows);
+      setLoaded(true);
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mt-3 pt-3 border-t" style={{ borderColor: "hsl(var(--admin-border))" }}>
+      <button
+        type="button"
+        onClick={toggle}
+        className="inline-flex items-center gap-1.5 text-[12px] font-medium"
+        style={{ color: "hsl(var(--admin-fg-muted))" }}
+      >
+        {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+        {open ? "Hide" : "Show"} this user's prior posts
+      </button>
+      {open && (
+        <div className="mt-2 pl-5">
+          {loading ? (
+            <div className="text-[12px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>Loading…</div>
+          ) : posts.length === 0 ? (
+            <div className="text-[12px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>No other posts by this user.</div>
+          ) : (
+            <ul className="space-y-1.5">
+              {posts.map((p) => (
+                <li key={p.id} className="text-[13px] flex items-center gap-2 flex-wrap">
+                  <Link
+                    to={p.topic_name ? `/topic/${p.topic_name}` : "#"}
+                    className="hover:underline"
+                    style={{ color: "hsl(var(--admin-primary))" }}
+                  >
+                    {p.title}
+                  </Link>
+                  <span className="text-[11px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>
+                    {p.status} · {formatDistanceToNow(parseISO(p.created_at))} ago
+                    {p.topic_name ? ` · in ${p.topic_name}` : ""}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 type Author = { id: string; name: string | null; username: string | null; avatar_url: string | null };
 
@@ -267,12 +350,13 @@ export default function AdminReview() {
             return (
               <div
                 key={`${item.kind}-${item.id}`}
-                className="rounded-xl p-5 flex gap-4"
+                className="rounded-xl p-5"
                 style={{
                   backgroundColor: "hsl(var(--admin-surface))",
                   border: "1px solid hsl(var(--admin-border))",
                 }}
               >
+                <div className="flex gap-4">
                 <div className="flex-1 min-w-0 space-y-2">
                   <div className="flex items-center gap-3 text-[12px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>
                     <TypeBadge kind={item.kind} />
@@ -365,6 +449,10 @@ export default function AdminReview() {
                     </button>
                   )}
                 </div>
+                </div>
+                {item.kind === "post" && author?.id && (
+                  <AuthorPriorPosts authorId={author.id} excludePostId={item.id} />
+                )}
               </div>
             );
           })}
