@@ -706,6 +706,30 @@ const ProfileEdit = () => {
                         )}
                       />
 
+                      <FormField
+                        control={form.control}
+                        name="orientation"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Sexual Orientation</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="straight">Straight</SelectItem>
+                                <SelectItem value="gay">Gay</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+
                       <div>
                         <Label className="text-sm">Date of Birth</Label>
                         <div className="mt-1.5 grid grid-cols-[1fr_64px_80px] gap-2">
