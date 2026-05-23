@@ -315,6 +315,7 @@ export type Database = {
           location_id: string | null
           major: string | null
           name: string | null
+          orientation: string | null
           reading: string | null
           sex: string | null
           state: string | null
@@ -347,6 +348,7 @@ export type Database = {
           location_id?: string | null
           major?: string | null
           name?: string | null
+          orientation?: string | null
           reading?: string | null
           sex?: string | null
           state?: string | null
@@ -379,6 +381,7 @@ export type Database = {
           location_id?: string | null
           major?: string | null
           name?: string | null
+          orientation?: string | null
           reading?: string | null
           sex?: string | null
           state?: string | null
