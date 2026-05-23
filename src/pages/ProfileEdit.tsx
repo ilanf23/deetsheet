@@ -186,6 +186,7 @@ const ProfileEdit = () => {
           name: data.name || "",
           entityType: data.entity_type || "",
           sex: data.sex || "",
+          orientation: (data as any).orientation || "",
           birthMonth: data.birth_month || "",
           birthDay: data.birth_day || "",
           birthYear: data.birth_year || "",
