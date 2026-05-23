@@ -520,7 +520,7 @@ const ProfileView = () => {
                     aria-expanded={moreInfoExpanded}
                     className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-5"
                   >
-                    more info...
+                    More Info...
                     {moreInfoExpanded ? (
                       <ChevronUp className="h-3 w-3" />
                     ) : (
