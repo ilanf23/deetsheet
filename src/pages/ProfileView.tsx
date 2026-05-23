@@ -320,6 +320,7 @@ const ProfileView = () => {
       title: "Personal",
       items: [
         { label: "Sex", value: formatTitleValue(profile?.sex) },
+        { label: "Orientation", value: formatTitleValue((profile as any)?.orientation) },
         { label: "Age", value: age !== null ? `${age} years old` : null },
         { label: "Birthday", value: fullBirthday },
         { label: "Lives in", value: city },
