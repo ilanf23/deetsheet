@@ -124,7 +124,7 @@ const EDUCATION_LABELS: Record<string, string> = {
 // Profile columns this page actually reads. Selecting only what we render
 // shaves a meaningful chunk of bytes off each profile fetch.
 const PROFILE_COLUMNS =
-  "id, name, username, avatar_url, bio, sex, birth_year, birth_month, birth_day, city, state, country, education, high_school, college, degree, major, job, entity_type, favorite_movie, reading, city_born, created_at";
+  "id, name, username, avatar_url, bio, sex, orientation, birth_year, birth_month, birth_day, city, state, country, education, high_school, college, degree, major, job, entity_type, favorite_movie, reading, city_born, created_at";
 
 function formatProfileValue(value: unknown): string | null {
   if (typeof value !== "string") return null;
