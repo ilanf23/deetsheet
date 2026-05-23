@@ -81,6 +81,7 @@ const profileSchema = z.object({
   name: z.string().optional().default(""),
   entityType: z.string().optional().default(""),
   sex: z.string().optional().default(""),
+  orientation: z.string().optional().default(""),
   birthMonth: z.string().optional().default(""),
   birthDay: z.string().optional().default(""),
   birthYear: z.string().optional().default(""),
