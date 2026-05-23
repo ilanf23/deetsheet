@@ -81,6 +81,7 @@ const profileSchema = z.object({
   name: z.string().optional().default(""),
   entityType: z.string().optional().default(""),
   sex: z.string().optional().default(""),
+  orientation: z.string().optional().default(""),
   birthMonth: z.string().optional().default(""),
   birthDay: z.string().optional().default(""),
   birthYear: z.string().optional().default(""),
@@ -160,6 +161,7 @@ const ProfileEdit = () => {
       name: "",
       entityType: "",
       sex: "",
+      orientation: "",
       birthMonth: "",
       birthDay: "",
       birthYear: "",
@@ -175,7 +177,7 @@ const ProfileEdit = () => {
       const { data } = await supabase
         .from("profiles")
         .select(
-          "username, name, entity_type, sex, birth_month, birth_day, birth_year, city, state, country, bio, education, high_school, college, degree, major, job, favorite_movie, reading, city_born, avatar_url, email_frequency, email_on_message, email_on_comment, email_on_follow, email_on_post_edit, email_top_posts",
+          "username, name, entity_type, sex, orientation, birth_month, birth_day, birth_year, city, state, country, bio, education, high_school, college, degree, major, job, favorite_movie, reading, city_born, avatar_url, email_frequency, email_on_message, email_on_comment, email_on_follow, email_on_post_edit, email_top_posts",
         )
         .eq("id", user.id)
         .single();
@@ -184,6 +186,7 @@ const ProfileEdit = () => {
           name: data.name || "",
           entityType: data.entity_type || "",
           sex: data.sex || "",
+          orientation: (data as any).orientation || "",
           birthMonth: data.birth_month || "",
           birthDay: data.birth_day || "",
           birthYear: data.birth_year || "",
@@ -300,6 +303,7 @@ const ProfileEdit = () => {
         name: values.name,
         entity_type: values.entityType,
         sex: values.sex,
+        orientation: values.orientation,
         birth_month: values.birthMonth,
         birth_day: values.birthDay,
         birth_year: values.birthYear,
@@ -701,6 +705,30 @@ const ProfileEdit = () => {
                           </FormItem>
                         )}
                       />
+
+                      <FormField
+                        control={form.control}
+                        name="orientation"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Sexual Orientation</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select..." />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="straight">Straight</SelectItem>
+                                <SelectItem value="gay">Gay</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
 
                       <div>
                         <Label className="text-sm">Date of Birth</Label>
