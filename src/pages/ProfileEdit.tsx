@@ -177,7 +177,7 @@ const ProfileEdit = () => {
       const { data } = await supabase
         .from("profiles")
         .select(
-          "username, name, entity_type, sex, birth_month, birth_day, birth_year, city, state, country, bio, education, high_school, college, degree, major, job, favorite_movie, reading, city_born, avatar_url, email_frequency, email_on_message, email_on_comment, email_on_follow, email_on_post_edit, email_top_posts",
+          "username, name, entity_type, sex, orientation, birth_month, birth_day, birth_year, city, state, country, bio, education, high_school, college, degree, major, job, favorite_movie, reading, city_born, avatar_url, email_frequency, email_on_message, email_on_comment, email_on_follow, email_on_post_edit, email_top_posts",
         )
         .eq("id", user.id)
         .single();
