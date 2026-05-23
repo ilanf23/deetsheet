@@ -462,6 +462,9 @@ const ProfileView = () => {
                   {profile?.sex && (
                     <span className="capitalize">{profile.sex as string}</span>
                   )}
+                  {(profile as any)?.orientation && (
+                    <span className="capitalize">{(profile as any).orientation as string}</span>
+                  )}
                   {age !== null && <span>{age} years old</span>}
                   {fullBirthday && <span>Born {fullBirthday}</span>}
                   {city && (
