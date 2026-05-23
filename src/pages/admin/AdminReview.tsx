@@ -350,7 +350,13 @@ export default function AdminReview() {
             return (
               <div
                 key={`${item.kind}-${item.id}`}
-                className="rounded-xl p-5 flex gap-4"
+                className="rounded-xl p-5"
+                style={{
+                  backgroundColor: "hsl(var(--admin-surface))",
+                  border: "1px solid hsl(var(--admin-border))",
+                }}
+              >
+                <div className="flex gap-4">
                 style={{
                   backgroundColor: "hsl(var(--admin-surface))",
                   border: "1px solid hsl(var(--admin-border))",
