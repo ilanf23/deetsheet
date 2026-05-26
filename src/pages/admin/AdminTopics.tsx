@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -63,6 +64,7 @@ export default function AdminTopics() {
   const [sort, setSort] = useState<SortKey>("name_asc");
   const [search, setSearch] = useState("");
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const sortedTopics = useMemo(() => {
     const cmpStr = (a: string, b: string) =>
@@ -223,8 +225,12 @@ export default function AdminTopics() {
       toast({ title: "Image must be 5MB or smaller", variant: "destructive" });
       return;
     }
+    if (!user) {
+      toast({ title: "Not signed in", variant: "destructive" });
+      return;
+    }
     const ext = file.name.split(".").pop() || "jpg";
-    const path = `admin/topics/${topic.id}-${Date.now()}.${ext}`;
+    const path = `${user.id}/topics/${topic.id}-${Date.now()}.${ext}`;
     const { error: upErr } = await supabase.storage
       .from("post-images")
       .upload(path, file, { upsert: false });
