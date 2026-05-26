@@ -199,40 +199,42 @@ const TopicPage = () => {
                 categoryName={topic.categoryName}
                 primaryImage={topic.imageUrl}
               />
-              {!!user && (
-                <div
-                  aria-hidden
-                  className="flex items-baseline gap-3 px-3 -mx-3 pb-2 text-sm text-muted-foreground"
-                >
-                  <span className="w-6 shrink-0" />
-                  <span className="flex-1 min-w-0" />
-                  <span className="shrink-0 w-[72px] ml-4 text-center">Rating</span>
-                  <span className="shrink-0 -ml-4 text-muted-foreground/60" aria-hidden>|</span>
-                  <span className="shrink-0 w-6 text-left">You</span>
+              <div className="bg-card rounded-md border border-border p-4">
+                {!!user && (
+                  <div
+                    aria-hidden
+                    className="flex items-baseline gap-3 px-3 -mx-3 pb-2 text-sm text-muted-foreground"
+                  >
+                    <span className="w-6 shrink-0" />
+                    <span className="flex-1 min-w-0" />
+                    <span className="shrink-0 w-[72px] ml-4 text-center">Rating</span>
+                    <span className="shrink-0 -ml-4 text-muted-foreground/60" aria-hidden>|</span>
+                    <span className="shrink-0 w-6 text-left">You</span>
+                  </div>
+                )}
+                <div className="divide-y divide-border border-y border-border rounded-t-md">
+                  {visiblePosts.map((post, i) => (
+                    <TopicPostListItem
+                      key={post.id}
+                      post={post}
+                      rank={i + 1}
+                      topicName={topic.name}
+                      topicId={topic.id}
+                      showRanking={!!user}
+                    />
+                  ))}
                 </div>
-              )}
-              <div className="divide-y divide-border border-y border-border rounded-t-md">
-                {visiblePosts.map((post, i) => (
-                  <TopicPostListItem
-                    key={post.id}
-                    post={post}
-                    rank={i + 1}
-                    topicName={topic.name}
-                    topicId={topic.id}
-                    showRanking={!!user}
-                  />
-                ))}
+                {!loading && !!user && topic && (
+                  <div className="mt-6">
+                    <AddPostBar
+                      topicId={topic.id}
+                      topicName={topic.name}
+                      categoryName={topic.categoryName}
+                      onPostAdded={refreshPosts}
+                    />
+                  </div>
+                )}
               </div>
-              {!loading && !!user && topic && (
-                <div className="mt-6">
-                  <AddPostBar
-                    topicId={topic.id}
-                    topicName={topic.name}
-                    categoryName={topic.categoryName}
-                    onPostAdded={refreshPosts}
-                  />
-                </div>
-              )}
               <TopicPaginationFooter
                 size={size}
                 total={posts.length}
