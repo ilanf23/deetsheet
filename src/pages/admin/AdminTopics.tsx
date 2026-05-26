@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { format, parseISO } from "date-fns";
 import { subjectCategories } from "@/data/seedData";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
+import { getTopicSubtitle } from "@/hooks/useSupabaseTopics";
 
 interface Topic {
   id: string;
