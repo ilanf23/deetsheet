@@ -56,7 +56,7 @@ export default function AdminTopics() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Topic | null>(null);
-  const [form, setForm] = useState({ name: "", category_name: "" });
+  const [form, setForm] = useState({ name: "", category_name: "", subtitle_override: "" });
   const [showNameSuggestions, setShowNameSuggestions] = useState(false);
   const [saving, setSaving] = useState(false);
   const [sort, setSort] = useState<SortKey>("name_asc");
