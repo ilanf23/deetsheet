@@ -294,6 +294,7 @@ const ProfileView = () => {
   const city = [profile?.city, profile?.state, profile?.country].filter(Boolean).join(", ") || null;
   const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   const fullBirthday = (() => {
+    if (hideAge) return null;
     const y = profile?.birth_year as string | null | undefined;
     const m = profile?.birth_month as string | null | undefined;
     const d = profile?.birth_day as string | null | undefined;
