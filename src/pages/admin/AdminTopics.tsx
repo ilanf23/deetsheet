@@ -225,8 +225,12 @@ export default function AdminTopics() {
       toast({ title: "Image must be 5MB or smaller", variant: "destructive" });
       return;
     }
+    if (!user) {
+      toast({ title: "Not signed in", variant: "destructive" });
+      return;
+    }
     const ext = file.name.split(".").pop() || "jpg";
-    const path = `admin/topics/${topic.id}-${Date.now()}.${ext}`;
+    const path = `${user.id}/topics/${topic.id}-${Date.now()}.${ext}`;
     const { error: upErr } = await supabase.storage
       .from("post-images")
       .upload(path, file, { upsert: false });
