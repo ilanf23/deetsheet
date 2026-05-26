@@ -148,7 +148,7 @@ const TopicPage = () => {
             <div className="lg:h-full lg:overflow-y-auto lg:pr-2">
               <div className="grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-5">
                 <div className={`${mobileTab === "posts" ? "block" : "hidden"} lg:block min-w-0 pt-4`}>
-              <div className="min-w-0">
+              <div className="min-w-0 bg-card rounded-md border border-border p-4">
               <div className="mb-3 flex items-start justify-between gap-4">
                 <div className="min-w-0 pl-1.5">
                   <div className="flex items-baseline gap-3">
