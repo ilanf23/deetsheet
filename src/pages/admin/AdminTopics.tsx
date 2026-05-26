@@ -165,7 +165,7 @@ export default function AdminTopics() {
     if (editing) {
       const { error } = await supabase
         .from("topics")
-        .update({ name: form.name, category_name: form.category_name })
+        .update({ name: form.name, category_name: form.category_name, subtitle_override: form.subtitle_override.trim() || null })
         .eq("id", editing.id);
 
       if (error) {
@@ -178,7 +178,7 @@ export default function AdminTopics() {
     } else {
       const { error } = await supabase
         .from("topics")
-        .insert({ name: form.name, slug: generateSlug(form.name), category_name: form.category_name, description: null, status: "approved" });
+        .insert({ name: form.name, slug: generateSlug(form.name), category_name: form.category_name, description: null, status: "approved", subtitle_override: form.subtitle_override.trim() || null });
 
       if (error) {
         toast({ title: "Error creating topic", description: error.message, variant: "destructive" });
