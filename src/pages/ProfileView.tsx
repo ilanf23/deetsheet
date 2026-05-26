@@ -316,7 +316,7 @@ const ProfileView = () => {
     (isOwnProfile ? user?.email?.split("@")[0] : null) ||
     "User";
   const email = isOwnProfile ? (user?.email || "") : "";
-  const hideAge = Boolean((profile as any)?.hide_age) && !isOwnProfile;
+  const hideAge = Boolean((profile as any)?.hide_age);
   const age = hideAge ? null : calculateAge(
     profile?.birth_year as string | null,
     profile?.birth_month as string | null,
