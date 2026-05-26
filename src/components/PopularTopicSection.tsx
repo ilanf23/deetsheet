@@ -12,7 +12,9 @@ interface PopularTopicSectionProps {
 const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const subtitle = getTopicSubtitle(topic.name, topic.categoryName);
+  // dbTopic comes from Supabase below; use its override if present, otherwise fall back to none
+  const { data: dbTopic } = useTopicByName(topic.name);
+  const subtitle = getTopicSubtitle(topic.name, topic.categoryName, dbTopic?.subtitleOverride);
 
   // Resolve this topic against the Supabase `topics` table so we can pull real
   // posts (with UUID ids + live average_rating). Falls back to seed data only
