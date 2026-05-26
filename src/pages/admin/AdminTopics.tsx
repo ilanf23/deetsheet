@@ -64,6 +64,7 @@ export default function AdminTopics() {
   const [sort, setSort] = useState<SortKey>("name_asc");
   const [search, setSearch] = useState("");
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const sortedTopics = useMemo(() => {
     const cmpStr = (a: string, b: string) =>
