@@ -463,8 +463,21 @@ export default function AdminTopics() {
                 </ul>
               )}
             </div>
+
+            {/* Optional custom question shown on the topic page in place of the auto-generated one */}
+            <div className="space-y-2">
+              <Label htmlFor="topic-subtitle-override">Custom question (optional)</Label>
+              <Input
+                id="topic-subtitle-override"
+                value={form.subtitle_override}
+                onChange={(e) => setForm((p) => ({ ...p, subtitle_override: e.target.value }))}
+                placeholder="e.g. What are the most important details of being in Chicago?"
+              />
+              <p className="text-xs text-muted-foreground">
+                Leave blank to use the auto-generated question.
+              </p>
+            </div>
           </div>
-          <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? "Saving..." : editing ? "Update" : "Create"}
