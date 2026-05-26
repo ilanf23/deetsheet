@@ -396,9 +396,14 @@ const COUNTABLE_HEALTH = new Set<string>(["Cold", "Heart Attack"]);
 
 export const getTopicSubtitle = (
   topicName: string,
-  categoryName?: string
+  categoryName?: string,
+  subtitleOverride?: string | null,
 ): string => {
+  if (subtitleOverride && subtitleOverride.trim().length > 0) {
+    return subtitleOverride.trim();
+  }
   const prefix = "What are the most important details of";
+
 
   if (NO_ARTICLE_TOPICS.has(topicName)) {
     return `${prefix} being ${topicName}?`;
