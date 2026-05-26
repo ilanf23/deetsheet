@@ -132,13 +132,13 @@ export default function AdminTopics() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ name: "", category_name: "" });
+    setForm({ name: "", category_name: "", subtitle_override: "" });
     setDialogOpen(true);
   };
 
   const openEdit = (topic: Topic) => {
     setEditing(topic);
-    setForm({ name: topic.name, category_name: topic.category_name || "" });
+    setForm({ name: topic.name, category_name: topic.category_name || "", subtitle_override: topic.subtitle_override || "" });
     setDialogOpen(true);
   };
 
