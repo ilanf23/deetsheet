@@ -163,7 +163,7 @@ const TopicPage = () => {
                     </Link>
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {getTopicSubtitle(topic.name, topic.categoryName)}
+                    {getTopicSubtitle(topic.name, topic.categoryName, topic.subtitleOverride)}
                   </p>
                 </div>
                 <div className="hidden md:flex items-start gap-4">
