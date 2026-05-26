@@ -22,6 +22,7 @@ interface Topic {
   created_at: string;
   status: "pending" | "approved" | "rejected";
   image_url: string | null;
+  subtitle_override: string | null;
 }
 
 type SortKey =
