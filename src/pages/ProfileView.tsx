@@ -244,8 +244,9 @@ const ProfileView = () => {
 
     void supabase
       .from("posts")
-      .select("id, title, content, created_at, comment_count, score, topic_id, topics(name)")
+      .select("id, title, content, created_at, comment_count, score, topic_id, status, topics(name)")
       .eq("author_id", targetUserId)
+      .neq("status", "deleted")
       .order("created_at", { ascending: false })
       .then(({ data }) => {
         if (!data) return;
@@ -277,7 +278,7 @@ const ProfileView = () => {
   const handleDeletePost = async (postId: string) => {
     const { error } = await supabase
       .from("posts")
-      .update({ status: "deleted" })
+      .delete()
       .eq("id", postId);
     if (error) {
       toast({
