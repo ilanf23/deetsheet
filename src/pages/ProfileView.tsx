@@ -889,15 +889,54 @@ const ProfileView = () => {
                 )}
               </TabsContent>
 
-              {["comments", "favorites"].map((tab) => (
-                <TabsContent key={tab} value={tab} className="mt-4">
+              <TabsContent value="comments" className="mt-4">
+                {userComments.length === 0 ? (
                   <Card className="bg-card">
                     <CardContent className="py-12 text-center text-muted-foreground">
-                      <p className="text-sm">Coming soon</p>
+                      <p className="text-sm">No comments yet</p>
                     </CardContent>
                   </Card>
-                </TabsContent>
-              ))}
+                ) : (
+                  <div className="space-y-3">
+                    {userComments.map((c) => {
+                      const slug = buildPostSlug(c.post_title, c.post_id) || c.post_id;
+                      const href = c.topic_name
+                        ? `/topic/${encodeURIComponent(c.topic_name)}/post/${slug}#comment-${c.id}`
+                        : `#`;
+                      return (
+                        <Card key={c.id} className="bg-card">
+                          <CardContent className="py-4 space-y-2">
+                            <div className="text-xs text-muted-foreground">
+                              {c.topic_name && c.post_title ? (
+                                <a href={href} className="text-primary hover:underline">
+                                  {c.topic_name} · {c.post_title}
+                                </a>
+                              ) : (
+                                <span>Comment</span>
+                              )}
+                              <span className="ml-2">
+                                {formatJoinDate(c.created_at)}
+                              </span>
+                            </div>
+                            <p className="text-sm text-card-foreground whitespace-pre-line">
+                              {c.content}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="favorites" className="mt-4">
+                <Card className="bg-card">
+                  <CardContent className="py-12 text-center text-muted-foreground">
+                    <p className="text-sm">Coming soon</p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
 
               <TabsContent value="following" className="mt-4">
                 {followingTotal === 0 ? (
