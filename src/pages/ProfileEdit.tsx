@@ -310,6 +310,7 @@ const ProfileEdit = () => {
         birth_month: values.birthMonth,
         birth_day: values.birthDay,
         birth_year: values.birthYear,
+        hide_age: hideAge,
         city: values.city,
         state: values.state,
         country: values.country,
