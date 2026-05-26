@@ -277,7 +277,7 @@ const ProfileView = () => {
   const handleDeletePost = async (postId: string) => {
     const { error } = await supabase
       .from("posts")
-      .update({ status: "deleted" })
+      .delete()
       .eq("id", postId);
     if (error) {
       toast({
