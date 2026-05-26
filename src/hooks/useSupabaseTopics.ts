@@ -127,7 +127,7 @@ export const useTopics = () => {
     queryFn: async (): Promise<TopicRow[]> => {
       const { data, error } = await supabase
         .from("topics")
-        .select("id, slug, name, category_name, description, image_url, posts(count)")
+        .select("id, slug, name, category_name, description, image_url, subtitle_override, posts(count)")
         .order("name", { ascending: true });
 
       if (error) throw error;
@@ -154,7 +154,7 @@ export const useTopicByName = (topicName: string | undefined) => {
       const decoded = decodeURIComponent(topicName);
       const { data, error } = await supabase
         .from("topics")
-        .select("id, slug, name, category_name, description, image_url, posts(count)")
+        .select("id, slug, name, category_name, description, image_url, subtitle_override, posts(count)")
         .or(`name.eq.${decoded},slug.eq.${decoded.toLowerCase()}`)
         .limit(1)
         .maybeSingle();
