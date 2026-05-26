@@ -13,7 +13,7 @@ import { ExternalLink, MessageSquare, Pencil, Trash2 } from "lucide-react";
 import { format, formatDistanceToNow, parseISO } from "date-fns";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
 import RichTextEditor from "@/components/RichTextEditor";
-import { slugifyPostTitle } from "@/lib/postSlug";
+import { buildPostSlug } from "@/lib/postSlug";
 import { logAdminAction } from "@/lib/auditLog";
 
 interface Comment {
@@ -531,7 +531,7 @@ function getPlainCommentText(content: string) {
 
 function getPostHref(comment: Comment) {
   if (!comment.postTopicName) return `/admin/posts`;
-  const slug = slugifyPostTitle(comment.postTitle) || comment.post_id;
+  const slug = buildPostSlug(comment.postTitle, comment.post_id) || comment.post_id;
   return `/topic/${encodeURIComponent(comment.postTopicName)}/post/${slug}#discussion`;
 }
 

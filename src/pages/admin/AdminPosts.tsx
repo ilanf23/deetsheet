@@ -7,6 +7,16 @@ import type { Tables } from "@/integrations/supabase/types";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
 import AdminEditPostDialog from "@/components/admin/AdminEditPostDialog";
 import AdminPostReviewDialog from "@/components/admin/AdminPostReviewDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { logAdminAction } from "@/lib/auditLog";
 
 type Post = Tables<"posts">;
@@ -82,6 +92,7 @@ export default function AdminPosts() {
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [reviewPostId, setReviewPostId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [deletingPost, setDeletingPost] = useState<Post | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -189,6 +200,32 @@ export default function AdminPosts() {
   };
   const handleApprove = (id: string) => updateStatus(id, "approved");
   const handleReject = (id: string) => updateStatus(id, "rejected");
+
+  const handleDelete = async (post: Post) => {
+    const { error } = await supabase.from("posts").delete().eq("id", post.id);
+    if (error) {
+      toast({ title: "Error deleting post", description: error.message, variant: "destructive" });
+      return;
+    }
+    setPosts((prev) => prev.filter((p) => p.id !== post.id));
+    setReportedIds((prev) => {
+      if (!prev.has(post.id)) return prev;
+      const next = new Set(prev);
+      next.delete(post.id);
+      return next;
+    });
+    if (user) {
+      await logAdminAction({
+        actorId: user.id,
+        action: "post.delete",
+        entityType: "post",
+        entityId: post.id,
+        details: { title: post.title, authorId: post.author_id },
+      });
+    }
+    toast({ title: "Post deleted", variant: "destructive" });
+    setDeletingPost(null);
+  };
 
   if (loading) {
     return (
@@ -333,6 +370,12 @@ export default function AdminPosts() {
                   >
                     Reject
                   </button>
+                  <button
+                    onClick={() => setDeletingPost(p)}
+                    style={{ color: "hsl(var(--admin-danger))" }}
+                  >
+                    Delete
+                  </button>
                 </span>
               </div>
             );
@@ -397,6 +440,30 @@ export default function AdminPosts() {
         onApprove={handleApprove}
         onReject={handleReject}
       />
+      <AlertDialog
+        open={!!deletingPost}
+        onOpenChange={(o) => { if (!o) setDeletingPost(null); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete post?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete
+              {deletingPost ? ` "${deletingPost.title}"` : " this post"} and any
+              comments on it. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deletingPost && handleDelete(deletingPost)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

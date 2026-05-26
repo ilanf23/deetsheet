@@ -42,9 +42,14 @@ const TopicPage = () => {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const sizeFromUrl = Number(searchParams.get("size"));
+  const sizeFromStorage = (() => {
+    if (typeof window === "undefined") return null;
+    const stored = Number(window.localStorage.getItem("topicPostsPageSize"));
+    return isValidPageSize(stored) ? stored : null;
+  })();
   const size: PageSize = isValidPageSize(sizeFromUrl)
     ? sizeFromUrl
-    : DEFAULT_PAGE_SIZE;
+    : sizeFromStorage ?? DEFAULT_PAGE_SIZE;
 
   const [rendered, setRendered] = useState<number>(size);
   const [rankOpen, setRankOpen] = useState(false);
@@ -68,6 +73,9 @@ const TopicPage = () => {
   );
 
   const handleSizeChange = (next: PageSize) => {
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("topicPostsPageSize", String(next));
+    }
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set("size", String(next));
     setSearchParams(nextParams, { replace: true });

@@ -224,13 +224,15 @@ export default function AdminPostReviewDialog({
                 />
               )}
 
-              {post.content && post.content !== post.title && (
-                <p className="text-sm leading-6 text-card-foreground whitespace-pre-line">
-                  {post.content}
-                </p>
-              )}
+              {post.content?.trim() &&
+                post.content.trim() !== post.title.trim() &&
+                post.content.trim() !== post.story?.trim() && (
+                  <p className="text-sm leading-6 text-card-foreground whitespace-pre-line">
+                    {post.content}
+                  </p>
+                )}
 
-              {post.story && (
+              {post.story?.trim() && post.story.trim() !== post.title.trim() && (
                 <div className="rounded-md border bg-muted/40 p-3">
                   <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
                     Comment / Story

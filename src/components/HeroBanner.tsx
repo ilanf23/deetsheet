@@ -3,6 +3,14 @@ import { useNavigate } from "react-router-dom";
 
 const slides = [
   {
+    image: "/hero-life.jpg",
+    headline: "LEARN & SHARE DETAILS ABOUT LIFE, PLACES AND MORE!",
+    quote: "What's it like being a doctor, a parent, or living in Paris!",
+    attribution: "Rate your favorites!",
+    topicSlug: "Paris",
+    postId: "a2000000-0000-0000-0000-000000000001",
+  },
+  {
     image: "/hero-city.jpg",
     headline: "LEARN & SHARE DETAILS ABOUT YOUR CITY, TOWN, OR STATE",
     quote: "Before I visit any city, I check DeetSheet to find out what are the best ways to enjoy the area.",
@@ -85,7 +93,7 @@ const HeroBanner = () => {
           </h1>
           <div className="text-green-300 text-xs sm:text-sm md:text-base whitespace-nowrap">
             <p className="italic hover:underline">&ldquo;{slide.quote}&rdquo;</p>
-            <p className="mt-1 font-semibold">— {slide.attribution}</p>
+            <p className="mt-1 font-semibold">{slide.attribution.includes(",") ? `— ${slide.attribution}` : slide.attribution}</p>
           </div>
         </div>
       ))}

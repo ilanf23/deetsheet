@@ -36,6 +36,7 @@ export interface PostRow {
   id: string;
   title: string;
   content: string;
+  story: string | null;
   topicId: string;
   topicName: string;
   categoryName: string;
@@ -64,6 +65,7 @@ type DbPostRaw = {
   id: string;
   title: string;
   content?: string;
+  story?: string | null;
   topic_id: string;
   author_id: string;
   score?: number;
@@ -95,6 +97,7 @@ const mapPost = (row: DbPostRaw): PostRow => {
     id: row.id,
     title: row.title,
     content: row.content ?? "",
+    story: row.story ?? null,
     topicId: row.topic_id,
     topicName: row.topics?.name ?? "",
     categoryName: row.topics?.category_name ?? "Life",
@@ -197,7 +200,7 @@ export const usePostsByTopic = (topicId: string | undefined) => {
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, content, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, image_url, status, " +
+          "id, title, content, story, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, image_url, status, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
@@ -324,7 +327,7 @@ export const useRecentPostsByTopic = (topicId: string | undefined, limit = 5) =>
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, content, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, image_url, status, " +
+          "id, title, content, story, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, image_url, status, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )

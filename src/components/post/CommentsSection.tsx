@@ -124,7 +124,7 @@ const CommentsSection = ({ postId }: CommentsSectionProps) => {
         <p className="text-muted-foreground text-sm italic">Loading discussion…</p>
       ) : tree.length === 0 ? (
         <p className="text-muted-foreground text-sm italic">
-          No comments yet. Be the first to discuss this answer.
+          Please add a comment or story to this post.
         </p>
       ) : (
         <div>

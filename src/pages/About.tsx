@@ -12,16 +12,11 @@ const renderPageContent = (content: string | undefined) => {
   const blocks = content.split(/\n{2,}/);
   return (
     <div className="text-foreground leading-relaxed space-y-4">
-      {blocks.map((block, i) => {
-        const lines = block.split("\n");
-        const [first, ...rest] = lines;
-        return (
-          <p key={i} className="whitespace-pre-wrap">
-            <span className="font-bold">{first}</span>
-            {rest.length > 0 && "\n" + rest.join("\n")}
-          </p>
-        );
-      })}
+      {blocks.map((block, i) => (
+        <p key={i} className="whitespace-pre-wrap">
+          {block}
+        </p>
+      ))}
     </div>
   );
 };
@@ -65,13 +60,17 @@ const About = () => {
           {activeTab === "how-it-started" && (
             <>
               {renderPageContent(started.content)}
-              <blockquote className="mt-12 border-l-4 border-secondary pl-8 italic text-foreground">
-                <p className="text-2xl md:text-3xl leading-relaxed">
+              <div className="mt-8 text-center text-foreground leading-relaxed">
+                <p>Fredric Brewer</p>
+                <p>DeetSheet Founder</p>
+              </div>
+              <blockquote className="mt-12 text-left text-muted-foreground">
+                <p className="leading-relaxed">
                   &ldquo;What we do for ourselves dies with us. What we do for
                   others and the world remains and is immortal.&rdquo;
                 </p>
-                <footer className="mt-4 text-base text-muted-foreground not-italic">
-                  &mdash; Albert Pine (English author, d.1851)
+                <footer className="mt-1 leading-relaxed">
+                  Albert Pine (English author, d.1851)
                 </footer>
               </blockquote>
             </>

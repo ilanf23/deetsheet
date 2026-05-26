@@ -235,11 +235,27 @@ const PostPage = () => {
                     />
                     <JudgementReactionsRow />
                   </div>
-                  <PostBody
-                    content={post.content}
-                    imageSrc={post.imageUrl ?? undefined}
-                    imageAlt={post.title || topic.name}
-                  />
+                  {(() => {
+                    // The post title and content are the same string (the
+                    // user's "detail") — render the optional Comment / Story
+                    // as the body, and fall back to content only when it
+                    // diverges from the title (legacy or admin-edited posts).
+                    const trimmedStory = post.story?.trim();
+                    const trimmedContent = post.content?.trim();
+                    const bodyText = trimmedStory
+                      ? post.story!
+                      : trimmedContent && trimmedContent !== post.title.trim()
+                        ? post.content
+                        : "";
+                    if (!bodyText && !post.imageUrl) return null;
+                    return (
+                      <PostBody
+                        content={bodyText}
+                        imageSrc={post.imageUrl ?? undefined}
+                        imageAlt={post.title || topic.name}
+                      />
+                    );
+                  })()}
                   <div id="comments" className="border-t border-border pt-[var(--space-rhythm-block)] scroll-mt-24">
                     <InlineCommentComposer
                       postId={post.id}
