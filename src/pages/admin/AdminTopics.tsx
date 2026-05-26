@@ -109,7 +109,7 @@ export default function AdminTopics() {
     setLoading(true);
     const { data, error } = await supabase
       .from("topics")
-      .select("id, name, description, category_name, created_at, status, image_url")
+      .select("id, name, description, category_name, created_at, status, image_url, subtitle_override")
       .order("name");
 
     if (error) {
