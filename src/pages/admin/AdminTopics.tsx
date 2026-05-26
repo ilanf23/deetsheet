@@ -139,7 +139,8 @@ export default function AdminTopics() {
 
   const openEdit = (topic: Topic) => {
     setEditing(topic);
-    setForm({ name: topic.name, category_name: topic.category_name || "", subtitle_override: topic.subtitle_override || "" });
+    const current = topic.subtitle_override || getTopicSubtitle(topic.name, topic.category_name);
+    setForm({ name: topic.name, category_name: topic.category_name || "", subtitle_override: current });
     setDialogOpen(true);
   };
 
