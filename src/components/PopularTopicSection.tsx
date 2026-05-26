@@ -12,14 +12,11 @@ interface PopularTopicSectionProps {
 const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  // dbTopic comes from Supabase below; use its override if present, otherwise fall back to none
-  const { data: dbTopic } = useTopicByName(topic.name);
-  const subtitle = getTopicSubtitle(topic.name, topic.categoryName, dbTopic?.subtitleOverride);
-
   // Resolve this topic against the Supabase `topics` table so we can pull real
   // posts (with UUID ids + live average_rating). Falls back to seed data only
   // if the DB lookup hasn't resolved yet, so the layout never flashes empty.
   const { data: dbTopic } = useTopicByName(topic.name);
+  const subtitle = getTopicSubtitle(topic.name, topic.categoryName, dbTopic?.subtitleOverride);
   const { data: dbPosts } = usePostsByTopic(dbTopic?.id);
   const seedPosts = getPostsByTopic(topic.name).slice(0, 5);
 
