@@ -27,6 +27,7 @@ export interface TopicRow {
   postCount: number;
   description: string | null;
   imageUrl: string | null;
+  subtitleOverride: string | null;
 }
 
 /** Shape the UI expects for a post row (maps to legacy seedData.Post,
