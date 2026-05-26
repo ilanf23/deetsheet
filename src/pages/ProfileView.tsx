@@ -183,6 +183,10 @@ const ProfileView = () => {
   // hook drives the badge above the tabs.
   const [followingRequested, setFollowingRequested] = useState(false);
   const [followersRequested, setFollowersRequested] = useState(false);
+  const [commentsRequested, setCommentsRequested] = useState(false);
+  const [userComments, setUserComments] = useState<
+    { id: string; content: string; created_at: string; post_id: string; post_title: string | null; topic_name: string | null }[]
+  >([]);
   const { data: followCounts } = useProfileFollowCounts(targetUserId);
   const { data: followingData } = useFollowing(targetUserId, { enabled: followingRequested });
   const { data: followersData } = useFollowers(targetUserId, { enabled: followersRequested });
@@ -194,7 +198,34 @@ const ProfileView = () => {
     if (activeTab === "following") setFollowingRequested(true);
     if (activeTab === "followers") setFollowersRequested(true);
     if (activeTab === "topics") setTopicsRequested(true);
+    if (activeTab === "comments") setCommentsRequested(true);
   }, [activeTab]);
+
+  // Fetch the user's comments (with their post + topic) the first time the
+  // Comments tab is opened, and whenever the target user changes.
+  useEffect(() => {
+    if (!commentsRequested || !targetUserId) return;
+    void supabase
+      .from("comments")
+      .select("id, content, created_at, post_id, posts(title, topics(name))")
+      .eq("author_id", targetUserId)
+      .order("created_at", { ascending: false })
+      .limit(50)
+      .then(({ data }) => {
+        if (!data) return;
+        setUserComments(
+          data.map((c: any) => ({
+            id: c.id,
+            content: c.content,
+            created_at: c.created_at,
+            post_id: c.post_id,
+            post_title: c.posts?.title ?? null,
+            topic_name: c.posts?.topics?.name ?? null,
+          })),
+        );
+      });
+  }, [commentsRequested, targetUserId, postsRefreshKey]);
+
 
   useEffect(() => {
     if (!targetUserId) return;
@@ -858,15 +889,54 @@ const ProfileView = () => {
                 )}
               </TabsContent>
 
-              {["comments", "favorites"].map((tab) => (
-                <TabsContent key={tab} value={tab} className="mt-4">
+              <TabsContent value="comments" className="mt-4">
+                {userComments.length === 0 ? (
                   <Card className="bg-card">
                     <CardContent className="py-12 text-center text-muted-foreground">
-                      <p className="text-sm">Coming soon</p>
+                      <p className="text-sm">No comments yet</p>
                     </CardContent>
                   </Card>
-                </TabsContent>
-              ))}
+                ) : (
+                  <div className="space-y-3">
+                    {userComments.map((c) => {
+                      const slug = buildPostSlug(c.post_title, c.post_id) || c.post_id;
+                      const href = c.topic_name
+                        ? `/topic/${encodeURIComponent(c.topic_name)}/post/${slug}#comment-${c.id}`
+                        : `#`;
+                      return (
+                        <Card key={c.id} className="bg-card">
+                          <CardContent className="py-4 space-y-2">
+                            <div className="text-xs text-muted-foreground">
+                              {c.topic_name && c.post_title ? (
+                                <a href={href} className="text-primary hover:underline">
+                                  {c.topic_name} · {c.post_title}
+                                </a>
+                              ) : (
+                                <span>Comment</span>
+                              )}
+                              <span className="ml-2">
+                                {formatJoinDate(c.created_at)}
+                              </span>
+                            </div>
+                            <p className="text-sm text-card-foreground whitespace-pre-line">
+                              {c.content}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="favorites" className="mt-4">
+                <Card className="bg-card">
+                  <CardContent className="py-12 text-center text-muted-foreground">
+                    <p className="text-sm">Coming soon</p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
 
               <TabsContent value="following" className="mt-4">
                 {followingTotal === 0 ? (
