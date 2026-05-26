@@ -60,6 +60,7 @@ type DbTopicRaw = {
   category_name: string | null;
   description: string | null;
   image_url: string | null;
+  subtitle_override?: string | null;
 };
 
 type DbPostRaw = {
@@ -77,7 +78,7 @@ type DbPostRaw = {
   image_url?: string | null;
   status?: string | null;
   profiles?: { username: string | null; avatar_url: string | null } | null;
-  topics?: { name: string; category_name: string | null; image_url: string | null } | null;
+  topics?: { name: string; category_name: string | null; image_url: string | null; subtitle_override?: string | null } | null;
 };
 
 const mapTopic = (row: DbTopicRaw, postCount: number): TopicRow => ({
@@ -88,6 +89,7 @@ const mapTopic = (row: DbTopicRaw, postCount: number): TopicRow => ({
   postCount,
   description: row.description,
   imageUrl: row.image_url ?? null,
+  subtitleOverride: row.subtitle_override ?? null,
 });
 
 const mapPost = (row: DbPostRaw): PostRow => {
