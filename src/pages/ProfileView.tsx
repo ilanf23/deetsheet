@@ -126,7 +126,7 @@ const EDUCATION_LABELS: Record<string, string> = {
 // Profile columns this page actually reads. Selecting only what we render
 // shaves a meaningful chunk of bytes off each profile fetch.
 const PROFILE_COLUMNS =
-  "id, name, username, avatar_url, bio, sex, orientation, birth_year, birth_month, birth_day, city, state, country, education, high_school, college, degree, major, job, entity_type, favorite_movie, reading, city_born, created_at";
+  "id, name, username, avatar_url, bio, sex, orientation, birth_year, birth_month, birth_day, hide_age, city, state, country, education, high_school, college, degree, major, job, entity_type, favorite_movie, reading, city_born, created_at";
 
 function formatProfileValue(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -285,7 +285,8 @@ const ProfileView = () => {
     (isOwnProfile ? user?.email?.split("@")[0] : null) ||
     "User";
   const email = isOwnProfile ? (user?.email || "") : "";
-  const age = calculateAge(
+  const hideAge = Boolean((profile as any)?.hide_age) && !isOwnProfile;
+  const age = hideAge ? null : calculateAge(
     profile?.birth_year as string | null,
     profile?.birth_month as string | null,
     profile?.birth_day as string | null
@@ -293,6 +294,7 @@ const ProfileView = () => {
   const city = [profile?.city, profile?.state, profile?.country].filter(Boolean).join(", ") || null;
   const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   const fullBirthday = (() => {
+    if (hideAge) return null;
     const y = profile?.birth_year as string | null | undefined;
     const m = profile?.birth_month as string | null | undefined;
     const d = profile?.birth_day as string | null | undefined;

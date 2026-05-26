@@ -309,6 +309,7 @@ export type Database = {
           email_top_posts: boolean | null
           entity_type: string | null
           favorite_movie: string | null
+          hide_age: boolean
           high_school: string | null
           id: string
           job: string | null
@@ -342,6 +343,7 @@ export type Database = {
           email_top_posts?: boolean | null
           entity_type?: string | null
           favorite_movie?: string | null
+          hide_age?: boolean
           high_school?: string | null
           id: string
           job?: string | null
@@ -375,6 +377,7 @@ export type Database = {
           email_top_posts?: boolean | null
           entity_type?: string | null
           favorite_movie?: string | null
+          hide_age?: boolean
           high_school?: string | null
           id?: string
           job?: string | null

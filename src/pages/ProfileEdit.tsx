@@ -21,6 +21,7 @@ import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -128,6 +129,7 @@ const ProfileEdit = () => {
   const [cityBorn, setCityBorn] = useState("");
   const [emailFrequency, setEmailFrequency] = useState("weekly");
   const [username, setUsername] = useState<string>("");
+  const [hideAge, setHideAge] = useState(false);
 
   const [prefs, setPrefs] = useState<Record<string, boolean>>({
     emailOnMessage: true,
@@ -177,7 +179,7 @@ const ProfileEdit = () => {
       const { data } = await supabase
         .from("profiles")
         .select(
-          "username, name, entity_type, sex, orientation, birth_month, birth_day, birth_year, city, state, country, bio, education, high_school, college, degree, major, job, favorite_movie, reading, city_born, avatar_url, email_frequency, email_on_message, email_on_comment, email_on_follow, email_on_post_edit, email_top_posts",
+          "username, name, entity_type, sex, orientation, birth_month, birth_day, birth_year, hide_age, city, state, country, bio, education, high_school, college, degree, major, job, favorite_movie, reading, city_born, avatar_url, email_frequency, email_on_message, email_on_comment, email_on_follow, email_on_post_edit, email_top_posts",
         )
         .eq("id", user.id)
         .single();
@@ -207,6 +209,7 @@ const ProfileEdit = () => {
         setCityBorn(data.city_born || "");
         setAvatarUrl(data.avatar_url || null);
         setEmailFrequency(data.email_frequency || "weekly");
+        setHideAge(Boolean((data as any).hide_age));
         setPrefs({
           emailOnMessage: data.email_on_message ?? true,
           emailOnComment: data.email_on_comment ?? true,
@@ -307,6 +310,7 @@ const ProfileEdit = () => {
         birth_month: values.birthMonth,
         birth_day: values.birthDay,
         birth_year: values.birthYear,
+        hide_age: hideAge,
         city: values.city,
         state: values.state,
         country: values.country,
@@ -789,6 +793,18 @@ const ProfileEdit = () => {
                           />
                         </div>
                       </div>
+
+                      <div className="flex items-center justify-between rounded-md border p-3">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm">Hide my age from other viewers</Label>
+                          <p className="text-xs text-muted-foreground">
+                            Your age won't appear on your public profile.
+                          </p>
+                        </div>
+                        <Switch checked={hideAge} onCheckedChange={setHideAge} />
+                      </div>
+
+
 
                       <FormField
                         control={form.control}
