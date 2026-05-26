@@ -21,6 +21,7 @@ import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
