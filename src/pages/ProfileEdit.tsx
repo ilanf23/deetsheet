@@ -794,6 +794,18 @@ const ProfileEdit = () => {
                         </div>
                       </div>
 
+                      <div className="flex items-center justify-between rounded-md border p-3">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm">Hide my age from other viewers</Label>
+                          <p className="text-xs text-muted-foreground">
+                            Your age won't appear on your public profile.
+                          </p>
+                        </div>
+                        <Switch checked={hideAge} onCheckedChange={setHideAge} />
+                      </div>
+
+
+
                       <FormField
                         control={form.control}
                         name="city"
