@@ -183,6 +183,10 @@ const ProfileView = () => {
   // hook drives the badge above the tabs.
   const [followingRequested, setFollowingRequested] = useState(false);
   const [followersRequested, setFollowersRequested] = useState(false);
+  const [commentsRequested, setCommentsRequested] = useState(false);
+  const [userComments, setUserComments] = useState<
+    { id: string; content: string; created_at: string; post_id: string; post_title: string | null; topic_name: string | null }[]
+  >([]);
   const { data: followCounts } = useProfileFollowCounts(targetUserId);
   const { data: followingData } = useFollowing(targetUserId, { enabled: followingRequested });
   const { data: followersData } = useFollowers(targetUserId, { enabled: followersRequested });
@@ -194,7 +198,34 @@ const ProfileView = () => {
     if (activeTab === "following") setFollowingRequested(true);
     if (activeTab === "followers") setFollowersRequested(true);
     if (activeTab === "topics") setTopicsRequested(true);
+    if (activeTab === "comments") setCommentsRequested(true);
   }, [activeTab]);
+
+  // Fetch the user's comments (with their post + topic) the first time the
+  // Comments tab is opened, and whenever the target user changes.
+  useEffect(() => {
+    if (!commentsRequested || !targetUserId) return;
+    void supabase
+      .from("comments")
+      .select("id, content, created_at, post_id, posts(title, topics(name))")
+      .eq("author_id", targetUserId)
+      .order("created_at", { ascending: false })
+      .limit(50)
+      .then(({ data }) => {
+        if (!data) return;
+        setUserComments(
+          data.map((c: any) => ({
+            id: c.id,
+            content: c.content,
+            created_at: c.created_at,
+            post_id: c.post_id,
+            post_title: c.posts?.title ?? null,
+            topic_name: c.posts?.topics?.name ?? null,
+          })),
+        );
+      });
+  }, [commentsRequested, targetUserId, postsRefreshKey]);
+
 
   useEffect(() => {
     if (!targetUserId) return;
