@@ -129,6 +129,7 @@ const ProfileEdit = () => {
   const [cityBorn, setCityBorn] = useState("");
   const [emailFrequency, setEmailFrequency] = useState("weekly");
   const [username, setUsername] = useState<string>("");
+  const [hideAge, setHideAge] = useState(false);
 
   const [prefs, setPrefs] = useState<Record<string, boolean>>({
     emailOnMessage: true,
