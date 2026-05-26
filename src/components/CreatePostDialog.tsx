@@ -235,11 +235,12 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
           Want a popular post? Here's some helpful hints:
         </p>
         <ul className="text-xs text-muted-foreground list-disc pl-5 space-y-1">
-          <li>Keep your post concise and actionable</li>
-          <li>Share advice from personal experience</li>
-          <li>Be specific — vague tips don't help anyone</li>
-          <li>Think about what you wish you knew earlier</li>
+          <li>Write your post short using the fewest amount of words to make your point.</li>
+          <li>Make sure there are no spelling or grammatical errors.</li>
         </ul>
+        <p className="text-xs text-muted-foreground mt-3">Hate messages will not be posted.</p>
+        <p className="text-xs text-muted-foreground mt-2">Thanks</p>
+
       </div>
 
       <PostImageEditorDialog
