@@ -209,6 +209,7 @@ const ProfileEdit = () => {
         setCityBorn(data.city_born || "");
         setAvatarUrl(data.avatar_url || null);
         setEmailFrequency(data.email_frequency || "weekly");
+        setHideAge(Boolean((data as any).hide_age));
         setPrefs({
           emailOnMessage: data.email_on_message ?? true,
           emailOnComment: data.email_on_comment ?? true,
