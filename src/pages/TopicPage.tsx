@@ -199,7 +199,7 @@ const TopicPage = () => {
                 categoryName={topic.categoryName}
                 primaryImage={topic.imageUrl}
               />
-              <div className="bg-card rounded-md border border-border p-4">
+              <div>
                 {!!user && (
                   <div
                     aria-hidden
