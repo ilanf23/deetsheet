@@ -22,6 +22,7 @@ interface Topic {
   created_at: string;
   status: "pending" | "approved" | "rejected";
   image_url: string | null;
+  subtitle_override: string | null;
 }
 
 type SortKey =
@@ -55,7 +56,7 @@ export default function AdminTopics() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Topic | null>(null);
-  const [form, setForm] = useState({ name: "", category_name: "" });
+  const [form, setForm] = useState({ name: "", category_name: "", subtitle_override: "" });
   const [showNameSuggestions, setShowNameSuggestions] = useState(false);
   const [saving, setSaving] = useState(false);
   const [sort, setSort] = useState<SortKey>("name_asc");
@@ -108,7 +109,7 @@ export default function AdminTopics() {
     setLoading(true);
     const { data, error } = await supabase
       .from("topics")
-      .select("id, name, description, category_name, created_at, status, image_url")
+      .select("id, name, description, category_name, created_at, status, image_url, subtitle_override")
       .order("name");
 
     if (error) {
@@ -131,13 +132,13 @@ export default function AdminTopics() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ name: "", category_name: "" });
+    setForm({ name: "", category_name: "", subtitle_override: "" });
     setDialogOpen(true);
   };
 
   const openEdit = (topic: Topic) => {
     setEditing(topic);
-    setForm({ name: topic.name, category_name: topic.category_name || "" });
+    setForm({ name: topic.name, category_name: topic.category_name || "", subtitle_override: topic.subtitle_override || "" });
     setDialogOpen(true);
   };
 
@@ -164,7 +165,7 @@ export default function AdminTopics() {
     if (editing) {
       const { error } = await supabase
         .from("topics")
-        .update({ name: form.name, category_name: form.category_name })
+        .update({ name: form.name, category_name: form.category_name, subtitle_override: form.subtitle_override.trim() || null })
         .eq("id", editing.id);
 
       if (error) {
@@ -177,7 +178,7 @@ export default function AdminTopics() {
     } else {
       const { error } = await supabase
         .from("topics")
-        .insert({ name: form.name, slug: generateSlug(form.name), category_name: form.category_name, description: null, status: "approved" });
+        .insert({ name: form.name, slug: generateSlug(form.name), category_name: form.category_name, description: null, status: "approved", subtitle_override: form.subtitle_override.trim() || null });
 
       if (error) {
         toast({ title: "Error creating topic", description: error.message, variant: "destructive" });
@@ -461,6 +462,20 @@ export default function AdminTopics() {
                   ))}
                 </ul>
               )}
+            </div>
+
+            {/* Optional custom question shown on the topic page in place of the auto-generated one */}
+            <div className="space-y-2">
+              <Label htmlFor="topic-subtitle-override">Custom question (optional)</Label>
+              <Input
+                id="topic-subtitle-override"
+                value={form.subtitle_override}
+                onChange={(e) => setForm((p) => ({ ...p, subtitle_override: e.target.value }))}
+                placeholder="e.g. What are the most important details of being in Chicago?"
+              />
+              <p className="text-xs text-muted-foreground">
+                Leave blank to use the auto-generated question.
+              </p>
             </div>
           </div>
           <DialogFooter>

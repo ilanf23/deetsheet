@@ -593,6 +593,7 @@ export type Database = {
           post_count: number
           slug: string
           status: string
+          subtitle_override: string | null
         }
         Insert: {
           category_name?: string
@@ -605,6 +606,7 @@ export type Database = {
           post_count?: number
           slug: string
           status?: string
+          subtitle_override?: string | null
         }
         Update: {
           category_name?: string
@@ -617,6 +619,7 @@ export type Database = {
           post_count?: number
           slug?: string
           status?: string
+          subtitle_override?: string | null
         }
         Relationships: []
       }

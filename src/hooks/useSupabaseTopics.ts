@@ -27,6 +27,7 @@ export interface TopicRow {
   postCount: number;
   description: string | null;
   imageUrl: string | null;
+  subtitleOverride: string | null;
 }
 
 /** Shape the UI expects for a post row (maps to legacy seedData.Post,
@@ -59,6 +60,7 @@ type DbTopicRaw = {
   category_name: string | null;
   description: string | null;
   image_url: string | null;
+  subtitle_override?: string | null;
 };
 
 type DbPostRaw = {
@@ -76,7 +78,7 @@ type DbPostRaw = {
   image_url?: string | null;
   status?: string | null;
   profiles?: { username: string | null; avatar_url: string | null } | null;
-  topics?: { name: string; category_name: string | null; image_url: string | null } | null;
+  topics?: { name: string; category_name: string | null; image_url: string | null; subtitle_override?: string | null } | null;
 };
 
 const mapTopic = (row: DbTopicRaw, postCount: number): TopicRow => ({
@@ -87,6 +89,7 @@ const mapTopic = (row: DbTopicRaw, postCount: number): TopicRow => ({
   postCount,
   description: row.description,
   imageUrl: row.image_url ?? null,
+  subtitleOverride: row.subtitle_override ?? null,
 });
 
 const mapPost = (row: DbPostRaw): PostRow => {
@@ -124,7 +127,7 @@ export const useTopics = () => {
     queryFn: async (): Promise<TopicRow[]> => {
       const { data, error } = await supabase
         .from("topics")
-        .select("id, slug, name, category_name, description, image_url, posts(count)")
+        .select("id, slug, name, category_name, description, image_url, subtitle_override, posts(count)")
         .order("name", { ascending: true });
 
       if (error) throw error;
@@ -151,7 +154,7 @@ export const useTopicByName = (topicName: string | undefined) => {
       const decoded = decodeURIComponent(topicName);
       const { data, error } = await supabase
         .from("topics")
-        .select("id, slug, name, category_name, description, image_url, posts(count)")
+        .select("id, slug, name, category_name, description, image_url, subtitle_override, posts(count)")
         .or(`name.eq.${decoded},slug.eq.${decoded.toLowerCase()}`)
         .limit(1)
         .maybeSingle();
@@ -393,9 +396,14 @@ const COUNTABLE_HEALTH = new Set<string>(["Cold", "Heart Attack"]);
 
 export const getTopicSubtitle = (
   topicName: string,
-  categoryName?: string
+  categoryName?: string,
+  subtitleOverride?: string | null,
 ): string => {
+  if (subtitleOverride && subtitleOverride.trim().length > 0) {
+    return subtitleOverride.trim();
+  }
   const prefix = "What are the most important details of";
+
 
   if (NO_ARTICLE_TOPICS.has(topicName)) {
     return `${prefix} being ${topicName}?`;
