@@ -91,7 +91,7 @@ const HeroBanner = () => {
           <h1 className="text-white font-extrabold text-xl sm:text-2xl md:text-3xl lg:text-4xl leading-tight mb-4 whitespace-nowrap">
             {slide.headline}
           </h1>
-          <div className="text-green-300 text-xs sm:text-sm md:text-base whitespace-nowrap">
+          <div className="text-primary text-xs sm:text-sm md:text-base whitespace-nowrap">
             <p className="italic hover:underline">&ldquo;{slide.quote}&rdquo;</p>
             <p className="mt-1 font-semibold">{slide.attribution.includes(",") ? `— ${slide.attribution}` : slide.attribution}</p>
           </div>
