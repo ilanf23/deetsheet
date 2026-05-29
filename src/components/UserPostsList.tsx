@@ -15,6 +15,7 @@ interface UserPost {
   comment_count: number;
   created_at: string;
   status: string;
+  is_anonymous?: boolean;
   topic: { name: string; slug: string } | null;
 }
 
