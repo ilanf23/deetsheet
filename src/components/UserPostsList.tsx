@@ -15,6 +15,7 @@ interface UserPost {
   comment_count: number;
   created_at: string;
   status: string;
+  is_anonymous?: boolean;
   topic: { name: string; slug: string } | null;
 }
 
@@ -34,7 +35,7 @@ const UserPostsList = ({ userId }: { userId: string }) => {
   const fetchPosts = useCallback(async () => {
     const { data, error } = await supabase
       .from("posts")
-      .select("id, title, content, score, comment_count, created_at, status, topics(name, slug)")
+      .select("id, title, content, score, comment_count, created_at, status, is_anonymous, topics(name, slug)")
       .eq("author_id", userId)
       .order("created_at", { ascending: false });
 
@@ -102,6 +103,11 @@ const UserPostsList = ({ userId }: { userId: string }) => {
                       >
                         {pill.label}
                       </span>
+                      {post.is_anonymous && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-muted text-muted-foreground">
+                          Anonymous
+                        </span>
+                      )}
                     </div>
                   </Link>
                   <div className="flex items-center gap-3 shrink-0 text-xs text-muted-foreground">

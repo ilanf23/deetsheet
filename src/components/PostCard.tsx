@@ -23,6 +23,7 @@ const PostCard = ({ post }: PostCardProps) => {
   const authorId = (post as Post & { authorId?: string }).authorId;
   const avatarUrl = (post as Post & { avatarUrl?: string | null }).avatarUrl;
   const status = (post as Post & { status?: string }).status;
+  const isAnonymous = !!(post as Post & { isAnonymous?: boolean }).isAnonymous;
   const isPending = status === "pending";
   const profileHref = `/profile/${authorId ?? post.username}`;
   const handleShare = async (e: MouseEvent<HTMLButtonElement>) => {
@@ -118,25 +119,38 @@ const PostCard = ({ post }: PostCardProps) => {
       )}
 
       <div className="mb-2 flex flex-wrap items-center gap-2 text-base leading-tight">
-        <Link
-          to={profileHref}
-          onClick={(e) => e.stopPropagation()}
-          className="shrink-0"
-        >
-          <Avatar className="h-5 w-5">
-            {avatarUrl && <AvatarImage src={avatarUrl} alt={post.username} />}
-            <AvatarFallback className="text-[9px] font-semibold bg-primary/10 text-primary">
-              {post.username[0]?.toUpperCase() ?? "?"}
-            </AvatarFallback>
-          </Avatar>
-        </Link>
-        <Link
-          to={profileHref}
-          onClick={(e) => e.stopPropagation()}
-          className="font-semibold text-primary hover:underline"
-        >
-          {post.username}
-        </Link>
+        {isAnonymous ? (
+          <>
+            <Avatar className="h-5 w-5">
+              <AvatarFallback className="text-[9px] font-semibold bg-muted text-muted-foreground">
+                ?
+              </AvatarFallback>
+            </Avatar>
+            <span className="font-semibold text-foreground">Anonymous</span>
+          </>
+        ) : (
+          <>
+            <Link
+              to={profileHref}
+              onClick={(e) => e.stopPropagation()}
+              className="shrink-0"
+            >
+              <Avatar className="h-5 w-5">
+                {avatarUrl && <AvatarImage src={avatarUrl} alt={post.username} />}
+                <AvatarFallback className="text-[9px] font-semibold bg-primary/10 text-primary">
+                  {post.username[0]?.toUpperCase() ?? "?"}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
+            <Link
+              to={profileHref}
+              onClick={(e) => e.stopPropagation()}
+              className="font-semibold text-primary hover:underline"
+            >
+              {post.username}
+            </Link>
+          </>
+        )}
         <span className="text-muted-foreground">Posted {getTimeAgo(post.createdAt)}</span>
       </div>
 

@@ -51,6 +51,7 @@ export interface PostRow {
   imageUrl: string | null;
   avatarUrl: string | null;
   status: "pending" | "approved" | "rejected";
+  isAnonymous: boolean;
 }
 
 type DbTopicRaw = {
@@ -77,6 +78,7 @@ type DbPostRaw = {
   created_at: string;
   image_url?: string | null;
   status?: string | null;
+  is_anonymous?: boolean | null;
   profiles?: { username: string | null; avatar_url: string | null } | null;
   topics?: { name: string; category_name: string | null; image_url: string | null; subtitle_override?: string | null } | null;
 };
@@ -114,6 +116,7 @@ const mapPost = (row: DbPostRaw): PostRow => {
     imageUrl: row.image_url ?? null,
     avatarUrl: row.profiles?.avatar_url ?? null,
     status,
+    isAnonymous: !!row.is_anonymous,
   };
 };
 
@@ -203,7 +206,7 @@ export const usePostsByTopic = (topicId: string | undefined) => {
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, content, story, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, image_url, status, " +
+          "id, title, content, story, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, image_url, status, is_anonymous, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
@@ -234,7 +237,7 @@ export const useRecentPosts = (limit = 8) => {
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, topic_id, author_id, average_rating, rating_count, comment_count, created_at, image_url, status, " +
+          "id, title, topic_id, author_id, average_rating, rating_count, comment_count, created_at, image_url, status, is_anonymous, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
@@ -330,7 +333,7 @@ export const useRecentPostsByTopic = (topicId: string | undefined, limit = 5) =>
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, content, story, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, image_url, status, " +
+          "id, title, content, story, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, image_url, status, is_anonymous, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )

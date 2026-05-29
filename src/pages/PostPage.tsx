@@ -223,6 +223,7 @@ const PostPage = () => {
                       username={post.username}
                       authorId={post.authorId}
                       avatarUrl={post.avatarUrl}
+                      isAnonymous={(post as { isAnonymous?: boolean }).isAnonymous}
                       createdAt={post.createdAt instanceof Date ? post.createdAt : new Date(post.createdAt)}
                     />
                     <PostMetaBar

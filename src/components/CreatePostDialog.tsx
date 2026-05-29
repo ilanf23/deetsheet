@@ -10,7 +10,7 @@ import PostImageEditorDialog from "@/components/PostImageEditorDialog";
 interface CreatePostDialogProps {
   topicName: string;
   categoryName: string;
-  onSubmit: (detail: string, story: string, image: File | null) => void;
+  onSubmit: (detail: string, story: string, image: File | null, isAnonymous: boolean) => void;
 }
 
 const DETAIL_CHAR_LIMIT = 200;
@@ -20,6 +20,7 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
   const [detail, setDetail] = useState("");
   const [comment, setComment] = useState("");
   const [image, setImage] = useState<File | null>(null);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [sourceImagePreview, setSourceImagePreview] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageEditorOpen, setImageEditorOpen] = useState(false);
@@ -58,7 +59,7 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
 
   const handleSubmit = () => {
     if (!detail.trim()) return;
-    onSubmit(detail.trim(), comment.trim(), image);
+    onSubmit(detail.trim(), comment.trim(), image, isAnonymous);
   };
 
   useEffect(() => {
@@ -219,6 +220,22 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
           </div>
         </div>
       )}
+
+      {/* Anonymous toggle */}
+      <label className="flex items-start gap-2 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={isAnonymous}
+          onChange={(e) => setIsAnonymous(e.target.checked)}
+          className="mt-1 h-4 w-4 rounded border-input accent-primary cursor-pointer"
+        />
+        <span className="text-sm">
+          <span className="font-medium text-foreground">Post anonymously</span>
+          <span className="block text-xs text-muted-foreground">
+            Your username and avatar won't be shown on this post.
+          </span>
+        </span>
+      </label>
 
       {/* Submit */}
       <Button

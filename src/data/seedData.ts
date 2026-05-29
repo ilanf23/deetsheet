@@ -22,6 +22,7 @@ export interface Post {
   commentCount: number;
   createdAt: Date;
   imageUrl?: string;
+  isAnonymous?: boolean;
 }
 
 export interface Topic {

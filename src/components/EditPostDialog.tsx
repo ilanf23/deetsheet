@@ -34,6 +34,7 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
   const [newImage, setNewImage] = useState<File | null>(null);
   const [newImagePreview, setNewImagePreview] = useState<string | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
+  const [isAnonymous, setIsAnonymous] = useState(false);
 
   useEffect(() => {
     if (!open || !postId) return;
@@ -42,7 +43,7 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
       setLoading(true);
       const { data, error } = await supabase
         .from("posts")
-        .select("id, title, content, story, image_url, author_id, status")
+        .select("id, title, content, story, image_url, author_id, status, is_anonymous")
         .eq("id", postId)
         .maybeSingle();
       if (cancelled) return;
@@ -58,6 +59,7 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
       setContent(data.content ?? "");
       setStory(data.story ?? "");
       setImageUrl(data.image_url ?? null);
+      setIsAnonymous(!!(data as { is_anonymous?: boolean }).is_anonymous);
       setNewImage(null);
       setNewImagePreview(null);
       setRemoveImage(false);
@@ -122,6 +124,7 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
         content,
         image_url: nextImageUrl,
         status: nextStatus,
+        is_anonymous: isAnonymous,
       };
       // Only touch `story` if the user typed one — keeps the update working
       // when the posts.story migration hasn't been applied to the live DB.
@@ -244,6 +247,21 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
                 />
               </div>
             </div>
+
+            <label className="flex items-start gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={isAnonymous}
+                onChange={(e) => setIsAnonymous(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-input accent-primary cursor-pointer"
+              />
+              <span className="text-sm">
+                <span className="font-medium text-foreground">Post anonymously</span>
+                <span className="block text-xs text-muted-foreground">
+                  Your username and avatar won't be shown on this post.
+                </span>
+              </span>
+            </label>
           </div>
         )}
 
