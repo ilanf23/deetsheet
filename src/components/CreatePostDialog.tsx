@@ -123,6 +123,7 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
         <Input
           id="detail"
           autoFocus
+          autoComplete="off"
           placeholder="Your tip, advice, or perspective..."
           value={detail}
           onChange={(e) => setDetail(e.target.value)}
