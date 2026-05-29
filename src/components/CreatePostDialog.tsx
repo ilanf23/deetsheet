@@ -13,7 +13,7 @@ interface CreatePostDialogProps {
   onSubmit: (detail: string, story: string, image: File | null, isAnonymous: boolean) => void;
 }
 
-const DETAIL_CHAR_LIMIT = 200;
+const DETAIL_CHAR_LIMIT = 99;
 
 const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialogProps) => {
   const [subject, setSubject] = useState(topicName);
