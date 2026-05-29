@@ -6,6 +6,7 @@ interface AuthorBylineProps {
   authorId?: string;
   avatarUrl?: string | null;
   createdAt: Date;
+  isAnonymous?: boolean;
 }
 
 const formatPostedDate = (date: Date) => {
@@ -20,16 +21,38 @@ const AuthorByline = ({
   authorId,
   avatarUrl,
   createdAt,
+  isAnonymous,
 }: AuthorBylineProps) => {
   const profileHref = authorId ? `/profile/${authorId}` : `/profile/${username}`;
+
+  const bylineStyle = {
+    fontSize: "var(--font-size-byline)",
+    lineHeight: "var(--line-height-byline)",
+  } as const;
+
+  if (isAnonymous) {
+    return (
+      <address
+        className="not-italic flex items-center gap-2 flex-wrap"
+        style={bylineStyle}
+      >
+        <Avatar className="h-6 w-6">
+          <AvatarFallback className="text-[10px] font-semibold bg-muted text-muted-foreground">
+            ?
+          </AvatarFallback>
+        </Avatar>
+        <span className="font-semibold text-foreground">Anonymous</span>
+        <time dateTime={createdAt.toISOString()} className="text-muted-foreground">
+          Posted {formatPostedDate(createdAt)}
+        </time>
+      </address>
+    );
+  }
 
   return (
     <address
       className="not-italic flex items-center gap-2 flex-wrap"
-      style={{
-        fontSize: "var(--font-size-byline)",
-        lineHeight: "var(--line-height-byline)",
-      }}
+      style={bylineStyle}
     >
       <Link to={profileHref} className="shrink-0">
         <Avatar className="h-6 w-6">
