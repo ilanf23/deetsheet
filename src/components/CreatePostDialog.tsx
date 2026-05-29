@@ -20,6 +20,7 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
   const [detail, setDetail] = useState("");
   const [comment, setComment] = useState("");
   const [image, setImage] = useState<File | null>(null);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [sourceImagePreview, setSourceImagePreview] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageEditorOpen, setImageEditorOpen] = useState(false);
