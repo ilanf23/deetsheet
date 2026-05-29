@@ -35,7 +35,7 @@ const UserPostsList = ({ userId }: { userId: string }) => {
   const fetchPosts = useCallback(async () => {
     const { data, error } = await supabase
       .from("posts")
-      .select("id, title, content, score, comment_count, created_at, status, topics(name, slug)")
+      .select("id, title, content, score, comment_count, created_at, status, is_anonymous, topics(name, slug)")
       .eq("author_id", userId)
       .order("created_at", { ascending: false });
 
