@@ -23,6 +23,7 @@ const PostCard = ({ post }: PostCardProps) => {
   const authorId = (post as Post & { authorId?: string }).authorId;
   const avatarUrl = (post as Post & { avatarUrl?: string | null }).avatarUrl;
   const status = (post as Post & { status?: string }).status;
+  const isAnonymous = !!(post as Post & { isAnonymous?: boolean }).isAnonymous;
   const isPending = status === "pending";
   const profileHref = `/profile/${authorId ?? post.username}`;
   const handleShare = async (e: MouseEvent<HTMLButtonElement>) => {
