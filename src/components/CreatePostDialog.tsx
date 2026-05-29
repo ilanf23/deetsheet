@@ -123,6 +123,7 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
         <Input
           id="detail"
           autoFocus
+          autoComplete="off"
           placeholder="Your tip, advice, or perspective..."
           value={detail}
           onChange={(e) => setDetail(e.target.value)}
@@ -252,7 +253,7 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
         <p className="text-sm font-semibold text-muted-foreground mb-2">
           Want a popular post? Here's some helpful hints:
         </p>
-        <ul className="text-xs text-muted-foreground list-disc pl-5 space-y-1">
+        <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
           <li>Write your post short using the fewest amount of words to make your point.</li>
           <li>Make sure there are no spelling or grammatical errors.</li>
         </ul>
