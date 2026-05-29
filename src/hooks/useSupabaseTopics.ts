@@ -116,6 +116,7 @@ const mapPost = (row: DbPostRaw): PostRow => {
     imageUrl: row.image_url ?? null,
     avatarUrl: row.profiles?.avatar_url ?? null,
     status,
+    isAnonymous: !!row.is_anonymous,
   };
 };
 
