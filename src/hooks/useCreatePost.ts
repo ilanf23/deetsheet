@@ -10,6 +10,7 @@ interface CreatePostInput {
   content: string;
   story?: string | null;
   image?: File | null;
+  isAnonymous?: boolean;
 }
 
 export const useCreatePost = () => {
