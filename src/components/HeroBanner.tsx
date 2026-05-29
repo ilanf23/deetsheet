@@ -27,14 +27,6 @@ const slides = [
     postId: "a2000000-0000-0000-0000-000000000002",
   },
   {
-    image: "/hero-paris.jpg",
-    headline: "SHARE INNER MOST DETAILS ABOUT LOVE, LIFE & RELATIONSHIPS",
-    quote: "I never knew others felt the same way about first dates until I read stories from others on DeetSheet.",
-    attribution: "Christine, 26, Nashville, TN",
-    topicSlug: "Love",
-    postId: "a2000000-0000-0000-0000-000000000003",
-  },
-  {
     image: "/hero-passions.jpg",
     headline: "SHARE DETAILS ABOUT YOUR PASSIONS, INTERESTS AND HOBBIES",
     quote: "I've been playing pickle for three years and DeetSheet showed me tips on how to play better.",
