@@ -221,6 +221,22 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
         </div>
       )}
 
+      {/* Anonymous toggle */}
+      <label className="flex items-start gap-2 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={isAnonymous}
+          onChange={(e) => setIsAnonymous(e.target.checked)}
+          className="mt-1 h-4 w-4 rounded border-input accent-primary cursor-pointer"
+        />
+        <span className="text-sm">
+          <span className="font-medium text-foreground">Post anonymously</span>
+          <span className="block text-xs text-muted-foreground">
+            Your username and avatar won't be shown on this post.
+          </span>
+        </span>
+      </label>
+
       {/* Submit */}
       <Button
         onClick={handleSubmit}
