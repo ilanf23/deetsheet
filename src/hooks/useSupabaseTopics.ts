@@ -78,6 +78,7 @@ type DbPostRaw = {
   created_at: string;
   image_url?: string | null;
   status?: string | null;
+  is_anonymous?: boolean | null;
   profiles?: { username: string | null; avatar_url: string | null } | null;
   topics?: { name: string; category_name: string | null; image_url: string | null; subtitle_override?: string | null } | null;
 };
