@@ -10,7 +10,7 @@ import PostImageEditorDialog from "@/components/PostImageEditorDialog";
 interface CreatePostDialogProps {
   topicName: string;
   categoryName: string;
-  onSubmit: (detail: string, story: string, image: File | null) => void;
+  onSubmit: (detail: string, story: string, image: File | null, isAnonymous: boolean) => void;
 }
 
 const DETAIL_CHAR_LIMIT = 200;
