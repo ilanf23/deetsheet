@@ -244,6 +244,8 @@ export default function AdminTopics() {
       toast({ title: "Couldn't update image", description: error.message, variant: "destructive" });
       return;
     }
+    // Also add to the topic images queue so it remains available for re-pinning later
+    await supabase.from("topic_images").insert({ topic_id: topic.id, url } as never);
     toast({ title: "Topic image updated" });
     fetchTopics();
   };
