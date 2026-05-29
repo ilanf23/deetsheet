@@ -51,6 +51,7 @@ export interface PostRow {
   imageUrl: string | null;
   avatarUrl: string | null;
   status: "pending" | "approved" | "rejected";
+  isAnonymous: boolean;
 }
 
 type DbTopicRaw = {
