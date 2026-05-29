@@ -124,6 +124,7 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
         content,
         image_url: nextImageUrl,
         status: nextStatus,
+        is_anonymous: isAnonymous,
       };
       // Only touch `story` if the user typed one — keeps the update working
       // when the posts.story migration hasn't been applied to the live DB.
