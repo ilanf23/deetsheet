@@ -17,7 +17,7 @@ const AddPostBar = ({ topicId, topicName, categoryName, onPostAdded }: AddPostBa
   const createPost = useCreatePost();
   const { toast } = useToast();
 
-  const handleSubmit = async (detail: string, story: string, image: File | null) => {
+  const handleSubmit = async (detail: string, story: string, image: File | null, isAnonymous: boolean) => {
     try {
       await createPost.mutateAsync({
         topicId,
@@ -26,6 +26,7 @@ const AddPostBar = ({ topicId, topicName, categoryName, onPostAdded }: AddPostBa
         content: detail,
         story: story || null,
         image,
+        isAnonymous,
       });
       toast({
         title: "Pending admin approval",
