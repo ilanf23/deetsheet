@@ -43,7 +43,7 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
       setLoading(true);
       const { data, error } = await supabase
         .from("posts")
-        .select("id, title, content, story, image_url, author_id, status")
+        .select("id, title, content, story, image_url, author_id, status, is_anonymous")
         .eq("id", postId)
         .maybeSingle();
       if (cancelled) return;
@@ -59,6 +59,7 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
       setContent(data.content ?? "");
       setStory(data.story ?? "");
       setImageUrl(data.image_url ?? null);
+      setIsAnonymous(!!(data as { is_anonymous?: boolean }).is_anonymous);
       setNewImage(null);
       setNewImagePreview(null);
       setRemoveImage(false);
