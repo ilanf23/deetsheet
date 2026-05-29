@@ -206,7 +206,7 @@ export const usePostsByTopic = (topicId: string | undefined) => {
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, content, story, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, image_url, status, " +
+          "id, title, content, story, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, image_url, status, is_anonymous, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
@@ -237,7 +237,7 @@ export const useRecentPosts = (limit = 8) => {
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, topic_id, author_id, average_rating, rating_count, comment_count, created_at, image_url, status, " +
+          "id, title, topic_id, author_id, average_rating, rating_count, comment_count, created_at, image_url, status, is_anonymous, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
@@ -333,7 +333,7 @@ export const useRecentPostsByTopic = (topicId: string | undefined, limit = 5) =>
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, content, story, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, image_url, status, " +
+          "id, title, content, story, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, image_url, status, is_anonymous, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
