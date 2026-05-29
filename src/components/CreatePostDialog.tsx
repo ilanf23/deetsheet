@@ -59,7 +59,7 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
 
   const handleSubmit = () => {
     if (!detail.trim()) return;
-    onSubmit(detail.trim(), comment.trim(), image);
+    onSubmit(detail.trim(), comment.trim(), image, isAnonymous);
   };
 
   useEffect(() => {
