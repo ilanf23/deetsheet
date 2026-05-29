@@ -103,6 +103,11 @@ const UserPostsList = ({ userId }: { userId: string }) => {
                       >
                         {pill.label}
                       </span>
+                      {post.is_anonymous && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-muted text-muted-foreground">
+                          Anonymous
+                        </span>
+                      )}
                     </div>
                   </Link>
                   <div className="flex items-center gap-3 shrink-0 text-xs text-muted-foreground">
