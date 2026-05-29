@@ -82,7 +82,7 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
       {/* Header */}
       <div>
         <h2 className="text-lg font-semibold text-orange-500">
-          You're About to Create a New Sub-Topic
+          You're About to Create a New Post
         </h2>
         <ul className="mt-2 text-sm text-muted-foreground list-disc pl-5 space-y-1">
           <li>Posts should contain useful advice, tips, or insights</li>
