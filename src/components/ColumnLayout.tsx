@@ -95,7 +95,7 @@ const ColumnLayout = ({ onAtBottomChange }: ColumnLayoutProps) => {
           ref={leftRef}
           className={`${mobileTab === "recent" ? "block" : "hidden"} lg:block lg:h-full lg:overflow-y-auto lg:pr-2 lg:pb-24`}
         >
-          <RecentlyAddedSidebar />
+          <RecentlyAddedSidebar scrollRootRef={leftRef} />
         </div>
 
         {/* Middle — Most Popular */}
