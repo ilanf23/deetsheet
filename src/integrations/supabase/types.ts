@@ -80,6 +80,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          is_anonymous: boolean
           like_count: number
           parent_comment_id: string | null
           post_id: string
@@ -89,6 +90,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          is_anonymous?: boolean
           like_count?: number
           parent_comment_id?: string | null
           post_id: string
@@ -98,6 +100,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          is_anonymous?: boolean
           like_count?: number
           parent_comment_id?: string | null
           post_id?: string
