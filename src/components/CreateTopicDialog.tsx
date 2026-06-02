@@ -153,11 +153,13 @@ export default function CreateTopicDialog({ open, onOpenChange, onTopicCreated, 
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {subjectCategories.map((cat) => (
-                      <SelectItem key={cat} value={cat}>
-                        {cat}
-                      </SelectItem>
-                    ))}
+                    {[...subjectCategories]
+                      .sort((a, b) => a.localeCompare(b))
+                      .map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>
