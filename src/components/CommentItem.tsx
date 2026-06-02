@@ -93,7 +93,7 @@ const CommentItem = ({
         className="absolute left-[5px] sm:left-[11px] top-[20px] w-[7px] sm:w-[13px] h-1 border-l border-t border-border rounded-tl-[4px] pointer-events-none"
       />
       <article id={`comment-${node.id}`}>
-        <header className="flex items-start justify-between gap-3">
+        <header className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
           <div className="flex items-start gap-2 min-w-0">
             <UserAvatar
               username={node.username}
