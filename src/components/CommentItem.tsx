@@ -96,20 +96,36 @@ const CommentItem = ({
       <article id={`comment-${node.id}`}>
         <header className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
           <div className="flex items-start gap-2 min-w-0">
-            <UserAvatar
-              username={node.username}
-              avatarUrl={node.avatarUrl ?? undefined}
-              size="lg"
-              showName={false}
-            />
+            {node.isAnonymous ? (
+              <div
+                aria-hidden
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground text-sm font-semibold"
+                title="Anonymous"
+              >
+                ?
+              </div>
+            ) : (
+              <UserAvatar
+                username={node.username}
+                avatarUrl={node.avatarUrl ?? undefined}
+                size="lg"
+                showName={false}
+              />
+            )}
             <div className="flex flex-col leading-tight min-w-0">
               <div className="flex items-baseline gap-2 flex-wrap">
-                <Link
-                  to={`/profile/${node.username}`}
-                  className="font-semibold text-primary hover:underline text-sm"
-                >
-                  {node.username}
-                </Link>
+                {node.isAnonymous ? (
+                  <span className="font-semibold text-card-foreground text-sm">
+                    Anonymous
+                  </span>
+                ) : (
+                  <Link
+                    to={`/profile/${node.username}`}
+                    className="font-semibold text-primary hover:underline text-sm"
+                  >
+                    {node.username}
+                  </Link>
+                )}
                 {(hasChildren || collapsed) && (
                   <button
                     type="button"
