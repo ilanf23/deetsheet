@@ -12,6 +12,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 
 type Profile = Tables<"profiles">;
@@ -65,6 +75,8 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
   const [comingSoonFeature, setComingSoonFeature] = useState<"edit" | "add">("edit");
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
 
   const fetchAll = async () => {
@@ -161,6 +173,26 @@ export default function AdminUsers() {
   };
   const handleBan = (name: string) => {
     toast({ title: "Ban user", description: `${name} would be banned (wire up to user_status table).` });
+  };
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const { data, error } = await supabase.functions.invoke<{ ok?: boolean; error?: string }>(
+      "admin-delete-user",
+      { body: { user_id: deleteTarget.id } },
+    );
+    setDeleting(false);
+    if (error || data?.error) {
+      toast({
+        title: "Couldn't delete user",
+        description: data?.error ?? error?.message ?? "Unknown error",
+        variant: "destructive",
+      });
+      return;
+    }
+    toast({ title: `${deleteTarget.name} deleted` });
+    setDeleteTarget(null);
+    fetchAll();
   };
 
   if (loading) {
@@ -315,6 +347,13 @@ export default function AdminUsers() {
                     style={{ color: "hsl(var(--admin-danger))" }}
                   >
                     Ban
+                  </button>
+                  <button
+                    onClick={() => setDeleteTarget({ id: u.id, name: displayName })}
+                    className="text-[14px]"
+                    style={{ color: "hsl(var(--admin-danger))" }}
+                  >
+                    Delete
                   </button>
                 </span>
               </div>
