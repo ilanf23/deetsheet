@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ImagePlus, Pencil, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,16 +7,46 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { getTopicSubtitle } from "@/hooks/useSupabaseTopics";
 import PostImageEditorDialog from "@/components/PostImageEditorDialog";
+import type { Post } from "@/data/seedData";
+import { buildPostSlug } from "@/lib/postSlug";
+import { formatTitle } from "@/lib/formatTitle";
 
 interface CreatePostDialogProps {
   topicName: string;
   categoryName: string;
+  existingPosts?: Post[];
   onSubmit: (detail: string, story: string, image: File | null, isAnonymous: boolean) => void;
+  onDismiss?: () => void;
 }
 
 const DETAIL_CHAR_LIMIT = 99;
+const SUGGEST_MIN_CHARS = 3;
+const SUGGEST_MAX_RESULTS = 5;
+const STOP_WORDS = new Set([
+  "the", "and", "for", "with", "you", "your", "are", "but", "not", "have",
+  "has", "this", "that", "from", "what", "when", "how", "why", "who",
+  "about", "into", "out", "can", "will", "just", "also", "than", "then",
+]);
 
-const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialogProps) => {
+const tokenize = (input: string): string[] => {
+  return Array.from(
+    new Set(
+      input
+        .toLowerCase()
+        .split(/[^a-z0-9]+/)
+        .filter((t) => t.length >= SUGGEST_MIN_CHARS && !STOP_WORDS.has(t)),
+    ),
+  );
+};
+
+const CreatePostDialog = ({
+  topicName,
+  categoryName,
+  existingPosts = [],
+  onSubmit,
+  onDismiss,
+}: CreatePostDialogProps) => {
+  const navigate = useNavigate();
   const [subject, setSubject] = useState(topicName);
   const [detail, setDetail] = useState("");
   const [comment, setComment] = useState("");
@@ -60,6 +91,31 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
   const handleSubmit = () => {
     if (!detail.trim()) return;
     onSubmit(detail.trim(), comment.trim(), image, isAnonymous);
+  };
+
+  const suggestions = useMemo(() => {
+    const tokens = tokenize(detail);
+    if (tokens.length === 0 || existingPosts.length === 0) return [];
+    const scored = existingPosts
+      .map((post) => {
+        const haystack = `${post.title ?? ""} ${post.content ?? ""}`.toLowerCase();
+        let score = 0;
+        for (const t of tokens) {
+          if (haystack.includes(t)) score += 1;
+        }
+        return { post, score };
+      })
+      .filter((s) => s.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, SUGGEST_MAX_RESULTS);
+    return scored.map((s) => s.post);
+  }, [detail, existingPosts]);
+
+  const goToExisting = (post: Post) => {
+    const title = formatTitle(post.title || post.content);
+    const slug = buildPostSlug(title, post.id) || post.id;
+    onDismiss?.();
+    navigate(`/topic/${encodeURIComponent(topicName)}/post/${slug}`);
   };
 
   useEffect(() => {
@@ -129,6 +185,32 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
           onChange={(e) => setDetail(e.target.value)}
           maxLength={DETAIL_CHAR_LIMIT}
         />
+        {suggestions.length > 0 && (
+          <div className="rounded-md border bg-muted/40 p-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+              Similar posts already in this topic
+            </p>
+            <ul className="space-y-1.5">
+              {suggestions.map((post) => {
+                const display = formatTitle(post.title || post.content);
+                return (
+                  <li key={post.id}>
+                    <button
+                      type="button"
+                      onClick={() => goToExisting(post)}
+                      className="block w-full text-left text-sm text-primary hover:underline"
+                    >
+                      {display}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Tap one to review it — or keep typing if yours is different.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Comment/story */}
@@ -217,7 +299,7 @@ const CreatePostDialog = ({ topicName, categoryName, onSubmit }: CreatePostDialo
               />
             )}
             <p className="whitespace-pre-line text-sm leading-6 text-card-foreground">
-              {detail.trim() || "Add a detail to preview the finished post."}
+              {comment.trim() || "Your comment or story will appear here."}
             </p>
           </div>
         </div>

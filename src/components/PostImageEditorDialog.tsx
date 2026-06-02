@@ -20,10 +20,15 @@ interface PostImageEditorDialogProps {
   onOpenChange: (open: boolean) => void;
   onApply: (file: File, previewUrl: string) => void;
   onReselect: () => void;
+  aspect?: number;
+  outputSize?: { width: number; height: number };
+  title?: string;
+  description?: string;
+  filenamePrefix?: string;
 }
 
-const POST_IMAGE_ASPECT = 4 / 3;
-const POST_IMAGE_OUTPUT_SIZE = { width: 1200, height: 900 };
+const DEFAULT_ASPECT = 4 / 3;
+const DEFAULT_OUTPUT_SIZE = { width: 1200, height: 900 };
 
 export default function PostImageEditorDialog({
   open,
@@ -31,6 +36,11 @@ export default function PostImageEditorDialog({
   onOpenChange,
   onApply,
   onReselect,
+  aspect = DEFAULT_ASPECT,
+  outputSize = DEFAULT_OUTPUT_SIZE,
+  title = "Edit Post Photo",
+  description = "Crop, zoom, and rotate the photo before attaching it to the post.",
+  filenamePrefix = "post-image",
 }: PostImageEditorDialogProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -80,7 +90,7 @@ export default function PostImageEditorDialog({
           imageSrc,
           croppedAreaPixels,
           rotation,
-          POST_IMAGE_OUTPUT_SIZE,
+          outputSize,
           "image/jpeg",
           0.9,
         );
@@ -99,7 +109,7 @@ export default function PostImageEditorDialog({
       active = false;
       window.clearTimeout(timeoutId);
     };
-  }, [croppedAreaPixels, imageSrc, rotation]);
+  }, [croppedAreaPixels, imageSrc, rotation, outputSize]);
 
   const handleApply = async () => {
     if (!imageSrc || !croppedAreaPixels) return;
@@ -110,11 +120,11 @@ export default function PostImageEditorDialog({
         imageSrc,
         croppedAreaPixels,
         rotation,
-        POST_IMAGE_OUTPUT_SIZE,
+        outputSize,
         "image/jpeg",
         0.9,
       );
-      const file = new File([blob], `post-image-${Date.now()}.jpg`, {
+      const file = new File([blob], `${filenamePrefix}-${Date.now()}.jpg`, {
         type: "image/jpeg",
       });
       const previewUrl = URL.createObjectURL(blob);
@@ -129,22 +139,23 @@ export default function PostImageEditorDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Edit Post Photo</DialogTitle>
-          <DialogDescription>
-            Crop, zoom, and rotate the photo before attaching it to the post.
-          </DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_260px]">
           <div className="space-y-4">
-            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-muted">
+            <div
+              className="relative w-full overflow-hidden rounded-lg bg-muted"
+              style={{ aspectRatio: aspect }}
+            >
               {imageSrc && (
                 <Cropper
                   image={imageSrc}
                   crop={crop}
                   zoom={zoom}
                   rotation={rotation}
-                  aspect={POST_IMAGE_ASPECT}
+                  aspect={aspect}
                   showGrid
                   onCropChange={setCrop}
                   onZoomChange={setZoom}
@@ -182,11 +193,14 @@ export default function PostImageEditorDialog({
           </div>
 
           <div className="space-y-3">
-            <p className="text-sm font-medium">Post Preview</p>
+            <p className="text-sm font-medium">Preview</p>
             <div className="rounded-lg border bg-card p-3 shadow-sm">
               <div className="mb-3 h-4 w-24 rounded bg-muted" />
               <div className="mb-3 h-5 w-11/12 rounded bg-muted" />
-              <div className="aspect-[4/3] overflow-hidden rounded-md border bg-muted">
+              <div
+                className="overflow-hidden rounded-md border bg-muted"
+                style={{ aspectRatio: aspect }}
+              >
                 {livePreviewUrl && (
                   <img
                     src={livePreviewUrl}

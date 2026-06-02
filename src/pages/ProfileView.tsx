@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   Pencil,
@@ -20,6 +20,8 @@ import {
   Building2,
   ChevronDown,
   ChevronUp,
+  Search,
+  X,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -42,6 +44,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import CreateTopicDialog from "@/components/CreateTopicDialog";
@@ -76,6 +79,28 @@ interface UserTopic {
   slug: string;
   description: string | null;
   created_at: string;
+}
+
+interface UserComment {
+  id: string;
+  content: string;
+  // Plain text is precomputed once at fetch so display + search don't re-parse
+  // the rich-text HTML on every keystroke.
+  plainText: string;
+  created_at: string;
+  like_count: number;
+  post_id: string;
+  postTitle: string;
+  topicName: string;
+}
+
+// Comment bodies are stored as rich-text HTML; strip tags for display + search.
+function getCommentPlainText(html: string): string {
+  if (typeof window === "undefined") {
+    return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  }
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  return (doc.body.textContent ?? "").replace(/\s+/g, " ").trim();
 }
 
 function getTimeAgo(dateStr: string): string {
@@ -154,6 +179,8 @@ const ProfileView = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("posts");
   const [moreInfoExpanded, setMoreInfoExpanded] = useState(false);
+  // Free-text filter applied to the active tab's list (Posts / Topics only).
+  const [query, setQuery] = useState("");
 
   // Determine which profile to view: URL param or logged-in user
   const targetUserId = userId || user?.id;
@@ -173,6 +200,12 @@ const ProfileView = () => {
   const [userTopics, setUserTopics] = useState<UserTopic[]>([]);
   const [topicCount, setTopicCount] = useState(0);
   const [topicsRequested, setTopicsRequested] = useState(false);
+
+  // Comments list — fetched lazily the first time the Comments tab is opened.
+  // The count badge is driven by the cheap exact-count query below.
+  const [userComments, setUserComments] = useState<UserComment[]>([]);
+  const [commentsRequested, setCommentsRequested] = useState(false);
+
   const [createTopicOpen, setCreateTopicOpen] = useState(false);
   const [editPostId, setEditPostId] = useState<string | null>(null);
   const [postsRefreshKey, setPostsRefreshKey] = useState(0);
@@ -183,10 +216,6 @@ const ProfileView = () => {
   // hook drives the badge above the tabs.
   const [followingRequested, setFollowingRequested] = useState(false);
   const [followersRequested, setFollowersRequested] = useState(false);
-  const [commentsRequested, setCommentsRequested] = useState(false);
-  const [userComments, setUserComments] = useState<
-    { id: string; content: string; created_at: string; post_id: string; post_title: string | null; topic_name: string | null }[]
-  >([]);
   const { data: followCounts } = useProfileFollowCounts(targetUserId);
   const { data: followingData } = useFollowing(targetUserId, { enabled: followingRequested });
   const { data: followersData } = useFollowers(targetUserId, { enabled: followersRequested });
@@ -194,38 +223,14 @@ const ProfileView = () => {
   const followerTotal = followersData?.length ?? followCounts?.followerCount ?? 0;
 
   // Mark heavy tab queries as requested the first time the tab is activated.
+  // Also clear the search filter so a query doesn't leak across tabs.
   useEffect(() => {
     if (activeTab === "following") setFollowingRequested(true);
     if (activeTab === "followers") setFollowersRequested(true);
     if (activeTab === "topics") setTopicsRequested(true);
     if (activeTab === "comments") setCommentsRequested(true);
+    setQuery("");
   }, [activeTab]);
-
-  // Fetch the user's comments (with their post + topic) the first time the
-  // Comments tab is opened, and whenever the target user changes.
-  useEffect(() => {
-    if (!commentsRequested || !targetUserId) return;
-    void supabase
-      .from("comments")
-      .select("id, content, created_at, post_id, posts(title, topics(name))")
-      .eq("author_id", targetUserId)
-      .order("created_at", { ascending: false })
-      .limit(50)
-      .then(({ data }) => {
-        if (!data) return;
-        setUserComments(
-          data.map((c: any) => ({
-            id: c.id,
-            content: c.content,
-            created_at: c.created_at,
-            post_id: c.post_id,
-            post_title: c.posts?.title ?? null,
-            topic_name: c.posts?.topics?.name ?? null,
-          })),
-        );
-      });
-  }, [commentsRequested, targetUserId, postsRefreshKey]);
-
 
   useEffect(() => {
     if (!targetUserId) return;
@@ -309,6 +314,66 @@ const ProfileView = () => {
         setTopicCount(data.length);
       });
   }, [topicsRequested]);
+
+  // Comments fetch fires the first time the user opens the Comments tab. We
+  // resolve each comment's post title + topic in a second query so the comment
+  // can link back to its discussion (same shape the admin author view uses).
+  useEffect(() => {
+    if (!commentsRequested || !targetUserId) return;
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase
+        .from("comments")
+        .select("id, content, created_at, like_count, post_id")
+        .eq("author_id", targetUserId)
+        .order("created_at", { ascending: false });
+      if (cancelled || !data) return;
+
+      const rows = data as Array<{
+        id: string;
+        content: string;
+        created_at: string;
+        like_count: number | null;
+        post_id: string;
+      }>;
+
+      const postIds = Array.from(new Set(rows.map((r) => r.post_id).filter(Boolean)));
+      const postById = new Map<string, { title: string; topicName: string }>();
+      if (postIds.length > 0) {
+        const { data: posts } = await supabase
+          .from("posts")
+          .select("id, title, topics(name)")
+          .in("id", postIds);
+        if (cancelled) return;
+        ((posts ?? []) as Array<Record<string, unknown>>).forEach((p) => {
+          const topics = p.topics as Record<string, unknown> | Record<string, unknown>[] | null;
+          const topicName = Array.isArray(topics)
+            ? (topics[0]?.name as string)
+            : (topics?.name as string);
+          postById.set(p.id as string, {
+            title: (p.title as string) || "Untitled post",
+            topicName: topicName || "General",
+          });
+        });
+      }
+
+      setUserComments(
+        rows.map((c) => ({
+          id: c.id,
+          content: c.content,
+          plainText: getCommentPlainText(c.content),
+          created_at: c.created_at,
+          like_count: c.like_count ?? 0,
+          post_id: c.post_id,
+          postTitle: postById.get(c.post_id)?.title ?? "Unknown post",
+          topicName: postById.get(c.post_id)?.topicName ?? "General",
+        })),
+      );
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [commentsRequested, targetUserId]);
 
   const username =
     (profile?.name as string) ||
@@ -414,6 +479,44 @@ const ProfileView = () => {
   if (profile?.entity_type && (profile.entity_type as string).toLowerCase() !== "person") {
     credentials.push({ icon: "award", text: `Organization — ${profile.entity_type as string}` });
   }
+
+  // Client-side filter over already-loaded lists. Both userPosts and userTopics
+  // are fully fetched, so filtering is instant and needs no extra DB calls.
+  const trimmedQuery = query.trim().toLowerCase();
+  const filteredPosts = useMemo(() => {
+    if (!trimmedQuery) return userPosts;
+    return userPosts.filter(
+      (p) =>
+        p.title?.toLowerCase().includes(trimmedQuery) ||
+        p.content?.toLowerCase().includes(trimmedQuery)
+    );
+  }, [userPosts, trimmedQuery]);
+  const filteredTopics = useMemo(() => {
+    if (!trimmedQuery) return userTopics;
+    return userTopics.filter(
+      (t) =>
+        t.name?.toLowerCase().includes(trimmedQuery) ||
+        t.description?.toLowerCase().includes(trimmedQuery)
+    );
+  }, [userTopics, trimmedQuery]);
+  const filteredComments = useMemo(() => {
+    if (!trimmedQuery) return userComments;
+    return userComments.filter(
+      (c) =>
+        c.plainText.toLowerCase().includes(trimmedQuery) ||
+        c.postTitle.toLowerCase().includes(trimmedQuery)
+    );
+  }, [userComments, trimmedQuery]);
+
+  // Posts, Topics, and Comments tabs support the search filter.
+  const searchable =
+    activeTab === "posts" || activeTab === "topics" || activeTab === "comments";
+  const searchPlaceholder =
+    activeTab === "topics"
+      ? "Search topics…"
+      : activeTab === "comments"
+        ? "Search your comments…"
+        : "Search your posts…";
 
   const TABS = [
     { value: "posts", label: "Posts", count: postCount },
@@ -727,16 +830,42 @@ const ProfileView = () => {
                 ))}
               </TabsList>
 
+              {searchable && (
+                <div className="relative mt-4 w-full sm:max-w-sm">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder={searchPlaceholder}
+                    className="pl-10 pr-9 bg-muted border-0 focus-visible:ring-primary"
+                  />
+                  {query && (
+                    <button
+                      type="button"
+                      onClick={() => setQuery("")}
+                      aria-label="Clear search"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              )}
+
               <TabsContent value="posts" className="mt-4">
-                {userPosts.length === 0 ? (
+                {filteredPosts.length === 0 ? (
                   <Card className="bg-card">
                     <CardContent className="py-12 text-center text-muted-foreground">
-                      <p className="text-sm">No posts yet.</p>
+                      <p className="text-sm">
+                        {trimmedQuery
+                          ? `No posts match "${query.trim()}."`
+                          : "No posts yet."}
+                      </p>
                     </CardContent>
                   </Card>
                 ) : (
                   <div className="space-y-2">
-                    {userPosts.map((post) => {
+                    {filteredPosts.map((post) => {
                       const postHref = `/topic/${encodeURIComponent(post.topic_name)}/post/${buildPostSlug(post.title || post.content, post.id) || post.id}`;
                       return (
                         <Card key={post.id} className="group bg-card hover:shadow-md transition-shadow">
@@ -851,15 +980,19 @@ const ProfileView = () => {
                     />
                   </div>
                 )}
-                {userTopics.length === 0 ? (
+                {filteredTopics.length === 0 ? (
                   <Card className="bg-card">
                     <CardContent className="py-12 text-center text-muted-foreground">
-                      <p className="text-sm">No topics created yet.</p>
+                      <p className="text-sm">
+                        {trimmedQuery
+                          ? `No topics match "${query.trim()}."`
+                          : "No topics created yet."}
+                      </p>
                     </CardContent>
                   </Card>
                 ) : (
                   <div className="space-y-4">
-                    {userTopics.map((topic) => (
+                    {filteredTopics.map((topic) => (
                       <Card key={topic.id} className="bg-card hover:shadow-md transition-shadow">
                         <CardContent className="pt-4 pb-3">
                           <div className="flex items-start gap-3">
@@ -891,37 +1024,45 @@ const ProfileView = () => {
               </TabsContent>
 
               <TabsContent value="comments" className="mt-4">
-                {userComments.length === 0 ? (
+                {filteredComments.length === 0 ? (
                   <Card className="bg-card">
                     <CardContent className="py-12 text-center text-muted-foreground">
-                      <p className="text-sm">No comments yet</p>
+                      <p className="text-sm">
+                        {trimmedQuery
+                          ? `No comments match "${query.trim()}."`
+                          : "No comments yet."}
+                      </p>
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="space-y-3">
-                    {userComments.map((c) => {
-                      const slug = buildPostSlug(c.post_title, c.post_id) || c.post_id;
-                      const href = c.topic_name
-                        ? `/topic/${encodeURIComponent(c.topic_name)}/post/${slug}#comment-${c.id}`
-                        : `#`;
+                  <div className="space-y-2">
+                    {filteredComments.map((comment) => {
+                      const commentHref = `/topic/${encodeURIComponent(comment.topicName)}/post/${buildPostSlug(comment.postTitle, comment.post_id) || comment.post_id}#comments`;
                       return (
-                        <Card key={c.id} className="bg-card">
-                          <CardContent className="py-4 space-y-2">
-                            <div className="text-xs text-muted-foreground">
-                              {c.topic_name && c.post_title ? (
-                                <a href={href} className="text-primary hover:underline">
-                                  {c.topic_name} · {c.post_title}
-                                </a>
-                              ) : (
-                                <span>Comment</span>
-                              )}
-                              <span className="ml-2">
-                                {formatJoinDate(c.created_at)}
-                              </span>
-                            </div>
-                            <p className="text-sm text-card-foreground whitespace-pre-line">
-                              {c.content}
+                        <Card key={comment.id} className="bg-card hover:shadow-md transition-shadow">
+                          <CardContent className="p-4">
+                            <p className="text-sm text-card-foreground line-clamp-3 break-words mb-2">
+                              {comment.plainText || "Empty comment"}
                             </p>
+                            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                              <span>on</span>
+                              <a
+                                href={commentHref}
+                                className="text-primary hover:underline truncate max-w-[60%]"
+                              >
+                                {formatTitle(comment.postTitle)}
+                              </a>
+                              <span aria-hidden>·</span>
+                              <span>{getTimeAgo(comment.created_at)}</span>
+                              {comment.like_count > 0 && (
+                                <>
+                                  <span aria-hidden>·</span>
+                                  <span className="tabular-nums">
+                                    {comment.like_count} {comment.like_count === 1 ? "like" : "likes"}
+                                  </span>
+                                </>
+                              )}
+                            </div>
                           </CardContent>
                         </Card>
                       );
@@ -937,7 +1078,6 @@ const ProfileView = () => {
                   </CardContent>
                 </Card>
               </TabsContent>
-
 
               <TabsContent value="following" className="mt-4">
                 {followingTotal === 0 ? (

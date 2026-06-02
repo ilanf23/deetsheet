@@ -109,6 +109,7 @@ type PendingPost = {
   author?: Author;
   title: string;
   content: string;
+  story: string | null;
   image_url: string | null;
   topic_id: string;
   topic_name?: string;
@@ -126,6 +127,16 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 function stripHtml(html: string, max = 220) {
   const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
   return text.length > max ? text.slice(0, max).trimEnd() + "…" : text;
+}
+
+function getPostPreviewText(item: PendingPost) {
+  const title = item.title.trim();
+  const story = item.story?.trim();
+  const content = item.content.trim();
+
+  if (story) return stripHtml(story);
+  if (content && content !== title) return stripHtml(content);
+  return "";
 }
 
 function TypeBadge({ kind }: { kind: "topic" | "post" }) {
@@ -161,7 +172,7 @@ export default function AdminReview() {
         .eq("status", "pending"),
       supabase
         .from("posts")
-        .select("id, title, content, image_url, topic_id, author_id, created_at")
+        .select("id, title, content, story, image_url, topic_id, author_id, created_at")
         .eq("status", "pending"),
     ]);
 
@@ -215,6 +226,7 @@ export default function AdminReview() {
           author: p.author_id ? authorMap.get(p.author_id) : undefined,
           title: p.title,
           content: p.content,
+          story: p.story ?? null,
           image_url: p.image_url,
           topic_id: p.topic_id,
           topic_name: parent?.name,
@@ -396,9 +408,11 @@ export default function AdminReview() {
                           </Link>
                         </div>
                       )}
-                      <p className="text-[14px]" style={{ color: "hsl(var(--admin-fg))" }}>
-                        {stripHtml(item.content)}
-                      </p>
+                      {getPostPreviewText(item) && (
+                        <p className="text-[14px]" style={{ color: "hsl(var(--admin-fg))" }}>
+                          {getPostPreviewText(item)}
+                        </p>
+                      )}
                     </>
                   )}
                 </div>

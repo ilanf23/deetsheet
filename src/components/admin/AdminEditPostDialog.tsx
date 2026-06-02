@@ -32,6 +32,8 @@ type TopicLite = Pick<Tables<"topics">, "id" | "name">;
 interface AuthorPost {
   id: string;
   title: string;
+  content: string;
+  story: string | null;
   status: string;
   createdAt: string;
   topicName: string | null;
@@ -118,6 +120,22 @@ interface Props {
 }
 
 const STATUS_OPTIONS = ["pending", "approved", "rejected"] as const;
+const AUTHOR_COMMENTS_LIMIT = 100;
+
+function stripHtml(html: string, max = 220) {
+  const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  return text.length > max ? text.slice(0, max).trimEnd() + "..." : text;
+}
+
+function getPostPreviewText(post: Pick<AuthorPost, "title" | "content" | "story">) {
+  const title = post.title.trim();
+  const story = post.story?.trim();
+  const content = post.content.trim();
+
+  if (story) return stripHtml(story);
+  if (content && content !== title) return stripHtml(content);
+  return "";
+}
 
 export default function AdminEditPostDialog({ postId, open, onOpenChange, onSaved }: Props) {
   const { user } = useAuth();
@@ -217,7 +235,7 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
                 .maybeSingle(),
               supabase
                 .from("posts")
-                .select("id, title, status, created_at, topic_id, topics(name)")
+                .select("id, title, content, story, status, created_at, topic_id, topics(name)")
                 .eq("author_id", p.author_id)
                 .order("created_at", { ascending: false }),
               supabase
@@ -260,6 +278,8 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
             type AuthorPostRow = {
               id: string;
               title: string;
+              content: string | null;
+              story: string | null;
               status: string | null;
               created_at: string;
               topic_id: string;
@@ -310,6 +330,8 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
               posts: rows.map((r) => ({
                 id: r.id,
                 title: r.title,
+                content: r.content ?? "",
+                story: r.story ?? null,
                 status: r.status ?? "approved",
                 createdAt: r.created_at,
                 topicName: topicNameOf(r.topics),
@@ -370,25 +392,38 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
     if (authorSectionOpen && authorTab === "comments" && authorComments === null) {
       void supabase
         .from("comments")
-        .select("id, content, created_at, posts(title)")
+        .select("id, content, created_at, post_id")
         .eq("author_id", author.id)
         .order("created_at", { ascending: false })
-        .then(({ data }) => {
+        .limit(AUTHOR_COMMENTS_LIMIT)
+        .then(async ({ data }) => {
           if (cancelled) return;
           const rows = (data ?? []) as Array<{
             id: string;
             content: string;
             created_at: string;
-            posts: { title: string } | { title: string }[] | null;
+            post_id: string;
           }>;
+
+          const postIds = Array.from(new Set(rows.map((c) => c.post_id).filter(Boolean)));
+          const postTitleById = new Map<string, string>();
+          if (postIds.length > 0) {
+            const { data: posts } = await supabase
+              .from("posts")
+              .select("id, title")
+              .in("id", postIds);
+            if (cancelled) return;
+            ((posts ?? []) as Array<{ id: string; title: string | null }>).forEach((post) => {
+              postTitleById.set(post.id, post.title ?? "Untitled post");
+            });
+          }
+
           setAuthorComments(
             rows.map((c) => ({
               id: c.id,
               content: c.content,
               createdAt: c.created_at,
-              postTitle: Array.isArray(c.posts)
-                ? (c.posts[0]?.title ?? null)
-                : (c.posts?.title ?? null),
+              postTitle: postTitleById.get(c.post_id) ?? null,
             }))
           );
         });
@@ -789,6 +824,11 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
                                   <div className="break-words text-sm font-medium text-foreground">
                                     {ap.title}
                                   </div>
+                                  {getPostPreviewText(ap) && (
+                                    <p className="mt-1 line-clamp-3 break-words text-sm text-foreground">
+                                      {getPostPreviewText(ap)}
+                                    </p>
+                                  )}
                                   <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                                     {ap.topicName && (
                                       <Badge variant="secondary" className="font-normal">
@@ -854,7 +894,7 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
                                 <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                                 <div className="min-w-0 flex-1">
                                   <p className="line-clamp-3 break-words text-sm text-foreground">
-                                    {c.content}
+                                    {stripHtml(c.content)}
                                   </p>
                                   <div className="mt-0.5 text-xs text-muted-foreground">
                                     {c.postTitle ? `on “${c.postTitle}” · ` : ""}

@@ -139,7 +139,7 @@ const TopicPage = () => {
               </button>
             ))}
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-5 lg:h-full">
+          <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-5 lg:gap-x-3 lg:h-full">
             {/* Left - Recently Added */}
             <div className={`${mobileTab === "recent" ? "block" : "hidden"} lg:block pt-4 lg:h-full lg:overflow-y-auto lg:pr-2`}>
               <TopicRecentlyAdded topicId={topic.id} topicName={topic.name} />
@@ -200,18 +200,16 @@ const TopicPage = () => {
                 primaryImage={topic.imageUrl}
               />
               <div>
-                {!!user && (
-                  <div
-                    aria-hidden
-                    className="flex items-baseline gap-3 px-3 -mx-3 pb-2 text-sm text-muted-foreground"
-                  >
-                    <span className="w-6 shrink-0" />
-                    <span className="flex-1 min-w-0" />
-                    <span className="shrink-0 w-[72px] ml-4 text-center">Rating</span>
-                    <span className="shrink-0 -ml-4 text-muted-foreground/60" aria-hidden>|</span>
-                    <span className="shrink-0 w-6 text-left">You</span>
-                  </div>
-                )}
+                <div
+                  aria-hidden
+                  className="flex items-baseline gap-3 px-3 -mx-3 pb-2 text-sm text-muted-foreground"
+                >
+                  <span className="w-6 shrink-0" />
+                  <span className="flex-1 min-w-0" />
+                  <span className="shrink-0 w-[72px] ml-4 text-center">Rating</span>
+                  <span className="shrink-0 -ml-4 text-muted-foreground/60" aria-hidden>|</span>
+                  <span className="shrink-0 w-6 text-left">You</span>
+                </div>
                 <div className="divide-y divide-border border-y border-border rounded-t-md">
                   {visiblePosts.map((post, i) => (
                     <TopicPostListItem
@@ -220,7 +218,7 @@ const TopicPage = () => {
                       rank={i + 1}
                       topicName={topic.name}
                       topicId={topic.id}
-                      showRanking={!!user}
+                      showRanking
                     />
                   ))}
                 </div>
@@ -230,6 +228,7 @@ const TopicPage = () => {
                       topicId={topic.id}
                       topicName={topic.name}
                       categoryName={topic.categoryName}
+                      existingPosts={posts}
                       onPostAdded={refreshPosts}
                     />
                   </div>

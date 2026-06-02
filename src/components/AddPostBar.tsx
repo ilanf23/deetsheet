@@ -4,15 +4,17 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import CreatePostDialog from "./CreatePostDialog";
 import { useCreatePost } from "@/hooks/useCreatePost";
 import { useToast } from "@/hooks/use-toast";
+import type { Post } from "@/data/seedData";
 
 interface AddPostBarProps {
   topicId: string;
   topicName: string;
   categoryName: string;
+  existingPosts?: Post[];
   onPostAdded: () => void;
 }
 
-const AddPostBar = ({ topicId, topicName, categoryName, onPostAdded }: AddPostBarProps) => {
+const AddPostBar = ({ topicId, topicName, categoryName, existingPosts, onPostAdded }: AddPostBarProps) => {
   const [open, setOpen] = useState(false);
   const createPost = useCreatePost();
   const { toast } = useToast();
@@ -60,7 +62,9 @@ const AddPostBar = ({ topicId, topicName, categoryName, onPostAdded }: AddPostBa
         <CreatePostDialog
           topicName={topicName}
           categoryName={categoryName}
+          existingPosts={existingPosts}
           onSubmit={handleSubmit}
+          onDismiss={() => setOpen(false)}
         />
       </DialogContent>
     </Dialog>

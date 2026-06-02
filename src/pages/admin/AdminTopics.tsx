@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +15,10 @@ import { format, parseISO } from "date-fns";
 import { subjectCategories } from "@/data/seedData";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
 import { getTopicSubtitle } from "@/hooks/useSupabaseTopics";
+import PostImageEditorDialog from "@/components/PostImageEditorDialog";
+
+const TOPIC_IMAGE_ASPECT = 16 / 7;
+const TOPIC_IMAGE_OUTPUT_SIZE = { width: 1600, height: 700 };
 
 interface Topic {
   id: string;
@@ -61,6 +65,13 @@ export default function AdminTopics() {
   const [form, setForm] = useState({ name: "", category_name: "", subtitle_override: "" });
   const [showNameSuggestions, setShowNameSuggestions] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [removeExistingImage, setRemoveExistingImage] = useState(false);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editorSource, setEditorSource] = useState<string | null>(null);
+  const editorSourceRef = useRef<string | null>(null);
+  const [rowEditor, setRowEditor] = useState<{ topic: Topic; source: string } | null>(null);
   const [sort, setSort] = useState<SortKey>("name_asc");
   const [search, setSearch] = useState("");
   const { toast } = useToast();
@@ -133,9 +144,27 @@ export default function AdminTopics() {
 
   useEffect(() => { fetchTopics(); }, []);
 
+  const resetImageState = () => {
+    if (imagePreview && imagePreview.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
+    if (editorSourceRef.current) {
+      URL.revokeObjectURL(editorSourceRef.current);
+      editorSourceRef.current = null;
+    }
+    setImageFile(null);
+    setImagePreview(null);
+    setRemoveExistingImage(false);
+    setEditorOpen(false);
+    setEditorSource(null);
+  };
+
+  useEffect(() => {
+    editorSourceRef.current = editorSource;
+  }, [editorSource]);
+
   const openCreate = () => {
     setEditing(null);
     setForm({ name: "", category_name: "", subtitle_override: "" });
+    resetImageState();
     setDialogOpen(true);
   };
 
@@ -143,7 +172,45 @@ export default function AdminTopics() {
     setEditing(topic);
     const current = topic.subtitle_override || getTopicSubtitle(topic.name, topic.category_name);
     setForm({ name: topic.name, category_name: topic.category_name || "", subtitle_override: current });
+    if (imagePreview && imagePreview.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
+    setImageFile(null);
+    setImagePreview(topic.image_url);
+    setRemoveExistingImage(false);
     setDialogOpen(true);
+  };
+
+  const handleDialogImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      toast({ title: "Use a JPEG, PNG, or WebP image.", variant: "destructive" });
+      e.target.value = "";
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Image must be 5MB or smaller.", variant: "destructive" });
+      e.target.value = "";
+      return;
+    }
+    if (editorSourceRef.current) URL.revokeObjectURL(editorSourceRef.current);
+    const url = URL.createObjectURL(file);
+    setEditorSource(url);
+    setEditorOpen(true);
+    e.target.value = "";
+  };
+
+  const handleEditorApply = (file: File, previewUrl: string) => {
+    if (imagePreview && imagePreview.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
+    setImageFile(file);
+    setImagePreview(previewUrl);
+    setRemoveExistingImage(false);
+  };
+
+  const handleDialogImageClear = () => {
+    if (imagePreview && imagePreview.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
+    setImageFile(null);
+    setImagePreview(null);
+    setRemoveExistingImage(true);
   };
 
   const handleSave = async () => {
@@ -166,10 +233,38 @@ export default function AdminTopics() {
 
     setSaving(true);
 
+    let uploadedUrl: string | null = null;
+    if (imageFile) {
+      const ext = imageFile.name.split(".").pop() || "jpg";
+      const path = `admin/topics/${editing?.id ?? "new"}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("post-images")
+        .upload(path, imageFile, { upsert: false });
+      if (upErr) {
+        toast({ title: "Image upload failed", description: upErr.message, variant: "destructive" });
+        setSaving(false);
+        return;
+      }
+      uploadedUrl = supabase.storage.from("post-images").getPublicUrl(path).data.publicUrl;
+    }
+
     if (editing) {
+      const updatePayload: {
+        name: string;
+        category_name: string;
+        subtitle_override: string | null;
+        image_url?: string | null;
+      } = {
+        name: form.name,
+        category_name: form.category_name,
+        subtitle_override: form.subtitle_override.trim() || null,
+      };
+      if (uploadedUrl) updatePayload.image_url = uploadedUrl;
+      else if (removeExistingImage) updatePayload.image_url = null;
+
       const { error } = await supabase
         .from("topics")
-        .update({ name: form.name, category_name: form.category_name, subtitle_override: form.subtitle_override.trim() || null })
+        .update(updatePayload)
         .eq("id", editing.id);
 
       if (error) {
@@ -177,18 +272,28 @@ export default function AdminTopics() {
       } else {
         toast({ title: "Topic updated" });
         setDialogOpen(false);
+        resetImageState();
         fetchTopics();
       }
     } else {
       const { error } = await supabase
         .from("topics")
-        .insert({ name: form.name, slug: generateSlug(form.name), category_name: form.category_name, description: null, status: "approved", subtitle_override: form.subtitle_override.trim() || null });
+        .insert({
+          name: form.name,
+          slug: generateSlug(form.name),
+          category_name: form.category_name,
+          description: null,
+          status: "approved",
+          subtitle_override: form.subtitle_override.trim() || null,
+          image_url: uploadedUrl,
+        });
 
       if (error) {
         toast({ title: "Error creating topic", description: error.message, variant: "destructive" });
       } else {
         toast({ title: "Topic created" });
         setDialogOpen(false);
+        resetImageState();
         fetchTopics();
       }
     }
@@ -364,7 +469,17 @@ export default function AdminTopics() {
                           inp.accept = "image/jpeg,image/png,image/webp";
                           inp.onchange = () => {
                             const f = inp.files?.[0];
-                            if (f) void handleReplaceImage(t, f);
+                            if (!f) return;
+                            if (!["image/jpeg", "image/png", "image/webp"].includes(f.type)) {
+                              toast({ title: "Use JPEG, PNG, or WebP", variant: "destructive" });
+                              return;
+                            }
+                            if (f.size > 5 * 1024 * 1024) {
+                              toast({ title: "Image must be 5MB or smaller", variant: "destructive" });
+                              return;
+                            }
+                            if (rowEditor) URL.revokeObjectURL(rowEditor.source);
+                            setRowEditor({ topic: t, source: URL.createObjectURL(f) });
                           };
                           inp.click();
                         }}
@@ -410,6 +525,78 @@ export default function AdminTopics() {
         </Table>
         </div>
       </div>
+
+      {/* Crop editor — dialog (create/edit) */}
+      <PostImageEditorDialog
+        open={editorOpen}
+        imageSrc={editorSource}
+        onOpenChange={(o) => {
+          setEditorOpen(o);
+          if (!o && editorSourceRef.current) {
+            URL.revokeObjectURL(editorSourceRef.current);
+            editorSourceRef.current = null;
+            setEditorSource(null);
+          }
+        }}
+        onApply={(file, previewUrl) => {
+          handleEditorApply(file, previewUrl);
+        }}
+        onReselect={() => {
+          const inp = document.createElement("input");
+          inp.type = "file";
+          inp.accept = "image/jpeg,image/png,image/webp";
+          inp.onchange = () => {
+            const f = inp.files?.[0];
+            if (!f) return;
+            if (editorSourceRef.current) URL.revokeObjectURL(editorSourceRef.current);
+            setEditorSource(URL.createObjectURL(f));
+          };
+          inp.click();
+        }}
+        aspect={TOPIC_IMAGE_ASPECT}
+        outputSize={TOPIC_IMAGE_OUTPUT_SIZE}
+        title="Edit Topic Photo"
+        description="Crop, zoom, and rotate the photo before saving it to the topic."
+        filenamePrefix="topic-image"
+      />
+
+      {/* Crop editor — per-row replace */}
+      <PostImageEditorDialog
+        open={!!rowEditor}
+        imageSrc={rowEditor?.source ?? null}
+        onOpenChange={(o) => {
+          if (!o && rowEditor) {
+            URL.revokeObjectURL(rowEditor.source);
+            setRowEditor(null);
+          }
+        }}
+        onApply={(file) => {
+          if (!rowEditor) return;
+          const topic = rowEditor.topic;
+          URL.revokeObjectURL(rowEditor.source);
+          setRowEditor(null);
+          void handleReplaceImage(topic, file);
+        }}
+        onReselect={() => {
+          if (!rowEditor) return;
+          const topic = rowEditor.topic;
+          const inp = document.createElement("input");
+          inp.type = "file";
+          inp.accept = "image/jpeg,image/png,image/webp";
+          inp.onchange = () => {
+            const f = inp.files?.[0];
+            if (!f) return;
+            URL.revokeObjectURL(rowEditor.source);
+            setRowEditor({ topic, source: URL.createObjectURL(f) });
+          };
+          inp.click();
+        }}
+        aspect={TOPIC_IMAGE_ASPECT}
+        outputSize={TOPIC_IMAGE_OUTPUT_SIZE}
+        title="Edit Topic Photo"
+        description="Crop, zoom, and rotate the photo before saving it to the topic."
+        filenamePrefix="topic-image"
+      />
 
       {/* Create / Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -486,6 +673,38 @@ export default function AdminTopics() {
               <p className="text-xs text-muted-foreground">
                 Leave blank to use the auto-generated question.
               </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="topic-image">Photo (optional)</Label>
+              <Input
+                id="topic-image"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleDialogImageChange}
+              />
+              {imagePreview && (
+                <div className="space-y-2">
+                  <div
+                    className="w-full overflow-hidden rounded-md border bg-muted"
+                    style={{ aspectRatio: TOPIC_IMAGE_ASPECT }}
+                  >
+                    <img
+                      src={imagePreview}
+                      alt="Topic preview"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDialogImageClear}
+                  >
+                    Remove photo
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>
