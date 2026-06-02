@@ -25,8 +25,8 @@ const UserAvatar = ({
 
   const content = (
     <span className="inline-flex items-center gap-1.5">
-      <Avatar className={sizeClass}>
-        <AvatarImage src={resolvedAvatar} alt={username} />
+      <Avatar className={`${sizeClass} shrink-0`}>
+        <AvatarImage src={resolvedAvatar} alt={username} className="object-cover" />
         <AvatarFallback className={`${textSize} font-semibold bg-primary/10 text-primary`}>
           {username[0].toUpperCase()}
         </AvatarFallback>
