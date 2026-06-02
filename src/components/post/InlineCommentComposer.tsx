@@ -33,6 +33,7 @@ const InlineCommentComposer = ({
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [focused, setFocused] = useState(false);
+  const [postAnonymously, setPostAnonymously] = useState(false);
   const editorRef = useRef<Editor | null>(null);
 
   const isAuthenticated = !!user;
@@ -96,6 +97,7 @@ const InlineCommentComposer = ({
       author_id: user.id,
       content: text,
       parent_comment_id: parentCommentId ?? null,
+      is_anonymous: postAnonymously,
     });
     setSubmitting(false);
 
@@ -112,6 +114,7 @@ const InlineCommentComposer = ({
     editorRef.current?.commands.clearContent();
     editorRef.current?.commands.blur();
     setFocused(false);
+    setPostAnonymously(false);
     queryClient.invalidateQueries({ queryKey: ["comments", postId] });
     queryClient.invalidateQueries({ queryKey: ["post", postId] });
     onSubmitted?.();
@@ -151,26 +154,37 @@ const InlineCommentComposer = ({
           editorRef={attachFocusListeners}
         />
         {active && (
-          <div className="shrink-0 flex justify-end items-center gap-2 px-2 pb-2">
-            {isReply && (
+          <div className="shrink-0 flex flex-wrap justify-between items-center gap-2 px-2 pb-2">
+            <label className="inline-flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+              <input
+                type="checkbox"
+                className="h-3.5 w-3.5 rounded border-border accent-primary"
+                checked={postAnonymously}
+                onChange={(e) => setPostAnonymously(e.target.checked)}
+              />
+              Post anonymously
+            </label>
+            <div className="flex items-center gap-2">
+              {isReply && (
+                <Button
+                  type="button"
+                  onClick={handleCancel}
+                  size="sm"
+                  variant="ghost"
+                  disabled={submitting}
+                >
+                  Cancel
+                </Button>
+              )}
               <Button
                 type="button"
-                onClick={handleCancel}
+                onClick={handleSend}
+                disabled={!trimmed || submitting}
                 size="sm"
-                variant="ghost"
-                disabled={submitting}
               >
-                Cancel
+                {submitting ? "Sending…" : isReply ? "Reply" : "Send"}
               </Button>
-            )}
-            <Button
-              type="button"
-              onClick={handleSend}
-              disabled={!trimmed || submitting}
-              size="sm"
-            >
-              {submitting ? "Sending…" : isReply ? "Reply" : "Send"}
-            </Button>
+            </div>
           </div>
         )}
       </div>
