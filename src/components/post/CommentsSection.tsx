@@ -18,6 +18,7 @@ interface DbComment {
   author_id: string;
   parent_comment_id: string | null;
   like_count: number | null;
+  is_anonymous: boolean | null;
 }
 
 interface DbProfile {
@@ -29,7 +30,7 @@ interface DbProfile {
 const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
   const { data, error } = await supabase
     .from("comments")
-    .select("id, content, created_at, author_id, parent_comment_id, like_count")
+    .select("id, content, created_at, author_id, parent_comment_id, like_count, is_anonymous")
     .eq("post_id", postId)
     .order("created_at", { ascending: true });
   if (error) throw error;
@@ -55,17 +56,28 @@ const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
     const parentAuthorId = c.parent_comment_id
       ? authorIdByCommentId.get(c.parent_comment_id) ?? null
       : null;
+    const isAnon = !!c.is_anonymous;
+    const parentRow = c.parent_comment_id
+      ? rows.find((r) => r.id === c.parent_comment_id)
+      : null;
+    const parentIsAnon = !!parentRow?.is_anonymous;
     return {
       id: c.id,
-      username: profileByAuthorId.get(c.author_id)?.username || "anonymous",
-      avatarUrl: profileByAuthorId.get(c.author_id)?.avatar_url ?? null,
+      username: isAnon
+        ? "anonymous"
+        : profileByAuthorId.get(c.author_id)?.username || "anonymous",
+      avatarUrl: isAnon ? null : profileByAuthorId.get(c.author_id)?.avatar_url ?? null,
       content: c.content,
       createdAt: new Date(c.created_at),
       likeCount: c.like_count ?? 0,
       parentCommentId: c.parent_comment_id,
-      parentUsername: parentAuthorId
-        ? profileByAuthorId.get(parentAuthorId)?.username ?? null
-        : null,
+      parentUsername:
+        parentAuthorId && !parentIsAnon
+          ? profileByAuthorId.get(parentAuthorId)?.username ?? null
+          : parentIsAnon
+            ? "anonymous"
+            : null,
+      isAnonymous: isAnon,
     };
   });
 };

@@ -21,6 +21,7 @@ export interface DisplayComment {
   likeCount: number;
   parentCommentId: string | null;
   parentUsername: string | null;
+  isAnonymous?: boolean;
 }
 
 export type CommentNode = DisplayComment & {
