@@ -1,0 +1,1 @@
+DELETE FROM auth.users WHERE id::text LIKE 'b1000000-%';
