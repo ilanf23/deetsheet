@@ -71,6 +71,8 @@ interface UserPost {
   comment_count: number;
   score: number;
   topic_name: string;
+  image_url: string | null;
+  story: string | null;
 }
 
 interface UserTopic {
@@ -249,7 +251,7 @@ const ProfileView = () => {
 
     void supabase
       .from("posts")
-      .select("id, title, content, created_at, comment_count, score, topic_id, status, topics(name)")
+      .select("id, title, content, created_at, comment_count, score, topic_id, status, image_url, story, topics(name)")
       .eq("author_id", targetUserId)
       .neq("status", "deleted")
       .order("created_at", { ascending: false })
@@ -263,6 +265,8 @@ const ProfileView = () => {
           comment_count: p.comment_count as number,
           score: p.score as number,
           topic_name: ((p.topics as Record<string, unknown>)?.name as string) || "General",
+          image_url: (p.image_url as string) || null,
+          story: (p.story as string) || null,
         }));
         setUserPosts(mapped);
         setPostCount(mapped.length);
@@ -867,6 +871,15 @@ const ProfileView = () => {
                   <div className="space-y-2">
                     {filteredPosts.map((post) => {
                       const postHref = `/topic/${encodeURIComponent(post.topic_name)}/post/${buildPostSlug(post.title || post.content, post.id) || post.id}`;
+                      // Prefer the story as the body; fall back to content only
+                      // when it diverges from the title (legacy/admin-edited posts).
+                      const trimmedStory = post.story?.trim();
+                      const trimmedContent = post.content?.trim();
+                      const bodyText = trimmedStory
+                        ? post.story!
+                        : trimmedContent && trimmedContent !== post.title?.trim()
+                          ? post.content
+                          : "";
                       return (
                         <Card key={post.id} className="group bg-card hover:shadow-md transition-shadow">
                           <CardContent className="p-4">
@@ -899,10 +912,26 @@ const ProfileView = () => {
                                     <span className="tabular-nums">{post.comment_count}</span>
                                   </button>
                                 </div>
-                                <p className="text-sm text-muted-foreground line-clamp-2 break-words">
-                                  {post.content}
-                                </p>
+                                {bodyText && (
+                                  <p className="text-sm text-muted-foreground line-clamp-2 break-words">
+                                    {bodyText}
+                                  </p>
+                                )}
                               </div>
+                              {post.image_url && (
+                                <a
+                                  href={postHref}
+                                  className="shrink-0 block"
+                                  aria-label={post.title ? formatTitle(post.title) : "View post"}
+                                >
+                                  <img
+                                    src={post.image_url}
+                                    alt=""
+                                    loading="lazy"
+                                    className="h-16 w-24 sm:h-20 sm:w-32 rounded-md object-cover border border-border"
+                                  />
+                                </a>
+                              )}
                               {isOwnProfile && (
                                 <div className="flex items-center gap-0.5 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                                   <Button
