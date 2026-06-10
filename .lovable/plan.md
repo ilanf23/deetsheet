@@ -1,41 +1,82 @@
+# Plan: Delete fredbrewer's AI-seeded posts (with safeguards)
+
 ## Goal
+Remove the ~509 AI/seed posts attributed to **fredbrewer** (`6d711ce0-f0fd-4a42-b052-a2b72f43aea1`) without touching any other user's data, and without losing the ability to recover if the analysis is wrong.
 
-Let users mark a post as anonymous when creating (or editing) it, and hide their identity in every place the post is rendered.
+## Scope guardrails (hard rules the migration will enforce)
+- Every delete is filtered by **`author_id = '6d711ce0-f0fd-4a42-b052-a2b72f43aea1'`** — no other user's row can ever be touched.
+- Every delete is also filtered by **the seed criteria** (see step 2) — fredbrewer's organic posts on other days are not touched.
+- Cascading deletes (ratings, comments, favorites, reports on the deleted posts) are **scoped by `post_id IN (...the archived set...)`** — only data attached to the archived posts is removed.
+- No changes to `auth.users`, `profiles`, `user_roles`, `topics`, or any other user's posts/comments.
 
-The database already supports this — `posts.is_anonymous` exists and the admin edit dialog already toggles it. Today the user-facing create flow hardcodes `is_anonymous: false`, and no display surface honors the flag. This plan closes both gaps.
+## Step 1 — Verify the seed batch (read-only)
+Before anything destructive, confirm the AI-vs-real split with these checks:
 
-## Scope
+1. Cluster check: do the 509 posts on `2026-04-24` have `created_at` timestamps within a few seconds/minutes of each other?
+2. Engagement check: do they have ~0 ratings/comments from real users?
+3. Topic spread: are they sprayed across many topics evenly (seed pattern) vs. concentrated on a few (human pattern)?
+4. Content fingerprint: do they share a uniform structure/length?
 
-Posts only (comments stay attributed — confirm if you want that included).
+If anything looks off (e.g., the 2026-04-24 set contains posts that look human-written or have real engagement), I stop and report back before continuing.
 
-## Changes
+## Step 2 — Lock in the exact "fake" set
+Define the seed set as a single, repeatable SQL filter:
 
-**1. Create / edit UI**
-- `CreatePostDialog.tsx`: add a "Post anonymously" checkbox under the form, with a short helper line ("Your username and avatar won't be shown on this post").
-- `EditPostDialog.tsx`: same checkbox, prefilled from the post's current `is_anonymous` value, so users can toggle later.
-- `useCreatePost.ts`: accept and persist `is_anonymous` instead of the hardcoded `false`.
+```text
+author_id = '6d711ce0-f0fd-4a42-b052-a2b72f43aea1'
+AND created_at::date = '2026-04-24'
+```
 
-**2. Display — replace author with "Anonymous" when `is_anonymous` is true**
-- `PostCard.tsx` (homepage / lists)
-- `TopicPostListItem.tsx` (topic page rows)
-- `post/AuthorByline.tsx` and `post/PostHeader.tsx` (post detail page)
-- `UserPostsList.tsx` (profile "My Posts") — author shouldn't be linked
-- `RecentlyAddedSidebar.tsx` / `TopicRecentlyAdded.tsx` if they show a byline
+Every later step uses this exact filter. Print the row count and re-confirm = 509 before proceeding.
 
-In each spot: show "Anonymous" as plain dark text (not the green link style), use a neutral placeholder avatar, and remove the link to the author's profile.
+## Step 3 — CSV export (belt #1)
+Export the full rows (all columns) of the seed set to `/mnt/documents/fredbrewer-seed-posts-backup.csv`, plus a second CSV of all ratings/comments attached to those posts. These files live outside the database and are downloadable.
 
-**3. Author-side affordance**
-- On the owner's own profile "My Posts" list, still show the post (the owner needs to manage it) but mark it with a small "Anonymous" badge so they remember it's posted that way.
+## Step 4 — Create archive tables (belt #2)
+In a single migration, create archive tables that mirror the live tables:
 
-**4. Admin**
-- No change. Admin edit dialog already exposes the toggle.
+- `posts_archive_fredbrewer_20260610`
+- `comments_archive_fredbrewer_20260610`
+- `ratings_archive_fredbrewer_20260610`
+- `favorites_archive_fredbrewer_20260610`
+- `reports_archive_fredbrewer_20260610`
 
-## Out of scope (flag if you want them)
+Each archive table is admin-only (no anon/authenticated grants) and copies the full row including original `id`, `author_id`, `created_at`, content, etc. — so any row can be re-inserted into the live table verbatim.
 
-- Comments: stay attributed to the user.
-- Ratings / favorites: stay attributed (only post author identity is hidden).
-- Retroactively anonymizing existing posts (admins can already do this per-post).
+## Step 5 — Copy then delete (one transaction)
+In the same migration, inside a single transaction:
 
-## Privacy note
+1. `INSERT INTO posts_archive_...` SELECT … from the seed set.
+2. `INSERT INTO comments_archive_...` SELECT … WHERE `post_id IN (seed set)`.
+3. Same for ratings, favorites, reports.
+4. Assert archived count = 509 (raise & rollback if not).
+5. `DELETE FROM ratings/comments/favorites/reports WHERE post_id IN (seed set)`.
+6. `DELETE FROM posts WHERE` (the exact filter from Step 2).
+7. Assert remaining fredbrewer posts = 131 (raise & rollback if not).
+8. Recompute `post_count` on affected topics and `comment_count` on any affected posts.
 
-`is_anonymous` only hides the author in the UI — the `author_id` column is still stored so the user can edit/delete their own post and admins can moderate. That matches how the admin tool works today. Let me know if you want stronger anonymity (e.g. strip `author_id` from public reads via a view) and I'll add that.
+If any assertion fails the whole transaction rolls back and nothing changes.
+
+## Step 6 — Verification (read-only, post-delete)
+- fredbrewer total posts = 131
+- All other users' post counts unchanged (snapshot before/after)
+- Archive table row counts match what was deleted
+- Site loads, topic pages render
+
+## Recovery options (in order of ease)
+1. **Restore one post**: `INSERT INTO posts SELECT * FROM posts_archive_... WHERE id = '<post-id>'` (plus its comments/ratings from the matching archive tables).
+2. **Restore all 509**: same as above without the `WHERE id =` clause.
+3. **Lovable Cloud point-in-time recovery**: full DB roll-back to before the migration (last resort — also reverts anything else that happened after).
+
+The archive tables stay in place until you explicitly tell me to drop them.
+
+## What I will NOT do
+- Touch fredbrewer's 131 organic posts.
+- Touch any other user's posts, comments, ratings, profile, or account.
+- Delete fredbrewer's account or profile.
+- Drop the archive tables without asking.
+
+## Deliverables after you approve
+- 1 migration: archive tables + transactional copy-then-delete with assertions.
+- 2 CSV backups in `/mnt/documents/`.
+- Before/after row-count report posted in chat.
