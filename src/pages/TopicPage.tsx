@@ -62,9 +62,10 @@ const TopicPage = () => {
   ];
 
   useEffect(() => {
-    setRendered((prev) =>
-      Math.min(Math.max(prev, size), posts.length || size)
-    );
+    setRendered((prev) => {
+      const target = Math.min(Math.max(prev, size), posts.length || size);
+      return target;
+    });
   }, [posts.length, size]);
 
   const visiblePosts = useMemo(
@@ -79,7 +80,9 @@ const TopicPage = () => {
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set("size", String(next));
     setSearchParams(nextParams, { replace: true });
-    setRendered((prev) => Math.max(prev, next));
+    // Reset the visible slice to exactly the chosen page size so picking a
+    // smaller value (e.g. 100 -> 25) actually shrinks the list.
+    setRendered(next);
   };
 
   const handleShowMore = () => {
