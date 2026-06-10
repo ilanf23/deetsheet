@@ -96,16 +96,24 @@ const CreatePostDialog = ({
   const suggestions = useMemo(() => {
     const tokens = tokenize(detail);
     if (tokens.length === 0 || existingPosts.length === 0) return [];
+    // Require a meaningful match: at least half of the user's keywords must
+    // appear as whole words in the candidate post (min 2 when possible).
+    const minMatches = Math.max(tokens.length >= 2 ? 2 : 1, Math.ceil(tokens.length / 2));
     const scored = existingPosts
       .map((post) => {
-        const haystack = `${post.title ?? ""} ${post.content ?? ""}`.toLowerCase();
+        const haystackTokens = new Set(
+          `${post.title ?? ""} ${post.content ?? ""}`
+            .toLowerCase()
+            .split(/[^a-z0-9]+/)
+            .filter(Boolean),
+        );
         let score = 0;
         for (const t of tokens) {
-          if (haystack.includes(t)) score += 1;
+          if (haystackTokens.has(t)) score += 1;
         }
         return { post, score };
       })
-      .filter((s) => s.score > 0)
+      .filter((s) => s.score >= minMatches)
       .sort((a, b) => b.score - a.score)
       .slice(0, SUGGEST_MAX_RESULTS);
     return scored.map((s) => s.post);
