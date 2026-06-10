@@ -122,6 +122,39 @@ export type Database = {
           },
         ]
       }
+      comments_archive_fredbrewer_20260610: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          is_anonymous: boolean
+          like_count: number
+          parent_comment_id: string | null
+          post_id: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          like_count?: number
+          parent_comment_id?: string | null
+          post_id: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_anonymous?: boolean
+          like_count?: number
+          parent_comment_id?: string | null
+          post_id?: string
+        }
+        Relationships: []
+      }
       contact_messages: {
         Row: {
           category: string | null
@@ -290,6 +323,63 @@ export type Database = {
           },
         ]
       }
+      posts_archive_fredbrewer_20260610: {
+        Row: {
+          author_id: string
+          average_rating: number
+          comment_count: number
+          content: string
+          created_at: string
+          id: string
+          image_url: string | null
+          is_anonymous: boolean
+          is_national: boolean
+          location_id: string | null
+          rating_count: number
+          score: number
+          status: string
+          story: string | null
+          title: string
+          topic_id: string
+        }
+        Insert: {
+          author_id: string
+          average_rating?: number
+          comment_count?: number
+          content: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_anonymous?: boolean
+          is_national?: boolean
+          location_id?: string | null
+          rating_count?: number
+          score?: number
+          status?: string
+          story?: string | null
+          title: string
+          topic_id: string
+        }
+        Update: {
+          author_id?: string
+          average_rating?: number
+          comment_count?: number
+          content?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          is_anonymous?: boolean
+          is_national?: boolean
+          location_id?: string | null
+          rating_count?: number
+          score?: number
+          status?: string
+          story?: string | null
+          title?: string
+          topic_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -434,6 +524,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ratings_archive_fredbrewer_20260610: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: []
       }
       reports: {
         Row: {
