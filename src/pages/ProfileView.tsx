@@ -269,6 +269,7 @@ const ProfileView = () => {
           topic_name: ((p.topics as Record<string, unknown>)?.name as string) || "General",
           image_url: (p.image_url as string) || null,
           story: (p.story as string) || null,
+          status: (p.status as string) || "approved",
         }));
         setUserPosts(mapped);
         setPostCount(mapped.length);
