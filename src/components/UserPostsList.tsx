@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Star, MessageSquare, Loader2, Pencil } from "lucide-react";
+import { Star, MessageSquare, Loader2, Pencil, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatTitle } from "@/lib/formatTitle";
@@ -87,8 +87,15 @@ const UserPostsList = ({ userId }: { userId: string }) => {
                     to={post.topic ? `/topic/${post.topic.slug}` : "#"}
                     className="flex-1 min-w-0 group"
                   >
-                    <h4 className="text-sm font-semibold text-primary group-hover:underline truncate">
-                      {formatTitle(post.title)}
+                    <h4 className="text-sm font-semibold text-primary group-hover:underline truncate flex items-center gap-2">
+                      <span className="truncate">{formatTitle(post.title)}</span>
+                      {post.status === "pending" && (
+                        <Clock
+                          className="h-[1em] w-[1em] shrink-0 text-secondary"
+                          strokeWidth={2.5}
+                          aria-label="Pending review"
+                        />
+                      )}
                     </h4>
                     <p className="text-xs text-card-foreground mt-1 line-clamp-2">
                       {post.content}
