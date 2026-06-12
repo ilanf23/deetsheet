@@ -74,6 +74,7 @@ interface UserPost {
   topic_name: string;
   image_url: string | null;
   story: string | null;
+  status: string;
 }
 
 interface UserTopic {
