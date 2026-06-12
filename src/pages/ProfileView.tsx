@@ -22,6 +22,7 @@ import {
   ChevronUp,
   Search,
   X,
+  Clock,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -73,6 +74,7 @@ interface UserPost {
   topic_name: string;
   image_url: string | null;
   story: string | null;
+  status: string;
 }
 
 interface UserTopic {
@@ -267,6 +269,7 @@ const ProfileView = () => {
           topic_name: ((p.topics as Record<string, unknown>)?.name as string) || "General",
           image_url: (p.image_url as string) || null,
           story: (p.story as string) || null,
+          status: (p.status as string) || "approved",
         }));
         setUserPosts(mapped);
         setPostCount(mapped.length);
@@ -888,9 +891,16 @@ const ProfileView = () => {
                                 {post.title && (
                                   <a
                                     href={postHref}
-                                    className="block font-semibold text-base text-primary hover:underline truncate mb-1"
+                                    className="font-semibold text-base text-primary hover:underline mb-1 flex items-center gap-2 min-w-0"
                                   >
-                                    {formatTitle(post.title)}
+                                    <span className="truncate">{formatTitle(post.title)}</span>
+                                    {post.status === "pending" && (
+                                      <Clock
+                                        className="h-[1em] w-[1em] shrink-0 text-secondary"
+                                        strokeWidth={2.5}
+                                        aria-label="Pending review"
+                                      />
+                                    )}
                                   </a>
                                 )}
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1.5">
