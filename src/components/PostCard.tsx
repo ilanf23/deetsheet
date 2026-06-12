@@ -75,7 +75,7 @@ const PostCard = ({ post }: PostCardProps) => {
           e.stopPropagation();
           openTopic();
         }}
-        className="mb-2.5 block font-heading text-3xl font-normal leading-tight text-primary hover:underline"
+        className="mb-2.5 block w-full text-left font-heading text-3xl font-normal leading-tight text-primary hover:underline"
       >
         {post.topicName}
       </button>
