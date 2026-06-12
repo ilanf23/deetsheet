@@ -895,11 +895,14 @@ const ProfileView = () => {
                                   >
                                     <span className="truncate">{formatTitle(post.title)}</span>
                                     {post.status === "pending" && (
-                                      <Clock
-                                        className="h-[1em] w-[1em] shrink-0 text-secondary"
-                                        strokeWidth={2.5}
-                                        aria-label="Pending review"
-                                      />
+                                      <span className="inline-flex items-center gap-1 shrink-0 text-secondary">
+                                        <Clock
+                                          className="h-[1em] w-[1em]"
+                                          strokeWidth={2.5}
+                                          aria-label="Pending review"
+                                        />
+                                        <span className="text-xs font-medium">Pending</span>
+                                      </span>
                                     )}
                                   </a>
                                 )}
