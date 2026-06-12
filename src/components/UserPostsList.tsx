@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Star, MessageSquare, Loader2, Pencil } from "lucide-react";
+import { Star, MessageSquare, Loader2, Pencil, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatTitle } from "@/lib/formatTitle";
