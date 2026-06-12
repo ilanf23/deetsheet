@@ -889,9 +889,16 @@ const ProfileView = () => {
                                 {post.title && (
                                   <a
                                     href={postHref}
-                                    className="block font-semibold text-base text-primary hover:underline truncate mb-1"
+                                    className="font-semibold text-base text-primary hover:underline mb-1 flex items-center gap-2 min-w-0"
                                   >
-                                    {formatTitle(post.title)}
+                                    <span className="truncate">{formatTitle(post.title)}</span>
+                                    {post.status === "pending" && (
+                                      <Clock
+                                        className="h-[1em] w-[1em] shrink-0 text-secondary"
+                                        strokeWidth={2.5}
+                                        aria-label="Pending review"
+                                      />
+                                    )}
                                   </a>
                                 )}
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1.5">
