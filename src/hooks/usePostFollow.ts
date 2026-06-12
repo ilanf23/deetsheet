@@ -52,6 +52,7 @@ export const usePostFollow = (postId: string | undefined) => {
       });
       queryClient.invalidateQueries({ queryKey: ["post-follower-count", postId] });
       queryClient.invalidateQueries({ queryKey: ["following", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["profile-follow-counts", user?.id] });
     },
   });
 
