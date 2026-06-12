@@ -90,11 +90,14 @@ const UserPostsList = ({ userId }: { userId: string }) => {
                     <h4 className="text-sm font-semibold text-primary group-hover:underline truncate flex items-center gap-2">
                       <span className="truncate">{formatTitle(post.title)}</span>
                       {post.status === "pending" && (
-                        <Clock
-                          className="h-[1em] w-[1em] shrink-0 text-secondary"
-                          strokeWidth={2.5}
-                          aria-label="Pending review"
-                        />
+                        <span className="inline-flex items-center gap-1 shrink-0 text-secondary">
+                          <Clock
+                            className="h-[1em] w-[1em]"
+                            strokeWidth={2.5}
+                            aria-label="Pending review"
+                          />
+                          <span className="text-xs font-medium">Pending</span>
+                        </span>
                       )}
                     </h4>
                     <p className="text-xs text-card-foreground mt-1 line-clamp-2">
