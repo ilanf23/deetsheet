@@ -154,7 +154,7 @@ const TopicPage = () => {
               <div className="min-w-0 bg-card rounded-md border border-border p-4">
               <div className="mb-3 flex items-start justify-between gap-4">
                 <div className="min-w-0 pl-1.5">
-                  <div className="flex items-baseline gap-3">
+                  <div className="flex items-baseline gap-1 flex-wrap">
                     <h1 className="text-3xl md:text-4xl font-heading font-bold text-primary">
                       {topic.name}
                     </h1>
