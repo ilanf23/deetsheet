@@ -69,33 +69,37 @@ const PostCard = ({ post }: PostCardProps) => {
       }}
       className="group py-4 border-b border-border last:border-b-0 cursor-pointer"
     >
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          openTopic();
-        }}
-        className="mb-2.5 block w-full text-left font-heading text-3xl font-normal leading-tight text-primary hover:underline"
-      >
-        {post.topicName}
-      </button>
-
-      {isPending && (
-        <span
-          className="mb-2 inline-flex items-center rounded-full border border-secondary/40 bg-secondary/10 px-2 py-0.5 text-xs font-medium text-secondary"
-          title="Visible only to you and admins until an admin approves it"
+      <div className="pl-6 sm:pl-10">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            openTopic();
+          }}
+          className="mb-2.5 block w-full text-right font-heading text-3xl font-normal leading-tight text-primary hover:underline"
         >
-          Pending review
-        </span>
-      )}
+          {post.topicName}
+        </button>
 
-      <Link
-        to={postHref}
-        className="mb-3.5 block text-[15px] leading-snug text-primary hover:underline"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {contentText}
-      </Link>
+        {isPending && (
+          <div className="mb-2 flex justify-end">
+            <span
+              className="inline-flex items-center rounded-full border border-secondary/40 bg-secondary/10 px-2 py-0.5 text-xs font-medium text-secondary"
+              title="Visible only to you and admins until an admin approves it"
+            >
+              Pending review
+            </span>
+          </div>
+        )}
+
+        <Link
+          to={postHref}
+          className="mb-3.5 block text-right text-[15px] leading-snug text-primary hover:underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {contentText}
+        </Link>
+      </div>
 
       {post.imageUrl && (
         <Link
@@ -118,7 +122,7 @@ const PostCard = ({ post }: PostCardProps) => {
         </Link>
       )}
 
-      <div className="mb-2 flex flex-wrap items-center gap-2 text-base leading-tight">
+      <div className="mb-2 flex flex-wrap items-center justify-end gap-2 text-base leading-tight">
         {isAnonymous ? (
           <>
             <Avatar className="h-5 w-5">

@@ -12,8 +12,8 @@ const TopicRecentlyAdded = ({ topicId, topicName }: TopicRecentlyAddedProps) => 
 
   return (
     <div className="bg-card rounded-xl border border-border p-4">
-      <div className="flex items-center justify-between h-8 mb-3 px-1 pb-2 border-b border-border">
-        <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="flex items-center justify-end h-8 mb-3 px-1 pb-2 border-b border-border">
+        <h2 className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground text-right">
           Recently Added
         </h2>
       </div>
