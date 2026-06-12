@@ -115,8 +115,7 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
         nextImageUrl = null;
       }
 
-      // Edits by the author re-enter moderation unless already rejected.
-      const nextStatus = currentStatus === "rejected" ? "rejected" : "pending";
+      const nextStatus = currentStatus === "rejected" ? "pending" : currentStatus;
 
       const trimmedStory = story.trim();
       const updates: Record<string, unknown> = {
@@ -140,7 +139,7 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
         title: "Post updated",
         description:
           nextStatus === "pending"
-            ? "Your edited post will be re-reviewed before going live again."
+            ? "Your revised post will be reviewed before going live."
             : undefined,
       });
       onSaved?.();
@@ -163,7 +162,7 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
           <DialogDescription>
             {currentStatus === "rejected"
               ? "This post was rejected. You can revise and resubmit it."
-              : "Changes go back to admin review before they're public again."}
+              : "Save changes to update this post."}
           </DialogDescription>
         </DialogHeader>
 
