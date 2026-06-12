@@ -55,6 +55,8 @@ export const useTopicFollow = (topicId: string | undefined) => {
       });
       queryClient.invalidateQueries({ queryKey: ["topics"] });
       queryClient.invalidateQueries({ queryKey: ["topic-follows", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["following", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["profile-follow-counts", user?.id] });
     },
   });
 

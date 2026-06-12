@@ -244,6 +244,35 @@ export type Database = {
         }
         Relationships: []
       }
+      post_follows: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_follows_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       posts: {
         Row: {
           author_id: string
@@ -251,6 +280,7 @@ export type Database = {
           comment_count: number
           content: string
           created_at: string
+          follower_count: number
           id: string
           image_url: string | null
           is_anonymous: boolean
@@ -269,6 +299,7 @@ export type Database = {
           comment_count?: number
           content: string
           created_at?: string
+          follower_count?: number
           id?: string
           image_url?: string | null
           is_anonymous?: boolean
@@ -287,6 +318,7 @@ export type Database = {
           comment_count?: number
           content?: string
           created_at?: string
+          follower_count?: number
           id?: string
           image_url?: string | null
           is_anonymous?: boolean
@@ -402,6 +434,8 @@ export type Database = {
           email_top_posts: boolean | null
           entity_type: string | null
           favorite_movie: string | null
+          follower_count: number
+          following_count: number
           hide_age: boolean
           high_school: string | null
           id: string
@@ -436,6 +470,8 @@ export type Database = {
           email_top_posts?: boolean | null
           entity_type?: string | null
           favorite_movie?: string | null
+          follower_count?: number
+          following_count?: number
           hide_age?: boolean
           high_school?: string | null
           id: string
@@ -470,6 +506,8 @@ export type Database = {
           email_top_posts?: boolean | null
           entity_type?: string | null
           favorite_movie?: string | null
+          follower_count?: number
+          following_count?: number
           hide_age?: boolean
           high_school?: string | null
           id?: string
@@ -707,6 +745,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          follower_count: number
           id: string
           image_url: string | null
           name: string
@@ -720,6 +759,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          follower_count?: number
           id?: string
           image_url?: string | null
           name: string
@@ -733,6 +773,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          follower_count?: number
           id?: string
           image_url?: string | null
           name?: string
@@ -797,6 +838,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      recalculate_profile_follow_counts: {
+        Args: { _profile_id: string }
+        Returns: undefined
       }
     }
     Enums: {
