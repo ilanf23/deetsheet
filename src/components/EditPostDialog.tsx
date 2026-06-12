@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -21,12 +22,14 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [authorId, setAuthorId] = useState<string | null>(null);
   const [currentStatus, setCurrentStatus] = useState<string>("approved");
+  const [topicId, setTopicId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [story, setStory] = useState("");
@@ -43,7 +46,7 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
       setLoading(true);
       const { data, error } = await supabase
         .from("posts")
-        .select("id, title, content, story, image_url, author_id, status, is_anonymous")
+        .select("id, title, content, story, image_url, author_id, topic_id, status, is_anonymous")
         .eq("id", postId)
         .maybeSingle();
       if (cancelled) return;
@@ -55,6 +58,7 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
       }
       setAuthorId(data.author_id ?? null);
       setCurrentStatus((data.status as string) ?? "approved");
+      setTopicId(data.topic_id ?? null);
       setTitle(data.title ?? "");
       setContent(data.content ?? "");
       setStory(data.story ?? "");
@@ -142,6 +146,9 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
             ? "Your revised post will be reviewed before going live."
             : undefined,
       });
+      queryClient.invalidateQueries({ queryKey: ["posts-by-topic", topicId] });
+      queryClient.invalidateQueries({ queryKey: ["recent-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["recent-posts-by-topic", topicId] });
       onSaved?.();
       onOpenChange(false);
     } catch (e) {
