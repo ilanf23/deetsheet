@@ -21,7 +21,7 @@ const TopicPostListItem = ({ post, rank, topicName, topicId, showRanking = true 
 
   const seedAvg =
     post.ratingCount > 0
-      ? Math.round((post.ratingScore / post.ratingCount) * 10) / 10
+      ? Math.round(post.ratingScore * 10) / 10
       : 0;
   const displayTitle = formatTitle(post.title || post.content);
   const isDbPost = UUID_RE.test(post.id);

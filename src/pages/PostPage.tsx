@@ -77,7 +77,7 @@ const PostPage = () => {
   const postContentLoading = postsLoading || postRouteSettling;
 
   const seedAvg = post && post.ratingCount > 0
-    ? Math.round((post.ratingScore / post.ratingCount) * 10) / 10
+    ? Math.round(post.ratingScore * 10) / 10
     : 0;
 
   const refreshRatings = () => {
