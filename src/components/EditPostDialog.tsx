@@ -119,16 +119,18 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
         nextImageUrl = null;
       }
 
-      const nextStatus = currentStatus === "rejected" ? "pending" : currentStatus;
-
       const trimmedStory = story.trim();
       const updates: Record<string, unknown> = {
         title: title.trim(),
         content,
         image_url: nextImageUrl,
-        status: nextStatus,
         is_anonymous: isAnonymous,
       };
+      const nextStatus = currentStatus === "rejected" ? "pending" : currentStatus;
+      // Do not write `status` for normal edits. Approved posts must stay live
+      // on topic pages, and pending posts should stay pending until review.
+      // Only rejected posts are explicitly resubmitted for review.
+      if (currentStatus === "rejected") updates.status = nextStatus;
       // Only touch `story` if the user typed one — keeps the update working
       // when the posts.story migration hasn't been applied to the live DB.
       if (trimmedStory) updates.story = trimmedStory;
@@ -142,13 +144,15 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
       toast({
         title: "Post updated",
         description:
-          nextStatus === "pending"
+          currentStatus === "rejected"
             ? "Your revised post will be reviewed before going live."
             : undefined,
       });
       queryClient.invalidateQueries({ queryKey: ["posts-by-topic", topicId] });
+      queryClient.invalidateQueries({ queryKey: ["posts-by-topic"] });
       queryClient.invalidateQueries({ queryKey: ["recent-posts"] });
       queryClient.invalidateQueries({ queryKey: ["recent-posts-by-topic", topicId] });
+      queryClient.invalidateQueries({ queryKey: ["recent-posts-by-topic"] });
       onSaved?.();
       onOpenChange(false);
     } catch (e) {
