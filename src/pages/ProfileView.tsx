@@ -290,7 +290,7 @@ const ProfileView = () => {
       .then(({ count }) => {
         if (count !== null) setCommentCount(count);
       });
-  }, [targetUserId, postsRefreshKey]);
+  }, [targetUserId, postsRefreshKey, isOwnProfile]);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
