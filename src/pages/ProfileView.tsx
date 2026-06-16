@@ -251,13 +251,19 @@ const ProfileView = () => {
         if (data) setProfile(data as unknown as Record<string, unknown>);
       });
 
-    void supabase
-      .from("posts")
-      .select("id, title, content, created_at, comment_count, score, topic_id, status, image_url, story, topics(name)")
-      .eq("author_id", targetUserId)
-      .neq("status", "deleted")
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
+    {
+      let postsQuery = supabase
+        .from("posts")
+        .select("id, title, content, created_at, comment_count, score, topic_id, status, image_url, story, topics(name)")
+        .eq("author_id", targetUserId)
+        .neq("status", "deleted")
+        .order("created_at", { ascending: false });
+
+      if (!isOwnProfile) {
+        postsQuery = postsQuery.eq("status", "approved");
+      }
+
+      void postsQuery.then(({ data }) => {
         if (!data) return;
         const mapped: UserPost[] = data.map((p: Record<string, unknown>) => ({
           id: p.id as string,
@@ -274,6 +280,8 @@ const ProfileView = () => {
         setUserPosts(mapped);
         setPostCount(mapped.length);
       });
+    }
+
 
     void supabase
       .from("comments")
@@ -282,7 +290,7 @@ const ProfileView = () => {
       .then(({ count }) => {
         if (count !== null) setCommentCount(count);
       });
-  }, [targetUserId, postsRefreshKey]);
+  }, [targetUserId, postsRefreshKey, isOwnProfile]);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
