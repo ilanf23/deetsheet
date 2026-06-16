@@ -33,11 +33,17 @@ const UserPostsList = ({ userId }: { userId: string }) => {
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
 
   const fetchPosts = useCallback(async () => {
-    const { data, error } = await supabase
+    let query = supabase
       .from("posts")
       .select("id, title, content, score, comment_count, created_at, status, is_anonymous, topics(name, slug)")
       .eq("author_id", userId)
       .order("created_at", { ascending: false });
+
+    if (!isOwnProfile) {
+      query = query.eq("status", "approved");
+    }
+
+    const { data, error } = await query;
 
     if (!error && data) {
       type Row = Omit<UserPost, "topic"> & {
@@ -51,7 +57,8 @@ const UserPostsList = ({ userId }: { userId: string }) => {
       );
     }
     setLoading(false);
-  }, [userId]);
+  }, [userId, isOwnProfile]);
+
 
   useEffect(() => {
     fetchPosts();
