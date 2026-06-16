@@ -10,11 +10,12 @@ interface AddPostBarProps {
   topicId: string;
   topicName: string;
   categoryName: string;
+  subtitleOverride?: string | null;
   existingPosts?: Post[];
   onPostAdded: () => void;
 }
 
-const AddPostBar = ({ topicId, topicName, categoryName, existingPosts, onPostAdded }: AddPostBarProps) => {
+const AddPostBar = ({ topicId, topicName, categoryName, subtitleOverride, existingPosts, onPostAdded }: AddPostBarProps) => {
   const [open, setOpen] = useState(false);
   const createPost = useCreatePost();
   const { toast } = useToast();
