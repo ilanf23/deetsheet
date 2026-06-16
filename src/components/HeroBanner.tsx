@@ -66,12 +66,12 @@ const HeroBanner = () => {
           key={slide.image}
           src={slide.image}
           alt=""
-          className={`absolute inset-0 w-full h-full object-cover brightness-[1.35] transition-opacity duration-700 ${
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
             i === current ? "opacity-100" : "opacity-0"
           }`}
         />
       ))}
-      <div className="absolute inset-0 bg-black/25" />
+      <div className="absolute inset-0 bg-black/40" />
       {slides.map((slide, i) => (
         <div
           key={i}
@@ -80,10 +80,10 @@ const HeroBanner = () => {
             i === current ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
-          <h1 className="text-white font-extrabold text-xl sm:text-2xl md:text-3xl lg:text-4xl leading-tight mb-4 whitespace-nowrap">
+          <h1 className="text-white font-extrabold text-xl sm:text-2xl md:text-3xl lg:text-4xl leading-tight mb-4 whitespace-nowrap [text-shadow:0_2px_6px_rgba(0,0,0,0.65)]">
             {slide.headline}
           </h1>
-          <div className="text-[hsl(146_38%_45%)] text-xs sm:text-sm md:text-base whitespace-nowrap">
+          <div className="text-[#FFE9A8] text-xs sm:text-sm md:text-base whitespace-nowrap [text-shadow:0_1px_4px_rgba(0,0,0,0.75)]">
             <p className="italic hover:underline">&ldquo;{slide.quote}&rdquo;</p>
             <p className="mt-1 font-semibold">{slide.attribution.includes(",") ? `— ${slide.attribution}` : slide.attribution}</p>
           </div>
