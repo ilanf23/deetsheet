@@ -43,6 +43,7 @@ const tokenize = (input: string): string[] => {
 const CreatePostDialog = ({
   topicName,
   categoryName,
+  subtitleOverride,
   existingPosts = [],
   onSubmit,
   onDismiss,
