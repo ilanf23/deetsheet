@@ -90,6 +90,7 @@ export default function AdminPosts() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<SortKey>("newest");
+  const [search, setSearch] = useState("");
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const [reviewPostId, setReviewPostId] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
