@@ -14,6 +14,7 @@ import { formatTitle } from "@/lib/formatTitle";
 interface CreatePostDialogProps {
   topicName: string;
   categoryName: string;
+  subtitleOverride?: string | null;
   existingPosts?: Post[];
   onSubmit: (detail: string, story: string, image: File | null, isAnonymous: boolean) => void;
   onDismiss?: () => void;
@@ -42,6 +43,7 @@ const tokenize = (input: string): string[] => {
 const CreatePostDialog = ({
   topicName,
   categoryName,
+  subtitleOverride,
   existingPosts = [],
   onSubmit,
   onDismiss,
@@ -172,7 +174,7 @@ const CreatePostDialog = ({
       {/* Preview */}
       <div className="rounded-md bg-muted/50 px-3 py-2">
         <p className="text-sm text-muted-foreground">
-          {subject ? getTopicSubtitle(subject, categoryName) : "What are the most important details of being a ..."}
+          {subject ? getTopicSubtitle(subject, categoryName, subtitleOverride) : "What are the most important details of being a ..."}
         </p>
       </div>
 
