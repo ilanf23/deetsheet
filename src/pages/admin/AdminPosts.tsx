@@ -291,7 +291,7 @@ export default function AdminPosts() {
         })}
       </div>
 
-      <div className="flex items-end gap-4">
+      <div className="flex flex-wrap items-end gap-4">
         <AdminSortSelect
           label="Sort by"
           value={sort}
@@ -301,6 +301,42 @@ export default function AdminPosts() {
           }}
           options={SORT_OPTIONS}
         />
+        <div className="flex flex-col gap-1">
+          <label
+            className="text-[11px] font-semibold uppercase tracking-wide"
+            style={{ color: "hsl(var(--admin-fg-muted))" }}
+          >
+            Search
+          </label>
+          <div
+            className="flex items-center gap-2 rounded-md px-3 h-9 bg-white"
+            style={{ border: "1px solid hsl(var(--admin-border))", minWidth: 280 }}
+          >
+            <Search className="h-4 w-4" style={{ color: "hsl(var(--admin-fg-muted))" }} />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Search by title or author…"
+              className="flex-1 bg-transparent text-[13px] outline-none placeholder:text-slate-400"
+            />
+            {search && (
+              <button
+                onClick={() => {
+                  setSearch("");
+                  setPage(1);
+                }}
+                aria-label="Clear search"
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       <div
