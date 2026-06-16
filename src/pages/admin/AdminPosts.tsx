@@ -133,6 +133,15 @@ export default function AdminPosts() {
     else if (tab === "reported") rows = posts.filter((p) => reportedIds.has(p.id));
     else rows = posts.filter((p) => p.status === "approved");
 
+    const q = search.trim().toLowerCase();
+    if (q) {
+      rows = rows.filter((p) => {
+        const a = authors.get(p.author_id);
+        const authorStr = `${a?.name ?? ""} ${a?.username ?? ""}`.toLowerCase();
+        return (p.title ?? "").toLowerCase().includes(q) || authorStr.includes(q);
+      });
+    }
+
     const cmpStr = (a: string, b: string) =>
       a.localeCompare(b, undefined, { sensitivity: "base" });
     const cmpDate = (a?: string | null, b?: string | null) =>
