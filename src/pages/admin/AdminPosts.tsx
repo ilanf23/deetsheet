@@ -173,7 +173,7 @@ export default function AdminPosts() {
         break;
     }
     return sorted;
-  }, [posts, reportedIds, tab, sort, authors]);
+  }, [posts, reportedIds, tab, sort, authors, search]);
 
   const tabCounts = {
     pending: posts.filter((p) => p.status === "pending").length,
