@@ -22,8 +22,11 @@ const PostBody = ({ content, imageSrc, imageAlt }: PostBodyProps) => {
     setOverflows(el.scrollHeight > el.clientHeight + 1);
   }, [content, expanded, imageSrc, imageFailed]);
 
-  const showToggle = expanded || overflows;
   const showImage = !!imageSrc && !imageFailed;
+  // Don't clip when an image is present — tall photos should display in full
+  // without forcing the user to click the "…" expander.
+  const canCollapse = !showImage;
+  const showToggle = canCollapse && (expanded || overflows);
 
   return (
     <div>
@@ -33,23 +36,23 @@ const PostBody = ({ content, imageSrc, imageAlt }: PostBodyProps) => {
         style={{
           fontSize: "var(--font-size-prose-body)",
           lineHeight: "var(--line-height-prose-body)",
-          ...(!expanded && {
+          ...(canCollapse && !expanded && {
             maxHeight: `calc(var(--line-height-prose-body) * ${COLLAPSED_LINES} * 1em)`,
             overflow: "hidden",
           }),
         }}
       >
-        {showImage && (
-          <img
-            src={imageSrc!}
-            alt={imageAlt || ""}
-            loading="lazy"
-            onError={() => setImageFailed(true)}
-            className="float-right ml-4 mb-2 w-full max-w-[480px] rounded-lg border border-border object-cover aspect-[4/3] bg-muted"
-          />
-        )}
         {content}
       </div>
+      {showImage && (
+        <img
+          src={imageSrc!}
+          alt={imageAlt || ""}
+          loading="lazy"
+          onError={() => setImageFailed(true)}
+          className="mt-3 w-full max-w-[480px] rounded-lg border border-border object-contain bg-muted"
+        />
+      )}
       {showToggle && (
         <button
           type="button"
@@ -64,5 +67,6 @@ const PostBody = ({ content, imageSrc, imageAlt }: PostBodyProps) => {
     </div>
   );
 };
+
 
 export default PostBody;
