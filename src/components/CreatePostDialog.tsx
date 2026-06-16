@@ -174,7 +174,7 @@ const CreatePostDialog = ({
       {/* Preview */}
       <div className="rounded-md bg-muted/50 px-3 py-2">
         <p className="text-sm text-muted-foreground">
-          {subject ? getTopicSubtitle(subject, categoryName) : "What are the most important details of being a ..."}
+          {subject ? getTopicSubtitle(subject, categoryName, subtitleOverride) : "What are the most important details of being a ..."}
         </p>
       </div>
 
