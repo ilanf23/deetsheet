@@ -192,15 +192,6 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
               />
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-post-content">Content</Label>
-              <Textarea
-                id="edit-post-content"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                rows={4}
-              />
-            </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="edit-post-story">Comment / Story (optional)</Label>
