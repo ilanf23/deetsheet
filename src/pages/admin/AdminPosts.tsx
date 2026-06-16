@@ -292,6 +292,44 @@ export default function AdminPosts() {
       </div>
 
       <div className="flex flex-wrap items-end gap-4">
+        <div className="flex flex-col gap-1">
+          <label
+            className="text-[11px] font-semibold uppercase tracking-wide"
+            style={{ color: "hsl(var(--admin-fg-muted))" }}
+          >
+            Quick sort
+          </label>
+          <div
+            className="inline-flex items-center gap-1 p-1 rounded-md h-9 bg-white"
+            style={{ border: "1px solid hsl(var(--admin-border))" }}
+          >
+            {([
+              { key: "title", asc: "title_asc", desc: "title_desc", label: "Title" },
+              { key: "author", asc: "author_asc", desc: "author_desc", label: "Author" },
+              { key: "date", asc: "oldest", desc: "newest", label: "Date" },
+            ] as const).map((b) => {
+              const isActive = sort === b.asc || sort === b.desc;
+              const isAsc = sort === b.asc;
+              const arrow = isActive ? (isAsc ? " ↑" : " ↓") : "";
+              return (
+                <button
+                  key={b.key}
+                  onClick={() => {
+                    setSort(isActive ? (isAsc ? b.desc : b.asc) : b.asc);
+                    setPage(1);
+                  }}
+                  className="px-3 h-7 rounded text-[12px] font-medium transition-colors"
+                  style={{
+                    backgroundColor: isActive ? "hsl(var(--admin-primary-soft))" : "transparent",
+                    color: isActive ? "hsl(var(--admin-primary))" : "hsl(var(--admin-fg-muted))",
+                  }}
+                >
+                  {b.label}{arrow}
+                </button>
+              );
+            })}
+          </div>
+        </div>
         <AdminSortSelect
           label="Sort by"
           value={sort}
@@ -338,6 +376,7 @@ export default function AdminPosts() {
           </div>
         </div>
       </div>
+
 
       <div
         className="rounded-xl overflow-hidden shadow-sm"
