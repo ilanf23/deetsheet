@@ -67,8 +67,8 @@ const HeroBanner = () => {
           src={slide.image}
           alt=""
           className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
-            i === current ? "opacity-100" : "opacity-0"
-          }`}
+            i === slides.length - 1 ? "brightness-[1.35]" : ""
+          } ${i === current ? "opacity-100" : "opacity-0"}`}
         />
       ))}
       <div className="absolute inset-0 bg-black/40" />
