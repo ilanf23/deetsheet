@@ -63,6 +63,7 @@ const AddPostBar = ({ topicId, topicName, categoryName, subtitleOverride, existi
         <CreatePostDialog
           topicName={topicName}
           categoryName={categoryName}
+          subtitleOverride={subtitleOverride}
           existingPosts={existingPosts}
           onSubmit={handleSubmit}
           onDismiss={() => setOpen(false)}
