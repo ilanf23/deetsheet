@@ -231,6 +231,7 @@ const TopicPage = () => {
                       topicId={topic.id}
                       topicName={topic.name}
                       categoryName={topic.categoryName}
+                      subtitleOverride={topic.subtitleOverride}
                       existingPosts={posts}
                       onPostAdded={refreshPosts}
                     />
