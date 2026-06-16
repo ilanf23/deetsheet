@@ -14,6 +14,7 @@ import { formatTitle } from "@/lib/formatTitle";
 interface CreatePostDialogProps {
   topicName: string;
   categoryName: string;
+  subtitleOverride?: string | null;
   existingPosts?: Post[];
   onSubmit: (detail: string, story: string, image: File | null, isAnonymous: boolean) => void;
   onDismiss?: () => void;
