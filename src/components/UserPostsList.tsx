@@ -40,7 +40,7 @@ const UserPostsList = ({ userId }: { userId: string }) => {
       .order("created_at", { ascending: false });
 
     if (!isOwnProfile) {
-      query = query.eq("status", "approved");
+      query = query.eq("status", "approved").eq("is_anonymous", false);
     }
 
     const { data, error } = await query;
