@@ -260,7 +260,7 @@ const ProfileView = () => {
         .order("created_at", { ascending: false });
 
       if (!isOwnProfile) {
-        postsQuery = postsQuery.eq("status", "approved");
+        postsQuery = postsQuery.eq("status", "approved").eq("is_anonymous", false);
       }
 
       void postsQuery.then(({ data }) => {
