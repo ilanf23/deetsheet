@@ -7,7 +7,16 @@ import { useInfiniteList } from "@/hooks/useInfiniteList";
 
 type MobileTab = "popular" | "recent" | "subjects";
 
-const PRIORITY_TOPICS = ["Parent", "Waiter", "Chicago", "Cancer", "College", "Love", "Doctor", "1980s", "New York City", "iPhone", "Married", "20s", "McDonald's"];
+// Curated priority order shown first on the homepage Most Popular column.
+// Remaining topics auto-fill below, sorted by post count (desc) so the
+// infinite scroll has a deterministic, traffic-driven order.
+const PRIORITY_TOPICS = [
+  "Parent", "Waiter", "Chicago", "Cancer", "College", "Love", "Doctor",
+  "1980s", "New York City", "Married", "Wisconsin", "Poor", "Pet Peeves",
+  "Man", "Work From Home", "Teacher", "Old", "Pregnant",
+  "University of Wisconsin", "Gentleman", "Los Angeles", "Nurse",
+  "Homeowner", "Baby", "Illinois", "Real Estate Agent",
+];
 
 interface ColumnLayoutProps {
   onAtBottomChange?: (atBottom: boolean) => void;
@@ -19,7 +28,9 @@ const ColumnLayout = ({ onAtBottomChange }: ColumnLayoutProps) => {
   const priority = PRIORITY_TOPICS
     .map((name) => topics.find((t) => t.name === name))
     .filter((t): t is typeof topics[number] => Boolean(t));
-  const rest = topics.filter((t) => !PRIORITY_TOPICS.includes(t.name));
+  const rest = topics
+    .filter((t) => !PRIORITY_TOPICS.includes(t.name))
+    .sort((a, b) => b.postCount - a.postCount);
   const popularTopics = [...priority, ...rest];
   // Each column scrolls independently on lg+, so the IntersectionObserver
   // must observe the middle column itself rather than the viewport.
