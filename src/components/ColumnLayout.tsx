@@ -28,7 +28,9 @@ const ColumnLayout = ({ onAtBottomChange }: ColumnLayoutProps) => {
   const priority = PRIORITY_TOPICS
     .map((name) => topics.find((t) => t.name === name))
     .filter((t): t is typeof topics[number] => Boolean(t));
-  const rest = topics.filter((t) => !PRIORITY_TOPICS.includes(t.name));
+  const rest = topics
+    .filter((t) => !PRIORITY_TOPICS.includes(t.name))
+    .sort((a, b) => b.postCount - a.postCount);
   const popularTopics = [...priority, ...rest];
   // Each column scrolls independently on lg+, so the IntersectionObserver
   // must observe the middle column itself rather than the viewport.
