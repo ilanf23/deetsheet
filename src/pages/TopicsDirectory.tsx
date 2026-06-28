@@ -11,7 +11,7 @@ type SortMode = "alphabetical" | "popular";
 const TopicsDirectory = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [sortMode, setSortMode] = useState<SortMode>("alphabetical");
+  const [sortMode, setSortMode] = useState<SortMode>("popular");
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
 
   const MAX_VISIBLE = 10;
