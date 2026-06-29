@@ -1,29 +1,30 @@
-## Hide anonymous posts from other users on profile
+# Fix: Priority topic order breaks after "Married"
 
-**Problem:** When viewing someone else's profile, their posts marked as anonymous are visible and attributed to them — defeating the purpose of "Anonymous."
+## Root cause
 
-**Fix:** In `src/components/UserPostsList.tsx`, when the viewer is NOT the profile owner (`!isOwnProfile`), exclude posts where `is_anonymous = true`.
+The homepage Most Popular column iterates `PRIORITY_TOPICS` against the **local `seedData.topics` list**. Many of your priority names don't exist in seed data — so they get silently dropped and replaced by popular tail topics, breaking the order you specified.
 
-Change the Supabase query to add:
-```ts
-if (!isOwnProfile) {
-  query = query.eq("status", "approved").eq("is_anonymous", false);
-}
-```
+Missing from seedData (and therefore skipped today):
+- Wisconsin, Pet Peeves, Work From Home, Teacher, Old, University of Wisconsin, Gentleman, Nurse, Homeowner, Baby, Real Estate Agent
 
-The profile owner still sees all their own posts (including anonymous ones, with the existing "Anonymous" pill) so they can manage them.
+That's why everything after "Married" looks out of order — the gaps collapse and the auto-sorted tail starts earlier than intended.
 
-**Also need (server-side safety):** Add an RLS-friendly approach. Right now `posts` is publicly readable, so a determined user could still query the DB directly. I'll add a SELECT policy adjustment so that anonymous posts are only returned to (a) the author and (b) admins — anyone else sees them only via aggregated/topic feeds where `author_id` is hidden in the UI.
+## Fix
 
-Specifically, update the public SELECT policy on `posts` to:
-- Allow read if `is_anonymous = false`, OR
-- `author_id = auth.uid()`, OR
-- `has_role(auth.uid(), 'admin')`
+Switch `ColumnLayout.tsx` to drive the Most Popular column from the **live database** (`useTopics()`) instead of the static seed file:
 
-This way the data layer also enforces the privacy, not just the UI.
+1. Call `useTopics()` to get every real topic with its live `postCount`.
+2. Build `priority` by matching `PRIORITY_TOPICS` (case-insensitive) against the DB list — any priority name that does exist in the DB renders in the exact order you gave.
+3. Build `rest` from the remaining DB topics, sorted by `postCount` descending.
+4. Concatenate and feed into the existing infinite-scroll list. `PopularTopicSection` already accepts a `Topic`-shaped object, so we pass through `{ id, name, categoryName, imageUrl, postCount, topPosts: [] }` from the DB row.
+5. Any priority topic still missing from the DB (e.g. if "Pet Peeves" was never created) gets logged once to the console as a one-time admin signal, then skipped — instead of silently collapsing the order.
 
-**Note:** This affects only the profile "My Posts" list. Anonymous posts continue to appear in topic feeds and on post pages as "Anonymous" (no author link), which is existing behavior.
+## Out of scope
 
-**Files touched:**
-- `src/components/UserPostsList.tsx` — add the filter for non-owner views.
-- One migration updating the `posts` SELECT policy.
+- Not changing the priority list itself.
+- Not touching `RecentlyAddedSidebar` or `SubjectsSidebar`.
+- Not creating new DB topics — if a name is missing, that's an admin action in `/admin/topics`. I'll list which ones are missing after the swap so you can decide whether to add them.
+
+## Verification
+
+After implementing, I'll open `/` and confirm the middle column renders in your exact order through "Real Estate Agent" (for the topics that exist in the DB), and report any priority names that aren't present so you can create them.
