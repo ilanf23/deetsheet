@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import PopularTopicSection from "@/components/PopularTopicSection";
 import SubjectsSidebar from "@/components/SubjectsSidebar";
 import RecentlyAddedSidebar from "@/components/RecentlyAddedSidebar";
-import { topics } from "@/data/seedData";
+import type { Topic } from "@/data/seedData";
+import { useTopics } from "@/hooks/useSupabaseTopics";
 import { useInfiniteList } from "@/hooks/useInfiniteList";
 
 type MobileTab = "popular" | "recent" | "subjects";
@@ -23,15 +24,38 @@ interface ColumnLayoutProps {
 }
 
 const ColumnLayout = ({ onAtBottomChange }: ColumnLayoutProps) => {
-  // Show priority topics first, then progressively reveal the rest of the
-  // catalog so the middle column scrolls "endlessly" Reddit-style.
-  const priority = PRIORITY_TOPICS
-    .map((name) => topics.find((t) => t.name === name))
-    .filter((t): t is typeof topics[number] => Boolean(t));
-  const rest = topics
-    .filter((t) => !PRIORITY_TOPICS.includes(t.name))
-    .sort((a, b) => b.postCount - a.postCount);
-  const popularTopics = [...priority, ...rest];
+  // Pull live topics from the DB so the priority list isn't silently
+  // truncated by missing seed-data entries.
+  const { data: dbTopics } = useTopics();
+
+  const popularTopics = useMemo<Topic[]>(() => {
+    const all = dbTopics ?? [];
+    const byNameLower = new Map(all.map((t) => [t.name.toLowerCase(), t]));
+    const priority = PRIORITY_TOPICS
+      .map((name) => byNameLower.get(name.toLowerCase()))
+      .filter((t): t is NonNullable<typeof t> => Boolean(t));
+    const priorityIds = new Set(priority.map((t) => t.id));
+    const rest = all
+      .filter((t) => !priorityIds.has(t.id))
+      .sort((a, b) => b.postCount - a.postCount);
+
+    if (typeof window !== "undefined" && all.length > 0) {
+      const missing = PRIORITY_TOPICS.filter((n) => !byNameLower.has(n.toLowerCase()));
+      if (missing.length > 0) {
+        // eslint-disable-next-line no-console
+        console.warn("[ColumnLayout] Priority topics missing from DB:", missing);
+      }
+    }
+
+    return [...priority, ...rest].map((t) => ({
+      id: t.id,
+      name: t.name,
+      categoryName: t.categoryName,
+      postCount: t.postCount,
+      topPosts: [],
+      imageUrl: t.imageUrl ?? "",
+    }));
+  }, [dbTopics]);
   // Each column scrolls independently on lg+, so the IntersectionObserver
   // must observe the middle column itself rather than the viewport.
   const middleRef = useRef<HTMLDivElement | null>(null);
