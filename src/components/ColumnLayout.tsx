@@ -14,7 +14,7 @@ type MobileTab = "popular" | "recent" | "subjects";
 const PRIORITY_TOPICS = [
   "Parent", "Waiter", "Chicago", "Cancer", "College", "Love", "Doctor",
   "1980s", "New York City", "Married", "Wisconsin", "Poor", "Pet Peeves",
-  "Man", "Work From Home", "Teacher", "Old", "Pregnant",
+  "Man", "Working From Home", "Teacher", "Old", "Pregnant",
   "University of Wisconsin", "Gentleman", "Los Angeles", "Nurse",
   "Homeowner", "Baby", "Illinois", "Real Estate Agent",
 ];

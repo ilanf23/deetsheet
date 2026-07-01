@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { topics, Topic } from "@/data/seedData";
+import type { Topic } from "@/data/seedData";
 import { useTopics } from "@/hooks/useSupabaseTopics";
 
 interface TopicRecommendationsProps {
@@ -9,21 +9,14 @@ interface TopicRecommendationsProps {
 
 const TopicRecommendations = ({ currentTopic }: TopicRecommendationsProps) => {
   const { data: dbTopics } = useTopics();
-  const dbImageByName = useMemo(() => {
-    const map = new Map<string, string | null>();
-    (dbTopics ?? []).forEach((t) => map.set(t.name, t.imageUrl));
-    return map;
-  }, [dbTopics]);
 
-  const sameCategoryTopics = topics.filter(
-    (t) => t.categoryName === currentTopic.categoryName && t.name !== currentTopic.name
-  );
-  const otherTopics = topics.filter(
-    (t) => t.categoryName !== currentTopic.categoryName && t.name !== currentTopic.name
-  );
-  const recommended = [...sameCategoryTopics, ...otherTopics]
-    .slice(0, 12)
-    .map((t) => ({ ...t, imageUrl: dbImageByName.get(t.name) ?? t.imageUrl }));
+  const recommended = useMemo(() => {
+    const all = dbTopics ?? [];
+    const others = all.filter((t) => t.name !== currentTopic.name);
+    const same = others.filter((t) => t.categoryName === currentTopic.categoryName);
+    const rest = others.filter((t) => t.categoryName !== currentTopic.categoryName);
+    return [...same, ...rest].slice(0, 12);
+  }, [dbTopics, currentTopic.name, currentTopic.categoryName]);
 
   return (
     <div>

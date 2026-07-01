@@ -1,30 +1,26 @@
-# Fix: Priority topic order breaks after "Married"
+## Fix two topic-list issues
 
-## Root cause
+### 1. "Working From Home" missing from priority order
+The DB topic is named **"Working From Home"** but `PRIORITY_TOPICS` in `src/components/ColumnLayout.tsx` lists **"Work From Home"**, so it silently drops out of the curated order.
 
-The homepage Most Popular column iterates `PRIORITY_TOPICS` against the **local `seedData.topics` list**. Many of your priority names don't exist in seed data — so they get silently dropped and replaced by popular tail topics, breaking the order you specified.
+**Change:** rename the entry in `PRIORITY_TOPICS` from `"Work From Home"` → `"Working From Home"`. No other code touched; matching is already case-insensitive against the live DB.
 
-Missing from seedData (and therefore skipped today):
-- Wisconsin, Pet Peeves, Work From Home, Teacher, Old, University of Wisconsin, Gentleman, Nurse, Homeowner, Baby, Real Estate Agent
+### 2. "Related Topics" rail points to a non-existent "New York"
+`src/components/TopicRecommendations.tsx` builds its list from the static `topics` array in `src/data/seedData.ts`, which still contains a stale `"New York"` state entry. The real DB topic is `"New York State"`, so clicking the suggestion lands on Topic Not Found. Several other seed entries (Working From Home, Homeowner, University of Wisconsin, etc.) have the same drift risk.
 
-That's why everything after "Married" looks out of order — the gaps collapse and the auto-sorted tail starts earlier than intended.
+**Change:** refactor `TopicRecommendations.tsx` to source its list from live DB topics via `useTopics()`, the same pattern already used by `ColumnLayout`:
+- Take `currentTopic` as-is.
+- Get all topics from `useTopics()`.
+- Split into `sameCategory` (same `categoryName`, excluding current) and `otherCategory`.
+- Concatenate, slice to 12, render.
+- Drop the `dbImageByName` merge step — images already come from the DB row.
+- Keep the existing card markup, link target (`/topic/<name>`), and `TopicImage` fallback.
 
-## Fix
+No changes to routing, `seedData.ts`, or the DB. No new topics created.
 
-Switch `ColumnLayout.tsx` to drive the Most Popular column from the **live database** (`useTopics()`) instead of the static seed file:
+### Files touched
+- `src/components/ColumnLayout.tsx` — one string change in `PRIORITY_TOPICS`.
+- `src/components/TopicRecommendations.tsx` — swap data source to `useTopics()`.
 
-1. Call `useTopics()` to get every real topic with its live `postCount`.
-2. Build `priority` by matching `PRIORITY_TOPICS` (case-insensitive) against the DB list — any priority name that does exist in the DB renders in the exact order you gave.
-3. Build `rest` from the remaining DB topics, sorted by `postCount` descending.
-4. Concatenate and feed into the existing infinite-scroll list. `PopularTopicSection` already accepts a `Topic`-shaped object, so we pass through `{ id, name, categoryName, imageUrl, postCount, topPosts: [] }` from the DB row.
-5. Any priority topic still missing from the DB (e.g. if "Pet Peeves" was never created) gets logged once to the console as a one-time admin signal, then skipped — instead of silently collapsing the order.
-
-## Out of scope
-
-- Not changing the priority list itself.
-- Not touching `RecentlyAddedSidebar` or `SubjectsSidebar`.
-- Not creating new DB topics — if a name is missing, that's an admin action in `/admin/topics`. I'll list which ones are missing after the swap so you can decide whether to add them.
-
-## Verification
-
-After implementing, I'll open `/` and confirm the middle column renders in your exact order through "Real Estate Agent" (for the topics that exist in the DB), and report any priority names that aren't present so you can create them.
+### Verification
+After build: reload `/`, confirm "Working From Home" appears in its slot (after "Man"). Open any topic page and confirm the Related Topics rail links to valid DB topics (no "New York" without "State").
