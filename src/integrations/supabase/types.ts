@@ -275,6 +275,7 @@ export type Database = {
       }
       posts: {
         Row: {
+          approved_at: string | null
           author_id: string
           average_rating: number
           comment_count: number
@@ -294,6 +295,7 @@ export type Database = {
           topic_id: string
         }
         Insert: {
+          approved_at?: string | null
           author_id: string
           average_rating?: number
           comment_count?: number
@@ -313,6 +315,7 @@ export type Database = {
           topic_id: string
         }
         Update: {
+          approved_at?: string | null
           author_id?: string
           average_rating?: number
           comment_count?: number
