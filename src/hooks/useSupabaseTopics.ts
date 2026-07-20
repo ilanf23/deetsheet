@@ -237,12 +237,13 @@ export const useRecentPosts = (limit = 8) => {
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, topic_id, author_id, average_rating, rating_count, comment_count, created_at, image_url, status, is_anonymous, " +
+          "id, title, topic_id, author_id, average_rating, rating_count, comment_count, created_at, approved_at, image_url, status, is_anonymous, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
         .eq("status", "approved")
-        .order("created_at", { ascending: false })
+        .not("approved_at", "is", null)
+        .order("approved_at", { ascending: false })
         .limit(Math.max(limit * 10, 100));
 
       if (error) throw error;
@@ -333,13 +334,14 @@ export const useRecentPostsByTopic = (topicId: string | undefined, limit = 5) =>
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, content, story, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, image_url, status, is_anonymous, " +
+          "id, title, content, story, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, approved_at, image_url, status, is_anonymous, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
         .eq("topic_id", topicId)
         .eq("status", "approved")
-        .order("created_at", { ascending: false })
+        .not("approved_at", "is", null)
+        .order("approved_at", { ascending: false })
         .limit(limit);
 
       if (error) throw error;
