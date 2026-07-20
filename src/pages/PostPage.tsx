@@ -257,7 +257,7 @@ const PostPage = () => {
                       />
                     );
                   })()}
-                  <div id="comments" className="border-t border-border pt-[var(--space-rhythm-block)] scroll-mt-24">
+                  <div id="comments" className="border-t border-border mt-[var(--space-rhythm-section)] pt-[var(--space-rhythm-block)] scroll-mt-24">
                     <InlineCommentComposer
                       postId={post.id}
                       onSubmitted={() =>
