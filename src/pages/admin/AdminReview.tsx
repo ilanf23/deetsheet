@@ -164,8 +164,22 @@ export default function AdminReview() {
   const [tab, setTab] = useState<FilterTab>("all");
   const [sort, setSort] = useState<SortKey>("newest");
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
+
+  // Confirmation dialog state — one popup drives approve, reject, and edit.
+  // For edit, `pendingEditPayload` holds the update payload prepared by
+  // AdminEditPostDialog; it is only written to the DB after the admin sends
+  // the accompanying author message.
+  const [reviewDialog, setReviewDialog] = useState<{
+    action: ReviewAction;
+    item: PendingItem;
+  } | null>(null);
+  const [pendingEditPayload, setPendingEditPayload] = useState<{
+    postId: string;
+    updates: Record<string, unknown>;
+    changed: Record<string, { from: unknown; to: unknown }>;
+  } | null>(null);
 
   const fetchAll = async () => {
     setLoading(true);
