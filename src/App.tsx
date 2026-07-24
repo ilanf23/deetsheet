@@ -156,6 +156,7 @@ const App = () => (
                 <Route path="audit" element={<AdminAuditLog />} />
                 <Route path="contact-messages" element={<AdminContactMessages />} />
                 <Route path="site-pages" element={<AdminSitePages />} />
+                <Route path="messages" element={<AdminMessages />} />
               </Route>
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
