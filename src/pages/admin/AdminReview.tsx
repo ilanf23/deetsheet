@@ -546,7 +546,9 @@ export default function AdminReview() {
             } else if (reviewDialog.action === "reject") {
               await applyDecision(reviewDialog.item, "rejected");
             } else if (reviewDialog.action === "edit") {
-              await applyDeferredEdit();
+              // "Suggest" flow: message sent to author; post stays pending
+              // until they update and resubmit. No DB change here.
+              setItems((prev) => prev.filter((i) => !(i.kind === reviewDialog.item.kind && i.id === reviewDialog.item.id)));
             }
           }}
         />
