@@ -55,6 +55,8 @@ import { useProfileFollowCounts } from "@/hooks/useUserFollow";
 import { useFollowing, useFollowers } from "@/hooks/useFollowLists";
 import { buildPostSlug } from "@/lib/postSlug";
 import { formatTitle } from "@/lib/formatTitle";
+import { useUnreadMessagesCount } from "@/hooks/useUnreadMessages";
+import ProfileMessagesPanel from "@/components/profile/ProfileMessagesPanel";
 
 const CREDENTIAL_ICON_MAP: Record<string, React.ReactNode> = {
   pencil: <Pencil className="h-4 w-4" />,
