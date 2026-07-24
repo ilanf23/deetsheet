@@ -22,6 +22,7 @@ const DeetHeader = () => {
   const { isAdmin } = useAdminAuth();
   const { adminModeActive, toggleAdminMode } = useAdminMode();
   const [searchOpen, setSearchOpen] = useState(false);
+  const { data: unreadCount = 0 } = useUnreadMessagesCount();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
