@@ -192,6 +192,10 @@ export default function ReviewActionDialog({
   } | null>(null);
   const [postRefreshKey, setPostRefreshKey] = useState(0);
 
+  const reasonList = action === "reject" ? REJECT_REASONS : action === "edit" ? EDIT_REASONS : [];
+  const showReasonPicker = action === "reject" || action === "edit";
+
+
 
   useEffect(() => {
     if (!open) return;
