@@ -182,9 +182,16 @@ export default function ReviewActionDialog({
   const [busy, setBusy] = useState(false);
   const [reasonKey, setReasonKey] = useState<string>("");
   const [customReason, setCustomReason] = useState("");
+  const [editOpen, setEditOpen] = useState(false);
+  const [postDetail, setPostDetail] = useState<{
+    title: string;
+    content: string | null;
+    story: string | null;
+    image_url: string | null;
+    topic_name: string | null;
+  } | null>(null);
+  const [postRefreshKey, setPostRefreshKey] = useState(0);
 
-  const reasonList = action === "reject" ? REJECT_REASONS : action === "edit" ? EDIT_REASONS : [];
-  const showReasonPicker = action === "reject" || action === "edit";
 
   useEffect(() => {
     if (!open) return;
