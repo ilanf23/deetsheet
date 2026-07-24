@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Search, Menu, X, List, User, UserCircle2, Shield } from "lucide-react";
+import { Search, Menu, X, List, User, UserCircle2, Shield, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import SearchBar from "@/components/SearchBar";
+import { useUnreadMessagesCount } from "@/hooks/useUnreadMessages";
 
 const DeetHeader = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const DeetHeader = () => {
   const { isAdmin } = useAdminAuth();
   const { adminModeActive, toggleAdminMode } = useAdminMode();
   const [searchOpen, setSearchOpen] = useState(false);
+  const { data: unreadCount = 0 } = useUnreadMessagesCount();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
@@ -79,6 +81,19 @@ const DeetHeader = () => {
                   )}
                 </button>
               )}
+              <button
+                onClick={() => navigate("/inbox")}
+                title="Inbox"
+                aria-label="Inbox"
+                className="relative mr-1 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <Mail className="h-4 w-4" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-secondary text-secondary-foreground text-[10px] font-semibold flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
               <HoverCard openDelay={150} closeDelay={100}>
                 <HoverCardTrigger asChild>
                   <button
@@ -103,6 +118,18 @@ const DeetHeader = () => {
                     className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                   >
                     Profile
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/inbox")}
+                    className="flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-sm text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                  >
+                    <span>Inbox</span>
+                    {unreadCount > 0 && (
+                      <span className="ml-2 min-w-[18px] h-4 px-1 rounded-full bg-secondary text-secondary-foreground text-[10px] font-semibold flex items-center justify-center">
+                        {unreadCount}
+                      </span>
+                    )}
                   </button>
                   <button
                     type="button"

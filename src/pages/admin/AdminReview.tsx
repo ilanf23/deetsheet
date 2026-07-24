@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow, parseISO } from "date-fns";
@@ -162,6 +162,7 @@ export default function AdminReview() {
   const [sort, setSort] = useState<SortKey>("newest");
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const fetchAll = async () => {
     setLoading(true);
@@ -460,6 +461,25 @@ export default function AdminReview() {
                       }}
                     >
                       Edit
+                    </button>
+                  )}
+                  {author?.id && (
+                    <button
+                      onClick={() => {
+                        const params = new URLSearchParams({
+                          compose: "1",
+                          user: author.id,
+                          ...(item.kind === "post" ? { post: item.id } : {}),
+                        });
+                        navigate(`/admin/messages?${params.toString()}`);
+                      }}
+                      className="px-4 py-2 rounded-md text-[13px] font-semibold border"
+                      style={{
+                        borderColor: "hsl(var(--admin-border))",
+                        color: "hsl(var(--admin-primary))",
+                      }}
+                    >
+                      Message author
                     </button>
                   )}
                 </div>
