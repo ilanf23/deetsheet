@@ -346,17 +346,31 @@ export default function AdminMessages() {
         <h1 className="text-[40px] font-bold leading-none tracking-tight" style={{ color: "hsl(var(--admin-fg))" }}>
           Messaging
         </h1>
-        <button
-          onClick={() => setTemplatesOpen(true)}
-          className="px-4 py-2 rounded-full text-[13px] font-medium border"
-          style={{
-            backgroundColor: "hsl(var(--admin-surface))",
-            borderColor: "hsl(var(--admin-border))",
-            color: "hsl(var(--admin-primary))",
-          }}
-        >
-          Manage form letters
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              setPickerQuery("");
+              setPickerResults([]);
+              setPickerOpen(true);
+            }}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold text-white"
+            style={{ backgroundColor: "hsl(var(--admin-primary))" }}
+          >
+            <PenSquare className="h-3.5 w-3.5" />
+            New message
+          </button>
+          <button
+            onClick={() => setTemplatesOpen(true)}
+            className="px-4 py-2 rounded-full text-[13px] font-medium border"
+            style={{
+              backgroundColor: "hsl(var(--admin-surface))",
+              borderColor: "hsl(var(--admin-border))",
+              color: "hsl(var(--admin-primary))",
+            }}
+          >
+            Manage form letters
+          </button>
+        </div>
       </div>
 
       <div className="flex items-center gap-3 flex-wrap">
