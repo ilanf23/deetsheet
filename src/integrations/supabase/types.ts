@@ -378,6 +378,7 @@ export type Database = {
           last_message_at: string
           last_read_at: string | null
           last_sender: string
+          other_last_read_at: string | null
           other_user_id: string | null
           post_id: string | null
           status: string
@@ -392,6 +393,7 @@ export type Database = {
           last_message_at?: string
           last_read_at?: string | null
           last_sender?: string
+          other_last_read_at?: string | null
           other_user_id?: string | null
           post_id?: string | null
           status?: string
@@ -406,6 +408,7 @@ export type Database = {
           last_message_at?: string
           last_read_at?: string | null
           last_sender?: string
+          other_last_read_at?: string | null
           other_user_id?: string | null
           post_id?: string | null
           status?: string
