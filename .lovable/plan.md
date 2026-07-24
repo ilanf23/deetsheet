@@ -1,3 +1,4 @@
+> **STATUS: PAUSED (2026-07-24)** — Messaging feature work is on hold per user request. Do not extend or refactor the messaging system (admin messages, inbox, review-slip popups, `send-admin-message` edge function) until the user explicitly resumes. Shipped surface remains live; only bug fixes if broken.
 
 ## Admin Messaging (Phase 1)
 
