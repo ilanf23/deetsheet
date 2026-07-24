@@ -1127,7 +1127,14 @@ const ProfileView = () => {
                 )}
               </TabsContent>
 
+              {isOwnProfile && (
+                <TabsContent value="messages" className="mt-4">
+                  <ProfileMessagesPanel />
+                </TabsContent>
+              )}
+
               <TabsContent value="favorites" className="mt-4">
+
                 <Card className="bg-card">
                   <CardContent className="py-12 text-center text-muted-foreground">
                     <p className="text-sm">Coming soon</p>
