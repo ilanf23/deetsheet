@@ -51,6 +51,7 @@ import { supabase } from "@/integrations/supabase/client";
 import CreateTopicDialog from "@/components/CreateTopicDialog";
 import EditPostDialog from "@/components/EditPostDialog";
 import FollowUserButton from "@/components/FollowUserButton";
+import MessageUserButton from "@/components/MessageUserButton";
 import { useProfileFollowCounts } from "@/hooks/useUserFollow";
 import { useFollowing, useFollowers } from "@/hooks/useFollowLists";
 import { buildPostSlug } from "@/lib/postSlug";
@@ -590,7 +591,13 @@ const ProfileView = () => {
                       </button>
                     )}
                     {!isOwnProfile && targetUserId && (
-                      <FollowUserButton targetUserId={targetUserId} />
+                      <>
+                        <FollowUserButton targetUserId={targetUserId} />
+                        <MessageUserButton
+                          targetUserId={targetUserId}
+                          targetUserLabel={username}
+                        />
+                      </>
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">{email}</p>

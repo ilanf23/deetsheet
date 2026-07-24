@@ -374,9 +374,12 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          kind: string
           last_message_at: string
           last_read_at: string | null
           last_sender: string
+          other_last_read_at: string | null
+          other_user_id: string | null
           post_id: string | null
           status: string
           subject: string
@@ -386,9 +389,12 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          kind?: string
           last_message_at?: string
           last_read_at?: string | null
           last_sender?: string
+          other_last_read_at?: string | null
+          other_user_id?: string | null
           post_id?: string | null
           status?: string
           subject: string
@@ -398,9 +404,12 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          kind?: string
           last_message_at?: string
           last_read_at?: string | null
           last_sender?: string
+          other_last_read_at?: string | null
+          other_user_id?: string | null
           post_id?: string | null
           status?: string
           subject?: string
