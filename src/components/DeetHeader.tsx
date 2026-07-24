@@ -121,6 +121,18 @@ const DeetHeader = () => {
                   </button>
                   <button
                     type="button"
+                    onClick={() => navigate("/inbox")}
+                    className="flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-sm text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
+                  >
+                    <span>Inbox</span>
+                    {unreadCount > 0 && (
+                      <span className="ml-2 min-w-[18px] h-4 px-1 rounded-full bg-secondary text-secondary-foreground text-[10px] font-semibold flex items-center justify-center">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => navigate("/contact")}
                     className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm text-foreground outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground"
                   >
