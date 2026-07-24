@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import SearchBar from "@/components/SearchBar";
+import { useUnreadMessagesCount } from "@/hooks/useUnreadMessages";
 
 const DeetHeader = () => {
   const navigate = useNavigate();
