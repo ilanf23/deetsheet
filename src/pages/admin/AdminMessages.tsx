@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
 import ManageTemplatesDialog from "@/components/admin/ManageTemplatesDialog";
-import { ChevronDown, FileText } from "lucide-react";
+import { ChevronDown, FileText, PenSquare, Search } from "lucide-react";
 
 type Thread = {
   id: string;
