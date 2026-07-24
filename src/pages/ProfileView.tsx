@@ -537,6 +537,9 @@ const ProfileView = () => {
     { value: "posts", label: "Posts", count: postCount },
     { value: "topics", label: "Topics", count: topicCount },
     { value: "comments", label: "Comments", count: commentCount },
+    ...(isOwnProfile
+      ? [{ value: "messages", label: "Messages", count: unreadMessages ?? 0 }]
+      : []),
     { value: "favorites", label: "Favorites", count: 0 },
     { value: "following", label: "Following", count: followingTotal },
     { value: "followers", label: "Followers", count: followerTotal },
