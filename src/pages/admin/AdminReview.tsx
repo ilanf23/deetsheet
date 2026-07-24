@@ -508,8 +508,49 @@ export default function AdminReview() {
         postId={editingPostId}
         open={!!editingPostId}
         onOpenChange={(o) => { if (!o) setEditingPostId(null); }}
+        deferCommit
+        onDeferredCommit={(payload) => {
+          setPendingEditPayload(payload);
+          const item = items.find((i) => i.kind === "post" && i.id === payload.postId);
+          setEditingPostId(null);
+          if (item) setReviewDialog({ action: "edit", item });
+        }}
         onSaved={fetchAll}
       />
+      {reviewDialog && reviewDialog.item.author?.id && (
+        <ReviewActionDialog
+          open={!!reviewDialog}
+          onOpenChange={(o) => {
+            if (!o) {
+              setReviewDialog(null);
+              setPendingEditPayload(null);
+            }
+          }}
+          action={reviewDialog.action}
+          itemKind={reviewDialog.item.kind}
+          itemTitle={
+            reviewDialog.item.kind === "topic"
+              ? reviewDialog.item.name
+              : reviewDialog.item.title
+          }
+          authorId={reviewDialog.item.author.id}
+          authorLabel={
+            reviewDialog.item.author.name ??
+            reviewDialog.item.author.username ??
+            "the author"
+          }
+          postId={reviewDialog.item.kind === "post" ? reviewDialog.item.id : null}
+          onConfirmed={async () => {
+            if (reviewDialog.action === "approve") {
+              await applyDecision(reviewDialog.item, "approved");
+            } else if (reviewDialog.action === "reject") {
+              await applyDecision(reviewDialog.item, "rejected");
+            } else if (reviewDialog.action === "edit") {
+              await applyDeferredEdit();
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
