@@ -81,6 +81,19 @@ const DeetHeader = () => {
                   )}
                 </button>
               )}
+              <button
+                onClick={() => navigate("/inbox")}
+                title="Inbox"
+                aria-label="Inbox"
+                className="relative mr-1 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <Mail className="h-4 w-4" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-secondary text-secondary-foreground text-[10px] font-semibold flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
               <HoverCard openDelay={150} closeDelay={100}>
                 <HoverCardTrigger asChild>
                   <button
