@@ -463,6 +463,25 @@ export default function AdminReview() {
                       Edit
                     </button>
                   )}
+                  {author?.id && (
+                    <button
+                      onClick={() => {
+                        const params = new URLSearchParams({
+                          compose: "1",
+                          user: author.id,
+                          ...(item.kind === "post" ? { post: item.id } : {}),
+                        });
+                        navigate(`/admin/messages?${params.toString()}`);
+                      }}
+                      className="px-4 py-2 rounded-md text-[13px] font-semibold border"
+                      style={{
+                        borderColor: "hsl(var(--admin-border))",
+                        color: "hsl(var(--admin-primary))",
+                      }}
+                    >
+                      Message author
+                    </button>
+                  )}
                 </div>
                 </div>
                 {item.kind === "post" && author?.id && (
