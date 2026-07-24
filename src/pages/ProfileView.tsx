@@ -591,7 +591,13 @@ const ProfileView = () => {
                       </button>
                     )}
                     {!isOwnProfile && targetUserId && (
-                      <FollowUserButton targetUserId={targetUserId} />
+                      <>
+                        <FollowUserButton targetUserId={targetUserId} />
+                        <MessageUserButton
+                          targetUserId={targetUserId}
+                          targetUserLabel={username}
+                        />
+                      </>
                     )}
                   </div>
                   <p className="text-sm text-muted-foreground">{email}</p>
