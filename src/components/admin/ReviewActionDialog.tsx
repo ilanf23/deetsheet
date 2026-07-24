@@ -207,6 +207,37 @@ export default function ReviewActionDialog({
     setBody(c.body);
   }, [open, action, itemKind, itemTitle]);
 
+  // Fetch the full post so the admin can review it (and optionally edit it)
+  // right inside the message dialog.
+  useEffect(() => {
+    if (!open || itemKind !== "post" || !postId) {
+      setPostDetail(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("posts")
+        .select("title, content, story, image_url, topics(name)")
+        .eq("id", postId)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      const t = (data as { topics: { name: string } | { name: string }[] | null }).topics;
+      const topicName = Array.isArray(t) ? (t[0]?.name ?? null) : (t?.name ?? null);
+      setPostDetail({
+        title: data.title ?? "",
+        content: data.content ?? null,
+        story: data.story ?? null,
+        image_url: data.image_url ?? null,
+        topic_name: topicName,
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, itemKind, postId, postRefreshKey]);
+
+
   // Re-render the default message whenever the admin picks a reason.
   useEffect(() => {
     if (!open || !showReasonPicker) return;
