@@ -100,6 +100,12 @@ export default function AdminMessages() {
   const [sending, setSending] = useState(false);
   const [templates, setTemplates] = useState<any[]>([]);
 
+  // New-thread user picker
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerQuery, setPickerQuery] = useState("");
+  const [pickerResults, setPickerResults] = useState<any[]>([]);
+  const [pickerLoading, setPickerLoading] = useState(false);
+
   const fetchAll = async () => {
     setLoading(true);
     const { data: threadRows } = await supabase
