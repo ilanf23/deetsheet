@@ -157,25 +157,24 @@ function defaultCopy(
     };
   }
   return {
-    subject: `Small edits to your ${label}`,
+    subject: `Suggestions to help your ${label} get approved`,
     body:
-      `Hi,\n\nAn editor made small revisions to your ${label} ${quoted} for clarity and formatting. ` +
-      `The updated version is now live.\n\n` +
-      `What changed: ${reasonDetail || "[select a change type above or write your own summary]"}\n\n` +
-      `The substance of your post wasn't changed. If anything doesn't look right, just reply to this message.\n\n— The DeetSheet team`,
+      `Hi,\n\nThanks for submitting your ${label} ${quoted}. Before we can approve it, we'd like you to make a few changes.\n\n` +
+      `Suggestion: ${reasonDetail || "[select a suggestion above or write your own]"}\n\n` +
+      `Once you've updated your ${label}, it will go back into review. Reply here if you have questions.\n\n— The DeetSheet team`,
   };
 }
 
 const ACTION_LABEL: Record<ReviewAction, string> = {
   approve: "Send & approve",
   reject: "Send & reject",
-  edit: "Send & apply edits",
+  edit: "Send suggestions",
 };
 
 const TITLE_LABEL: Record<ReviewAction, string> = {
   approve: "Approve",
   reject: "Reject",
-  edit: "Apply edits",
+  edit: "Suggest changes",
 };
 
 export default function ReviewActionDialog({
