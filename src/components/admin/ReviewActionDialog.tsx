@@ -353,18 +353,6 @@ export default function ReviewActionDialog({
                 <div className="font-medium">{postDetail?.title ?? itemTitle}</div>
                 <div className="text-xs text-muted-foreground mt-1">Author: {authorLabel}</div>
               </div>
-              {itemKind === "post" && postId && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditOpen(true)}
-                  className="shrink-0"
-                >
-                  <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                  Edit post
-                </Button>
-              )}
             </div>
 
             {itemKind === "post" && postDetail && (
