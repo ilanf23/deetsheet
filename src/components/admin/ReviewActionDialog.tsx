@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +8,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import AdminEditPostDialog from "@/components/admin/AdminEditPostDialog";
 
 
 export type ReviewAction = "approve" | "reject" | "edit";
@@ -85,34 +83,50 @@ const REJECT_REASONS: { value: string; label: string; detail: string }[] = [
 
 const EDIT_REASONS: { value: string; label: string; detail: string }[] = [
   {
-    value: "grammar",
-    label: "Grammar / spelling",
-    detail: "I corrected a few small spelling and grammar issues so the post reads more clearly.",
+    value: "add_detail",
+    label: "Add more detail / context",
+    detail:
+      "Please expand your post with more specifics — firsthand examples, numbers, or context — so readers can learn from your experience.",
+  },
+  {
+    value: "clarify_title",
+    label: "Clarify the title",
+    detail:
+      "Please tighten the title so it more clearly reflects what the post is about. A specific title helps the right readers find it.",
   },
   {
     value: "formatting",
-    label: "Formatting / readability",
-    detail: "I lightly reformatted the post (paragraph breaks, bullets) to make it easier to scan.",
+    label: "Improve formatting / readability",
+    detail:
+      "Please break the post into short paragraphs or bullet points so it's easier to scan and read.",
   },
   {
-    value: "title",
-    label: "Clarified the title",
-    detail: "I tightened the title so it more accurately reflects what the post is about.",
-  },
-  {
-    value: "trim",
-    label: "Trimmed for length",
-    detail: "I trimmed a few sections that were repetitive so the post stays focused.",
+    value: "grammar",
+    label: "Fix grammar / spelling",
+    detail:
+      "Please give the post a quick pass for spelling and grammar so it reads more cleanly.",
   },
   {
     value: "tone",
-    label: "Softened tone / removed language",
+    label: "Soften tone / adjust language",
     detail:
-      "I softened some wording so the post stays within our community guidelines while keeping your point intact.",
+      "Please soften some of the wording so the post stays within our community guidelines while keeping your point intact.",
+  },
+  {
+    value: "sources",
+    label: "Add sources or firsthand context",
+    detail:
+      "Please add sources or clarify which parts come from firsthand experience so readers can trust the claims.",
+  },
+  {
+    value: "trim",
+    label: "Trim for length",
+    detail:
+      "Please trim repetitive sections so the post stays focused on the main point.",
   },
   {
     value: "other",
-    label: "Other (write your own summary)",
+    label: "Other (write your own suggestion)",
     detail: "",
   },
 ];
@@ -143,25 +157,24 @@ function defaultCopy(
     };
   }
   return {
-    subject: `Small edits to your ${label}`,
+    subject: `Suggestions to help your ${label} get approved`,
     body:
-      `Hi,\n\nAn editor made small revisions to your ${label} ${quoted} for clarity and formatting. ` +
-      `The updated version is now live.\n\n` +
-      `What changed: ${reasonDetail || "[select a change type above or write your own summary]"}\n\n` +
-      `The substance of your post wasn't changed. If anything doesn't look right, just reply to this message.\n\n— The DeetSheet team`,
+      `Hi,\n\nThanks for submitting your ${label} ${quoted}. Before we can approve it, we'd like you to make a few changes.\n\n` +
+      `Suggestion: ${reasonDetail || "[select a suggestion above or write your own]"}\n\n` +
+      `Once you've updated your ${label}, it will go back into review. Reply here if you have questions.\n\n— The DeetSheet team`,
   };
 }
 
 const ACTION_LABEL: Record<ReviewAction, string> = {
   approve: "Send & approve",
   reject: "Send & reject",
-  edit: "Send & apply edits",
+  edit: "Send suggestions",
 };
 
 const TITLE_LABEL: Record<ReviewAction, string> = {
   approve: "Approve",
   reject: "Reject",
-  edit: "Apply edits",
+  edit: "Suggest changes",
 };
 
 export default function ReviewActionDialog({
@@ -182,7 +195,7 @@ export default function ReviewActionDialog({
   const [busy, setBusy] = useState(false);
   const [reasonKey, setReasonKey] = useState<string>("");
   const [customReason, setCustomReason] = useState("");
-  const [editOpen, setEditOpen] = useState(false);
+  
   const [postDetail, setPostDetail] = useState<{
     title: string;
     content: string | null;
@@ -190,7 +203,7 @@ export default function ReviewActionDialog({
     image_url: string | null;
     topic_name: string | null;
   } | null>(null);
-  const [postRefreshKey, setPostRefreshKey] = useState(0);
+  const [postRefreshKey] = useState(0);
 
   const reasonList = action === "reject" ? REJECT_REASONS : action === "edit" ? EDIT_REASONS : [];
   const showReasonPicker = action === "reject" || action === "edit";
@@ -340,18 +353,6 @@ export default function ReviewActionDialog({
                 <div className="font-medium">{postDetail?.title ?? itemTitle}</div>
                 <div className="text-xs text-muted-foreground mt-1">Author: {authorLabel}</div>
               </div>
-              {itemKind === "post" && postId && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setEditOpen(true)}
-                  className="shrink-0"
-                >
-                  <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                  Edit post
-                </Button>
-              )}
             </div>
 
             {itemKind === "post" && postDetail && (
@@ -385,20 +386,20 @@ export default function ReviewActionDialog({
           <p className="text-sm text-muted-foreground">
             {action === "approve" && "The message below will be sent to the author, then the item will be approved and go live."}
             {action === "reject" && "Choose a reason so the author knows why. The message below will be sent to them, then the item will be rejected."}
-            {action === "edit" && "Tell the author what you changed. The message below will be sent to them, then your edits will be saved and go live."}
+            {action === "edit" && "Choose a suggestion so the author knows what to improve. The post will stay pending until they update it and resubmit."}
           </p>
 
           {showReasonPicker && (
             <div className="space-y-2">
               <Label className="text-xs">
-                {action === "reject" ? "Reason for rejection" : "What did you change?"}
+                {action === "reject" ? "Reason for rejection" : "Suggestion for the author"}
                 <span className="text-destructive"> *</span>
               </Label>
               <Select value={reasonKey} onValueChange={setReasonKey}>
                 <SelectTrigger>
                   <SelectValue
                     placeholder={
-                      action === "reject" ? "Select a reason…" : "Select what you edited…"
+                      action === "reject" ? "Select a reason…" : "Select a suggestion…"
                     }
                   />
                 </SelectTrigger>
@@ -416,7 +417,7 @@ export default function ReviewActionDialog({
                   placeholder={
                     action === "reject"
                       ? "Write a short reason the author will see…"
-                      : "Write a short summary of what you edited…"
+                      : "Write a short suggestion the author will see…"
                   }
                   value={customReason}
                   onChange={(e) => setCustomReason(e.target.value)}
@@ -424,7 +425,9 @@ export default function ReviewActionDialog({
                 />
               )}
               <p className="text-xs text-muted-foreground">
-                Picking a reason updates the message below. You can still edit it before sending.
+                {action === "edit"
+                  ? "Picking a suggestion updates the message below. You can still edit it before sending."
+                  : "Picking a reason updates the message below. You can still edit it before sending."}
               </p>
             </div>
           )}
@@ -462,12 +465,6 @@ export default function ReviewActionDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
-      <AdminEditPostDialog
-        postId={itemKind === "post" ? postId ?? null : null}
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        onSaved={() => setPostRefreshKey((k) => k + 1)}
-      />
     </Dialog>
   );
 }

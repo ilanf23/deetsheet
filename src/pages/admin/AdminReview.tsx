@@ -483,7 +483,7 @@ export default function AdminReview() {
                   </button>
                   {item.kind === "post" && (
                     <button
-                      onClick={() => setEditingPostId(item.id)}
+                      onClick={() => author?.id && setReviewDialog({ action: "edit", item })}
                       disabled={!author?.id}
                       className="px-4 py-2 rounded-md text-[13px] font-semibold border disabled:opacity-50"
                       style={{
@@ -491,7 +491,7 @@ export default function AdminReview() {
                         color: "hsl(var(--admin-fg))",
                       }}
                     >
-                      Edit
+                      Suggest
                     </button>
                   )}
                 </div>
@@ -546,7 +546,9 @@ export default function AdminReview() {
             } else if (reviewDialog.action === "reject") {
               await applyDecision(reviewDialog.item, "rejected");
             } else if (reviewDialog.action === "edit") {
-              await applyDeferredEdit();
+              // "Suggest" flow: message sent to author; post stays pending
+              // until they update and resubmit. No DB change here.
+              setItems((prev) => prev.filter((i) => !(i.kind === reviewDialog.item.kind && i.id === reviewDialog.item.id)));
             }
           }}
         />
