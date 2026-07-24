@@ -386,20 +386,20 @@ export default function ReviewActionDialog({
           <p className="text-sm text-muted-foreground">
             {action === "approve" && "The message below will be sent to the author, then the item will be approved and go live."}
             {action === "reject" && "Choose a reason so the author knows why. The message below will be sent to them, then the item will be rejected."}
-            {action === "edit" && "Tell the author what you changed. The message below will be sent to them, then your edits will be saved and go live."}
+            {action === "edit" && "Choose a suggestion so the author knows what to improve. The post will stay pending until they update it and resubmit."}
           </p>
 
           {showReasonPicker && (
             <div className="space-y-2">
               <Label className="text-xs">
-                {action === "reject" ? "Reason for rejection" : "What did you change?"}
+                {action === "reject" ? "Reason for rejection" : "Suggestion for the author"}
                 <span className="text-destructive"> *</span>
               </Label>
               <Select value={reasonKey} onValueChange={setReasonKey}>
                 <SelectTrigger>
                   <SelectValue
                     placeholder={
-                      action === "reject" ? "Select a reason…" : "Select what you edited…"
+                      action === "reject" ? "Select a reason…" : "Select a suggestion…"
                     }
                   />
                 </SelectTrigger>
@@ -417,7 +417,7 @@ export default function ReviewActionDialog({
                   placeholder={
                     action === "reject"
                       ? "Write a short reason the author will see…"
-                      : "Write a short summary of what you edited…"
+                      : "Write a short suggestion the author will see…"
                   }
                   value={customReason}
                   onChange={(e) => setCustomReason(e.target.value)}
@@ -425,7 +425,9 @@ export default function ReviewActionDialog({
                 />
               )}
               <p className="text-xs text-muted-foreground">
-                Picking a reason updates the message below. You can still edit it before sending.
+                {action === "edit"
+                  ? "Picking a suggestion updates the message below. You can still edit it before sending."
+                  : "Picking a reason updates the message below. You can still edit it before sending."}
               </p>
             </div>
           )}
