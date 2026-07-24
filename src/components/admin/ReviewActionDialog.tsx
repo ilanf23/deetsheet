@@ -195,7 +195,7 @@ export default function ReviewActionDialog({
   const [busy, setBusy] = useState(false);
   const [reasonKey, setReasonKey] = useState<string>("");
   const [customReason, setCustomReason] = useState("");
-  const [editOpen, setEditOpen] = useState(false);
+  
   const [postDetail, setPostDetail] = useState<{
     title: string;
     content: string | null;
