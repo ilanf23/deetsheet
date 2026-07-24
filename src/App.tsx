@@ -56,6 +56,9 @@ const AdminReports = lazy(() => import("./pages/admin/AdminReports"));
 const AdminAuditLog = lazy(() => import("./pages/admin/AdminAuditLog"));
 const AdminContactMessages = lazy(() => import("./pages/admin/AdminContactMessages"));
 const AdminSitePages = lazy(() => import("./pages/admin/AdminSitePages"));
+const AdminMessages = lazy(() => import("./pages/admin/AdminMessages"));
+const Inbox = lazy(() => import("./pages/Inbox"));
+const InboxThread = lazy(() => import("./pages/InboxThread"));
 
 function AdminChunkFallback() {
   return (
