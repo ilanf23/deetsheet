@@ -483,7 +483,7 @@ export default function AdminReview() {
                   </button>
                   {item.kind === "post" && (
                     <button
-                      onClick={() => setEditingPostId(item.id)}
+                      onClick={() => author?.id && setReviewDialog({ action: "edit", item })}
                       disabled={!author?.id}
                       className="px-4 py-2 rounded-md text-[13px] font-semibold border disabled:opacity-50"
                       style={{
@@ -491,7 +491,7 @@ export default function AdminReview() {
                         color: "hsl(var(--admin-fg))",
                       }}
                     >
-                      Edit
+                      Suggest
                     </button>
                   )}
                 </div>
