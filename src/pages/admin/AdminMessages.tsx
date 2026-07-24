@@ -564,6 +564,64 @@ export default function AdminMessages() {
         </DialogContent>
       </Dialog>
 
+      {/* New-thread user picker */}
+      <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Start a new conversation</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                autoFocus
+                placeholder="Search by name or username…"
+                value={pickerQuery}
+                onChange={(e) => setPickerQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <div className="max-h-80 overflow-y-auto rounded-md border">
+              {pickerLoading ? (
+                <div className="py-8 text-center text-sm text-muted-foreground">Searching…</div>
+              ) : pickerResults.length === 0 ? (
+                <div className="py-8 text-center text-sm text-muted-foreground">No users found.</div>
+              ) : (
+                pickerResults.map((p) => {
+                  const label = p.name ?? p.username ?? "Unknown";
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => startNewThreadWith(p)}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/50 border-b last:border-b-0"
+                    >
+                      <div
+                        className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-[13px] font-semibold text-white"
+                        style={{ backgroundColor: "hsl(var(--secondary))" }}
+                      >
+                        {label.slice(0, 1).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium truncate">{label}</div>
+                        {p.username && p.name && (
+                          <div className="text-xs text-muted-foreground truncate">@{p.username}</div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPickerOpen(false)}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+
       <ManageTemplatesDialog
         open={templatesOpen}
         onOpenChange={(o) => {
