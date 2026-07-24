@@ -203,7 +203,7 @@ export default function ReviewActionDialog({
     image_url: string | null;
     topic_name: string | null;
   } | null>(null);
-  const [postRefreshKey, setPostRefreshKey] = useState(0);
+  const [postRefreshKey] = useState(0);
 
   const reasonList = action === "reject" ? REJECT_REASONS : action === "edit" ? EDIT_REASONS : [];
   const showReasonPicker = action === "reject" || action === "edit";
