@@ -227,6 +227,7 @@ const ProfileView = () => {
   const { data: followersData } = useFollowers(targetUserId, { enabled: followersRequested });
   const followingTotal = followingData?.total ?? followCounts?.followingCount ?? 0;
   const followerTotal = followersData?.length ?? followCounts?.followerCount ?? 0;
+  const { data: unreadMessages } = useUnreadMessagesCount();
 
   // Mark heavy tab queries as requested the first time the tab is activated.
   // Also clear the search filter so a query doesn't leak across tabs.
