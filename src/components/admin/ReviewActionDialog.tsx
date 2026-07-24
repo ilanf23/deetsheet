@@ -83,34 +83,50 @@ const REJECT_REASONS: { value: string; label: string; detail: string }[] = [
 
 const EDIT_REASONS: { value: string; label: string; detail: string }[] = [
   {
-    value: "grammar",
-    label: "Grammar / spelling",
-    detail: "I corrected a few small spelling and grammar issues so the post reads more clearly.",
+    value: "add_detail",
+    label: "Add more detail / context",
+    detail:
+      "Please expand your post with more specifics — firsthand examples, numbers, or context — so readers can learn from your experience.",
+  },
+  {
+    value: "clarify_title",
+    label: "Clarify the title",
+    detail:
+      "Please tighten the title so it more clearly reflects what the post is about. A specific title helps the right readers find it.",
   },
   {
     value: "formatting",
-    label: "Formatting / readability",
-    detail: "I lightly reformatted the post (paragraph breaks, bullets) to make it easier to scan.",
+    label: "Improve formatting / readability",
+    detail:
+      "Please break the post into short paragraphs or bullet points so it's easier to scan and read.",
   },
   {
-    value: "title",
-    label: "Clarified the title",
-    detail: "I tightened the title so it more accurately reflects what the post is about.",
-  },
-  {
-    value: "trim",
-    label: "Trimmed for length",
-    detail: "I trimmed a few sections that were repetitive so the post stays focused.",
+    value: "grammar",
+    label: "Fix grammar / spelling",
+    detail:
+      "Please give the post a quick pass for spelling and grammar so it reads more cleanly.",
   },
   {
     value: "tone",
-    label: "Softened tone / removed language",
+    label: "Soften tone / adjust language",
     detail:
-      "I softened some wording so the post stays within our community guidelines while keeping your point intact.",
+      "Please soften some of the wording so the post stays within our community guidelines while keeping your point intact.",
+  },
+  {
+    value: "sources",
+    label: "Add sources or firsthand context",
+    detail:
+      "Please add sources or clarify which parts come from firsthand experience so readers can trust the claims.",
+  },
+  {
+    value: "trim",
+    label: "Trim for length",
+    detail:
+      "Please trim repetitive sections so the post stays focused on the main point.",
   },
   {
     value: "other",
-    label: "Other (write your own summary)",
+    label: "Other (write your own suggestion)",
     detail: "",
   },
 ];
