@@ -55,6 +55,8 @@ import { useProfileFollowCounts } from "@/hooks/useUserFollow";
 import { useFollowing, useFollowers } from "@/hooks/useFollowLists";
 import { buildPostSlug } from "@/lib/postSlug";
 import { formatTitle } from "@/lib/formatTitle";
+import { useUnreadMessagesCount } from "@/hooks/useUnreadMessages";
+import ProfileMessagesPanel from "@/components/profile/ProfileMessagesPanel";
 
 const CREDENTIAL_ICON_MAP: Record<string, React.ReactNode> = {
   pencil: <Pencil className="h-4 w-4" />,
@@ -225,6 +227,7 @@ const ProfileView = () => {
   const { data: followersData } = useFollowers(targetUserId, { enabled: followersRequested });
   const followingTotal = followingData?.total ?? followCounts?.followingCount ?? 0;
   const followerTotal = followersData?.length ?? followCounts?.followerCount ?? 0;
+  const { data: unreadMessages } = useUnreadMessagesCount();
 
   // Mark heavy tab queries as requested the first time the tab is activated.
   // Also clear the search filter so a query doesn't leak across tabs.
@@ -537,6 +540,9 @@ const ProfileView = () => {
     { value: "posts", label: "Posts", count: postCount },
     { value: "topics", label: "Topics", count: topicCount },
     { value: "comments", label: "Comments", count: commentCount },
+    ...(isOwnProfile
+      ? [{ value: "messages", label: "Messages", count: unreadMessages ?? 0 }]
+      : []),
     { value: "favorites", label: "Favorites", count: 0 },
     { value: "following", label: "Following", count: followingTotal },
     { value: "followers", label: "Followers", count: followerTotal },
@@ -1121,7 +1127,14 @@ const ProfileView = () => {
                 )}
               </TabsContent>
 
+              {isOwnProfile && (
+                <TabsContent value="messages" className="mt-4">
+                  <ProfileMessagesPanel />
+                </TabsContent>
+              )}
+
               <TabsContent value="favorites" className="mt-4">
+
                 <Card className="bg-card">
                   <CardContent className="py-12 text-center text-muted-foreground">
                     <p className="text-sm">Coming soon</p>
