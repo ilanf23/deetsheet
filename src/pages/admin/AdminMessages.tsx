@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
 import ManageTemplatesDialog from "@/components/admin/ManageTemplatesDialog";
-import { ChevronDown, FileText } from "lucide-react";
+import { ChevronDown, FileText, PenSquare, Search } from "lucide-react";
 
 type Thread = {
   id: string;
@@ -100,6 +100,12 @@ export default function AdminMessages() {
   const [sending, setSending] = useState(false);
   const [templates, setTemplates] = useState<any[]>([]);
 
+  // New-thread user picker
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerQuery, setPickerQuery] = useState("");
+  const [pickerResults, setPickerResults] = useState<any[]>([]);
+  const [pickerLoading, setPickerLoading] = useState(false);
+
   const fetchAll = async () => {
     setLoading(true);
     const { data: threadRows } = await supabase
@@ -152,6 +158,44 @@ export default function AdminMessages() {
     fetchAll();
     fetchTemplates();
   }, []);
+
+  // Live user search for new-thread picker
+  useEffect(() => {
+    if (!pickerOpen) return;
+    let cancelled = false;
+    const run = async () => {
+      setPickerLoading(true);
+      const q = pickerQuery.trim();
+      let query = supabase.from("profiles").select("id,name,username").limit(20);
+      if (q) {
+        query = query.or(`name.ilike.%${q}%,username.ilike.%${q}%`);
+      } else {
+        query = query.order("username", { ascending: true });
+      }
+      const { data } = await query;
+      if (!cancelled) {
+        setPickerResults(data ?? []);
+        setPickerLoading(false);
+      }
+    };
+    const t = setTimeout(run, 150);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [pickerOpen, pickerQuery]);
+
+  const startNewThreadWith = (p: { id: string; name?: string | null; username?: string | null }) => {
+    setPickerOpen(false);
+    openCompose({
+      userId: p.id,
+      userLabel: p.name ?? p.username ?? p.id,
+      postId: null,
+      postTitle: null,
+      postStatus: null,
+    });
+    setSubject("Message from DeetSheet");
+  };
 
   // Deep-link compose from AdminReview
   useEffect(() => {
@@ -302,17 +346,31 @@ export default function AdminMessages() {
         <h1 className="text-[40px] font-bold leading-none tracking-tight" style={{ color: "hsl(var(--admin-fg))" }}>
           Messaging
         </h1>
-        <button
-          onClick={() => setTemplatesOpen(true)}
-          className="px-4 py-2 rounded-full text-[13px] font-medium border"
-          style={{
-            backgroundColor: "hsl(var(--admin-surface))",
-            borderColor: "hsl(var(--admin-border))",
-            color: "hsl(var(--admin-primary))",
-          }}
-        >
-          Manage form letters
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              setPickerQuery("");
+              setPickerResults([]);
+              setPickerOpen(true);
+            }}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold text-white"
+            style={{ backgroundColor: "hsl(var(--admin-primary))" }}
+          >
+            <PenSquare className="h-3.5 w-3.5" />
+            New message
+          </button>
+          <button
+            onClick={() => setTemplatesOpen(true)}
+            className="px-4 py-2 rounded-full text-[13px] font-medium border"
+            style={{
+              backgroundColor: "hsl(var(--admin-surface))",
+              borderColor: "hsl(var(--admin-border))",
+              color: "hsl(var(--admin-primary))",
+            }}
+          >
+            Manage form letters
+          </button>
+        </div>
       </div>
 
       <div className="flex items-center gap-3 flex-wrap">
@@ -505,6 +563,64 @@ export default function AdminMessages() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* New-thread user picker */}
+      <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Start a new conversation</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                autoFocus
+                placeholder="Search by name or username…"
+                value={pickerQuery}
+                onChange={(e) => setPickerQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <div className="max-h-80 overflow-y-auto rounded-md border">
+              {pickerLoading ? (
+                <div className="py-8 text-center text-sm text-muted-foreground">Searching…</div>
+              ) : pickerResults.length === 0 ? (
+                <div className="py-8 text-center text-sm text-muted-foreground">No users found.</div>
+              ) : (
+                pickerResults.map((p) => {
+                  const label = p.name ?? p.username ?? "Unknown";
+                  return (
+                    <button
+                      key={p.id}
+                      onClick={() => startNewThreadWith(p)}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/50 border-b last:border-b-0"
+                    >
+                      <div
+                        className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-[13px] font-semibold text-white"
+                        style={{ backgroundColor: "hsl(var(--secondary))" }}
+                      >
+                        {label.slice(0, 1).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium truncate">{label}</div>
+                        {p.username && p.name && (
+                          <div className="text-xs text-muted-foreground truncate">@{p.username}</div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPickerOpen(false)}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
 
       <ManageTemplatesDialog
         open={templatesOpen}
