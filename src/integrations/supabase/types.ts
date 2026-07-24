@@ -244,6 +244,139 @@ export type Database = {
         }
         Relationships: []
       }
+      message_templates: {
+        Row: {
+          body_html: string | null
+          created_at: string
+          created_by: string | null
+          deadline_default: string | null
+          id: string
+          reason_default: string | null
+          subject: string
+          suggestions_default: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body_html?: string | null
+          created_at?: string
+          created_by?: string | null
+          deadline_default?: string | null
+          id?: string
+          reason_default?: string | null
+          subject: string
+          suggestions_default?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body_html?: string | null
+          created_at?: string
+          created_by?: string | null
+          deadline_default?: string | null
+          id?: string
+          reason_default?: string | null
+          subject?: string
+          suggestions_default?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      message_threads: {
+        Row: {
+          created_at: string
+          id: string
+          last_message_at: string
+          last_read_at: string | null
+          last_sender: string
+          post_id: string | null
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          last_read_at?: string | null
+          last_sender?: string
+          post_id?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_message_at?: string
+          last_read_at?: string | null
+          last_sender?: string
+          post_id?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_threads_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          body_html: string | null
+          body_text: string | null
+          created_at: string
+          email_message_id: string | null
+          email_sent: boolean
+          id: string
+          sender_id: string
+          sender_role: string
+          slip: Json | null
+          thread_id: string
+        }
+        Insert: {
+          body_html?: string | null
+          body_text?: string | null
+          created_at?: string
+          email_message_id?: string | null
+          email_sent?: boolean
+          id?: string
+          sender_id: string
+          sender_role: string
+          slip?: Json | null
+          thread_id: string
+        }
+        Update: {
+          body_html?: string | null
+          body_text?: string | null
+          created_at?: string
+          email_message_id?: string | null
+          email_sent?: boolean
+          id?: string
+          sender_id?: string
+          sender_role?: string
+          slip?: Json | null
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "message_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_follows: {
         Row: {
           created_at: string
