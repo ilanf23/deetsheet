@@ -460,8 +460,9 @@ export default function AdminReview() {
 
                 <div className="flex flex-col gap-2 shrink-0 self-center">
                   <button
-                    onClick={() => decide(item, "approved")}
-                    className="px-4 py-2 rounded-md text-[13px] font-semibold"
+                    onClick={() => author?.id && setReviewDialog({ action: "approve", item })}
+                    disabled={!author?.id}
+                    className="px-4 py-2 rounded-md text-[13px] font-semibold disabled:opacity-50"
                     style={{
                       backgroundColor: "hsl(var(--admin-primary))",
                       color: "#ffffff",
@@ -470,8 +471,9 @@ export default function AdminReview() {
                     Approve
                   </button>
                   <button
-                    onClick={() => decide(item, "rejected")}
-                    className="px-4 py-2 rounded-md text-[13px] font-semibold"
+                    onClick={() => author?.id && setReviewDialog({ action: "reject", item })}
+                    disabled={!author?.id}
+                    className="px-4 py-2 rounded-md text-[13px] font-semibold disabled:opacity-50"
                     style={{
                       backgroundColor: "hsl(var(--admin-danger-soft))",
                       color: "hsl(var(--admin-danger))",
@@ -482,32 +484,14 @@ export default function AdminReview() {
                   {item.kind === "post" && (
                     <button
                       onClick={() => setEditingPostId(item.id)}
-                      className="px-4 py-2 rounded-md text-[13px] font-semibold border"
+                      disabled={!author?.id}
+                      className="px-4 py-2 rounded-md text-[13px] font-semibold border disabled:opacity-50"
                       style={{
                         borderColor: "hsl(var(--admin-border))",
                         color: "hsl(var(--admin-fg))",
                       }}
                     >
                       Edit
-                    </button>
-                  )}
-                  {author?.id && (
-                    <button
-                      onClick={() => {
-                        const params = new URLSearchParams({
-                          compose: "1",
-                          user: author.id,
-                          ...(item.kind === "post" ? { post: item.id } : {}),
-                        });
-                        navigate(`/admin/messages?${params.toString()}`);
-                      }}
-                      className="px-4 py-2 rounded-md text-[13px] font-semibold border"
-                      style={{
-                        borderColor: "hsl(var(--admin-border))",
-                        color: "hsl(var(--admin-primary))",
-                      }}
-                    >
-                      Message author
                     </button>
                   )}
                 </div>
