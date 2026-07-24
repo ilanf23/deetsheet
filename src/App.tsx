@@ -121,6 +121,22 @@ const App = () => (
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route
+              path="/inbox"
+              element={
+                <Suspense fallback={<ProfileChunkFallback />}>
+                  <Inbox />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/inbox/:threadId"
+              element={
+                <Suspense fallback={<ProfileChunkFallback />}>
+                  <InboxThread />
+                </Suspense>
+              }
+            />
+            <Route
               path="/admin"
               element={
                 <Suspense fallback={<AdminChunkFallback />}>
