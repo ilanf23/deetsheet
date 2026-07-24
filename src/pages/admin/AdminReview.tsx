@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
 import AdminEditPostDialog from "@/components/admin/AdminEditPostDialog";
+import ReviewActionDialog, { type ReviewAction } from "@/components/admin/ReviewActionDialog";
+import { logAdminAction } from "@/lib/auditLog";
 import { Hash, FileText, ChevronDown, ChevronRight } from "lucide-react";
 
 type PriorPost = {
