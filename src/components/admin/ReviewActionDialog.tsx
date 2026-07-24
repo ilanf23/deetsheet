@@ -462,6 +462,13 @@ export default function ReviewActionDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+      <AdminEditPostDialog
+        postId={itemKind === "post" ? postId ?? null : null}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSaved={() => setPostRefreshKey((k) => k + 1)}
+      />
     </Dialog>
   );
 }
+
