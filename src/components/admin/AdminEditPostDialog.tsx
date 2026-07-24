@@ -117,6 +117,18 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSaved?: () => void;
+  /**
+   * When true, the dialog uploads/prepares the update payload but does NOT
+   * persist it. It hands the payload to `onDeferredCommit` and closes. The
+   * parent is responsible for actually writing the update (e.g. after showing
+   * an author-message step).
+   */
+  deferCommit?: boolean;
+  onDeferredCommit?: (payload: {
+    postId: string;
+    updates: Record<string, unknown>;
+    changed: Record<string, { from: unknown; to: unknown }>;
+  }) => void;
 }
 
 const STATUS_OPTIONS = ["pending", "approved", "rejected"] as const;
