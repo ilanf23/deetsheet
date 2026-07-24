@@ -282,24 +282,35 @@ export default function AdminReview() {
     [items],
   );
 
-  const decide = async (item: PendingItem, status: "approved" | "rejected") => {
+  /**
+   * Persist the actual approve/reject decision. Called from ReviewActionDialog
+   * *after* the author message has been sent successfully.
+   */
+  const applyDecision = async (item: PendingItem, status: "approved" | "rejected") => {
     const table = item.kind === "topic" ? "topics" : "posts";
     const { error } = await supabase.from(table).update({ status }).eq("id", item.id);
-    if (error) {
-      toast({
-        title: `Error ${status === "approved" ? "approving" : "rejecting"} ${item.kind}`,
-        description: error.message,
-        variant: "destructive",
-      });
-      return;
-    }
+    if (error) throw error;
     setItems((prev) => prev.filter((i) => !(i.kind === item.kind && i.id === item.id)));
-    toast({
-      title: status === "approved"
-        ? `${item.kind === "topic" ? "Topic" : "Post"} approved`
-        : `${item.kind === "topic" ? "Topic" : "Post"} rejected`,
-      variant: status === "rejected" ? "destructive" : undefined,
+  };
+
+  /**
+   * Persist a deferred edit (payload prepared inside AdminEditPostDialog).
+   * Called from ReviewActionDialog after the author message has been sent.
+   */
+  const applyDeferredEdit = async () => {
+    if (!pendingEditPayload || !user) return;
+    const { postId, updates, changed } = pendingEditPayload;
+    const { error } = await supabase.from("posts").update(updates).eq("id", postId);
+    if (error) throw error;
+    await logAdminAction({
+      actorId: user.id,
+      action: "post.edit",
+      entityType: "post",
+      entityId: postId,
+      details: { changed },
     });
+    setItems((prev) => prev.filter((i) => !(i.kind === "post" && i.id === postId)));
+    setPendingEditPayload(null);
   };
 
   if (loading) {
