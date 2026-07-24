@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import AdminEditPostDialog from "@/components/admin/AdminEditPostDialog";
+
 
 export type ReviewAction = "approve" | "reject" | "edit";
 
@@ -179,9 +182,20 @@ export default function ReviewActionDialog({
   const [busy, setBusy] = useState(false);
   const [reasonKey, setReasonKey] = useState<string>("");
   const [customReason, setCustomReason] = useState("");
+  const [editOpen, setEditOpen] = useState(false);
+  const [postDetail, setPostDetail] = useState<{
+    title: string;
+    content: string | null;
+    story: string | null;
+    image_url: string | null;
+    topic_name: string | null;
+  } | null>(null);
+  const [postRefreshKey, setPostRefreshKey] = useState(0);
 
   const reasonList = action === "reject" ? REJECT_REASONS : action === "edit" ? EDIT_REASONS : [];
   const showReasonPicker = action === "reject" || action === "edit";
+
+
 
   useEffect(() => {
     if (!open) return;
@@ -192,6 +206,37 @@ export default function ReviewActionDialog({
     setSubject(c.subject);
     setBody(c.body);
   }, [open, action, itemKind, itemTitle]);
+
+  // Fetch the full post so the admin can review it (and optionally edit it)
+  // right inside the message dialog.
+  useEffect(() => {
+    if (!open || itemKind !== "post" || !postId) {
+      setPostDetail(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("posts")
+        .select("title, content, story, image_url, topics(name)")
+        .eq("id", postId)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      const t = (data as { topics: { name: string } | { name: string }[] | null }).topics;
+      const topicName = Array.isArray(t) ? (t[0]?.name ?? null) : (t?.name ?? null);
+      setPostDetail({
+        title: data.title ?? "",
+        content: data.content ?? null,
+        story: data.story ?? null,
+        image_url: data.image_url ?? null,
+        topic_name: topicName,
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [open, itemKind, postId, postRefreshKey]);
+
 
   // Re-render the default message whenever the admin picks a reason.
   useEffect(() => {
@@ -274,20 +319,68 @@ export default function ReviewActionDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !busy && onOpenChange(o)}>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {TITLE_LABEL[action]} — message to {authorLabel}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
-          <div className="rounded-md border bg-muted/40 p-3 text-sm">
-            <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
-              {itemKind === "topic" ? "Topic" : "Post"}
+          <div className="rounded-md border bg-muted/40 p-3 text-sm space-y-2">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+                  {itemKind === "topic" ? "Topic" : "Post"}
+                  {postDetail?.topic_name && (
+                    <span className="ml-2 normal-case tracking-normal text-muted-foreground">
+                      in <span className="text-primary">{postDetail.topic_name}</span>
+                    </span>
+                  )}
+                </div>
+                <div className="font-medium">{postDetail?.title ?? itemTitle}</div>
+                <div className="text-xs text-muted-foreground mt-1">Author: {authorLabel}</div>
+              </div>
+              {itemKind === "post" && postId && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditOpen(true)}
+                  className="shrink-0"
+                >
+                  <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                  Edit post
+                </Button>
+              )}
             </div>
-            <div className="font-medium line-clamp-2">{itemTitle}</div>
-            <div className="text-xs text-muted-foreground mt-1">Author: {authorLabel}</div>
+
+            {itemKind === "post" && postDetail && (
+              <div className="pt-2 border-t border-border/60 space-y-2">
+                {postDetail.image_url && (
+                  <img
+                    src={postDetail.image_url}
+                    alt=""
+                    className="max-h-56 w-auto rounded-md border"
+                    onError={(e) => {
+                      const img = e.currentTarget as HTMLImageElement;
+                      img.style.display = "none";
+                    }}
+                  />
+                )}
+                {postDetail.story && postDetail.story.trim().length > 0 ? (
+                  <div
+                    className="prose prose-sm max-w-none text-foreground [&_p]:my-1"
+                    dangerouslySetInnerHTML={{ __html: postDetail.story }}
+                  />
+                ) : postDetail.content && postDetail.content.trim().length > 0 ? (
+                  <p className="whitespace-pre-wrap text-foreground text-sm">{postDetail.content}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground italic">No body content.</p>
+                )}
+              </div>
+            )}
           </div>
+
 
           <p className="text-sm text-muted-foreground">
             {action === "approve" && "The message below will be sent to the author, then the item will be approved and go live."}
@@ -369,6 +462,13 @@ export default function ReviewActionDialog({
           </Button>
         </DialogFooter>
       </DialogContent>
+      <AdminEditPostDialog
+        postId={itemKind === "post" ? postId ?? null : null}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSaved={() => setPostRefreshKey((k) => k + 1)}
+      />
     </Dialog>
   );
 }
+
