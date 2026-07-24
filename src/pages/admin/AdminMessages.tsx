@@ -159,6 +159,44 @@ export default function AdminMessages() {
     fetchTemplates();
   }, []);
 
+  // Live user search for new-thread picker
+  useEffect(() => {
+    if (!pickerOpen) return;
+    let cancelled = false;
+    const run = async () => {
+      setPickerLoading(true);
+      const q = pickerQuery.trim();
+      let query = supabase.from("profiles").select("id,name,username").limit(20);
+      if (q) {
+        query = query.or(`name.ilike.%${q}%,username.ilike.%${q}%`);
+      } else {
+        query = query.order("username", { ascending: true });
+      }
+      const { data } = await query;
+      if (!cancelled) {
+        setPickerResults(data ?? []);
+        setPickerLoading(false);
+      }
+    };
+    const t = setTimeout(run, 150);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [pickerOpen, pickerQuery]);
+
+  const startNewThreadWith = (p: { id: string; name?: string | null; username?: string | null }) => {
+    setPickerOpen(false);
+    openCompose({
+      userId: p.id,
+      userLabel: p.name ?? p.username ?? p.id,
+      postId: null,
+      postTitle: null,
+      postStatus: null,
+    });
+    setSubject("Message from DeetSheet");
+  };
+
   // Deep-link compose from AdminReview
   useEffect(() => {
     const compose = searchParams.get("compose");
