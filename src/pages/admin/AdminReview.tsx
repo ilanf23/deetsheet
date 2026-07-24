@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
 import AdminEditPostDialog from "@/components/admin/AdminEditPostDialog";
+import ReviewActionDialog, { type ReviewAction } from "@/components/admin/ReviewActionDialog";
+import { logAdminAction } from "@/lib/auditLog";
 import { Hash, FileText, ChevronDown, ChevronRight } from "lucide-react";
 
 type PriorPost = {
@@ -161,8 +164,22 @@ export default function AdminReview() {
   const [tab, setTab] = useState<FilterTab>("all");
   const [sort, setSort] = useState<SortKey>("newest");
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
+
+  // Confirmation dialog state — one popup drives approve, reject, and edit.
+  // For edit, `pendingEditPayload` holds the update payload prepared by
+  // AdminEditPostDialog; it is only written to the DB after the admin sends
+  // the accompanying author message.
+  const [reviewDialog, setReviewDialog] = useState<{
+    action: ReviewAction;
+    item: PendingItem;
+  } | null>(null);
+  const [pendingEditPayload, setPendingEditPayload] = useState<{
+    postId: string;
+    updates: Record<string, unknown>;
+    changed: Record<string, { from: unknown; to: unknown }>;
+  } | null>(null);
 
   const fetchAll = async () => {
     setLoading(true);
@@ -265,24 +282,35 @@ export default function AdminReview() {
     [items],
   );
 
-  const decide = async (item: PendingItem, status: "approved" | "rejected") => {
+  /**
+   * Persist the actual approve/reject decision. Called from ReviewActionDialog
+   * *after* the author message has been sent successfully.
+   */
+  const applyDecision = async (item: PendingItem, status: "approved" | "rejected") => {
     const table = item.kind === "topic" ? "topics" : "posts";
     const { error } = await supabase.from(table).update({ status }).eq("id", item.id);
-    if (error) {
-      toast({
-        title: `Error ${status === "approved" ? "approving" : "rejecting"} ${item.kind}`,
-        description: error.message,
-        variant: "destructive",
-      });
-      return;
-    }
+    if (error) throw error;
     setItems((prev) => prev.filter((i) => !(i.kind === item.kind && i.id === item.id)));
-    toast({
-      title: status === "approved"
-        ? `${item.kind === "topic" ? "Topic" : "Post"} approved`
-        : `${item.kind === "topic" ? "Topic" : "Post"} rejected`,
-      variant: status === "rejected" ? "destructive" : undefined,
+  };
+
+  /**
+   * Persist a deferred edit (payload prepared inside AdminEditPostDialog).
+   * Called from ReviewActionDialog after the author message has been sent.
+   */
+  const applyDeferredEdit = async () => {
+    if (!pendingEditPayload || !user) return;
+    const { postId, updates, changed } = pendingEditPayload;
+    const { error } = await supabase.from("posts").update(updates).eq("id", postId);
+    if (error) throw error;
+    await logAdminAction({
+      actorId: user.id,
+      action: "post.edit",
+      entityType: "post",
+      entityId: postId,
+      details: { changed },
     });
+    setItems((prev) => prev.filter((i) => !(i.kind === "post" && i.id === postId)));
+    setPendingEditPayload(null);
   };
 
   if (loading) {
@@ -432,8 +460,9 @@ export default function AdminReview() {
 
                 <div className="flex flex-col gap-2 shrink-0 self-center">
                   <button
-                    onClick={() => decide(item, "approved")}
-                    className="px-4 py-2 rounded-md text-[13px] font-semibold"
+                    onClick={() => author?.id && setReviewDialog({ action: "approve", item })}
+                    disabled={!author?.id}
+                    className="px-4 py-2 rounded-md text-[13px] font-semibold disabled:opacity-50"
                     style={{
                       backgroundColor: "hsl(var(--admin-primary))",
                       color: "#ffffff",
@@ -442,8 +471,9 @@ export default function AdminReview() {
                     Approve
                   </button>
                   <button
-                    onClick={() => decide(item, "rejected")}
-                    className="px-4 py-2 rounded-md text-[13px] font-semibold"
+                    onClick={() => author?.id && setReviewDialog({ action: "reject", item })}
+                    disabled={!author?.id}
+                    className="px-4 py-2 rounded-md text-[13px] font-semibold disabled:opacity-50"
                     style={{
                       backgroundColor: "hsl(var(--admin-danger-soft))",
                       color: "hsl(var(--admin-danger))",
@@ -454,32 +484,14 @@ export default function AdminReview() {
                   {item.kind === "post" && (
                     <button
                       onClick={() => setEditingPostId(item.id)}
-                      className="px-4 py-2 rounded-md text-[13px] font-semibold border"
+                      disabled={!author?.id}
+                      className="px-4 py-2 rounded-md text-[13px] font-semibold border disabled:opacity-50"
                       style={{
                         borderColor: "hsl(var(--admin-border))",
                         color: "hsl(var(--admin-fg))",
                       }}
                     >
                       Edit
-                    </button>
-                  )}
-                  {author?.id && (
-                    <button
-                      onClick={() => {
-                        const params = new URLSearchParams({
-                          compose: "1",
-                          user: author.id,
-                          ...(item.kind === "post" ? { post: item.id } : {}),
-                        });
-                        navigate(`/admin/messages?${params.toString()}`);
-                      }}
-                      className="px-4 py-2 rounded-md text-[13px] font-semibold border"
-                      style={{
-                        borderColor: "hsl(var(--admin-border))",
-                        color: "hsl(var(--admin-primary))",
-                      }}
-                    >
-                      Message author
                     </button>
                   )}
                 </div>
@@ -496,8 +508,49 @@ export default function AdminReview() {
         postId={editingPostId}
         open={!!editingPostId}
         onOpenChange={(o) => { if (!o) setEditingPostId(null); }}
+        deferCommit
+        onDeferredCommit={(payload) => {
+          setPendingEditPayload(payload);
+          const item = items.find((i) => i.kind === "post" && i.id === payload.postId);
+          setEditingPostId(null);
+          if (item) setReviewDialog({ action: "edit", item });
+        }}
         onSaved={fetchAll}
       />
+      {reviewDialog && reviewDialog.item.author?.id && (
+        <ReviewActionDialog
+          open={!!reviewDialog}
+          onOpenChange={(o) => {
+            if (!o) {
+              setReviewDialog(null);
+              setPendingEditPayload(null);
+            }
+          }}
+          action={reviewDialog.action}
+          itemKind={reviewDialog.item.kind}
+          itemTitle={
+            reviewDialog.item.kind === "topic"
+              ? reviewDialog.item.name
+              : reviewDialog.item.title
+          }
+          authorId={reviewDialog.item.author.id}
+          authorLabel={
+            reviewDialog.item.author.name ??
+            reviewDialog.item.author.username ??
+            "the author"
+          }
+          postId={reviewDialog.item.kind === "post" ? reviewDialog.item.id : null}
+          onConfirmed={async () => {
+            if (reviewDialog.action === "approve") {
+              await applyDecision(reviewDialog.item, "approved");
+            } else if (reviewDialog.action === "reject") {
+              await applyDecision(reviewDialog.item, "rejected");
+            } else if (reviewDialog.action === "edit") {
+              await applyDeferredEdit();
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

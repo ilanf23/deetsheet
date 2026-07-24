@@ -117,6 +117,18 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSaved?: () => void;
+  /**
+   * When true, the dialog uploads/prepares the update payload but does NOT
+   * persist it. It hands the payload to `onDeferredCommit` and closes. The
+   * parent is responsible for actually writing the update (e.g. after showing
+   * an author-message step).
+   */
+  deferCommit?: boolean;
+  onDeferredCommit?: (payload: {
+    postId: string;
+    updates: Record<string, unknown>;
+    changed: Record<string, { from: unknown; to: unknown }>;
+  }) => void;
 }
 
 const STATUS_OPTIONS = ["pending", "approved", "rejected"] as const;
@@ -137,7 +149,7 @@ function getPostPreviewText(post: Pick<AuthorPost, "title" | "content" | "story"
   return "";
 }
 
-export default function AdminEditPostDialog({ postId, open, onOpenChange, onSaved }: Props) {
+export default function AdminEditPostDialog({ postId, open, onOpenChange, onSaved, deferCommit, onDeferredCommit }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -493,14 +505,22 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
       // migration isn't live yet.
       if (trimmedStory) updates.story = trimmedStory;
 
-      const { error: updErr } = await supabase.from("posts").update(updates).eq("id", post.id);
-      if (updErr) throw updErr;
-
       const changed: Record<string, { from: unknown; to: unknown }> = {};
       const before = post as unknown as Record<string, unknown>;
       Object.entries(updates).forEach(([k, v]) => {
         if (before[k] !== v) changed[k] = { from: before[k], to: v };
       });
+
+      if (deferCommit) {
+        // Hand the prepared payload back to the parent to persist after any
+        // follow-up steps (e.g. author-message confirmation).
+        onDeferredCommit?.({ postId: post.id, updates, changed });
+        onOpenChange(false);
+        return;
+      }
+
+      const { error: updErr } = await supabase.from("posts").update(updates).eq("id", post.id);
+      if (updErr) throw updErr;
 
       await logAdminAction({
         actorId: user.id,
