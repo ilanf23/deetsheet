@@ -307,6 +307,73 @@ export default function ReviewActionDialog({
         .map((line) => `<p style="margin:0 0 10px;">${line.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c] as string))}</p>`)
         .join("");
 
+      // Resolve which branded template the author should receive.
+      const picked = reasonList.find((r) => r.value === reasonKey);
+      const reasonText = (picked?.value === "other" ? customReason : picked?.detail ?? picked?.label ?? "").trim();
+      const suggestionList = suggestions
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const topicName = postDetail?.topic_name ?? undefined;
+      const postTitle = postDetail?.title ?? itemTitle;
+      const profileUrl = "https://deetsheet.com/profile";
+      const postUrl =
+        topicName && postId
+          ? `https://deetsheet.com/topic/${encodeURIComponent(topicName)}/post/${buildPostSlug(postTitle, postId)}`
+          : profileUrl;
+
+      let emailTemplate = "admin-message";
+      let templateData: Record<string, unknown> = {
+        headline: subject,
+        bodyText: body,
+        quotedTitle: [topicName, postTitle].filter(Boolean).join(": "),
+        reasons: reasonText ? [reasonText] : undefined,
+        suggestions: suggestionList.length ? suggestionList : undefined,
+        ctaLabel: "View your post",
+        ctaUrl: postUrl,
+      };
+
+      if (itemKind === "post") {
+        const base = {
+          topic: topicName,
+          title: postTitle,
+          adminNote: body,
+        };
+        if (action === "approve" && photoDenied) {
+          emailTemplate = "post-photo-denied";
+          templateData = { ...base, reasons: reasonText ? [reasonText] : [], ctaUrl: profileUrl };
+        } else if (action === "approve" && adjusted) {
+          emailTemplate = "post-approved-adjusted";
+          templateData = {
+            ...base,
+            originalText: originalText || postDetail?.content || "",
+            finalText,
+            reasons: reasonText ? [reasonText] : suggestionList,
+            ctaUrl: postUrl,
+          };
+        } else if (action === "approve") {
+          emailTemplate = "post-approved";
+          templateData = { ...base, ctaUrl: postUrl };
+        } else if (action === "edit") {
+          emailTemplate = "post-pending";
+          templateData = {
+            ...base,
+            reasons: reasonText ? [reasonText] : [],
+            suggestions: suggestionList,
+            ctaUrl: profileUrl,
+          };
+        } else if (action === "reject") {
+          const isConduct = DENY_REASON_KEYS.has(reasonKey);
+          emailTemplate = isConduct ? "post-denied" : "post-pending";
+          templateData = {
+            ...base,
+            reasons: reasonText ? [reasonText] : [],
+            suggestions: isConduct ? undefined : suggestionList,
+            ctaUrl: profileUrl,
+          };
+        }
+      }
+
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-admin-message`,
         {
@@ -321,9 +388,12 @@ export default function ReviewActionDialog({
             subject,
             body_html: bodyHtml,
             send_email: sendEmail,
+            email_template: emailTemplate,
+            template_data: templateData,
           }),
         }
       );
+
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? "Failed to send message");
 
