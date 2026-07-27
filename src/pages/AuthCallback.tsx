@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { consumeReturnTo } from "@/lib/authRedirect";
 
 const AuthCallback = () => {
   const navigate = useNavigate();
@@ -8,11 +9,12 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       const { error } = await supabase.auth.getSession();
+      const returnTo = consumeReturnTo();
       if (error) {
         console.error("Auth callback error:", error);
         navigate("/login");
       } else {
-        navigate("/profile");
+        navigate(returnTo || "/profile");
       }
     };
     handleCallback();
