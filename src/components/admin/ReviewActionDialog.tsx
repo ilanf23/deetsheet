@@ -8,6 +8,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { buildPostSlug } from "@/lib/postSlug";
+
 
 
 export type ReviewAction = "approve" | "reject" | "edit";
@@ -131,7 +133,11 @@ const EDIT_REASONS: { value: string; label: string; detail: string }[] = [
   },
 ];
 
+/** Reasons that mean the post is denied outright (conduct), not just pending. */
+const DENY_REASON_KEYS = new Set(["vulgar", "personal_attack"]);
+
 function defaultCopy(
+
   action: ReviewAction,
   itemKind: "topic" | "post",
   itemTitle: string,
@@ -195,6 +201,16 @@ export default function ReviewActionDialog({
   const [busy, setBusy] = useState(false);
   const [reasonKey, setReasonKey] = useState<string>("");
   const [customReason, setCustomReason] = useState("");
+  // Approve flow: mark the post as "approved with a slight adjustment" so the
+  // author receives the original-vs-final version of the branded email.
+  const [adjusted, setAdjusted] = useState(false);
+  const [originalText, setOriginalText] = useState("");
+  const [finalText, setFinalText] = useState("");
+  const [photoDenied, setPhotoDenied] = useState(false);
+  /** One suggestion per line — rendered in the email's green suggestions box. */
+  const [suggestions, setSuggestions] = useState("");
+
+
   
   const [postDetail, setPostDetail] = useState<{
     title: string;
@@ -214,8 +230,15 @@ export default function ReviewActionDialog({
     if (!open) return;
     setReasonKey("");
     setCustomReason("");
+    setSuggestions("");
+
     setSendEmail(true);
+    setAdjusted(false);
+    setPhotoDenied(false);
+    setOriginalText("");
+    setFinalText("");
     const c = defaultCopy(action, itemKind, itemTitle, "");
+
     setSubject(c.subject);
     setBody(c.body);
   }, [open, action, itemKind, itemTitle]);
@@ -291,6 +314,76 @@ export default function ReviewActionDialog({
         .map((line) => `<p style="margin:0 0 10px;">${line.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c] as string))}</p>`)
         .join("");
 
+      // Resolve which branded template the author should receive.
+      const picked = reasonList.find((r) => r.value === reasonKey);
+      const reasonText = (
+        picked ? (picked.value === "other" ? customReason : picked.detail ?? picked.label) : customReason
+      ).trim();
+
+      const suggestionList = suggestions
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const topicName = postDetail?.topic_name ?? undefined;
+      const postTitle = postDetail?.title ?? itemTitle;
+      const profileUrl = "https://deetsheet.com/profile";
+      const postUrl =
+        topicName && postId
+          ? `https://deetsheet.com/topic/${encodeURIComponent(topicName)}/post/${buildPostSlug(postTitle, postId)}`
+          : profileUrl;
+
+      let emailTemplate = "admin-message";
+      let templateData: Record<string, unknown> = {
+        headline: subject,
+        bodyText: body,
+        quotedTitle: [topicName, postTitle].filter(Boolean).join(": "),
+        reasons: reasonText ? [reasonText] : undefined,
+        suggestions: suggestionList.length ? suggestionList : undefined,
+        ctaLabel: "View your post",
+        ctaUrl: postUrl,
+      };
+
+      if (itemKind === "post") {
+        const base = {
+          topic: topicName,
+          title: postTitle,
+          adminNote: body,
+        };
+        if (action === "approve" && photoDenied) {
+          emailTemplate = "post-photo-denied";
+          templateData = { ...base, reasons: reasonText ? [reasonText] : [], ctaUrl: profileUrl };
+        } else if (action === "approve" && adjusted) {
+          emailTemplate = "post-approved-adjusted";
+          templateData = {
+            ...base,
+            originalText: originalText || postDetail?.content || "",
+            finalText,
+            reasons: reasonText ? [reasonText] : suggestionList,
+            ctaUrl: postUrl,
+          };
+        } else if (action === "approve") {
+          emailTemplate = "post-approved";
+          templateData = { ...base, ctaUrl: postUrl };
+        } else if (action === "edit") {
+          emailTemplate = "post-pending";
+          templateData = {
+            ...base,
+            reasons: reasonText ? [reasonText] : [],
+            suggestions: suggestionList,
+            ctaUrl: profileUrl,
+          };
+        } else if (action === "reject") {
+          const isConduct = DENY_REASON_KEYS.has(reasonKey);
+          emailTemplate = isConduct ? "post-denied" : "post-pending";
+          templateData = {
+            ...base,
+            reasons: reasonText ? [reasonText] : [],
+            suggestions: isConduct ? undefined : suggestionList,
+            ctaUrl: profileUrl,
+          };
+        }
+      }
+
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-admin-message`,
         {
@@ -305,9 +398,12 @@ export default function ReviewActionDialog({
             subject,
             body_html: bodyHtml,
             send_email: sendEmail,
+            email_template: emailTemplate,
+            template_data: templateData,
           }),
         }
       );
+
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? "Failed to send message");
 
@@ -389,8 +485,69 @@ export default function ReviewActionDialog({
             {action === "edit" && "Choose a suggestion so the author knows what to improve. The post will stay pending until they update it and resubmit."}
           </p>
 
+          {action === "approve" && itemKind === "post" && (
+            <div className="space-y-3 rounded-md border p-3">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="approve-adjusted"
+                  checked={adjusted}
+                  onCheckedChange={(v) => setAdjusted(!!v)}
+                />
+                <Label htmlFor="approve-adjusted" className="text-sm font-normal">
+                  Approved with a slight adjustment
+                </Label>
+              </div>
+              {adjusted && (
+                <div className="space-y-2">
+                  <Label className="text-xs">Original text</Label>
+                  <Textarea
+                    rows={2}
+                    value={originalText || postDetail?.content || ""}
+                    onChange={(e) => setOriginalText(e.target.value)}
+                    className="text-sm"
+                  />
+                  <Label className="text-xs">Final text</Label>
+                  <Textarea
+                    rows={2}
+                    value={finalText}
+                    onChange={(e) => setFinalText(e.target.value)}
+                    placeholder="The approved wording the author will see…"
+                    className="text-sm"
+                  />
+                  <Label className="text-xs">Why it was adjusted (one per line)</Label>
+                  <Textarea
+                    rows={2}
+                    value={suggestions}
+                    onChange={(e) => setSuggestions(e.target.value)}
+                    className="text-sm"
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="approve-photo-denied"
+                  checked={photoDenied}
+                  onCheckedChange={(v) => setPhotoDenied(!!v)}
+                />
+                <Label htmlFor="approve-photo-denied" className="text-sm font-normal">
+                  Photo denied (post approved, image rejected)
+                </Label>
+              </div>
+              {photoDenied && (
+                <Textarea
+                  rows={2}
+                  value={customReason}
+                  onChange={(e) => setCustomReason(e.target.value)}
+                  placeholder="Why the photo was denied…"
+                  className="text-sm"
+                />
+              )}
+            </div>
+          )}
+
           {showReasonPicker && (
             <div className="space-y-2">
+
               <Label className="text-xs">
                 {action === "reject" ? "Reason for rejection" : "Suggestion for the author"}
                 <span className="text-destructive"> *</span>
@@ -429,8 +586,19 @@ export default function ReviewActionDialog({
                   ? "Picking a suggestion updates the message below. You can still edit it before sending."
                   : "Picking a reason updates the message below. You can still edit it before sending."}
               </p>
+              <Label className="text-xs">
+                Suggested rewrites for the author (one per line, optional)
+              </Label>
+              <Textarea
+                rows={3}
+                value={suggestions}
+                onChange={(e) => setSuggestions(e.target.value)}
+                placeholder={"Preppy clothing\nSpandex clothing"}
+                className="text-sm"
+              />
             </div>
           )}
+
 
           <div>
             <Label className="text-xs">Subject</Label>
