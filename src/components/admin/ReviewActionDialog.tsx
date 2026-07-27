@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useEffect, useRef, useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -221,6 +221,17 @@ export default function ReviewActionDialog({
   } | null>(null);
   const [postRefreshKey] = useState(0);
 
+  // Editable copy of the post — the admin adjusts it in the left column and it
+  // is saved when the action is submitted.
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [editStory, setEditStory] = useState("");
+  const [newImage, setNewImage] = useState<File | null>(null);
+  const [newImagePreview, setNewImagePreview] = useState<string | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [finalTextTouched, setFinalTextTouched] = useState(false);
+
   const reasonList = action === "reject" ? REJECT_REASONS : action === "edit" ? EDIT_REASONS : [];
   const showReasonPicker = action === "reject" || action === "edit";
 
@@ -237,6 +248,10 @@ export default function ReviewActionDialog({
     setPhotoDenied(false);
     setOriginalText("");
     setFinalText("");
+    setFinalTextTouched(false);
+    setNewImage(null);
+    setNewImagePreview(null);
+    setRemoveImage(false);
     const c = defaultCopy(action, itemKind, itemTitle, "");
 
     setSubject(c.subject);
@@ -267,11 +282,40 @@ export default function ReviewActionDialog({
         image_url: data.image_url ?? null,
         topic_name: topicName,
       });
+      setEditTitle(data.title ?? "");
+      setEditContent(data.content ?? "");
+      setEditStory(data.story ?? "");
     })();
     return () => {
       cancelled = true;
     };
   }, [open, itemKind, postId, postRefreshKey]);
+
+  const pickImage = (file: File | null) => {
+    if (!file) return;
+    setNewImage(file);
+    setRemoveImage(false);
+    setNewImagePreview(URL.createObjectURL(file));
+  };
+
+  const clearImage = () => {
+    setNewImage(null);
+    setNewImagePreview(null);
+    setRemoveImage(true);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const currentImage = newImagePreview ?? (removeImage ? null : postDetail?.image_url ?? null);
+
+  /** Whether the admin actually changed the post in the left column. */
+  const postEdited =
+    !!postDetail &&
+    (editTitle !== (postDetail.title ?? "") ||
+      editContent !== (postDetail.content ?? "") ||
+      editStory !== (postDetail.story ?? "") ||
+      !!newImage ||
+      removeImage);
+
 
 
   // Re-render the default message whenever the admin picks a reason.
@@ -325,7 +369,7 @@ export default function ReviewActionDialog({
         .map((s) => s.trim())
         .filter(Boolean);
       const topicName = postDetail?.topic_name ?? undefined;
-      const postTitle = postDetail?.title ?? itemTitle;
+      const postTitle = (itemKind === "post" ? editTitle.trim() : "") || postDetail?.title || itemTitle;
       const profileUrl = "https://deetsheet.com/profile";
       const postUrl =
         topicName && postId
@@ -356,11 +400,13 @@ export default function ReviewActionDialog({
           emailTemplate = "post-approved-adjusted";
           templateData = {
             ...base,
+            // Original = the post as submitted; Final = the admin's edited copy.
             originalText: originalText || postDetail?.content || "",
-            finalText,
+            finalText: (finalTextTouched ? finalText : editContent) || editContent,
             reasons: reasonText ? [reasonText] : suggestionList,
             ctaUrl: postUrl,
           };
+
         } else if (action === "approve") {
           emailTemplate = "post-approved";
           templateData = { ...base, ctaUrl: postUrl };
@@ -407,8 +453,37 @@ export default function ReviewActionDialog({
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? "Failed to send message");
 
+      // Message delivered — now persist the admin's inline post edits, then
+      // apply the review action.
+      if (itemKind === "post" && postId && postEdited) {
+        let nextImageUrl: string | null = postDetail?.image_url ?? null;
+        if (newImage) {
+          const uid = sess.session?.user?.id;
+          const ext = newImage.name.split(".").pop() ?? "jpg";
+          const path = `${uid}/${postId}-${Date.now()}.${ext}`;
+          const { error: upErr } = await supabase.storage
+            .from("post-images")
+            .upload(path, newImage, { upsert: true });
+          if (upErr) throw upErr;
+          nextImageUrl = supabase.storage.from("post-images").getPublicUrl(path).data.publicUrl;
+        } else if (removeImage) {
+          nextImageUrl = null;
+        }
+        const { error: updErr } = await supabase
+          .from("posts")
+          .update({
+            title: editTitle.trim() || postDetail?.title,
+            content: editContent.trim(),
+            story: editStory.trim() ? editStory : null,
+            image_url: nextImageUrl,
+          })
+          .eq("id", postId);
+        if (updErr) throw updErr;
+      }
+
       // Now perform the actual action.
       await onConfirmed();
+
 
       toast({
         title: `${TITLE_LABEL[action]} — message sent to ${authorLabel}`,
@@ -428,55 +503,101 @@ export default function ReviewActionDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !busy && onOpenChange(o)}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {TITLE_LABEL[action]} — message to {authorLabel}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-3">
-          <div className="rounded-md border bg-muted/40 p-3 text-sm space-y-2">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
-                  {itemKind === "topic" ? "Topic" : "Post"}
-                  {postDetail?.topic_name && (
-                    <span className="ml-2 normal-case tracking-normal text-muted-foreground">
-                      in <span className="text-primary">{postDetail.topic_name}</span>
-                    </span>
-                  )}
-                </div>
-                <div className="font-medium">{postDetail?.title ?? itemTitle}</div>
-                <div className="text-xs text-muted-foreground mt-1">Author: {authorLabel}</div>
-              </div>
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* LEFT — the post itself, editable in place. */}
+          <div className="space-y-3">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">
+              {itemKind === "topic" ? "Topic" : "Post"}
+              {postDetail?.topic_name && (
+                <span className="ml-2 normal-case tracking-normal">
+                  in <span className="text-primary">{postDetail.topic_name}</span>
+                </span>
+              )}
+              <span className="ml-2 normal-case tracking-normal">· {authorLabel}</span>
             </div>
 
-            {itemKind === "post" && postDetail && (
-              <div className="pt-2 border-t border-border/60 space-y-2">
-                {postDetail.image_url && (
-                  <img
-                    src={postDetail.image_url}
-                    alt=""
-                    className="max-h-56 w-auto rounded-md border"
-                    onError={(e) => {
-                      const img = e.currentTarget as HTMLImageElement;
-                      img.style.display = "none";
-                    }}
+            {itemKind === "post" && postDetail ? (
+              <>
+                <div>
+                  <Label className="text-xs">Title</Label>
+                  <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">Post text</Label>
+                  <Textarea
+                    rows={4}
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    className="text-sm"
                   />
-                )}
-                {postDetail.story && postDetail.story.trim().length > 0 ? (
-                  <div
-                    className="prose prose-sm max-w-none text-foreground [&_p]:my-1"
-                    dangerouslySetInnerHTML={{ __html: postDetail.story }}
+                </div>
+                <div>
+                  <Label className="text-xs">Comment / story</Label>
+                  <Textarea
+                    rows={8}
+                    value={editStory}
+                    onChange={(e) => setEditStory(e.target.value)}
+                    placeholder="No comment provided."
+                    className="text-sm"
                   />
-                ) : postDetail.content && postDetail.content.trim().length > 0 ? (
-                  <p className="whitespace-pre-wrap text-foreground text-sm">{postDetail.content}</p>
-                ) : (
-                  <p className="text-xs text-muted-foreground italic">No body content.</p>
-                )}
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Photo</Label>
+                  {currentImage ? (
+                    <img
+                      src={currentImage}
+                      alt=""
+                      className="max-h-64 w-auto rounded-md border"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic">No photo.</p>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => pickImage(e.target.files?.[0] ?? null)}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      {currentImage ? "Replace photo" : "Add photo"}
+                    </Button>
+                    {currentImage && (
+                      <Button type="button" size="sm" variant="outline" onClick={clearImage}>
+                        Remove photo
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Any edits here are saved when you submit this action.
+                </p>
+              </>
+            ) : (
+              <div className="rounded-md border bg-muted/40 p-3 text-sm">
+                <div className="font-medium">{itemTitle}</div>
               </div>
             )}
           </div>
+
+          {/* RIGHT — action reason, message to author, and submit controls. */}
+          <div className="space-y-3">
+
 
 
           <p className="text-sm text-muted-foreground">
@@ -509,11 +630,15 @@ export default function ReviewActionDialog({
                   <Label className="text-xs">Final text</Label>
                   <Textarea
                     rows={2}
-                    value={finalText}
-                    onChange={(e) => setFinalText(e.target.value)}
+                    value={finalTextTouched ? finalText : editContent}
+                    onChange={(e) => {
+                      setFinalTextTouched(true);
+                      setFinalText(e.target.value);
+                    }}
                     placeholder="The approved wording the author will see…"
                     className="text-sm"
                   />
+
                   <Label className="text-xs">Why it was adjusted (one per line)</Label>
                   <Textarea
                     rows={2}
@@ -623,16 +748,18 @@ export default function ReviewActionDialog({
               Also send as email
             </Label>
           </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
+              Cancel
+            </Button>
+            <Button onClick={submit} disabled={busy}>
+              {busy ? "Sending…" : ACTION_LABEL[action]}
+            </Button>
+          </div>
+          </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
-            Cancel
-          </Button>
-          <Button onClick={submit} disabled={busy}>
-            {busy ? "Sending…" : ACTION_LABEL[action]}
-          </Button>
-        </DialogFooter>
       </DialogContent>
+
     </Dialog>
   );
 }
