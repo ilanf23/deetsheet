@@ -199,6 +199,13 @@ export default function ReviewActionDialog({
   const [busy, setBusy] = useState(false);
   const [reasonKey, setReasonKey] = useState<string>("");
   const [customReason, setCustomReason] = useState("");
+  // Approve flow: mark the post as "approved with a slight adjustment" so the
+  // author receives the original-vs-final version of the branded email.
+  const [adjusted, setAdjusted] = useState(false);
+  const [originalText, setOriginalText] = useState("");
+  const [finalText, setFinalText] = useState("");
+  const [photoDenied, setPhotoDenied] = useState(false);
+
   
   const [postDetail, setPostDetail] = useState<{
     title: string;
