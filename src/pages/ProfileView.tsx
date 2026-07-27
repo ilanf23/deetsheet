@@ -183,7 +183,7 @@ type DetailGroup = {
 const ProfileView = () => {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("posts");
   const [moreInfoExpanded, setMoreInfoExpanded] = useState(false);
   // Free-text filter applied to the active tab's list (Posts / Topics only).
