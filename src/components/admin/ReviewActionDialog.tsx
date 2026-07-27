@@ -482,8 +482,69 @@ export default function ReviewActionDialog({
             {action === "edit" && "Choose a suggestion so the author knows what to improve. The post will stay pending until they update it and resubmit."}
           </p>
 
+          {action === "approve" && itemKind === "post" && (
+            <div className="space-y-3 rounded-md border p-3">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="approve-adjusted"
+                  checked={adjusted}
+                  onCheckedChange={(v) => setAdjusted(!!v)}
+                />
+                <Label htmlFor="approve-adjusted" className="text-sm font-normal">
+                  Approved with a slight adjustment
+                </Label>
+              </div>
+              {adjusted && (
+                <div className="space-y-2">
+                  <Label className="text-xs">Original text</Label>
+                  <Textarea
+                    rows={2}
+                    value={originalText || postDetail?.content || ""}
+                    onChange={(e) => setOriginalText(e.target.value)}
+                    className="text-sm"
+                  />
+                  <Label className="text-xs">Final text</Label>
+                  <Textarea
+                    rows={2}
+                    value={finalText}
+                    onChange={(e) => setFinalText(e.target.value)}
+                    placeholder="The approved wording the author will see…"
+                    className="text-sm"
+                  />
+                  <Label className="text-xs">Why it was adjusted (one per line)</Label>
+                  <Textarea
+                    rows={2}
+                    value={suggestions}
+                    onChange={(e) => setSuggestions(e.target.value)}
+                    className="text-sm"
+                  />
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="approve-photo-denied"
+                  checked={photoDenied}
+                  onCheckedChange={(v) => setPhotoDenied(!!v)}
+                />
+                <Label htmlFor="approve-photo-denied" className="text-sm font-normal">
+                  Photo denied (post approved, image rejected)
+                </Label>
+              </div>
+              {photoDenied && (
+                <Textarea
+                  rows={2}
+                  value={customReason}
+                  onChange={(e) => setCustomReason(e.target.value)}
+                  placeholder="Why the photo was denied…"
+                  className="text-sm"
+                />
+              )}
+            </div>
+          )}
+
           {showReasonPicker && (
             <div className="space-y-2">
+
               <Label className="text-xs">
                 {action === "reject" ? "Reason for rejection" : "Suggestion for the author"}
                 <span className="text-destructive"> *</span>
