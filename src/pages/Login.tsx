@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { sanitizeReturnTo, rememberReturnTo } from "@/lib/authRedirect";
 
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
@@ -13,6 +14,8 @@ import { toast } from "@/components/ui/sonner";
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnTo = sanitizeReturnTo(searchParams.get("returnTo"));
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -25,11 +28,12 @@ const Login = () => {
     if (error) {
       toast.error(error.message);
     } else {
-      navigate("/");
+      navigate(returnTo || "/");
     }
   };
 
   const handleGoogleSignIn = async () => {
+    rememberReturnTo(returnTo);
     const { lovable } = await import("@/integrations/lovable/index");
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: `${window.location.origin}/auth/callback`,
@@ -39,8 +43,9 @@ const Login = () => {
       return;
     }
     if (result.redirected) return;
-    navigate("/");
+    navigate(returnTo || "/");
   };
+
 
   return (
     <div className="min-h-screen flex flex-col bg-background">

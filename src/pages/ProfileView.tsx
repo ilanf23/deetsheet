@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Navigate } from "react-router-dom";
+import { buildLoginPath } from "@/lib/authRedirect";
 import {
   Pencil,
   GraduationCap,
@@ -183,7 +184,7 @@ type DetailGroup = {
 const ProfileView = () => {
   const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("posts");
   const [moreInfoExpanded, setMoreInfoExpanded] = useState(false);
   // Free-text filter applied to the active tab's list (Posts / Topics only).
@@ -548,6 +549,12 @@ const ProfileView = () => {
     { value: "following", label: "Following", count: followingTotal },
     { value: "followers", label: "Followers", count: followerTotal },
   ];
+
+  // Own-profile route (/profile) requires auth. Email CTAs link here, so send
+  // signed-out visitors through login and return them once authenticated.
+  if (!userId && !authLoading && !user) {
+    return <Navigate to={buildLoginPath("/profile")} replace />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
