@@ -5,10 +5,11 @@ import { Cta, H1, P, SITE_URL, Shell, SuggestionsBox } from './_shell.tsx'
 
 interface Props {
   firstName?: string
-  ctaUrl?: string
 }
 
-const Email = ({ firstName, ctaUrl }: Props) => (
+// The welcome CTA always points at the generic own-profile route. Never build
+// a /profile/:userId URL in email — the recipient may not be signed in yet.
+const Email = ({ firstName }: Props) => (
   <Shell
     eyebrow="WELCOME"
     preview="Welcome to DeetSheet — here's how to make your first post count."
@@ -33,7 +34,7 @@ const Email = ({ firstName, ctaUrl }: Props) => (
     <Text style={{ color: '#1a1a1a', fontSize: '16px', lineHeight: 1.55, margin: '0 0 4px' }}>
       That's it. Add your first deet and see where it lands.
     </Text>
-    <Cta href={ctaUrl || `${SITE_URL}/profile`} label="Make your first post" />
+    <Cta href={`${SITE_URL}/profile`} label="Make your first post" />
   </Shell>
 )
 
