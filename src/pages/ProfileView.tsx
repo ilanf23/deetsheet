@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Navigate } from "react-router-dom";
+import { buildLoginPath } from "@/lib/authRedirect";
 import {
   Pencil,
   GraduationCap,
@@ -548,6 +549,12 @@ const ProfileView = () => {
     { value: "following", label: "Following", count: followingTotal },
     { value: "followers", label: "Followers", count: followerTotal },
   ];
+
+  // Own-profile route (/profile) requires auth. Email CTAs link here, so send
+  // signed-out visitors through login and return them once authenticated.
+  if (!userId && !authLoading && !user) {
+    return <Navigate to={buildLoginPath("/profile")} replace />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background overflow-x-hidden">
