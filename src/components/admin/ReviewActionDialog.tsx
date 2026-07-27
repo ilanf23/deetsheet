@@ -453,8 +453,37 @@ export default function ReviewActionDialog({
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? "Failed to send message");
 
+      // Message delivered — now persist the admin's inline post edits, then
+      // apply the review action.
+      if (itemKind === "post" && postId && postEdited) {
+        let nextImageUrl: string | null = postDetail?.image_url ?? null;
+        if (newImage) {
+          const uid = sess.session?.user?.id;
+          const ext = newImage.name.split(".").pop() ?? "jpg";
+          const path = `${uid}/${postId}-${Date.now()}.${ext}`;
+          const { error: upErr } = await supabase.storage
+            .from("post-images")
+            .upload(path, newImage, { upsert: true });
+          if (upErr) throw upErr;
+          nextImageUrl = supabase.storage.from("post-images").getPublicUrl(path).data.publicUrl;
+        } else if (removeImage) {
+          nextImageUrl = null;
+        }
+        const { error: updErr } = await supabase
+          .from("posts")
+          .update({
+            title: editTitle.trim() || postDetail?.title,
+            content: editContent.trim(),
+            story: editStory.trim() ? editStory : null,
+            image_url: nextImageUrl,
+          })
+          .eq("id", postId);
+        if (updErr) throw updErr;
+      }
+
       // Now perform the actual action.
       await onConfirmed();
+
 
       toast({
         title: `${TITLE_LABEL[action]} — message sent to ${authorLabel}`,
