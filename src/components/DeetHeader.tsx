@@ -60,12 +60,36 @@ const DeetHeader = () => {
         </div>
 
         <nav className="hidden md:flex items-center gap-1">
-          <button
-            onClick={() => navigate("/about")}
-            className="mr-2 px-2 py-1 text-sm text-foreground/80 hover:text-foreground transition-colors"
-          >
-            About
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="mr-1 inline-flex items-center gap-1 px-2 py-1 text-sm text-foreground/80 hover:text-foreground transition-colors focus-visible:outline-none">
+              About
+              <ChevronDown className="h-3.5 w-3.5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem onClick={() => navigate("/about")}>About</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/contact")}>Contact</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/investor")}>
+                Become an Investor
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger className="mr-2 inline-flex items-center gap-1 px-2 py-1 text-sm text-foreground/80 hover:text-foreground transition-colors focus-visible:outline-none">
+              Guides
+              <ChevronDown className="h-3.5 w-3.5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem onClick={() => navigate("/inspiration")}>
+                Need inspiration?
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/rules")}>
+                Rules &amp; Guidelines
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+
 
           {user ? (
             <>
