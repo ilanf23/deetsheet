@@ -19,6 +19,7 @@ import {
 import { toast } from "@/components/ui/sonner";
 import { US_STATES } from "@/lib/usStates";
 import { readStoredLocation, clearStoredLocation } from "@/lib/locationStorage";
+import { rememberReturnTo } from "@/lib/authRedirect";
 
 const benefits = [
   "Keep Track of all your favorite posts and comments.",
@@ -120,6 +121,7 @@ const SignUp = () => {
   };
 
   const handleGoogleSignIn = async () => {
+    rememberReturnTo(null);
     const { lovable } = await import("@/integrations/lovable/index");
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: `${window.location.origin}/auth/callback`,
