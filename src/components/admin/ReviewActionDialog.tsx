@@ -748,16 +748,18 @@ export default function ReviewActionDialog({
               Also send as email
             </Label>
           </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
+              Cancel
+            </Button>
+            <Button onClick={submit} disabled={busy}>
+              {busy ? "Sending…" : ACTION_LABEL[action]}
+            </Button>
+          </div>
+          </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
-            Cancel
-          </Button>
-          <Button onClick={submit} disabled={busy}>
-            {busy ? "Sending…" : ACTION_LABEL[action]}
-          </Button>
-        </DialogFooter>
       </DialogContent>
+
     </Dialog>
   );
 }
