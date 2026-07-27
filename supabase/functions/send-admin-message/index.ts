@@ -22,7 +22,11 @@ interface Payload {
   body_html?: string;
   slip?: Slip;
   send_email?: boolean;
+  /** Registered transactional template name, e.g. "post-approved". */
+  email_template?: string;
+  template_data?: Record<string, unknown>;
 }
+
 
 function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) =>
