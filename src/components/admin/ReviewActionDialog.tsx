@@ -583,8 +583,19 @@ export default function ReviewActionDialog({
                   ? "Picking a suggestion updates the message below. You can still edit it before sending."
                   : "Picking a reason updates the message below. You can still edit it before sending."}
               </p>
+              <Label className="text-xs">
+                Suggested rewrites for the author (one per line, optional)
+              </Label>
+              <Textarea
+                rows={3}
+                value={suggestions}
+                onChange={(e) => setSuggestions(e.target.value)}
+                placeholder={"Preppy clothing\nSpandex clothing"}
+                className="text-sm"
+              />
             </div>
           )}
+
 
           <div>
             <Label className="text-xs">Subject</Label>
