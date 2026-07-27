@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LocationProvider } from "@/contexts/LocationContext";
 import { AdminModeProvider } from "@/hooks/useAdminMode";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { usePageViews } from "@/hooks/usePageViews";
 import Index from "./pages/Index";
 import SignUp from "./pages/SignUp";
 import Login from "./pages/Login";
@@ -71,6 +72,11 @@ function AdminChunkFallback() {
 }
 
 const queryClient = new QueryClient();
+
+function AnalyticsTracker() {
+  usePageViews();
+  return null;
+}
 
 const App = () => (
   <ErrorBoundary>
