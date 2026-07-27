@@ -525,6 +525,8 @@ export default function AdminPosts() {
         onOpenChange={(o) => { if (!o) setReviewPostId(null); }}
         onApprove={handleApprove}
         onReject={handleReject}
+        onSuggestEdit={(id) => { setReviewPostId(null); setEditingPostId(id); }}
+        onSaved={() => setRefreshKey((k) => k + 1)}
       />
       <AlertDialog
         open={!!deletingPost}
