@@ -226,7 +226,12 @@ export default function ReviewActionDialog({
     setReasonKey("");
     setCustomReason("");
     setSendEmail(true);
+    setAdjusted(false);
+    setPhotoDenied(false);
+    setOriginalText("");
+    setFinalText("");
     const c = defaultCopy(action, itemKind, itemTitle, "");
+
     setSubject(c.subject);
     setBody(c.body);
   }, [open, action, itemKind, itemTitle]);
