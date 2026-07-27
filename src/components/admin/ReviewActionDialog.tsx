@@ -369,7 +369,7 @@ export default function ReviewActionDialog({
         .map((s) => s.trim())
         .filter(Boolean);
       const topicName = postDetail?.topic_name ?? undefined;
-      const postTitle = postDetail?.title ?? itemTitle;
+      const postTitle = (itemKind === "post" ? editTitle.trim() : "") || postDetail?.title || itemTitle;
       const profileUrl = "https://deetsheet.com/profile";
       const postUrl =
         topicName && postId
@@ -400,11 +400,13 @@ export default function ReviewActionDialog({
           emailTemplate = "post-approved-adjusted";
           templateData = {
             ...base,
+            // Original = the post as submitted; Final = the admin's edited copy.
             originalText: originalText || postDetail?.content || "",
-            finalText,
+            finalText: (finalTextTouched ? finalText : editContent) || editContent,
             reasons: reasonText ? [reasonText] : suggestionList,
             ctaUrl: postUrl,
           };
+
         } else if (action === "approve") {
           emailTemplate = "post-approved";
           templateData = { ...base, ctaUrl: postUrl };
