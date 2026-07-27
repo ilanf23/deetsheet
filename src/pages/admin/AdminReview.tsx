@@ -8,7 +8,7 @@ import AdminSortSelect from "@/components/admin/AdminSortSelect";
 import AdminEditPostDialog from "@/components/admin/AdminEditPostDialog";
 import ReviewActionDialog, { type ReviewAction } from "@/components/admin/ReviewActionDialog";
 import { logAdminAction } from "@/lib/auditLog";
-import { Hash, FileText, ChevronDown, ChevronRight } from "lucide-react";
+import { Hash, FileText, ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 
 type PriorPost = {
   id: string;
@@ -116,16 +116,31 @@ type PendingPost = {
   image_url: string | null;
   topic_id: string;
   topic_name?: string;
+  updated_at: string;
+  author_id?: string;
+  /** Re-submitted after the author edited an already-reviewed post. */
+  isReReview: boolean;
 };
 
 type PendingItem = PendingTopic | PendingPost;
 type FilterTab = "all" | "topics" | "posts";
-type SortKey = "newest" | "oldest";
+type SortKey = "newest" | "oldest" | "edited";
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: "newest", label: "Submitted — Newest" },
   { value: "oldest", label: "Submitted — Oldest" },
+  { value: "edited", label: "Recently edited" },
 ];
+
+/** A pending post whose updated_at is meaningfully later than created_at was
+ *  edited after submission — i.e. it is coming back for a second look. */
+const RE_REVIEW_THRESHOLD_MS = 60_000;
+
+function openDirectMessage(authorId: string, postId?: string | null) {
+  const params = new URLSearchParams({ compose: "1", user: authorId });
+  if (postId) params.set("post", postId);
+  window.open(`/admin/messages?${params.toString()}`, "_blank", "noopener");
+}
 
 function stripHtml(html: string, max = 220) {
   const text = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
@@ -190,7 +205,7 @@ export default function AdminReview() {
         .eq("status", "pending"),
       supabase
         .from("posts")
-        .select("id, title, content, story, image_url, topic_id, author_id, created_at")
+        .select("id, title, content, story, image_url, topic_id, author_id, created_at, updated_at, approved_at")
         .eq("status", "pending"),
     ]);
 
@@ -248,6 +263,13 @@ export default function AdminReview() {
           image_url: p.image_url,
           topic_id: p.topic_id,
           topic_name: parent?.name,
+          author_id: p.author_id,
+          updated_at: p.updated_at ?? p.created_at,
+          isReReview:
+            !!p.approved_at ||
+            new Date(p.updated_at ?? p.created_at).getTime() -
+              new Date(p.created_at).getTime() >
+              RE_REVIEW_THRESHOLD_MS,
         };
       }),
     ];
@@ -266,6 +288,15 @@ export default function AdminReview() {
     if (tab === "posts") rows = rows.filter((i) => i.kind === "post");
     const sorted = [...rows];
     sorted.sort((a, b) => {
+      if (sort === "edited") {
+        const au = new Date(
+          a.kind === "post" ? a.updated_at : a.created_at,
+        ).getTime();
+        const bu = new Date(
+          b.kind === "post" ? b.updated_at : b.created_at,
+        ).getTime();
+        return bu - au;
+      }
       const ad = new Date(a.created_at).getTime();
       const bd = new Date(b.created_at).getTime();
       return sort === "newest" ? bd - ad : ad - bd;
@@ -401,9 +432,27 @@ export default function AdminReview() {
                 <div className="flex-1 min-w-0 space-y-2">
                   <div className="flex items-center gap-3 text-[12px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>
                     <TypeBadge kind={item.kind} />
+                    {item.kind === "post" && item.isReReview && (
+                      <span
+                        className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[12px] font-medium"
+                        style={{
+                          backgroundColor: "hsl(var(--admin-warning-soft, var(--admin-danger-soft)))",
+                          color: "hsl(var(--admin-warning, var(--admin-danger)))",
+                        }}
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                        Re-review
+                      </span>
+                    )}
                     <span>by {authorLabel}</span>
                     <span>·</span>
                     <span>{formatDistanceToNow(parseISO(item.created_at))} ago</span>
+                    {item.kind === "post" && item.isReReview && (
+                      <>
+                        <span>·</span>
+                        <span>edited {formatDistanceToNow(parseISO(item.updated_at))} ago</span>
+                      </>
+                    )}
                   </div>
 
                   {item.kind === "topic" ? (
@@ -494,6 +543,20 @@ export default function AdminReview() {
                       Suggest
                     </button>
                   )}
+                  <button
+                    onClick={() =>
+                      author?.id &&
+                      openDirectMessage(author.id, item.kind === "post" ? item.id : null)
+                    }
+                    disabled={!author?.id}
+                    className="px-4 py-2 rounded-md text-[13px] font-semibold border disabled:opacity-50"
+                    style={{
+                      borderColor: "hsl(var(--admin-border))",
+                      color: "hsl(var(--admin-fg-muted))",
+                    }}
+                  >
+                    Message them directly
+                  </button>
                 </div>
                 </div>
                 {item.kind === "post" && author?.id && (

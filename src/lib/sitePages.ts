@@ -41,6 +41,48 @@ export const SITE_PAGE_SECTIONS: SitePageSection[] = [
     defaultContent:
       "Request our investor deck or schedule an intro call.\n\ninvest@deetsheet.com",
   },
+  {
+    slug: "inspiration_intro",
+    label: "Need Inspiration? — Intro",
+    defaultTitle: "Need Inspiration?",
+    defaultContent:
+      "Not sure what to post? You already know something that would help someone else. Use the prompts and tips below to find it.",
+  },
+  {
+    slug: "inspiration_prompts",
+    label: "Need Inspiration? — Posting prompts",
+    defaultTitle: "Posting Prompts",
+    defaultContent:
+      "What do you wish someone had told you before your first day at your job?\n\nWhat is one thing every visitor to your city gets wrong?\n\nWhat small habit made a big difference in your life?\n\nWhat is a cost, rule, or step people never see coming?",
+  },
+  {
+    slug: "inspiration_tips",
+    label: "Need Inspiration? — Tips",
+    defaultTitle: "Tips For A Strong Post",
+    defaultContent:
+      "Post one concrete, uncommon fact.\n\nNo opinions, no exclamation points, few words.\n\nRank what you know instead of what you guess.",
+  },
+  {
+    slug: "rules_intro",
+    label: "Rules & Guidelines — Intro",
+    defaultTitle: "Rules & Guidelines",
+    defaultContent:
+      "DeetSheet is built to help people. Every post is reviewed before it goes live. These guidelines explain what we look for and why a post may be adjusted or rejected.",
+  },
+  {
+    slug: "rules_rejected",
+    label: "Rules & Guidelines — Why posts are rejected",
+    defaultTitle: "Why A Post May Be Rejected",
+    defaultContent:
+      "Vulgar, hateful, or harassing language.\n\nSpam or promotional content.\n\nOff-topic posts submitted under the wrong subject.\n\nDuplicates of content that already exists.\n\nUnverified or misleading claims.",
+  },
+  {
+    slug: "rules_adjusted",
+    label: "Rules & Guidelines — Why posts are adjusted",
+    defaultTitle: "Why A Post May Be Adjusted",
+    defaultContent:
+      "Light edits for spelling, grammar, or formatting.\n\nTightening a title so readers can find the post.\n\nTrimming wording so the insight stays short and clear.\n\nIf you do not like an adjusted version, you can delete the post from your profile.",
+  },
 ];
 
 export const findSection = (slug: string) =>

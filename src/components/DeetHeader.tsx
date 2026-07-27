@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Search, Menu, X, List, User, UserCircle2, Shield, Mail } from "lucide-react";
+import { Search, Menu, X, List, User, UserCircle2, Shield, Mail, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
@@ -8,6 +8,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useAdminMode } from "@/hooks/useAdminMode";
 import SearchBar from "@/components/SearchBar";
+import NotificationBell from "@/components/NotificationBell";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useUnreadMessagesCount } from "@/hooks/useUnreadMessages";
 
 const DeetHeader = () => {
@@ -60,12 +67,36 @@ const DeetHeader = () => {
         </div>
 
         <nav className="hidden md:flex items-center gap-1">
-          <button
-            onClick={() => navigate("/about")}
-            className="mr-2 px-2 py-1 text-sm text-foreground/80 hover:text-foreground transition-colors"
-          >
-            About
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="mr-1 inline-flex items-center gap-1 px-2 py-1 text-sm text-foreground/80 hover:text-foreground transition-colors focus-visible:outline-none">
+              About
+              <ChevronDown className="h-3.5 w-3.5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem onClick={() => navigate("/about")}>About</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/contact")}>Contact</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/investor")}>
+                Become an Investor
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger className="mr-2 inline-flex items-center gap-1 px-2 py-1 text-sm text-foreground/80 hover:text-foreground transition-colors focus-visible:outline-none">
+              Guides
+              <ChevronDown className="h-3.5 w-3.5" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem onClick={() => navigate("/inspiration")}>
+                Need inspiration?
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/rules")}>
+                Rules &amp; Guidelines
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+
 
           {user ? (
             <>
@@ -81,6 +112,7 @@ const DeetHeader = () => {
                   )}
                 </button>
               )}
+              <NotificationBell />
               <button
                 onClick={() => navigate("/inbox")}
                 title="Inbox"
@@ -167,11 +199,20 @@ const DeetHeader = () => {
         </nav>
 
         <div className="flex md:hidden items-center gap-2">
+          {user && <NotificationBell />}
           <Button variant="ghost" size="icon" title={onTopics ? "Close Topics" : "Topics Directory"} onClick={toggleTopics}>
             {onTopics ? <X className="h-[29px] w-[29px]" /> : <List className="h-[34px] w-[34px]" />}
           </Button>
           <Button variant="ghost" size="icon" onClick={() => setSearchOpen(!searchOpen)}>
             <Search className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Menu"
+            onClick={() => setMobileMenuOpen((o) => !o)}
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
           <button
             onClick={() => navigate(user ? "/profile" : "/login")}
@@ -192,6 +233,67 @@ const DeetHeader = () => {
           </button>
         </div>
       </div>
+
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t bg-card">
+          <nav className="flex flex-col p-2">
+            {[
+              ["/about", "About"],
+              ["/contact", "Contact"],
+              ["/investor", "Become an Investor"],
+              ["/inspiration", "Need inspiration?"],
+              ["/rules", "Rules & Guidelines"],
+            ].map(([to, label]) => (
+              <button
+                key={to}
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  navigate(to);
+                }}
+                className="rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-accent"
+              >
+                {label}
+              </button>
+            ))}
+            {user ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  navigate("/inbox");
+                }}
+                className="rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-accent"
+              >
+                Inbox{unreadCount > 0 ? ` (${unreadCount})` : ""}
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    navigate("/signup");
+                  }}
+                  className="rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-accent"
+                >
+                  Sign Up
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    navigate("/login");
+                  }}
+                  className="rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-accent"
+                >
+                  Log In
+                </button>
+              </>
+            )}
+          </nav>
+        </div>
+      )}
 
       {searchOpen && (
         <div className="md:hidden border-t p-3">

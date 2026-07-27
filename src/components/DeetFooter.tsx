@@ -18,6 +18,8 @@ const DeetFooter = () => {
             <Link to="/faq" className="hover:text-foreground transition">FAQ</Link>
             <Link to="/contact" className="hover:text-foreground transition">Contact</Link>
             <Link to="/investor" className="hover:text-foreground transition">Become an Investor</Link>
+            <Link to="/inspiration" className="hover:text-foreground transition">Need inspiration?</Link>
+            <Link to="/rules" className="hover:text-foreground transition">Rules &amp; Guidelines</Link>
             <Link to="/terms" className="hover:text-foreground transition">Terms</Link>
             <Link to="/privacy" className="hover:text-foreground transition">Privacy</Link>
             {isAdmin && adminModeActive && (

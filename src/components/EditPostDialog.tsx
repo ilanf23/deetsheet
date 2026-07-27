@@ -126,11 +126,11 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
         image_url: nextImageUrl,
         is_anonymous: isAnonymous,
       };
-      const nextStatus = currentStatus === "rejected" ? "pending" : currentStatus;
-      // Do not write `status` for normal edits. Approved posts must stay live
-      // on topic pages, and pending posts should stay pending until review.
-      // Only rejected posts are explicitly resubmitted for review.
-      if (currentStatus === "rejected") updates.status = nextStatus;
+      // Any user edit sends the post back through review. An approved post
+      // goes offline until it is re-approved — this prevents a clean post from
+      // being edited into something inappropriate after approval.
+      updates.status = "pending";
+
       // Only touch `story` if the user typed one — keeps the update working
       // when the posts.story migration hasn't been applied to the live DB.
       if (trimmedStory) updates.story = trimmedStory;
@@ -143,11 +143,9 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
 
       toast({
         title: "Post updated",
-        description:
-          currentStatus === "rejected"
-            ? "Your revised post will be reviewed before going live."
-            : undefined,
+        description: "Your post is offline until it's re-approved.",
       });
+
       queryClient.invalidateQueries({ queryKey: ["posts-by-topic", topicId] });
       queryClient.invalidateQueries({ queryKey: ["posts-by-topic"] });
       queryClient.invalidateQueries({ queryKey: ["recent-posts"] });
@@ -176,6 +174,10 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
               : "Save changes to update this post."}
           </DialogDescription>
         </DialogHeader>
+
+        <div className="rounded-md border border-secondary/40 bg-secondary/10 px-3 py-2 text-sm text-foreground">
+          Saving changes will temporarily remove your post from DeetSheet until it's re-approved.
+        </div>
 
         {loading ? (
           <div className="py-12 flex justify-center">

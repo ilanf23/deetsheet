@@ -473,6 +473,42 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          link: string | null
+          message: string
+          post_id: string | null
+          read_at: string | null
+          thread_id: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          link?: string | null
+          message: string
+          post_id?: string | null
+          read_at?: string | null
+          thread_id?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          link?: string | null
+          message?: string
+          post_id?: string | null
+          read_at?: string | null
+          thread_id?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       post_follows: {
         Row: {
           created_at: string
@@ -522,6 +558,7 @@ export type Database = {
           story: string | null
           title: string
           topic_id: string
+          updated_at: string
         }
         Insert: {
           approved_at?: string | null
@@ -542,6 +579,7 @@ export type Database = {
           story?: string | null
           title: string
           topic_id: string
+          updated_at?: string
         }
         Update: {
           approved_at?: string | null
@@ -562,6 +600,7 @@ export type Database = {
           story?: string | null
           title?: string
           topic_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -1084,6 +1123,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      build_post_link: { Args: { _post_id: string }; Returns: string }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
