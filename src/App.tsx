@@ -85,6 +85,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <AnalyticsTracker />
           <AuthProvider>
             <LocationProvider>
             <AdminModeProvider>
