@@ -230,6 +230,8 @@ export default function ReviewActionDialog({
     if (!open) return;
     setReasonKey("");
     setCustomReason("");
+    setSuggestions("");
+
     setSendEmail(true);
     setAdjusted(false);
     setPhotoDenied(false);
