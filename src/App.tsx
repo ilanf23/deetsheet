@@ -22,6 +22,8 @@ import FAQ from "./pages/FAQ";
 import Contact from "./pages/Contact";
 import Investor from "./pages/Investor";
 import Terms from "./pages/Terms";
+import Inspiration from "./pages/Inspiration";
+import Rules from "./pages/Rules";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 
@@ -118,6 +120,8 @@ const App = () => (
             <Route path="/faq" element={<FAQ />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/investor" element={<Investor />} />
+            <Route path="/inspiration" element={<Inspiration />} />
+            <Route path="/rules" element={<Rules />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route
