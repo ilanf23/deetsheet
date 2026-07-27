@@ -82,8 +82,32 @@ export const useCreatePost = () => {
         .single();
 
       if (error) throw error;
+
+      // Branded "we received your post" email. Never block the post itself.
+      if (user.email) {
+        try {
+          await supabase.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "post-received",
+              recipientEmail: user.email,
+              idempotencyKey: `post-received-${data.id}`,
+              templateData: {
+                topic: input.topicName,
+                title: input.title,
+                imageUrl: imageUrl ?? undefined,
+                isAnonymous: !!input.isAnonymous,
+                ctaUrl: "https://deetsheet.com/profile",
+              },
+            },
+          });
+        } catch (e) {
+          console.error("post-received email failed", e);
+        }
+      }
+
       return data;
     },
+
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["posts-by-topic", variables.topicId],
