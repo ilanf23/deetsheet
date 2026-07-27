@@ -221,6 +221,17 @@ export default function ReviewActionDialog({
   } | null>(null);
   const [postRefreshKey] = useState(0);
 
+  // Editable copy of the post — the admin adjusts it in the left column and it
+  // is saved when the action is submitted.
+  const [editTitle, setEditTitle] = useState("");
+  const [editContent, setEditContent] = useState("");
+  const [editStory, setEditStory] = useState("");
+  const [newImage, setNewImage] = useState<File | null>(null);
+  const [newImagePreview, setNewImagePreview] = useState<string | null>(null);
+  const [removeImage, setRemoveImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [finalTextTouched, setFinalTextTouched] = useState(false);
+
   const reasonList = action === "reject" ? REJECT_REASONS : action === "edit" ? EDIT_REASONS : [];
   const showReasonPicker = action === "reject" || action === "edit";
 
@@ -237,6 +248,10 @@ export default function ReviewActionDialog({
     setPhotoDenied(false);
     setOriginalText("");
     setFinalText("");
+    setFinalTextTouched(false);
+    setNewImage(null);
+    setNewImagePreview(null);
+    setRemoveImage(false);
     const c = defaultCopy(action, itemKind, itemTitle, "");
 
     setSubject(c.subject);
@@ -267,11 +282,40 @@ export default function ReviewActionDialog({
         image_url: data.image_url ?? null,
         topic_name: topicName,
       });
+      setEditTitle(data.title ?? "");
+      setEditContent(data.content ?? "");
+      setEditStory(data.story ?? "");
     })();
     return () => {
       cancelled = true;
     };
   }, [open, itemKind, postId, postRefreshKey]);
+
+  const pickImage = (file: File | null) => {
+    if (!file) return;
+    setNewImage(file);
+    setRemoveImage(false);
+    setNewImagePreview(URL.createObjectURL(file));
+  };
+
+  const clearImage = () => {
+    setNewImage(null);
+    setNewImagePreview(null);
+    setRemoveImage(true);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const currentImage = newImagePreview ?? (removeImage ? null : postDetail?.image_url ?? null);
+
+  /** Whether the admin actually changed the post in the left column. */
+  const postEdited =
+    !!postDetail &&
+    (editTitle !== (postDetail.title ?? "") ||
+      editContent !== (postDetail.content ?? "") ||
+      editStory !== (postDetail.story ?? "") ||
+      !!newImage ||
+      removeImage);
+
 
 
   // Re-render the default message whenever the admin picks a reason.
