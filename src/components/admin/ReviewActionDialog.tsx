@@ -630,11 +630,15 @@ export default function ReviewActionDialog({
                   <Label className="text-xs">Final text</Label>
                   <Textarea
                     rows={2}
-                    value={finalText}
-                    onChange={(e) => setFinalText(e.target.value)}
+                    value={finalTextTouched ? finalText : editContent}
+                    onChange={(e) => {
+                      setFinalTextTouched(true);
+                      setFinalText(e.target.value);
+                    }}
                     placeholder="The approved wording the author will see…"
                     className="text-sm"
                   />
+
                   <Label className="text-xs">Why it was adjusted (one per line)</Label>
                   <Textarea
                     rows={2}
