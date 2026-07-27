@@ -503,55 +503,101 @@ export default function ReviewActionDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !busy && onOpenChange(o)}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {TITLE_LABEL[action]} — message to {authorLabel}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-3">
-          <div className="rounded-md border bg-muted/40 p-3 text-sm space-y-2">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
-                  {itemKind === "topic" ? "Topic" : "Post"}
-                  {postDetail?.topic_name && (
-                    <span className="ml-2 normal-case tracking-normal text-muted-foreground">
-                      in <span className="text-primary">{postDetail.topic_name}</span>
-                    </span>
-                  )}
-                </div>
-                <div className="font-medium">{postDetail?.title ?? itemTitle}</div>
-                <div className="text-xs text-muted-foreground mt-1">Author: {authorLabel}</div>
-              </div>
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* LEFT — the post itself, editable in place. */}
+          <div className="space-y-3">
+            <div className="text-xs uppercase tracking-wide text-muted-foreground">
+              {itemKind === "topic" ? "Topic" : "Post"}
+              {postDetail?.topic_name && (
+                <span className="ml-2 normal-case tracking-normal">
+                  in <span className="text-primary">{postDetail.topic_name}</span>
+                </span>
+              )}
+              <span className="ml-2 normal-case tracking-normal">· {authorLabel}</span>
             </div>
 
-            {itemKind === "post" && postDetail && (
-              <div className="pt-2 border-t border-border/60 space-y-2">
-                {postDetail.image_url && (
-                  <img
-                    src={postDetail.image_url}
-                    alt=""
-                    className="max-h-56 w-auto rounded-md border"
-                    onError={(e) => {
-                      const img = e.currentTarget as HTMLImageElement;
-                      img.style.display = "none";
-                    }}
+            {itemKind === "post" && postDetail ? (
+              <>
+                <div>
+                  <Label className="text-xs">Title</Label>
+                  <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">Post text</Label>
+                  <Textarea
+                    rows={4}
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    className="text-sm"
                   />
-                )}
-                {postDetail.story && postDetail.story.trim().length > 0 ? (
-                  <div
-                    className="prose prose-sm max-w-none text-foreground [&_p]:my-1"
-                    dangerouslySetInnerHTML={{ __html: postDetail.story }}
+                </div>
+                <div>
+                  <Label className="text-xs">Comment / story</Label>
+                  <Textarea
+                    rows={8}
+                    value={editStory}
+                    onChange={(e) => setEditStory(e.target.value)}
+                    placeholder="No comment provided."
+                    className="text-sm"
                   />
-                ) : postDetail.content && postDetail.content.trim().length > 0 ? (
-                  <p className="whitespace-pre-wrap text-foreground text-sm">{postDetail.content}</p>
-                ) : (
-                  <p className="text-xs text-muted-foreground italic">No body content.</p>
-                )}
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Photo</Label>
+                  {currentImage ? (
+                    <img
+                      src={currentImage}
+                      alt=""
+                      className="max-h-64 w-auto rounded-md border"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic">No photo.</p>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => pickImage(e.target.files?.[0] ?? null)}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      {currentImage ? "Replace photo" : "Add photo"}
+                    </Button>
+                    {currentImage && (
+                      <Button type="button" size="sm" variant="outline" onClick={clearImage}>
+                        Remove photo
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Any edits here are saved when you submit this action.
+                </p>
+              </>
+            ) : (
+              <div className="rounded-md border bg-muted/40 p-3 text-sm">
+                <div className="font-medium">{itemTitle}</div>
               </div>
             )}
           </div>
+
+          {/* RIGHT — action reason, message to author, and submit controls. */}
+          <div className="space-y-3">
+
 
 
           <p className="text-sm text-muted-foreground">
