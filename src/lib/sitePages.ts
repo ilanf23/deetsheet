@@ -46,44 +46,87 @@ export const SITE_PAGE_SECTIONS: SitePageSection[] = [
     label: "Need Inspiration? — Intro",
     defaultTitle: "Need Inspiration?",
     defaultContent:
-      "Not sure what to post? You already know something that would help someone else. Use the prompts and tips below to find it.",
+      "Below are some inspirations on how to come up with post ideas.",
   },
   {
     slug: "inspiration_prompts",
-    label: "Need Inspiration? — Posting prompts",
-    defaultTitle: "Posting Prompts",
+    label: "Need Inspiration? — Idea prompts (list)",
+    defaultTitle: "Idea Prompts",
     defaultContent:
-      "What do you wish someone had told you before your first day at your job?\n\nWhat is one thing every visitor to your city gets wrong?\n\nWhat small habit made a big difference in your life?\n\nWhat is a cost, rule, or step people never see coming?",
+      "What are the best and worst parts about this topic? For example, what are the best and worst parts about being a teacher?\n\nIf you could give advice to someone about this topic, what would it be?\n\nHave you ever wanted to complain about what customers/clients do? This is your time to do it!\n\nWhat makes this topic different than others? For example, what makes Chicago different than other cities? What happens in Chicago that doesn't happen somewhere else?",
   },
   {
-    slug: "inspiration_tips",
-    label: "Need Inspiration? — Tips",
-    defaultTitle: "Tips For A Strong Post",
+    slug: "inspiration_note",
+    label: "Need Inspiration? — Note",
+    defaultTitle: "Good To Know",
     defaultContent:
-      "Post one concrete, uncommon fact.\n\nNo opinions, no exclamation points, few words.\n\nRank what you know instead of what you guess.",
+      "Remember, you can always make a post anonymous. You can also make them public later as well. Also, once you make a post, you have the option to go back and edit it.",
+  },
+  {
+    slug: "inspiration_guidelines",
+    label: "Need Inspiration? — Helpful guidelines (list)",
+    defaultTitle: "Below are some helpful guidelines.",
+    defaultContent:
+      "Make headlines punchy. Only use as few words as possible to explain your post.\n\nIs the post headline self-explanatory?\n\nAvoid using the name of the topic in the post.\n\nA period is only needed if it is a sentence (meaning it has a subject and a verb).\n\nDo not use exclamation points in headlines, but you can use them in comments.\n\nNo opinions. (For example: Dogs are the best pets.)",
+  },
+  {
+    slug: "inspiration_comment",
+    label: "Need Inspiration? — Include a Comment",
+    defaultTitle: "Include a Comment",
+    defaultContent:
+      "It's not required, but please include a comment to explain your post. Maybe write a little history about it or include a personal story.",
+  },
+  {
+    slug: "inspiration_photo",
+    label: "Need Inspiration? — Include A Photo",
+    defaultTitle: "Include A Photo",
+    defaultContent:
+      "Attaching a photo gives attention to your post and really helps engage the viewer.",
+  },
+  {
+    slug: "inspiration_rank",
+    label: "Need Inspiration? — Rank!",
+    defaultTitle: "Rank!",
+    defaultContent:
+      "If you don't feel like posting, please rank other posts. It might get the creative juices flowing to post.",
+  },
+  {
+    slug: "inspiration_closing",
+    label: "Need Inspiration? — Closing",
+    defaultTitle: "Thank You",
+    defaultContent:
+      "Thank you again for contributing to DeetSheet! Your thoughts could help others for a lifetime.",
   },
   {
     slug: "rules_intro",
     label: "Rules & Guidelines — Intro",
     defaultTitle: "Rules & Guidelines",
     defaultContent:
-      "DeetSheet is built to help people. Every post is reviewed before it goes live. These guidelines explain what we look for and why a post may be adjusted or rejected.",
-  },
-  {
-    slug: "rules_rejected",
-    label: "Rules & Guidelines — Why posts are rejected",
-    defaultTitle: "Why A Post May Be Rejected",
-    defaultContent:
-      "Vulgar, hateful, or harassing language.\n\nSpam or promotional content.\n\nOff-topic posts submitted under the wrong subject.\n\nDuplicates of content that already exists.\n\nUnverified or misleading claims.",
+      "Every post is reviewed before it goes live. These guidelines explain what we look for.",
   },
   {
     slug: "rules_adjusted",
-    label: "Rules & Guidelines — Why posts are adjusted",
-    defaultTitle: "Why A Post May Be Adjusted",
+    label: "Rules & Guidelines — Why posts are adjusted (list)",
+    defaultTitle: "Below are reasons why your post will be adjusted.",
     defaultContent:
-      "Light edits for spelling, grammar, or formatting.\n\nTightening a title so readers can find the post.\n\nTrimming wording so the insight stays short and clear.\n\nIf you do not like an adjusted version, you can delete the post from your profile.",
+      "Avoid personalization (Ex: I, me, you, yours, we, ours)\n\nAvoid gender (Ex: her, him, she, he, etc.)\n\nAvoid exact numbers (Ex: People call me 10 times a day — should be — people call me too many times a day.)\n\nCapitalize first word if it's a sentence. Otherwise, you can capitalize each word if it's a headline.\n\nAvoid using name of the topic in the post.\n\nPeriod at end if it's a sentence\n\nToo many words\n\nToo vague\n\nGrammar\n\nNo interjections\n\nWrong category\n\nNo opinions\n\nNo Slang",
+  },
+  {
+    slug: "rules_rejected",
+    label: "Rules & Guidelines — Why posts are not approved (list)",
+    defaultTitle: "Below are reasons why a post or photo is not approved.",
+    defaultContent:
+      "Political\n\nSelf-promoting\n\nIncludes a link to dangerous landing page\n\nObscene or Vulgar\n\nMalicious or Hateful",
+  },
+  {
+    slug: "rules_closing",
+    label: "Rules & Guidelines — Closing",
+    defaultTitle: "Thank You",
+    defaultContent:
+      "Thank you again for contributing to DeetSheet! Your thoughts could help others for a lifetime.",
   },
 ];
+
 
 export const findSection = (slug: string) =>
   SITE_PAGE_SECTIONS.find((s) => s.slug === slug);
