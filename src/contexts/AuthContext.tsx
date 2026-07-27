@@ -71,6 +71,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Fire the branded welcome email once per account. The edge function is
+  // idempotent (deduped server-side), this just avoids repeat calls per tab.
+  useEffect(() => {
+    if (!user?.id) return;
+    const key = `deetsheet:welcome-email:${user.id}`;
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, "1");
+    supabase.functions
+      .invoke("send-welcome-email")
+      .catch((e) => console.error("welcome email failed", e));
+  }, [user?.id]);
+
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
