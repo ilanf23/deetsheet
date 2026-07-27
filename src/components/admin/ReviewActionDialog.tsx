@@ -131,7 +131,11 @@ const EDIT_REASONS: { value: string; label: string; detail: string }[] = [
   },
 ];
 
+/** Reasons that mean the post is denied outright (conduct), not just pending. */
+const DENY_REASON_KEYS = new Set(["vulgar", "personal_attack"]);
+
 function defaultCopy(
+
   action: ReviewAction,
   itemKind: "topic" | "post",
   itemTitle: string,
