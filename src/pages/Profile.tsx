@@ -1,8 +1,10 @@
 import { useState, useRef } from "react";
+import { Navigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { User, Pencil, GraduationCap, Eye, Calendar, Loader2, FileText } from "lucide-react";
+import { buildLoginPath } from "@/lib/authRedirect";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import DeetHeader from "@/components/DeetHeader";
@@ -146,6 +148,22 @@ const Profile = () => {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 100 }, (_, i) => String(currentYear - i));
   const days = Array.from({ length: 31 }, (_, i) => String(i + 1));
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <DeetHeader />
+        <main className="flex-1 flex items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </main>
+        <DeetFooter />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to={buildLoginPath("/profile")} replace />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
