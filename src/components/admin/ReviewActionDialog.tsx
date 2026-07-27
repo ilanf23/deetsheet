@@ -207,6 +207,9 @@ export default function ReviewActionDialog({
   const [originalText, setOriginalText] = useState("");
   const [finalText, setFinalText] = useState("");
   const [photoDenied, setPhotoDenied] = useState(false);
+  /** One suggestion per line — rendered in the email's green suggestions box. */
+  const [suggestions, setSuggestions] = useState("");
+
 
   
   const [postDetail, setPostDetail] = useState<{
