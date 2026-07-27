@@ -161,37 +161,45 @@ Deno.serve(async (req) => {
     const { data: userInfo } = await admin.auth.admin.getUserById(payload.user_id);
     const recipientEmail = userInfo?.user?.email ?? null;
 
-    // Send email via existing send-email function
+    // Send email. Preferred path: the branded React Email templates via
+    // send-transactional-email. Falls back to the legacy raw-HTML sender.
     let emailSent = false;
     let emailMessageId: string | null = null;
     if (payload.send_email !== false && recipientEmail) {
       try {
-        const emailRes = await fetch(
-          `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-email`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-            },
-            body: JSON.stringify({
-              to: recipientEmail,
-              subject: payload.subject,
-              html: bodyHtml,
-            }),
-          }
-        );
+        const useTemplate = !!payload.email_template;
+        const url = useTemplate
+          ? `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-transactional-email`
+          : `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-email`;
+        const emailBody = useTemplate
+          ? {
+              templateName: payload.email_template,
+              recipientEmail,
+              idempotencyKey: `${payload.email_template}-${payload.post_id ?? payload.user_id}-${Date.now()}`,
+              templateData: payload.template_data ?? {},
+            }
+          : { to: recipientEmail, subject: payload.subject, html: bodyHtml };
+
+        const emailRes = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify(emailBody),
+        });
         const emailData = await emailRes.json();
         if (emailRes.ok) {
           emailSent = true;
           emailMessageId = emailData?.data?.id ?? null;
         } else {
-          console.error("send-email failed:", emailData);
+          console.error("email send failed:", emailData);
         }
       } catch (e) {
-        console.error("send-email exception:", e);
+        console.error("email send exception:", e);
       }
     }
+
 
     // Insert message row
     const { data: message, error: msgErr } = await admin
