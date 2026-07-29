@@ -402,3 +402,40 @@ const copyright = {
   textAlign: 'center' as const,
   margin: '14px 0 0',
 }
+
+/** Light gray box with bolded headline items — used by the welcome email. */
+export const TipsBox = ({
+  items,
+}: {
+  items: { title: string; body: string }[]
+}) => (
+  <div style={tipsBox}>
+    {items.map((it, i) => (
+      <div key={i} style={{ margin: i === 0 ? '0' : '16px 0 0' }}>
+        <Text style={tipsTitle}>{it.title}</Text>
+        <Text style={tipsBody}>{it.body}</Text>
+      </div>
+    ))}
+  </div>
+)
+
+const tipsBox = {
+  backgroundColor: '#f3f4f6',
+  borderRadius: '10px',
+  padding: '20px 22px',
+  margin: '20px 0',
+}
+
+const tipsTitle = {
+  color: TEXT,
+  fontSize: '16px',
+  fontWeight: 700,
+  margin: '0 0 4px',
+}
+
+const tipsBody = {
+  color: TEXT,
+  fontSize: '15px',
+  lineHeight: 1.5,
+  margin: 0,
+}
