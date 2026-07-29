@@ -160,6 +160,34 @@ Deno.serve(async (req) => {
     )
   }
 
+  // 2b. Respect the recipient's email preferences. Account/security emails
+  // (welcome, auth) are always sent and have no category.
+  const category = TEMPLATE_CATEGORY[templateName]
+  if (category) {
+    const { data: prefs } = await supabase
+      .from('email_preferences')
+      .select('post_updates, admin_messages, comment_notifications')
+      .ilike('email', effectiveRecipient)
+      .maybeSingle()
+
+    if (prefs && prefs[category] === false) {
+      await supabase.from('email_send_log').insert({
+        message_id: messageId,
+        template_name: templateName,
+        recipient_email: effectiveRecipient,
+        status: 'suppressed',
+        error_message: `Recipient opted out of ${category}`,
+      })
+      console.log('Email skipped by preference', { effectiveRecipient, templateName, category })
+      return new Response(
+        JSON.stringify({ success: false, reason: 'opted_out' }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+  }
+
+
+
   // 3. Get or create unsubscribe token (one token per email address)
   const normalizedEmail = effectiveRecipient.toLowerCase()
   let unsubscribeToken: string
