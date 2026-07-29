@@ -119,7 +119,23 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Failed to process unsubscribe' }, 500)
   }
 
+  // Turn every optional email category off for this address too, so the
+  // in-app preferences page reflects the unsubscribe.
+  const { error: prefsError } = await supabase
+    .from('email_preferences')
+    .update({
+      post_updates: false,
+      admin_messages: false,
+      comment_notifications: false,
+    })
+    .ilike('email', tokenRecord.email)
+
+  if (prefsError) {
+    console.error('Failed to clear email preferences', { error: prefsError })
+  }
+
   console.log('Email unsubscribed', { email: tokenRecord.email })
 
   return jsonResponse({ success: true })
 })
+

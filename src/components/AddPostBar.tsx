@@ -21,6 +21,7 @@ const AddPostBar = ({ topicId, topicName, categoryName, subtitleOverride, existi
   const { toast } = useToast();
 
   const handleSubmit = async (detail: string, story: string, image: File | null, isAnonymous: boolean) => {
+    if (createPost.isPending) return;
     try {
       await createPost.mutateAsync({
         topicId,

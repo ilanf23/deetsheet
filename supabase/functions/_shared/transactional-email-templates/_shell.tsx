@@ -73,28 +73,14 @@ export const Shell = ({
     <Body style={main}>
       <Container style={outer}>
         <Section style={header}>
-          <table width="100%" cellPadding={0} cellSpacing={0} role="presentation">
-            <tr>
-              <td style={{ verticalAlign: 'middle' }}>
-                <table cellPadding={0} cellSpacing={0} role="presentation">
-                  <tr>
-                    <td style={logoChip}>
-                      <Img
-                        src={LOGO_URL}
-                        alt="DeetSheet"
-                        height={28}
-                        style={{ display: 'block', height: '28px', width: 'auto' }}
-                      />
-                    </td>
-                  </tr>
-                </table>
-              </td>
-              <td style={{ textAlign: 'right', verticalAlign: 'middle' }}>
-                <span style={eyebrowStyle}>{eyebrow}</span>
-              </td>
-            </tr>
-          </table>
+          <Img
+            src={LOGO_URL}
+            alt="DeetSheet"
+            height={52}
+            style={{ display: 'block', height: '52px', width: 'auto' }}
+          />
         </Section>
+
 
         {statusValue && (
           <Section style={statusBand}>
@@ -124,10 +110,11 @@ export const Shell = ({
 
           <Text style={footerNote}>{footerReason}</Text>
           <Text style={footerNote}>
-            <Link href={`${SITE_URL}/profile`} style={subtleLink}>
+            <Link href={`${SITE_URL}/email-preferences`} style={subtleLink}>
               Manage email preferences
             </Link>
           </Text>
+
           <Text style={copyright}>
             © {new Date().getFullYear()} DeetSheet. All rights reserved. ·{' '}
             <Link href={SITE_URL} style={subtleLink}>
@@ -256,20 +243,12 @@ const outer = {
   padding: '0',
 }
 
-const header = { backgroundColor: GREEN, padding: '24px 32px' }
-
-const logoChip = {
+const header = {
   backgroundColor: '#ffffff',
-  padding: '10px 18px',
-  borderRadius: '8px',
+  padding: '28px 32px 24px',
+  textAlign: 'left' as const,
 }
 
-const eyebrowStyle = {
-  color: '#ffffff',
-  fontSize: '12px',
-  letterSpacing: '0.22em',
-  fontWeight: 600,
-}
 
 const statusBand = { backgroundColor: GREEN_DARK, padding: '13px 32px' }
 
@@ -422,4 +401,41 @@ const copyright = {
   fontSize: '12px',
   textAlign: 'center' as const,
   margin: '14px 0 0',
+}
+
+/** Light gray box with bolded headline items — used by the welcome email. */
+export const TipsBox = ({
+  items,
+}: {
+  items: { title: string; body: string }[]
+}) => (
+  <div style={tipsBox}>
+    {items.map((it, i) => (
+      <div key={i} style={{ margin: i === 0 ? '0' : '16px 0 0' }}>
+        <Text style={tipsTitle}>{it.title}</Text>
+        <Text style={tipsBody}>{it.body}</Text>
+      </div>
+    ))}
+  </div>
+)
+
+const tipsBox = {
+  backgroundColor: '#f3f4f6',
+  borderRadius: '10px',
+  padding: '20px 22px',
+  margin: '20px 0',
+}
+
+const tipsTitle = {
+  color: TEXT,
+  fontSize: '16px',
+  fontWeight: 700,
+  margin: '0 0 4px',
+}
+
+const tipsBody = {
+  color: TEXT,
+  fontSize: '15px',
+  lineHeight: 1.5,
+  margin: 0,
 }
