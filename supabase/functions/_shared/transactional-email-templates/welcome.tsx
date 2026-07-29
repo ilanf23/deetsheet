@@ -1,46 +1,66 @@
 import * as React from 'npm:react@18.3.1'
-import { Text } from 'npm:@react-email/components@0.0.22'
+import { Link, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
-import { Cta, H1, P, SITE_URL, Shell, SuggestionsBox } from './_shell.tsx'
+import { Cta, GREEN, H1, P, SITE_URL, Shell, TipsBox } from './_shell.tsx'
 
-interface Props {
-  firstName?: string
-}
-
-// The welcome CTA always points at the generic own-profile route. Never build
-// a /profile/:userId URL in email — the recipient may not be signed in yet.
-const Email = ({ firstName }: Props) => (
+// The welcome CTA always points at the public site root. Never build a
+// /profile/:userId URL in email — the recipient may not be signed in yet.
+const Email = () => (
   <Shell
     eyebrow="WELCOME"
-    preview="Welcome to DeetSheet — here's how to make your first post count."
+    preview="Welcome to DeetSheet — learn and share advice on a wide variety of topics."
     statusLabel="Status:"
     statusValue="Your account is ready"
     footerReason="You're receiving this email because you created a DeetSheet account."
   >
-    <H1>Welcome to DeetSheet{firstName ? `, ${firstName}` : ''}.</H1>
-    <P>
-      DeetSheet is a place for short, ranked insights — the kind of detail you
-      only learn from doing something yourself. Here are three tips before you
-      start:
-    </P>
-    <SuggestionsBox
-      label="THREE TIPS"
+    <H1>Welcome to DeetSheet!</H1>
+    <P>Get ready to learn and share advice on a wide variety of topics!</P>
+    <P>Now that you created an account, below are a few suggestions.</P>
+    <TipsBox
       items={[
-        '1. Post one concrete, uncommon fact — something most people would not already know.',
-        '2. No opinions, no exclamation points, few words.',
-        '3. Rank what you know. Your ratings help the best deets rise to the top.',
+        {
+          title: 'Rank Your Favorite posts!',
+          body: 'We want your feedback on which posts you think are the best. Reward others for sharing great advice by ranking their posts.',
+        },
+        {
+          title: 'Create Your Own Posts!',
+          body: 'Share advice about your job, hometown, or life in general.',
+        },
+        {
+          title: 'Comment on Other Posts!',
+          body: "If you have more to add on someone else's post, share your own story, experience, or advice.",
+        },
       ]}
     />
-    <Text style={{ color: '#1a1a1a', fontSize: '16px', lineHeight: 1.55, margin: '0 0 4px' }}>
-      That's it. Add your first deet and see where it lands.
-    </Text>
-    <Cta href={`${SITE_URL}/profile`} label="Make your first post" />
+    <P>
+      We appreciate you adding to the DeetSheet community. Your few suggestions
+      could help someone for a lifetime.
+    </P>
+    <P>DeetSheet</P>
+    <Cta href={SITE_URL} label="Return to DeetSheet" />
+    <Section style={{ textAlign: 'center', margin: '14px 0 0' }}>
+      <Link href={`${SITE_URL}/inspiration`} style={smallGreenLink}>
+        Inspirations for posts
+      </Link>
+      <Text style={{ margin: '6px 0 0' }}>
+        <Link href={`${SITE_URL}/rules`} style={smallGreenLink}>
+          Rules and Guidelines
+        </Link>
+      </Text>
+    </Section>
   </Shell>
 )
+
+const smallGreenLink = {
+  color: GREEN,
+  fontSize: '14px',
+  fontWeight: 600,
+  textDecoration: 'none',
+}
 
 export const template = {
   component: Email,
   subject: 'Welcome to DeetSheet',
   displayName: 'Welcome',
-  previewData: { firstName: 'Ilan' },
+  previewData: {},
 } satisfies TemplateEntry
