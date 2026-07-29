@@ -19,6 +19,9 @@ export const useCreatePost = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    // Never retry: a retried insert would create a duplicate post.
+    retry: false,
+
     mutationFn: async (input: CreatePostInput) => {
       if (!user) throw new Error("You must be signed in to post.");
 
