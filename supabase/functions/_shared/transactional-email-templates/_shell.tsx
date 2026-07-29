@@ -73,28 +73,14 @@ export const Shell = ({
     <Body style={main}>
       <Container style={outer}>
         <Section style={header}>
-          <table width="100%" cellPadding={0} cellSpacing={0} role="presentation">
-            <tr>
-              <td style={{ verticalAlign: 'middle' }}>
-                <table cellPadding={0} cellSpacing={0} role="presentation">
-                  <tr>
-                    <td style={logoChip}>
-                      <Img
-                        src={LOGO_URL}
-                        alt="DeetSheet"
-                        height={28}
-                        style={{ display: 'block', height: '28px', width: 'auto' }}
-                      />
-                    </td>
-                  </tr>
-                </table>
-              </td>
-              <td style={{ textAlign: 'right', verticalAlign: 'middle' }}>
-                <span style={eyebrowStyle}>{eyebrow}</span>
-              </td>
-            </tr>
-          </table>
+          <Img
+            src={LOGO_URL}
+            alt="DeetSheet"
+            height={52}
+            style={{ display: 'block', height: '52px', width: 'auto' }}
+          />
         </Section>
+
 
         {statusValue && (
           <Section style={statusBand}>
