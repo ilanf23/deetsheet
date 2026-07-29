@@ -6,7 +6,23 @@ import { TEMPLATES } from '../_shared/transactional-email-templates/registry.ts'
 
 // Configuration baked in at scaffold time — do NOT change these manually.
 // To update, re-run the email domain setup flow.
-const SITE_NAME = "deetsheet"
+const SITE_NAME = "DeetSheet.com"
+
+// Optional email categories users can turn off on /email-preferences.
+// Templates not listed here are account/security emails and always send.
+const TEMPLATE_CATEGORY: Record<
+  string,
+  'post_updates' | 'admin_messages' | 'comment_notifications' | undefined
+> = {
+  'post-received': 'post_updates',
+  'post-approved': 'post_updates',
+  'post-approved-adjusted': 'post_updates',
+  'post-pending': 'post_updates',
+  'post-photo-denied': 'post_updates',
+  'post-denied': 'post_updates',
+  'admin-message': 'admin_messages',
+  'comment-notification': 'comment_notifications',
+}
 // SENDER_DOMAIN is the verified sender subdomain FQDN (e.g., "notify.example.com").
 // It MUST match the subdomain delegated to Lovable's nameservers — never the root domain.
 // The email API looks up this exact domain; a mismatch causes "No email domain record found".
