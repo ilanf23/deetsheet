@@ -243,20 +243,12 @@ const outer = {
   padding: '0',
 }
 
-const header = { backgroundColor: GREEN, padding: '24px 32px' }
-
-const logoChip = {
+const header = {
   backgroundColor: '#ffffff',
-  padding: '10px 18px',
-  borderRadius: '8px',
+  padding: '28px 32px 24px',
+  textAlign: 'left' as const,
 }
 
-const eyebrowStyle = {
-  color: '#ffffff',
-  fontSize: '12px',
-  letterSpacing: '0.22em',
-  fontWeight: 600,
-}
 
 const statusBand = { backgroundColor: GREEN_DARK, padding: '13px 32px' }
 
