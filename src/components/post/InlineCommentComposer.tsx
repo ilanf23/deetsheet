@@ -92,13 +92,18 @@ const InlineCommentComposer = ({
   const handleSend = async () => {
     if (!trimmed || submitting || !user) return;
     setSubmitting(true);
-    const { error } = await supabase.from("comments").insert({
-      post_id: postId,
-      author_id: user.id,
-      content: text,
-      parent_comment_id: parentCommentId ?? null,
-      is_anonymous: postAnonymously,
-    });
+    const { data: inserted, error } = await supabase
+      .from("comments")
+      .insert({
+        post_id: postId,
+        author_id: user.id,
+        content: text,
+        parent_comment_id: parentCommentId ?? null,
+        is_anonymous: postAnonymously,
+      })
+      .select("id")
+      .single();
+
     setSubmitting(false);
 
     if (error) {
