@@ -25,6 +25,7 @@ import Investor from "./pages/Investor";
 import Terms from "./pages/Terms";
 import Inspiration from "./pages/Inspiration";
 import Rules from "./pages/Rules";
+import EmailPreferences from "./pages/EmailPreferences";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 
@@ -129,6 +130,7 @@ const App = () => (
             <Route path="/investor" element={<Investor />} />
             <Route path="/inspiration" element={<Inspiration />} />
             <Route path="/rules" element={<Rules />} />
+            <Route path="/email-preferences" element={<EmailPreferences />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route
