@@ -115,6 +115,15 @@ const InlineCommentComposer = ({
       return;
     }
 
+    // Notify the post author by email (best-effort; the edge function skips
+    // self-comments and respects the recipient's comment_notifications pref).
+    if (inserted?.id) {
+      supabase.functions
+        .invoke("send-comment-notification", { body: { commentId: inserted.id } })
+        .catch(() => {});
+    }
+
+
     setText("");
     editorRef.current?.commands.clearContent();
     editorRef.current?.commands.blur();
