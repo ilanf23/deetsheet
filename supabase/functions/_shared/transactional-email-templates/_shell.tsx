@@ -110,10 +110,11 @@ export const Shell = ({
 
           <Text style={footerNote}>{footerReason}</Text>
           <Text style={footerNote}>
-            <Link href={`${SITE_URL}/profile`} style={subtleLink}>
+            <Link href={`${SITE_URL}/email-preferences`} style={subtleLink}>
               Manage email preferences
             </Link>
           </Text>
+
           <Text style={copyright}>
             © {new Date().getFullYear()} DeetSheet. All rights reserved. ·{' '}
             <Link href={SITE_URL} style={subtleLink}>
