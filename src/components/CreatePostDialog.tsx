@@ -16,7 +16,7 @@ interface CreatePostDialogProps {
   categoryName: string;
   subtitleOverride?: string | null;
   existingPosts?: Post[];
-  onSubmit: (detail: string, story: string, image: File | null, isAnonymous: boolean) => void;
+  onSubmit: (detail: string, story: string, image: File | null, isAnonymous: boolean) => void | Promise<void>;
   onDismiss?: () => void;
 }
 
@@ -54,6 +54,7 @@ const CreatePostDialog = ({
   const [comment, setComment] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [sourceImagePreview, setSourceImagePreview] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageEditorOpen, setImageEditorOpen] = useState(false);
@@ -90,9 +91,16 @@ const CreatePostDialog = ({
     fileInputRef.current?.click();
   };
 
-  const handleSubmit = () => {
-    if (!detail.trim()) return;
-    onSubmit(detail.trim(), comment.trim(), image, isAnonymous);
+  // Guard against double submission — a second click (or a re-render race)
+  // previously created two identical posts.
+  const handleSubmit = async () => {
+    if (submitting || !detail.trim()) return;
+    setSubmitting(true);
+    try {
+      await onSubmit(detail.trim(), comment.trim(), image, isAnonymous);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const suggestions = useMemo(() => {
@@ -334,10 +342,10 @@ const CreatePostDialog = ({
       {/* Submit */}
       <Button
         onClick={handleSubmit}
-        disabled={!detail.trim()}
+        disabled={!detail.trim() || submitting}
         className="w-full bg-[#1a2340] hover:bg-[#252f4a] text-white font-semibold tracking-wide"
       >
-        SUBMIT
+        {submitting ? "SUBMITTING…" : "SUBMIT"}
       </Button>
 
       {/* Helpful hints */}
