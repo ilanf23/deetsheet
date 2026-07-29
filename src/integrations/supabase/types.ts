@@ -191,6 +191,36 @@ export type Database = {
         }
         Relationships: []
       }
+      email_preferences: {
+        Row: {
+          admin_messages: boolean
+          comment_notifications: boolean
+          created_at: string
+          email: string
+          post_updates: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_messages?: boolean
+          comment_notifications?: boolean
+          created_at?: string
+          email: string
+          post_updates?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_messages?: boolean
+          comment_notifications?: boolean
+          created_at?: string
+          email?: string
+          post_updates?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
