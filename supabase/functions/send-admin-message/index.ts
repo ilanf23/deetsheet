@@ -28,6 +28,19 @@ interface Payload {
 }
 
 
+function htmlToText(html: string) {
+  return html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|li|h[1-6])>/gi, "\n")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 function escapeHtml(s: string) {
   return s.replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string)
@@ -165,24 +178,41 @@ Deno.serve(async (req) => {
     const { data: userInfo } = await admin.auth.admin.getUserById(payload.user_id);
     const recipientEmail = userInfo?.user?.email ?? null;
 
-    // Send email. Preferred path: the branded React Email templates via
-    // send-transactional-email. Falls back to the legacy raw-HTML sender.
+    // Send email. ALL admin emails go through send-transactional-email so that
+    // suppression and the recipient's email preferences are always enforced.
+    // Direct messages with no explicit template fall back to the branded
+    // "admin-message" template built from the review slip.
     let emailSent = false;
     let emailMessageId: string | null = null;
     if (payload.send_email !== false && recipientEmail) {
       try {
-        const useTemplate = !!payload.email_template;
-        const url = useTemplate
-          ? `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-transactional-email`
-          : `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-email`;
-        const emailBody = useTemplate
+        const templateName = payload.email_template || "admin-message";
+        const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-transactional-email`;
+        const emailBody = payload.email_template
           ? {
-              templateName: payload.email_template,
+              templateName,
               recipientEmail,
-              idempotencyKey: `${payload.email_template}-${payload.post_id ?? payload.user_id}-${Date.now()}`,
+              idempotencyKey: `${templateName}-${payload.post_id ?? payload.user_id}-${Date.now()}`,
               templateData: payload.template_data ?? {},
             }
-          : { to: recipientEmail, subject: payload.subject, html: bodyHtml };
+          : {
+              templateName,
+              recipientEmail,
+              idempotencyKey: `admin-message-${payload.user_id}-${Date.now()}`,
+              templateData: {
+                eyebrow: "MESSAGE FROM DEETSHEET",
+                statusValue: payload.slip?.status ?? undefined,
+                headline: payload.subject,
+                quotedTitle: payload.slip?.post ?? undefined,
+                reason: payload.slip?.reason ?? undefined,
+                suggestions: payload.slip?.suggestions
+                  ? [payload.slip.suggestions]
+                  : undefined,
+                bodyText: htmlToText(payload.body_html ?? ""),
+                callout: payload.slip?.deadline_text ?? undefined,
+                ...(payload.template_data ?? {}),
+              },
+            };
 
         const emailRes = await fetch(url, {
           method: "POST",
@@ -193,7 +223,8 @@ Deno.serve(async (req) => {
           body: JSON.stringify(emailBody),
         });
         const emailData = await emailRes.json();
-        if (emailRes.ok) {
+        if (emailRes.ok && emailData?.success !== false) {
+
           emailSent = true;
           emailMessageId = emailData?.data?.id ?? null;
         } else {

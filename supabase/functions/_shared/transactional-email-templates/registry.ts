@@ -8,6 +8,7 @@ import { template as postApprovedAdjusted } from './post-approved-adjusted.tsx'
 import { template as postPending } from './post-pending.tsx'
 import { template as postPhotoDenied } from './post-photo-denied.tsx'
 import { template as postDenied } from './post-denied.tsx'
+import { template as commentNotification } from './comment-notification.tsx'
 
 export interface TemplateEntry {
   component: ComponentType<any>
@@ -27,4 +28,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'post-pending': postPending,
   'post-photo-denied': postPhotoDenied,
   'post-denied': postDenied,
+  'comment-notification': commentNotification,
 }
