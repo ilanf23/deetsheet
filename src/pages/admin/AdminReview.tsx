@@ -127,10 +127,11 @@ type FilterTab = "all" | "topics" | "posts";
 type SortKey = "newest" | "oldest" | "edited";
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+  { value: "edited", label: "Recently edited" },
   { value: "newest", label: "Submitted — Newest" },
   { value: "oldest", label: "Submitted — Oldest" },
-  { value: "edited", label: "Recently edited" },
 ];
+
 
 /** A pending post whose updated_at is meaningfully later than created_at was
  *  edited after submission — i.e. it is coming back for a second look. */
