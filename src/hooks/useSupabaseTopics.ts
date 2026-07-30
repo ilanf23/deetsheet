@@ -76,6 +76,7 @@ type DbPostRaw = {
   rating_count: number | null;
   comment_count: number | null;
   created_at: string;
+  approved_at?: string | null;
   image_url?: string | null;
   status?: string | null;
   is_anonymous?: boolean | null;
@@ -112,7 +113,7 @@ const mapPost = (row: DbPostRaw): PostRow => {
     ratingCount: row.rating_count ?? 0,
     commentCount: row.comment_count ?? 0,
     score: row.score ?? 0,
-    createdAt: new Date(row.created_at),
+    createdAt: new Date(row.approved_at || row.created_at),
     imageUrl: row.image_url ?? null,
     avatarUrl: row.profiles?.avatar_url ?? null,
     status,
@@ -206,7 +207,7 @@ export const usePostsByTopic = (topicId: string | undefined) => {
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, content, story, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, image_url, status, is_anonymous, " +
+          "id, title, content, story, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, approved_at, image_url, status, is_anonymous, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
@@ -283,7 +284,7 @@ export const usePostRanksForTopics = (topicIds: string[]) => {
     queryFn: async (): Promise<Map<string, number>> => {
       const { data, error } = await supabase
         .from("posts")
-        .select("id, topic_id, average_rating, rating_count, created_at")
+        .select("id, topic_id, average_rating, rating_count, created_at, approved_at")
         .eq("status", "approved")
         .in("topic_id", topicIds);
 
@@ -299,13 +300,14 @@ export const usePostRanksForTopics = (topicIds: string[]) => {
         average_rating: number | null;
         rating_count: number | null;
         created_at: string;
+        approved_at?: string | null;
       }>) {
         const arr = byTopic.get(row.topic_id) ?? [];
         arr.push({
           id: row.id,
           ratingScore: Number(row.average_rating ?? 0),
           ratingCount: row.rating_count ?? 0,
-          createdAt: new Date(row.created_at),
+          createdAt: new Date(row.approved_at || row.created_at),
         });
         byTopic.set(row.topic_id, arr);
       }
