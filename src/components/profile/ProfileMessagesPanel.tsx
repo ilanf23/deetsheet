@@ -25,6 +25,8 @@ export default function ProfileMessagesPanel() {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [profileMap, setProfileMap] = useState<Map<string, ProfileLite>>(new Map());
   const [loading, setLoading] = useState(true);
+  const [openThreadId, setOpenThreadId] = useState<string | null>(null);
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!user) return;
