@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
+import ThreadDialog from "@/components/inbox/ThreadDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow, parseISO } from "date-fns";
@@ -27,6 +28,8 @@ export default function Inbox() {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [profileMap, setProfileMap] = useState<Map<string, ProfileLite>>(new Map());
   const [busy, setBusy] = useState(true);
+  const [openThreadId, setOpenThreadId] = useState<string | null>(null);
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!user) return;
@@ -83,11 +86,6 @@ export default function Inbox() {
     const other = otherId ? profileMap.get(otherId) : null;
     const otherName = other?.name || other?.username || "user";
     const myRead = isPrimary ? t.last_read_at : t.other_last_read_at;
-    const otherIsSender =
-      (isPrimary && t.last_sender !== "user_primary") &&
-      // last_sender for direct threads is always 'user' — distinguish by sender_id
-      // is expensive per row; fall back to last message time comparison instead.
-      false;
     // Unread = last message time is newer than my last read AND I wasn't the last sender
     const iSentLast = isPrimary
       ? t.last_sender === "user" && myRead && new Date(myRead) >= new Date(t.last_message_at)
@@ -104,7 +102,7 @@ export default function Inbox() {
   return (
     <div className="min-h-screen flex flex-col">
       <DeetHeader />
-      <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-8">
+      <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-10">
         <h1 className="text-3xl font-bold mb-6">Inbox</h1>
         {busy ? (
           <div className="text-muted-foreground text-sm">Loading…</div>
@@ -116,34 +114,43 @@ export default function Inbox() {
           <ul className="divide-y border rounded-lg overflow-hidden">
             {threads.map((t) => {
               const d = displayFor(t);
+              const unread = d.unread && !readIds.has(t.id);
               return (
                 <li key={t.id}>
-                  <Link
-                    to={`/inbox/${t.id}`}
-                    className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-muted/40"
+                  <button
+                    type="button"
+                    onClick={() => setOpenThreadId(t.id)}
+                    className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition-colors hover:bg-muted/40"
                   >
                     <div className="min-w-0 flex-1">
-                      <div className={`truncate ${d.unread ? "font-semibold" : ""}`}>
+                      <div
+                        className={`truncate text-primary ${unread ? "font-semibold" : ""}`}
+                      >
                         {d.title}
                       </div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="mt-1 text-xs text-muted-foreground">
                         {formatDistanceToNow(parseISO(t.last_message_at))} ago · from{" "}
                         {d.senderLabel}
                       </div>
                     </div>
-                    {d.unread && (
+                    {unread && (
                       <span
-                        className="h-2 w-2 rounded-full bg-secondary shrink-0"
+                        className="h-2 w-2 shrink-0 rounded-full bg-secondary"
                         aria-label="unread"
                       />
                     )}
-                  </Link>
+                  </button>
                 </li>
               );
             })}
           </ul>
         )}
       </main>
+      <ThreadDialog
+        threadId={openThreadId}
+        onOpenChange={(open) => !open && setOpenThreadId(null)}
+        onRead={(id) => setReadIds((prev) => new Set(prev).add(id))}
+      />
       <DeetFooter />
     </div>
   );
