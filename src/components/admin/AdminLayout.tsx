@@ -115,17 +115,28 @@ export default function AdminLayout() {
                     style={{ color: isActive ? "#ffffff" : "hsl(var(--admin-fg))" }}
                   />
                   <span className="flex-1">{item.label}</span>
-                  {item.badgeKey === "review" && pendingCount > 0 && (
-                    <span
-                      className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-semibold"
-                      style={{
-                        backgroundColor: isActive ? "#ffffff" : "hsl(var(--secondary))",
-                        color: isActive ? "hsl(var(--admin-primary))" : "hsl(var(--secondary-foreground))",
-                      }}
-                    >
-                      {pendingCount}
-                    </span>
-                  )}
+                  {(() => {
+                    const count =
+                      item.badgeKey === "review"
+                        ? pendingCount
+                        : item.badgeKey === "messages"
+                          ? messagesCount
+                          : 0;
+                    if (!count) return null;
+                    return (
+                      <span
+                        className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-semibold"
+                        style={{
+                          backgroundColor: isActive ? "#ffffff" : "hsl(var(--secondary))",
+                          color: isActive
+                            ? "hsl(var(--admin-primary))"
+                            : "hsl(var(--secondary-foreground))",
+                        }}
+                      >
+                        {count > 99 ? "99+" : count}
+                      </span>
+                    );
+                  })()}
                 </>
               )}
             </NavLink>
