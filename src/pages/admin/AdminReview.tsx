@@ -508,11 +508,11 @@ export default function AdminReview() {
                   />
                 )}
 
-                <div className="flex flex-col gap-2 shrink-0 self-center">
+                <div className="flex w-44 flex-col gap-2.5 shrink-0 self-start">
                   <button
                     onClick={() => author?.id && setReviewDialog({ action: "approve", item })}
                     disabled={!author?.id}
-                    className="px-4 py-2 rounded-md text-[13px] font-semibold disabled:opacity-50"
+                    className="w-full px-4 py-2 rounded-md text-[13px] font-semibold disabled:opacity-50"
                     style={{
                       backgroundColor: "hsl(var(--admin-primary))",
                       color: "#ffffff",
@@ -523,7 +523,7 @@ export default function AdminReview() {
                   <button
                     onClick={() => author?.id && setReviewDialog({ action: "reject", item })}
                     disabled={!author?.id}
-                    className="px-4 py-2 rounded-md text-[13px] font-semibold disabled:opacity-50"
+                    className="w-full px-4 py-2 rounded-md text-[13px] font-semibold disabled:opacity-50"
                     style={{
                       backgroundColor: "hsl(var(--admin-danger-soft))",
                       color: "hsl(var(--admin-danger))",
@@ -535,7 +535,7 @@ export default function AdminReview() {
                     <button
                       onClick={() => author?.id && setReviewDialog({ action: "edit", item })}
                       disabled={!author?.id}
-                      className="px-4 py-2 rounded-md text-[13px] font-semibold border disabled:opacity-50"
+                      className="w-full px-4 py-2 rounded-md text-[13px] font-semibold border disabled:opacity-50"
                       style={{
                         borderColor: "hsl(var(--admin-border))",
                         color: "hsl(var(--admin-fg))",
@@ -550,7 +550,7 @@ export default function AdminReview() {
                       openDirectMessage(author.id, item.kind === "post" ? item.id : null)
                     }
                     disabled={!author?.id}
-                    className="px-4 py-2 rounded-md text-[13px] font-semibold border disabled:opacity-50"
+                    className="w-full px-4 py-2 rounded-md text-[13px] font-semibold border disabled:opacity-50"
                     style={{
                       borderColor: "hsl(var(--admin-border))",
                       color: "hsl(var(--admin-fg-muted))",
