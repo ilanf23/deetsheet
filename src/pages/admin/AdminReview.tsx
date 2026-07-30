@@ -423,15 +423,15 @@ export default function AdminReview() {
             return (
               <div
                 key={`${item.kind}-${item.id}`}
-                className="rounded-xl p-5"
+                className="rounded-xl p-6"
                 style={{
                   backgroundColor: "hsl(var(--admin-surface))",
                   border: "1px solid hsl(var(--admin-border))",
                 }}
               >
-                <div className="flex gap-4">
-                <div className="flex-1 min-w-0 space-y-2">
-                  <div className="flex items-center gap-3 text-[12px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>
+                <div className="flex gap-5">
+                <div className="flex-1 min-w-0 space-y-2.5">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>
                     <TypeBadge kind={item.kind} />
                     {item.kind === "post" && item.isReReview && (
                       <span
