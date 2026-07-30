@@ -598,13 +598,14 @@ export default function ReviewActionDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {reasonList.map((r) => (
-                    <SelectItem key={r.value} value={r.value}>
+                    <SelectItem key={r.id} value={r.id}>
                       {r.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {reasonKey === "other" && (
+              {isOther && (
+
                 <Textarea
                   rows={3}
                   placeholder={
