@@ -25,16 +25,18 @@ const Email = ({ topic, title, reasons }: Props) => (
     {reasons && reasons.length > 0 && <ReasonBox items={reasons} />}
     <P>
       DeetSheet does not tolerate vulgar or hateful language. We built this
-      platform to help others and not bring them down.
+      platform to help others and not bring them down. Your post has been
+      deleted.
     </P>
     <P>
       You may post again, but this is a warning that your account is now on
       probation and will be blocked if you post again and don&apos;t follow the{' '}
-      <Link href={`${SITE_URL}/faq`} style={subtleLink}>
+      <Link href={`${SITE_URL}/rules`} style={subtleLink}>
         Rules and Guidelines
       </Link>{' '}
       of DeetSheet.
     </P>
+
   </Shell>
 )
 
