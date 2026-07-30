@@ -178,7 +178,7 @@ export default function AdminReview() {
   const [items, setItems] = useState<PendingItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<FilterTab>("all");
-  const [sort, setSort] = useState<SortKey>("newest");
+  const [sort, setSort] = useState<SortKey>("edited");
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
