@@ -508,12 +508,12 @@ export default function AdminMessages() {
           <DialogHeader>
             <DialogTitle>Review Slip — what {composeCtx?.userLabel} receives</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">
+          <div className="space-y-4">
             {templates.length > 0 && (
-              <div className="flex items-center gap-2">
-                <Label className="text-xs">Template</Label>
+              <div className="flex items-center gap-3">
+                <Label className="text-xs shrink-0">Template</Label>
                 <select
-                  className="border rounded-md px-2 py-1 text-sm"
+                  className="border rounded-md px-2 py-1.5 text-sm"
                   onChange={(e) => e.target.value && applyTemplate(e.target.value)}
                   defaultValue=""
                 >
@@ -526,7 +526,7 @@ export default function AdminMessages() {
                 </select>
               </div>
             )}
-            <div>
+            <div className="space-y-1.5">
               <Label className="text-xs">Subject</Label>
               <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
             </div>
