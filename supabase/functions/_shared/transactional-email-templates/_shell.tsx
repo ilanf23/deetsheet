@@ -256,7 +256,9 @@ const outer = {
 
 const header = {
   backgroundColor: '#ffffff',
-  padding: '28px 32px 24px',
+  // Left padding matches the content card (32px) so the trimmed wordmark's
+  // left edge lines up with the body copy; even breathing room top/bottom.
+  padding: '32px 32px 32px',
   textAlign: 'left' as const,
 }
 
