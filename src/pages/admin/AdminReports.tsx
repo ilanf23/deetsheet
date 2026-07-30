@@ -217,6 +217,10 @@ export default function AdminReports() {
         </span>
       </div>
 
+      <MessageReportsPanel />
+
+
+
       <div
         className="inline-flex items-center gap-1 p-1 rounded-full"
         style={{ backgroundColor: "hsl(var(--admin-primary-soft))" }}
