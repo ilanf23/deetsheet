@@ -125,9 +125,20 @@ export default function ReviewActionDialog({
   const [removeImage, setRemoveImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [finalTextTouched, setFinalTextTouched] = useState(false);
+  /** Once the admin edits the message themselves we stop regenerating it. */
+  const [messageTouched, setMessageTouched] = useState(false);
 
-  const reasonList = action === "reject" ? REJECT_REASONS : action === "edit" ? EDIT_REASONS : [];
+  const { data: reasons } = useReviewReasons();
+  const reasonList: ReviewReason[] =
+    action === "reject" ? reasons?.reject ?? [] : action === "edit" ? reasons?.edit ?? [] : [];
   const showReasonPicker = action === "reject" || action === "edit";
+  const pickedReason = reasonList.find((r) => r.id === reasonKey) ?? null;
+  const isOther = !!pickedReason && isOtherReason(pickedReason.label);
+
+  /** Title as it currently reads in the left column — keeps the message in sync. */
+  const liveTitle = (itemKind === "post" ? editTitle.trim() : "") || postDetail?.title || itemTitle;
+  const quotedTitle = [postDetail?.topic_name, liveTitle].filter(Boolean).join(": ");
+
 
 
 
