@@ -78,10 +78,19 @@ export const Shell = ({
           <Img
             src={LOGO_URL}
             alt="DeetSheet"
-            height={52}
-            style={{ display: 'block', height: '52px', width: 'auto' }}
+            width={230}
+            height={38}
+            style={{
+              display: 'block',
+              height: '38px',
+              width: '230px',
+              margin: 0,
+              border: 0,
+            }}
           />
         </Section>
+
+
 
 
         {statusValue && (
