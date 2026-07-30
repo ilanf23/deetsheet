@@ -17,7 +17,9 @@ import {
   Inbox,
   ArrowLeft,
   LogOut,
+  Settings,
 } from "lucide-react";
+import { useAdminUnreadThreadsCount } from "@/hooks/useUnreadMessages";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutGrid, end: true },
