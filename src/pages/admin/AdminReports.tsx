@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { Tables } from "@/integrations/supabase/types";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
+import MessageReportsPanel from "@/components/admin/MessageReportsPanel";
 
 type Report = Tables<"reports">;
 type Post = Tables<"posts">;
