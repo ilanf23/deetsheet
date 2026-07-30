@@ -239,19 +239,50 @@ export default function ThreadConversation({
         )}
       </div>
 
-      <div className="space-y-3">
-        <Textarea
-          rows={4}
-          value={reply}
-          onChange={(e) => setReply(e.target.value)}
-          placeholder="Write a reply…"
-        />
-        <div className="flex justify-end">
-          <Button onClick={sendReply} disabled={sending || !reply.trim()}>
-            {sending ? "Sending…" : "Send reply"}
-          </Button>
+      {thread?.request_status === "declined" ? (
+        <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
+          You declined this message request.
         </div>
-      </div>
+      ) : iAmRecipient ? (
+        <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
+          <p className="text-sm text-foreground">
+            {otherName} wants to start a conversation with you.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" disabled={sending} onClick={() => resolveRequest(true)}>
+              Accept
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={sending}
+              onClick={() => resolveRequest(false)}
+            >
+              Decline
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {isPendingRequest && (
+            <p className="text-xs text-muted-foreground">
+              This is a message request — {otherName} needs to accept it before you can
+              keep chatting.
+            </p>
+          )}
+          <Textarea
+            rows={4}
+            value={reply}
+            onChange={(e) => setReply(e.target.value)}
+            placeholder="Write a reply…"
+          />
+          <div className="flex justify-end">
+            <Button onClick={sendReply} disabled={sending || !reply.trim()}>
+              {sending ? "Sending…" : "Send reply"}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
