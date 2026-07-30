@@ -13,6 +13,7 @@ import {
   History,
   Mail,
   FileEdit,
+  ListChecks,
   Inbox,
   ArrowLeft,
   LogOut,
@@ -30,6 +31,7 @@ const navItems = [
   { to: "/admin/messages", label: "Messaging", icon: MessageSquare },
   { to: "/admin/contact-messages", label: "Contact Messages", icon: Mail },
   { to: "/admin/site-pages", label: "Site Pages", icon: FileEdit },
+  { to: "/admin/review-reasons", label: "Review Reasons", icon: ListChecks },
   { to: "/admin/audit", label: "Audit Log", icon: History },
 ];
 

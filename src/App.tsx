@@ -53,6 +53,8 @@ const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminPosts = lazy(() => import("./pages/admin/AdminPosts"));
 const AdminReview = lazy(() => import("./pages/admin/AdminReview"));
+const AdminReviewReasons = lazy(() => import("./pages/admin/AdminReviewReasons"));
+
 const AdminComments = lazy(() => import("./pages/admin/AdminComments"));
 const AdminTopics = lazy(() => import("./pages/admin/AdminTopics"));
 const AdminTopicImages = lazy(() => import("./pages/admin/AdminTopicImages"));
@@ -169,7 +171,9 @@ const App = () => (
                 <Route path="audit" element={<AdminAuditLog />} />
                 <Route path="contact-messages" element={<AdminContactMessages />} />
                 <Route path="site-pages" element={<AdminSitePages />} />
+                <Route path="review-reasons" element={<AdminReviewReasons />} />
                 <Route path="messages" element={<AdminMessages />} />
+
               </Route>
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

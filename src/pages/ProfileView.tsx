@@ -259,7 +259,7 @@ const ProfileView = () => {
     {
       let postsQuery = supabase
         .from("posts")
-        .select("id, title, content, created_at, comment_count, score, topic_id, status, image_url, story, topics(name)")
+        .select("id, title, content, created_at, approved_at, comment_count, score, topic_id, status, image_url, story, topics(name)")
         .eq("author_id", targetUserId)
         .neq("status", "deleted")
         .order("created_at", { ascending: false });
@@ -274,7 +274,7 @@ const ProfileView = () => {
           id: p.id as string,
           title: p.title as string,
           content: p.content as string,
-          created_at: p.created_at as string,
+          created_at: (p.approved_at as string) || (p.created_at as string),
           comment_count: p.comment_count as number,
           score: p.score as number,
           topic_name: ((p.topics as Record<string, unknown>)?.name as string) || "General",

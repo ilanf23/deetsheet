@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { buildPostSlug } from "@/lib/postSlug";
+import { isOtherReason, useReviewReasons, type ReviewReason } from "@/lib/reviewReasons";
+
 
 
 
@@ -27,124 +29,16 @@ interface Props {
   onConfirmed: () => Promise<void>;
 }
 
-const REJECT_REASONS: { value: string; label: string; detail: string }[] = [
-  {
-    value: "off_topic",
-    label: "Off-topic / wrong subject",
-    detail:
-      "Your post didn't fit the subject it was submitted under. Feel free to resubmit it under a more relevant topic.",
-  },
-  {
-    value: "duplicate",
-    label: "Duplicate of existing content",
-    detail:
-      "A very similar post already exists on DeetSheet. To keep discussions focused, we only publish one version. You're welcome to add your perspective as a comment on the original.",
-  },
-  {
-    value: "low_quality",
-    label: "Too short / lacks detail",
-    detail:
-      "Your post didn't include enough detail for other readers to learn from it. Please expand on your experience or reasoning and resubmit.",
-  },
-  {
-    value: "unverified",
-    label: "Unverified or misleading claims",
-    detail:
-      "Some of the claims in your post couldn't be verified or appeared misleading. Please add sources or firsthand context and resubmit.",
-  },
-  {
-    value: "vulgar",
-    label: "Vulgar / offensive language",
-    detail:
-      "Your post included language that doesn't meet our community guidelines. Please revise the tone and resubmit.",
-  },
-  {
-    value: "personal_attack",
-    label: "Personal attack / harassment",
-    detail:
-      "Your post targeted an individual in a way that violates our community guidelines. Please focus critique on ideas or experiences rather than people.",
-  },
-  {
-    value: "spam",
-    label: "Spam / promotional",
-    detail:
-      "Your post read as promotional or spam. DeetSheet is for firsthand insight, not advertising.",
-  },
-  {
-    value: "formatting",
-    label: "Formatting / readability",
-    detail:
-      "Your post was hard to read due to formatting. Please break it into short paragraphs or bullet points and resubmit.",
-  },
-  {
-    value: "other",
-    label: "Other (write your own reason)",
-    detail: "",
-  },
-];
-
-const EDIT_REASONS: { value: string; label: string; detail: string }[] = [
-  {
-    value: "add_detail",
-    label: "Add more detail / context",
-    detail:
-      "Please expand your post with more specifics — firsthand examples, numbers, or context — so readers can learn from your experience.",
-  },
-  {
-    value: "clarify_title",
-    label: "Clarify the title",
-    detail:
-      "Please tighten the title so it more clearly reflects what the post is about. A specific title helps the right readers find it.",
-  },
-  {
-    value: "formatting",
-    label: "Improve formatting / readability",
-    detail:
-      "Please break the post into short paragraphs or bullet points so it's easier to scan and read.",
-  },
-  {
-    value: "grammar",
-    label: "Fix grammar / spelling",
-    detail:
-      "Please give the post a quick pass for spelling and grammar so it reads more cleanly.",
-  },
-  {
-    value: "tone",
-    label: "Soften tone / adjust language",
-    detail:
-      "Please soften some of the wording so the post stays within our community guidelines while keeping your point intact.",
-  },
-  {
-    value: "sources",
-    label: "Add sources or firsthand context",
-    detail:
-      "Please add sources or clarify which parts come from firsthand experience so readers can trust the claims.",
-  },
-  {
-    value: "trim",
-    label: "Trim for length",
-    detail:
-      "Please trim repetitive sections so the post stays focused on the main point.",
-  },
-  {
-    value: "other",
-    label: "Other (write your own suggestion)",
-    detail: "",
-  },
-];
-
-/** Reasons that mean the post is denied outright (conduct), not just pending. */
-const DENY_REASON_KEYS = new Set(["vulgar", "personal_attack"]);
+const RULES_URL = "https://deetsheet.com/rules";
 
 function defaultCopy(
-
   action: ReviewAction,
   itemKind: "topic" | "post",
-  itemTitle: string,
+  quotedTitle: string,
   reasonDetail: string,
 ) {
   const label = itemKind === "topic" ? "topic" : "post";
-  const quoted = `"${itemTitle}"`;
+  const quoted = `"${quotedTitle}"`;
   if (action === "approve") {
     return {
       subject: `Your ${label} was approved`,
@@ -155,11 +49,12 @@ function defaultCopy(
   }
   if (action === "reject") {
     return {
-      subject: `Update on your ${label}: not approved`,
+      subject: `Your DeetSheet ${label} has been denied`,
       body:
-        `Hi,\n\nThanks for submitting your ${label} ${quoted}. After review, we weren't able to approve it for publication.\n\n` +
-        `Reason: ${reasonDetail || "[select a reason above or write your own]"}\n\n` +
-        `You're welcome to revise and resubmit. If you have questions, just reply to this message.\n\n— The DeetSheet team`,
+        `Thank you for posting on DeetSheet, but your recent ${label} has been denied: ${quotedTitle}.\n\n` +
+        `It was denied for the following reason: ${reasonDetail || "[select a reason above or write your own]"}\n\n` +
+        `DeetSheet does not tolerate vulgar or hateful language. We built this platform to help others and not bring them down. Your post has been deleted.\n\n` +
+        `You may post again, but this is a warning that your account is now on probation and will be blocked if you post again and don't follow the Rules and Guidelines of DeetSheet: ${RULES_URL}\n\n— The DeetSheet team`,
     };
   }
   return {
@@ -170,6 +65,7 @@ function defaultCopy(
       `Once you've updated your ${label}, it will go back into review. Reply here if you have questions.\n\n— The DeetSheet team`,
   };
 }
+
 
 const ACTION_LABEL: Record<ReviewAction, string> = {
   approve: "Send & approve",
@@ -231,9 +127,20 @@ export default function ReviewActionDialog({
   const [removeImage, setRemoveImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [finalTextTouched, setFinalTextTouched] = useState(false);
+  /** Once the admin edits the message themselves we stop regenerating it. */
+  const [messageTouched, setMessageTouched] = useState(false);
 
-  const reasonList = action === "reject" ? REJECT_REASONS : action === "edit" ? EDIT_REASONS : [];
+  const { data: reasons } = useReviewReasons();
+  const reasonList: ReviewReason[] =
+    action === "reject" ? reasons?.reject ?? [] : action === "edit" ? reasons?.edit ?? [] : [];
   const showReasonPicker = action === "reject" || action === "edit";
+  const pickedReason = reasonList.find((r) => r.id === reasonKey) ?? null;
+  const isOther = !!pickedReason && isOtherReason(pickedReason.label);
+
+  /** Title as it currently reads in the left column — keeps the message in sync. */
+  const liveTitle = (itemKind === "post" ? editTitle.trim() : "") || postDetail?.title || itemTitle;
+  const quotedTitle = [postDetail?.topic_name, liveTitle].filter(Boolean).join(": ");
+
 
 
 
@@ -249,6 +156,7 @@ export default function ReviewActionDialog({
     setOriginalText("");
     setFinalText("");
     setFinalTextTouched(false);
+    setMessageTouched(false);
     setNewImage(null);
     setNewImagePreview(null);
     setRemoveImage(false);
@@ -257,6 +165,7 @@ export default function ReviewActionDialog({
     setSubject(c.subject);
     setBody(c.body);
   }, [open, action, itemKind, itemTitle]);
+
 
   // Fetch the full post so the admin can review it (and optionally edit it)
   // right inside the message dialog.
@@ -318,16 +227,17 @@ export default function ReviewActionDialog({
 
 
 
-  // Re-render the default message whenever the admin picks a reason.
+  // Re-render the default message whenever the admin picks a reason or edits
+  // the post title — unless the admin already customised the message body.
   useEffect(() => {
-    if (!open || !showReasonPicker) return;
-    const picked = reasonList.find((r) => r.value === reasonKey);
-    const detail = picked?.value === "other" ? customReason : picked?.detail ?? "";
-    const c = defaultCopy(action, itemKind, itemTitle, detail);
+    if (!open || messageTouched) return;
+    const detail = isOther ? customReason : pickedReason?.detail ?? "";
+    const c = defaultCopy(action, itemKind, quotedTitle || itemTitle, detail);
     setSubject(c.subject);
     setBody(c.body);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reasonKey, customReason, open]);
+  }, [reasonKey, customReason, open, quotedTitle, messageTouched]);
+
 
   const submit = async () => {
     if (!subject.trim() || !body.trim()) {
@@ -359,10 +269,11 @@ export default function ReviewActionDialog({
         .join("");
 
       // Resolve which branded template the author should receive.
-      const picked = reasonList.find((r) => r.value === reasonKey);
+      const picked = pickedReason;
       const reasonText = (
-        picked ? (picked.value === "other" ? customReason : picked.detail ?? picked.label) : customReason
+        picked ? (isOther ? customReason : picked.detail || picked.label) : customReason
       ).trim();
+
 
       const suggestionList = suggestions
         .split("\n")
@@ -419,15 +330,14 @@ export default function ReviewActionDialog({
             ctaUrl: profileUrl,
           };
         } else if (action === "reject") {
-          const isConduct = DENY_REASON_KEYS.has(reasonKey);
-          emailTemplate = isConduct ? "post-denied" : "post-pending";
+          emailTemplate = "post-denied";
           templateData = {
             ...base,
             reasons: reasonText ? [reasonText] : [],
-            suggestions: isConduct ? undefined : suggestionList,
             ctaUrl: profileUrl,
           };
         }
+
       }
 
       const res = await fetch(
@@ -687,13 +597,14 @@ export default function ReviewActionDialog({
                 </SelectTrigger>
                 <SelectContent>
                   {reasonList.map((r) => (
-                    <SelectItem key={r.value} value={r.value}>
+                    <SelectItem key={r.id} value={r.id}>
                       {r.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {reasonKey === "other" && (
+              {isOther && (
+
                 <Textarea
                   rows={3}
                   placeholder={
@@ -734,7 +645,11 @@ export default function ReviewActionDialog({
             <Textarea
               rows={10}
               value={body}
-              onChange={(e) => setBody(e.target.value)}
+              onChange={(e) => {
+                setMessageTouched(true);
+                setBody(e.target.value);
+              }}
+
               className="text-sm"
             />
           </div>

@@ -920,6 +920,36 @@ export type Database = {
           },
         ]
       }
+      review_reasons: {
+        Row: {
+          created_at: string
+          detail: string
+          id: string
+          kind: string
+          label: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          detail?: string
+          id?: string
+          kind: string
+          label: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string
+          id?: string
+          kind?: string
+          label?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       site_pages: {
         Row: {
           content: string

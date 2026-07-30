@@ -68,7 +68,7 @@ const DeetHeader = () => {
 
         <nav className="hidden md:flex items-center gap-1">
           <DropdownMenu>
-            <DropdownMenuTrigger className="mr-1 inline-flex items-center gap-1 px-2 py-1 text-sm text-foreground/80 hover:text-foreground transition-colors focus-visible:outline-none">
+            <DropdownMenuTrigger className="mr-2 inline-flex items-center gap-1 px-2 py-1 text-sm text-foreground/80 hover:text-foreground transition-colors focus-visible:outline-none">
               About
               <ChevronDown className="h-3.5 w-3.5" />
             </DropdownMenuTrigger>
@@ -78,23 +78,15 @@ const DeetHeader = () => {
               <DropdownMenuItem onClick={() => navigate("/investor")}>
                 Become an Investor
               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger className="mr-2 inline-flex items-center gap-1 px-2 py-1 text-sm text-foreground/80 hover:text-foreground transition-colors focus-visible:outline-none">
-              Guides
-              <ChevronDown className="h-3.5 w-3.5" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
               <DropdownMenuItem onClick={() => navigate("/inspiration")}>
-                Need inspiration?
+                Need Inspiration?
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => navigate("/rules")}>
                 Rules &amp; Guidelines
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
 
 
 

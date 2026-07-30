@@ -14,6 +14,7 @@ interface UserPost {
   score: number;
   comment_count: number;
   created_at: string;
+  approved_at?: string | null;
   status: string;
   is_anonymous?: boolean;
   topic: { name: string; slug: string } | null;
@@ -35,7 +36,7 @@ const UserPostsList = ({ userId }: { userId: string }) => {
   const fetchPosts = useCallback(async () => {
     let query = supabase
       .from("posts")
-      .select("id, title, content, score, comment_count, created_at, status, is_anonymous, topics(name, slug)")
+      .select("id, title, content, score, comment_count, created_at, approved_at, status, is_anonymous, topics(name, slug)")
       .eq("author_id", userId)
       .order("created_at", { ascending: false });
 
@@ -84,7 +85,7 @@ const UserPostsList = ({ userId }: { userId: string }) => {
     <>
       <div className="space-y-3">
         {posts.map((post) => {
-          const timeAgo = getTimeAgo(post.created_at);
+          const timeAgo = getTimeAgo(post.approved_at || post.created_at);
           const pill = STATUS_PILL[post.status] ?? STATUS_PILL.approved;
           return (
             <Card key={post.id} className="bg-card hover:shadow-md transition-all duration-200">
