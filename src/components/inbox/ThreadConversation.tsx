@@ -165,9 +165,36 @@ export default function ThreadConversation({
     load();
   };
 
+  const isPendingRequest =
+    thread?.kind === "direct" && thread?.request_status === "pending";
+  const iAmRecipient = isPendingRequest && thread?.initiated_by !== user.id;
+
+  const resolveRequest = async (accepted: boolean) => {
+    if (!thread) return;
+    setSending(true);
+    const { error } = await supabase
+      .from("message_threads")
+      .update({ request_status: accepted ? "accepted" : "declined" })
+      .eq("id", thread.id);
+    setSending(false);
+    if (error) {
+      toast({ title: "Couldn't update", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({
+      title: accepted ? "Request accepted" : "Request declined",
+      description: accepted
+        ? "This conversation moved to your inbox."
+        : "You won't receive further messages here.",
+    });
+    onRequestResolved?.();
+    load();
+  };
+
   if (loading) {
     return <div className="py-8 text-center text-sm text-muted-foreground">Loading…</div>;
   }
+
 
   return (
     <div className="space-y-6">
