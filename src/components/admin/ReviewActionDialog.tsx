@@ -645,7 +645,11 @@ export default function ReviewActionDialog({
             <Textarea
               rows={10}
               value={body}
-              onChange={(e) => setBody(e.target.value)}
+              onChange={(e) => {
+                setMessageTouched(true);
+                setBody(e.target.value);
+              }}
+
               className="text-sm"
             />
           </div>
