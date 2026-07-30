@@ -64,7 +64,9 @@ export default function ThreadConversation({
     if (!threadId || !user) return;
     const { data: t } = await supabase
       .from("message_threads")
-      .select("id,subject,user_id,other_user_id,kind,status")
+      .select(
+        "id,subject,user_id,other_user_id,kind,status,request_status,initiated_by",
+      )
       .eq("id", threadId)
       .maybeSingle();
     if (!t) {
@@ -73,6 +75,15 @@ export default function ThreadConversation({
       return;
     }
     setThread(t as Thread);
+    onMeta?.({
+      otherUserId:
+        (t as Thread).kind === "direct"
+          ? (t as Thread).user_id === user.id
+            ? (t as Thread).other_user_id
+            : (t as Thread).user_id
+          : null,
+      isDirect: (t as Thread).kind === "direct",
+    });
 
     // Resolve counterpart profile for direct threads (title + sender label).
     let other: ProfileLite | null = null;
