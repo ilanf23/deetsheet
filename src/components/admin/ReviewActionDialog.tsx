@@ -269,10 +269,11 @@ export default function ReviewActionDialog({
         .join("");
 
       // Resolve which branded template the author should receive.
-      const picked = reasonList.find((r) => r.value === reasonKey);
+      const picked = pickedReason;
       const reasonText = (
-        picked ? (picked.value === "other" ? customReason : picked.detail ?? picked.label) : customReason
+        picked ? (isOther ? customReason : picked.detail || picked.label) : customReason
       ).trim();
+
 
       const suggestionList = suggestions
         .split("\n")
