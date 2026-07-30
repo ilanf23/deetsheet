@@ -15,7 +15,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useUnreadMessagesCount } from "@/hooks/useUnreadMessages";
+import { useThreadCounts } from "@/hooks/useUnreadMessages";
 
 const DeetHeader = () => {
   const navigate = useNavigate();
@@ -29,7 +29,9 @@ const DeetHeader = () => {
   const { isAdmin } = useAdminAuth();
   const { adminModeActive, toggleAdminMode } = useAdminMode();
   const [searchOpen, setSearchOpen] = useState(false);
-  const { data: unreadCount = 0 } = useUnreadMessagesCount();
+  const { data: threadCounts } = useThreadCounts();
+  const unreadCount = (threadCounts?.unread ?? 0) + (threadCounts?.requests ?? 0);
+  const unreadLabel = unreadCount > 99 ? "99+" : String(unreadCount);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
