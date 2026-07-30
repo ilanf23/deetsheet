@@ -156,6 +156,7 @@ export default function ReviewActionDialog({
     setOriginalText("");
     setFinalText("");
     setFinalTextTouched(false);
+    setMessageTouched(false);
     setNewImage(null);
     setNewImagePreview(null);
     setRemoveImage(false);
@@ -164,6 +165,7 @@ export default function ReviewActionDialog({
     setSubject(c.subject);
     setBody(c.body);
   }, [open, action, itemKind, itemTitle]);
+
 
   // Fetch the full post so the admin can review it (and optionally edit it)
   // right inside the message dialog.
