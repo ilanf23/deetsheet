@@ -27,7 +27,9 @@ import {
  */
 
 export const SITE_URL = 'https://deetsheet.com'
-export const LOGO_URL = 'https://deetsheet.com/logo.png'
+// Whitespace-trimmed wordmark so the logo optically aligns flush-left with the
+// body copy below it (the original logo.png carries ~94px of baked-in padding).
+export const LOGO_URL = 'https://deetsheet.com/logo-email.png'
 
 /* Brand tokens — mirror src/index.css */
 export const GREEN = '#27593c' // hsl(146 38% 25%)
