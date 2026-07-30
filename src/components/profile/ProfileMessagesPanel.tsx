@@ -104,40 +104,49 @@ export default function ProfileMessagesPanel() {
   };
 
   return (
-    <Card className="bg-card">
-      <CardContent className="p-0">
-        <ul className="divide-y">
-          {threads.map((t) => {
-            const d = displayFor(t);
-            return (
-              <li key={t.id}>
-                <Link
-                  to={`/inbox/${t.id}`}
-                  className="flex items-center justify-between gap-4 px-4 py-3 hover:bg-muted/40"
-                >
-                  <div className="min-w-0 flex-1">
-                    <div
-                      className={`truncate text-primary hover:underline ${d.unread ? "font-semibold" : ""}`}
-                    >
-                      {d.title}
+    <>
+      <Card className="bg-card">
+        <CardContent className="p-0">
+          <ul className="divide-y">
+            {threads.map((t) => {
+              const d = displayFor(t);
+              const unread = d.unread && !readIds.has(t.id);
+              return (
+                <li key={t.id}>
+                  <button
+                    type="button"
+                    onClick={() => setOpenThreadId(t.id)}
+                    className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition-colors hover:bg-muted/40"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div
+                        className={`truncate text-primary ${unread ? "font-semibold" : ""}`}
+                      >
+                        {d.title}
+                      </div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        {formatDistanceToNow(parseISO(t.last_message_at))} ago · from{" "}
+                        {d.senderLabel}
+                      </div>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(parseISO(t.last_message_at))} ago · from{" "}
-                      {d.senderLabel}
-                    </div>
-                  </div>
-                  {d.unread && (
-                    <span
-                      className="h-2 w-2 rounded-full bg-secondary shrink-0"
-                      aria-label="unread"
-                    />
-                  )}
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </CardContent>
-    </Card>
+                    {unread && (
+                      <span
+                        className="h-2 w-2 shrink-0 rounded-full bg-secondary"
+                        aria-label="unread"
+                      />
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </CardContent>
+      </Card>
+      <ThreadDialog
+        threadId={openThreadId}
+        onOpenChange={(open) => !open && setOpenThreadId(null)}
+        onRead={(id) => setReadIds((prev) => new Set(prev).add(id))}
+      />
+    </>
   );
 }
