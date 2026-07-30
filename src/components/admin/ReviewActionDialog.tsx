@@ -227,16 +227,17 @@ export default function ReviewActionDialog({
 
 
 
-  // Re-render the default message whenever the admin picks a reason.
+  // Re-render the default message whenever the admin picks a reason or edits
+  // the post title — unless the admin already customised the message body.
   useEffect(() => {
-    if (!open || !showReasonPicker) return;
-    const picked = reasonList.find((r) => r.value === reasonKey);
-    const detail = picked?.value === "other" ? customReason : picked?.detail ?? "";
-    const c = defaultCopy(action, itemKind, itemTitle, detail);
+    if (!open || messageTouched) return;
+    const detail = isOther ? customReason : pickedReason?.detail ?? "";
+    const c = defaultCopy(action, itemKind, quotedTitle || itemTitle, detail);
     setSubject(c.subject);
     setBody(c.body);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reasonKey, customReason, open]);
+  }, [reasonKey, customReason, open, quotedTitle, messageTouched]);
+
 
   const submit = async () => {
     if (!subject.trim() || !body.trim()) {
