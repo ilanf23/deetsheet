@@ -53,6 +53,8 @@ const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminPosts = lazy(() => import("./pages/admin/AdminPosts"));
 const AdminReview = lazy(() => import("./pages/admin/AdminReview"));
+const AdminReviewReasons = lazy(() => import("./pages/admin/AdminReviewReasons"));
+
 const AdminComments = lazy(() => import("./pages/admin/AdminComments"));
 const AdminTopics = lazy(() => import("./pages/admin/AdminTopics"));
 const AdminTopicImages = lazy(() => import("./pages/admin/AdminTopicImages"));
