@@ -34,6 +34,7 @@ const navItems = [
   { to: "/admin/contact-messages", label: "Contact Messages", icon: Mail },
   { to: "/admin/site-pages", label: "Site Pages", icon: FileEdit },
   { to: "/admin/review-reasons", label: "Review Reasons", icon: ListChecks },
+  { to: "/admin/settings", label: "Settings", icon: Settings },
   { to: "/admin/audit", label: "Audit Log", icon: History },
 ];
 
@@ -41,6 +42,7 @@ export default function AdminLayout() {
   const { user, signOut } = useAuth();
   const location = useLocation();
   const [pendingCount, setPendingCount] = useState(0);
+  const { data: messagesCount = 0 } = useAdminUnreadThreadsCount();
 
   useEffect(() => {
     let cancelled = false;
