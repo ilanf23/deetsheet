@@ -330,15 +330,14 @@ export default function ReviewActionDialog({
             ctaUrl: profileUrl,
           };
         } else if (action === "reject") {
-          const isConduct = DENY_REASON_KEYS.has(reasonKey);
-          emailTemplate = isConduct ? "post-denied" : "post-pending";
+          emailTemplate = "post-denied";
           templateData = {
             ...base,
             reasons: reasonText ? [reasonText] : [],
-            suggestions: isConduct ? undefined : suggestionList,
             ctaUrl: profileUrl,
           };
         }
+
       }
 
       const res = await fetch(
