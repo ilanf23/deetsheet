@@ -42,13 +42,15 @@ const NotificationBell = () => {
         </button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-80 p-0">
-        <div className="flex items-center justify-between border-b px-3 py-2">
-          <span className="text-sm font-semibold text-foreground">Notifications</span>
+        <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
+          <span className="text-sm font-semibold leading-none text-foreground">
+            Notifications
+          </span>
           {unread > 0 && (
             <button
               type="button"
               onClick={() => markAllRead.mutate()}
-              className="text-xs text-primary hover:underline"
+              className="text-xs leading-none text-primary hover:underline"
             >
               Mark all read
             </button>
@@ -56,7 +58,7 @@ const NotificationBell = () => {
         </div>
         <div className="max-h-80 overflow-y-auto">
           {notifications.length === 0 ? (
-            <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+            <p className="px-4 py-8 text-center text-sm text-muted-foreground">
               Nothing new right now.
             </p>
           ) : (
@@ -65,12 +67,12 @@ const NotificationBell = () => {
                 key={n.id}
                 type="button"
                 onClick={() => handleClick(n)}
-                className={`w-full text-left px-3 py-2.5 border-b last:border-b-0 transition-colors hover:bg-accent ${
+                className={`w-full border-b px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-accent ${
                   n.read_at ? "" : "bg-primary/5"
                 }`}
               >
-                <span className="block text-sm text-foreground">{n.message}</span>
-                <span className="block text-xs text-muted-foreground mt-0.5">
+                <span className="block text-sm leading-snug text-foreground">{n.message}</span>
+                <span className="mt-1 block text-xs text-muted-foreground">
                   {formatDistanceToNow(parseISO(n.created_at), { addSuffix: true })}
                 </span>
               </button>
