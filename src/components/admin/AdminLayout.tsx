@@ -28,7 +28,7 @@ const navItems = [
   { to: "/admin/topics", label: "Topics", icon: Hash },
   { to: "/admin/topic-images", label: "Topic Images", icon: ImageIcon },
   { to: "/admin/reports", label: "Reports", icon: Flag },
-  { to: "/admin/messages", label: "Messaging", icon: MessageSquare },
+  { to: "/admin/messages", label: "Messaging", icon: MessageSquare, badgeKey: "messages" as const },
   { to: "/admin/contact-messages", label: "Contact Messages", icon: Mail },
   { to: "/admin/site-pages", label: "Site Pages", icon: FileEdit },
   { to: "/admin/review-reasons", label: "Review Reasons", icon: ListChecks },
