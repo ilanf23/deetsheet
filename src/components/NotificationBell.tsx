@@ -63,19 +63,34 @@ const NotificationBell = () => {
             </p>
           ) : (
             notifications.map((n) => (
-              <button
+              <div
                 key={n.id}
-                type="button"
-                onClick={() => handleClick(n)}
-                className={`w-full border-b px-4 py-3 text-left transition-colors last:border-b-0 hover:bg-accent ${
+                className={`group relative border-b last:border-b-0 ${
                   n.read_at ? "" : "bg-primary/5"
                 }`}
               >
-                <span className="block text-sm leading-snug text-foreground">{n.message}</span>
-                <span className="mt-1 block text-xs text-muted-foreground">
-                  {formatDistanceToNow(parseISO(n.created_at), { addSuffix: true })}
-                </span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => handleClick(n)}
+                  className="w-full px-4 py-3 pr-10 text-left transition-colors hover:bg-accent"
+                >
+                  <span className="block text-sm leading-snug text-foreground">{n.message}</span>
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    {formatDistanceToNow(parseISO(n.created_at), { addSuffix: true })}
+                  </span>
+                </button>
+                {!n.read_at && (
+                  <button
+                    type="button"
+                    title="Dismiss"
+                    aria-label="Dismiss notification"
+                    onClick={() => markRead.mutate(n.id)}
+                    className="absolute right-2 top-2 rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </div>
             ))
           )}
         </div>
