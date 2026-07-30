@@ -23,6 +23,8 @@ type Thread = {
   other_user_id: string | null;
   kind: string;
   status: string;
+  request_status: string | null;
+  initiated_by: string | null;
 };
 
 type ProfileLite = { id: string; name: string | null; username: string | null };
@@ -35,6 +37,10 @@ interface ThreadConversationProps {
   onNotFound?: () => void;
   /** Called after the thread is marked read or a reply is sent. */
   onRead?: () => void;
+  /** Called with thread metadata the parent needs (counterpart, request state). */
+  onMeta?: (meta: { otherUserId: string | null; isDirect: boolean }) => void;
+  /** Called after a request is accepted or declined. */
+  onRequestResolved?: () => void;
 }
 
 export default function ThreadConversation({
@@ -42,6 +48,8 @@ export default function ThreadConversation({
   onTitle,
   onNotFound,
   onRead,
+  onMeta,
+  onRequestResolved,
 }: ThreadConversationProps) {
   const { user } = useAuth();
   const { toast } = useToast();
