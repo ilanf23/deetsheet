@@ -65,7 +65,7 @@ const EmailPreferences = () => {
     (async () => {
       const { data } = await supabase
         .from("email_preferences")
-        .select("post_updates, admin_messages, comment_notifications")
+        .select("post_updates, admin_messages, comment_notifications, member_messages")
         .eq("user_id", user.id)
         .maybeSingle();
       if (cancelled) return;
