@@ -442,7 +442,7 @@ export default function AdminMessages() {
           }}
         >
           <div
-            className="grid grid-cols-[1.2fr_1.6fr_0.8fr_1fr_0.7fr] gap-4 px-5 py-3 text-[12px] font-semibold uppercase tracking-wide"
+            className="grid grid-cols-[1.2fr_1.6fr_0.8fr_1fr_0.7fr] gap-6 px-6 py-3 text-[12px] font-semibold uppercase tracking-wide"
             style={{
               color: "hsl(var(--admin-fg-muted))",
               borderBottom: "1px solid hsl(var(--admin-border))",
@@ -454,17 +454,22 @@ export default function AdminMessages() {
             <div>Last contact</div>
             <div className="text-right">Action</div>
           </div>
-          {filtered.map((t) => {
+          {filtered.map((t, idx) => {
             const label = t.user_name ?? t.user_username ?? "Unknown";
             return (
               <div
                 key={t.id}
-                className="grid grid-cols-[1.2fr_1.6fr_0.8fr_1fr_0.7fr] gap-4 items-center px-5 py-4 text-[14px]"
-                style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}
+                className="grid grid-cols-[1.2fr_1.6fr_0.8fr_1fr_0.7fr] gap-6 items-center px-6 py-4 text-[14px]"
+                style={{
+                  borderBottom:
+                    idx === filtered.length - 1
+                      ? "none"
+                      : "1px solid hsl(var(--admin-border))",
+                }}
               >
-                <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-center gap-3 min-w-0">
                   <div
-                    className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-[13px] font-semibold text-white"
+                    className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-[13px] font-semibold leading-none text-white"
                     style={{ backgroundColor: "hsl(var(--secondary))" }}
                   >
                     {label.slice(0, 1).toUpperCase()}
