@@ -12,7 +12,7 @@ const SITE_NAME = "DeetSheet.com"
 // Templates not listed here are account/security emails and always send.
 const TEMPLATE_CATEGORY: Record<
   string,
-  'post_updates' | 'admin_messages' | 'comment_notifications' | undefined
+  'post_updates' | 'admin_messages' | 'comment_notifications' | 'member_messages' | undefined
 > = {
   'post-received': 'post_updates',
   'post-approved': 'post_updates',
@@ -182,7 +182,7 @@ Deno.serve(async (req) => {
   if (category) {
     const { data: prefs } = await supabase
       .from('email_preferences')
-      .select('post_updates, admin_messages, comment_notifications')
+      .select('post_updates, admin_messages, comment_notifications, member_messages')
       .ilike('email', effectiveRecipient)
       .maybeSingle()
 

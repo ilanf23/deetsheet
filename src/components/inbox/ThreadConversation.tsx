@@ -23,6 +23,8 @@ type Thread = {
   other_user_id: string | null;
   kind: string;
   status: string;
+  request_status: string | null;
+  initiated_by: string | null;
 };
 
 type ProfileLite = { id: string; name: string | null; username: string | null };
@@ -35,6 +37,10 @@ interface ThreadConversationProps {
   onNotFound?: () => void;
   /** Called after the thread is marked read or a reply is sent. */
   onRead?: () => void;
+  /** Called with thread metadata the parent needs (counterpart, request state). */
+  onMeta?: (meta: { otherUserId: string | null; isDirect: boolean }) => void;
+  /** Called after a request is accepted or declined. */
+  onRequestResolved?: () => void;
 }
 
 export default function ThreadConversation({
@@ -42,6 +48,8 @@ export default function ThreadConversation({
   onTitle,
   onNotFound,
   onRead,
+  onMeta,
+  onRequestResolved,
 }: ThreadConversationProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -56,7 +64,9 @@ export default function ThreadConversation({
     if (!threadId || !user) return;
     const { data: t } = await supabase
       .from("message_threads")
-      .select("id,subject,user_id,other_user_id,kind,status")
+      .select(
+        "id,subject,user_id,other_user_id,kind,status,request_status,initiated_by",
+      )
       .eq("id", threadId)
       .maybeSingle();
     if (!t) {
@@ -65,6 +75,15 @@ export default function ThreadConversation({
       return;
     }
     setThread(t as Thread);
+    onMeta?.({
+      otherUserId:
+        (t as Thread).kind === "direct"
+          ? (t as Thread).user_id === user.id
+            ? (t as Thread).other_user_id
+            : (t as Thread).user_id
+          : null,
+      isDirect: (t as Thread).kind === "direct",
+    });
 
     // Resolve counterpart profile for direct threads (title + sender label).
     let other: ProfileLite | null = null;
@@ -146,9 +165,36 @@ export default function ThreadConversation({
     load();
   };
 
+  const isPendingRequest =
+    thread?.kind === "direct" && thread?.request_status === "pending";
+  const iAmRecipient = isPendingRequest && thread?.initiated_by !== user.id;
+
+  const resolveRequest = async (accepted: boolean) => {
+    if (!thread) return;
+    setSending(true);
+    const { error } = await supabase
+      .from("message_threads")
+      .update({ request_status: accepted ? "accepted" : "declined" })
+      .eq("id", thread.id);
+    setSending(false);
+    if (error) {
+      toast({ title: "Couldn't update", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({
+      title: accepted ? "Request accepted" : "Request declined",
+      description: accepted
+        ? "This conversation moved to your inbox."
+        : "You won't receive further messages here.",
+    });
+    onRequestResolved?.();
+    load();
+  };
+
   if (loading) {
     return <div className="py-8 text-center text-sm text-muted-foreground">Loading…</div>;
   }
+
 
   return (
     <div className="space-y-6">
@@ -193,19 +239,50 @@ export default function ThreadConversation({
         )}
       </div>
 
-      <div className="space-y-3">
-        <Textarea
-          rows={4}
-          value={reply}
-          onChange={(e) => setReply(e.target.value)}
-          placeholder="Write a reply…"
-        />
-        <div className="flex justify-end">
-          <Button onClick={sendReply} disabled={sending || !reply.trim()}>
-            {sending ? "Sending…" : "Send reply"}
-          </Button>
+      {thread?.request_status === "declined" ? (
+        <div className="rounded-lg border bg-muted/30 p-4 text-sm text-muted-foreground">
+          You declined this message request.
         </div>
-      </div>
+      ) : iAmRecipient ? (
+        <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
+          <p className="text-sm text-foreground">
+            {otherName} wants to start a conversation with you.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" disabled={sending} onClick={() => resolveRequest(true)}>
+              Accept
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={sending}
+              onClick={() => resolveRequest(false)}
+            >
+              Decline
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {isPendingRequest && (
+            <p className="text-xs text-muted-foreground">
+              This is a message request — {otherName} needs to accept it before you can
+              keep chatting.
+            </p>
+          )}
+          <Textarea
+            rows={4}
+            value={reply}
+            onChange={(e) => setReply(e.target.value)}
+            placeholder="Write a reply…"
+          />
+          <div className="flex justify-end">
+            <Button onClick={sendReply} disabled={sending || !reply.trim()}>
+              {sending ? "Sending…" : "Send reply"}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -54,6 +54,7 @@ const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminPosts = lazy(() => import("./pages/admin/AdminPosts"));
 const AdminReview = lazy(() => import("./pages/admin/AdminReview"));
 const AdminReviewReasons = lazy(() => import("./pages/admin/AdminReviewReasons"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 
 const AdminComments = lazy(() => import("./pages/admin/AdminComments"));
 const AdminTopics = lazy(() => import("./pages/admin/AdminTopics"));
@@ -172,6 +173,7 @@ const App = () => (
                 <Route path="contact-messages" element={<AdminContactMessages />} />
                 <Route path="site-pages" element={<AdminSitePages />} />
                 <Route path="review-reasons" element={<AdminReviewReasons />} />
+                <Route path="settings" element={<AdminSettings />} />
                 <Route path="messages" element={<AdminMessages />} />
 
               </Route>

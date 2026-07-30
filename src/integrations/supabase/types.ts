@@ -197,6 +197,7 @@ export type Database = {
           comment_notifications: boolean
           created_at: string
           email: string
+          member_messages: boolean
           post_updates: boolean
           updated_at: string
           user_id: string
@@ -206,6 +207,7 @@ export type Database = {
           comment_notifications?: boolean
           created_at?: string
           email: string
+          member_messages?: boolean
           post_updates?: boolean
           updated_at?: string
           user_id: string
@@ -215,6 +217,7 @@ export type Database = {
           comment_notifications?: boolean
           created_at?: string
           email?: string
+          member_messages?: boolean
           post_updates?: boolean
           updated_at?: string
           user_id?: string
@@ -404,6 +407,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          initiated_by: string | null
           kind: string
           last_message_at: string
           last_read_at: string | null
@@ -411,6 +415,7 @@ export type Database = {
           other_last_read_at: string | null
           other_user_id: string | null
           post_id: string | null
+          request_status: string
           status: string
           subject: string
           updated_at: string
@@ -419,6 +424,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          initiated_by?: string | null
           kind?: string
           last_message_at?: string
           last_read_at?: string | null
@@ -426,6 +432,7 @@ export type Database = {
           other_last_read_at?: string | null
           other_user_id?: string | null
           post_id?: string | null
+          request_status?: string
           status?: string
           subject: string
           updated_at?: string
@@ -434,6 +441,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          initiated_by?: string | null
           kind?: string
           last_message_at?: string
           last_read_at?: string | null
@@ -441,6 +449,7 @@ export type Database = {
           other_last_read_at?: string | null
           other_user_id?: string | null
           post_id?: string | null
+          request_status?: string
           status?: string
           subject?: string
           updated_at?: string
@@ -974,6 +983,27 @@ export type Database = {
         }
         Relationships: []
       }
+      site_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
@@ -997,6 +1027,50 @@ export type Database = {
           reason?: string
         }
         Relationships: []
+      }
+      thread_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reported_user_id: string | null
+          reporter_id: string
+          status: string
+          thread_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reported_user_id?: string | null
+          reporter_id: string
+          status?: string
+          thread_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reported_user_id?: string | null
+          reporter_id?: string
+          status?: string
+          thread_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "thread_reports_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "message_threads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       topic_follows: {
         Row: {
@@ -1139,6 +1213,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       user_follows: {
         Row: {
           created_at: string
@@ -1204,6 +1299,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_blocked_pair: { Args: { _a: string; _b: string }; Returns: boolean }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -1225,6 +1321,7 @@ export type Database = {
         Args: { _profile_id: string }
         Returns: undefined
       }
+      user_messaging_enabled: { Args: never; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

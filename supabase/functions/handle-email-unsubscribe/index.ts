@@ -127,6 +127,7 @@ Deno.serve(async (req) => {
       post_updates: false,
       admin_messages: false,
       comment_notifications: false,
+      member_messages: false,
     })
     .ilike('email', tokenRecord.email)
 

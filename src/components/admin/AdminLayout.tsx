@@ -17,7 +17,9 @@ import {
   Inbox,
   ArrowLeft,
   LogOut,
+  Settings,
 } from "lucide-react";
+import { useAdminUnreadThreadsCount } from "@/hooks/useUnreadMessages";
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutGrid, end: true },
@@ -28,10 +30,11 @@ const navItems = [
   { to: "/admin/topics", label: "Topics", icon: Hash },
   { to: "/admin/topic-images", label: "Topic Images", icon: ImageIcon },
   { to: "/admin/reports", label: "Reports", icon: Flag },
-  { to: "/admin/messages", label: "Messaging", icon: MessageSquare },
+  { to: "/admin/messages", label: "Messaging", icon: MessageSquare, badgeKey: "messages" as const },
   { to: "/admin/contact-messages", label: "Contact Messages", icon: Mail },
   { to: "/admin/site-pages", label: "Site Pages", icon: FileEdit },
   { to: "/admin/review-reasons", label: "Review Reasons", icon: ListChecks },
+  { to: "/admin/settings", label: "Settings", icon: Settings },
   { to: "/admin/audit", label: "Audit Log", icon: History },
 ];
 
@@ -39,6 +42,7 @@ export default function AdminLayout() {
   const { user, signOut } = useAuth();
   const location = useLocation();
   const [pendingCount, setPendingCount] = useState(0);
+  const { data: messagesCount = 0 } = useAdminUnreadThreadsCount();
 
   useEffect(() => {
     let cancelled = false;
@@ -111,17 +115,28 @@ export default function AdminLayout() {
                     style={{ color: isActive ? "#ffffff" : "hsl(var(--admin-fg))" }}
                   />
                   <span className="flex-1">{item.label}</span>
-                  {item.badgeKey === "review" && pendingCount > 0 && (
-                    <span
-                      className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-semibold"
-                      style={{
-                        backgroundColor: isActive ? "#ffffff" : "hsl(var(--secondary))",
-                        color: isActive ? "hsl(var(--admin-primary))" : "hsl(var(--secondary-foreground))",
-                      }}
-                    >
-                      {pendingCount}
-                    </span>
-                  )}
+                  {(() => {
+                    const count =
+                      item.badgeKey === "review"
+                        ? pendingCount
+                        : item.badgeKey === "messages"
+                          ? messagesCount
+                          : 0;
+                    if (!count) return null;
+                    return (
+                      <span
+                        className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-semibold"
+                        style={{
+                          backgroundColor: isActive ? "#ffffff" : "hsl(var(--secondary))",
+                          color: isActive
+                            ? "hsl(var(--admin-primary))"
+                            : "hsl(var(--secondary-foreground))",
+                        }}
+                      >
+                        {count > 99 ? "99+" : count}
+                      </span>
+                    );
+                  })()}
                 </>
               )}
             </NavLink>
