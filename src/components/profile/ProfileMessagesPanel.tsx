@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
+import ThreadDialog from "@/components/inbox/ThreadDialog";
 import { formatDistanceToNow, parseISO } from "date-fns";
 
 type Thread = {
