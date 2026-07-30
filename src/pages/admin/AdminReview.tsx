@@ -52,7 +52,7 @@ function AuthorPriorPosts({ authorId, excludePostId }: { authorId: string; exclu
   };
 
   return (
-    <div className="mt-3 pt-3 border-t" style={{ borderColor: "hsl(var(--admin-border))" }}>
+    <div className="mt-5 pt-4 border-t" style={{ borderColor: "hsl(var(--admin-border))" }}>
       <button
         type="button"
         onClick={toggle}
@@ -423,15 +423,15 @@ export default function AdminReview() {
             return (
               <div
                 key={`${item.kind}-${item.id}`}
-                className="rounded-xl p-5"
+                className="rounded-xl p-6"
                 style={{
                   backgroundColor: "hsl(var(--admin-surface))",
                   border: "1px solid hsl(var(--admin-border))",
                 }}
               >
-                <div className="flex gap-4">
-                <div className="flex-1 min-w-0 space-y-2">
-                  <div className="flex items-center gap-3 text-[12px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>
+                <div className="flex gap-5">
+                <div className="flex-1 min-w-0 space-y-2.5">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>
                     <TypeBadge kind={item.kind} />
                     {item.kind === "post" && item.isReReview && (
                       <span
@@ -508,11 +508,11 @@ export default function AdminReview() {
                   />
                 )}
 
-                <div className="flex flex-col gap-2 shrink-0 self-center">
+                <div className="flex w-44 flex-col gap-2.5 shrink-0 self-start">
                   <button
                     onClick={() => author?.id && setReviewDialog({ action: "approve", item })}
                     disabled={!author?.id}
-                    className="px-4 py-2 rounded-md text-[13px] font-semibold disabled:opacity-50"
+                    className="w-full px-4 py-2 rounded-md text-[13px] font-semibold disabled:opacity-50"
                     style={{
                       backgroundColor: "hsl(var(--admin-primary))",
                       color: "#ffffff",
@@ -523,7 +523,7 @@ export default function AdminReview() {
                   <button
                     onClick={() => author?.id && setReviewDialog({ action: "reject", item })}
                     disabled={!author?.id}
-                    className="px-4 py-2 rounded-md text-[13px] font-semibold disabled:opacity-50"
+                    className="w-full px-4 py-2 rounded-md text-[13px] font-semibold disabled:opacity-50"
                     style={{
                       backgroundColor: "hsl(var(--admin-danger-soft))",
                       color: "hsl(var(--admin-danger))",
@@ -535,7 +535,7 @@ export default function AdminReview() {
                     <button
                       onClick={() => author?.id && setReviewDialog({ action: "edit", item })}
                       disabled={!author?.id}
-                      className="px-4 py-2 rounded-md text-[13px] font-semibold border disabled:opacity-50"
+                      className="w-full px-4 py-2 rounded-md text-[13px] font-semibold border disabled:opacity-50"
                       style={{
                         borderColor: "hsl(var(--admin-border))",
                         color: "hsl(var(--admin-fg))",
@@ -550,7 +550,7 @@ export default function AdminReview() {
                       openDirectMessage(author.id, item.kind === "post" ? item.id : null)
                     }
                     disabled={!author?.id}
-                    className="px-4 py-2 rounded-md text-[13px] font-semibold border disabled:opacity-50"
+                    className="w-full px-4 py-2 rounded-md text-[13px] font-semibold border disabled:opacity-50"
                     style={{
                       borderColor: "hsl(var(--admin-border))",
                       color: "hsl(var(--admin-fg-muted))",

@@ -27,7 +27,9 @@ import {
  */
 
 export const SITE_URL = 'https://deetsheet.com'
-export const LOGO_URL = 'https://deetsheet.com/logo.png'
+// Whitespace-trimmed wordmark so the logo optically aligns flush-left with the
+// body copy below it (the original logo.png carries ~94px of baked-in padding).
+export const LOGO_URL = 'https://deetsheet.com/logo-email.png'
 
 /* Brand tokens — mirror src/index.css */
 export const GREEN = '#27593c' // hsl(146 38% 25%)
@@ -76,10 +78,19 @@ export const Shell = ({
           <Img
             src={LOGO_URL}
             alt="DeetSheet"
-            height={52}
-            style={{ display: 'block', height: '52px', width: 'auto' }}
+            width={230}
+            height={38}
+            style={{
+              display: 'block',
+              height: '38px',
+              width: '230px',
+              margin: 0,
+              border: 0,
+            }}
           />
         </Section>
+
+
 
 
         {statusValue && (
@@ -245,7 +256,9 @@ const outer = {
 
 const header = {
   backgroundColor: '#ffffff',
-  padding: '28px 32px 24px',
+  // Left padding matches the content card (32px) so the trimmed wordmark's
+  // left edge lines up with the body copy; even breathing room top/bottom.
+  padding: '32px 32px 32px',
   textAlign: 'left' as const,
 }
 
