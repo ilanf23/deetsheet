@@ -52,7 +52,7 @@ function AuthorPriorPosts({ authorId, excludePostId }: { authorId: string; exclu
   };
 
   return (
-    <div className="mt-3 pt-3 border-t" style={{ borderColor: "hsl(var(--admin-border))" }}>
+    <div className="mt-5 pt-4 border-t" style={{ borderColor: "hsl(var(--admin-border))" }}>
       <button
         type="button"
         onClick={toggle}
