@@ -116,7 +116,7 @@ const DeetHeader = () => {
                 <Mail className="h-4 w-4" />
                 {unreadCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-secondary text-secondary-foreground text-[10px] font-semibold flex items-center justify-center">
-                    {unreadCount}
+                    {unreadLabel}
                   </span>
                 )}
               </button>
@@ -153,7 +153,7 @@ const DeetHeader = () => {
                     <span>Inbox</span>
                     {unreadCount > 0 && (
                       <span className="ml-2 min-w-[18px] h-4 px-1 rounded-full bg-secondary text-secondary-foreground text-[10px] font-semibold flex items-center justify-center">
-                        {unreadCount}
+                        {unreadLabel}
                       </span>
                     )}
                   </button>
@@ -259,7 +259,7 @@ const DeetHeader = () => {
                 }}
                 className="rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-accent"
               >
-                Inbox{unreadCount > 0 ? ` (${unreadCount})` : ""}
+                Inbox{unreadCount > 0 ? ` (${unreadLabel})` : ""}
               </button>
             ) : (
               <>
