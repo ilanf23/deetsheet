@@ -13,12 +13,14 @@ type Prefs = {
   post_updates: boolean;
   admin_messages: boolean;
   comment_notifications: boolean;
+  member_messages: boolean;
 };
 
 const DEFAULT_PREFS: Prefs = {
   post_updates: true,
   admin_messages: true,
   comment_notifications: true,
+  member_messages: true,
 };
 
 const CATEGORIES: { key: keyof Prefs; title: string; description: string }[] = [
@@ -31,6 +33,12 @@ const CATEGORIES: { key: keyof Prefs; title: string; description: string }[] = [
     key: "admin_messages",
     title: "Messages from DeetSheet",
     description: "Emails when a DeetSheet moderator sends you a message.",
+  },
+  {
+    key: "member_messages",
+    title: "Messages from other members",
+    description:
+      "Emails when another member messages you. Message requests are never emailed.",
   },
   {
     key: "comment_notifications",
