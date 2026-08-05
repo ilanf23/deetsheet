@@ -105,7 +105,7 @@ export default function AdminPosts() {
       // includes rich-text body content which is expensive over the wire.
       const [postsRes, profilesRes, reportsRes] = await Promise.all([
         supabase
-          .from("posts")
+          .from("posts_privileged")
           .select("id, title, author_id, created_at, status")
           .order("created_at", { ascending: false }),
         supabase.from("profiles").select("id, name, username, avatar_url"),

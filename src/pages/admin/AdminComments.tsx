@@ -126,14 +126,14 @@ export default function AdminComments() {
     setLoading(true);
     setLoadWarning(null);
     let { data: commentRows, error: commentsError } = await supabase
-      .from("comments")
+      .from("comments_privileged")
       .select(COMMENT_SELECT)
       .order("created_at", { ascending: false })
       .limit(COMMENT_LOAD_LIMIT);
 
     if (commentsError?.message.toLowerCase().includes("timeout")) {
       const fallback = await supabase
-        .from("comments")
+        .from("comments_privileged")
         .select(COMMENT_SELECT)
         .limit(COMMENT_LOAD_LIMIT);
       commentRows = fallback.data;

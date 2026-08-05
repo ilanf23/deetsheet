@@ -199,7 +199,7 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
     (async () => {
       setLoading(true);
       const [postRes, topicsRes] = await Promise.all([
-        supabase.from("posts").select("*").eq("id", postId).maybeSingle(),
+        supabase.from("posts_privileged").select("*").eq("id", postId).maybeSingle(),
         supabase.from("topics").select("id, name").order("name"),
       ]);
       if (cancelled) return;
@@ -236,7 +236,7 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
           const [profileRes, postsRes, commentCountRes, topicCountRes] =
             await Promise.all([
               supabase
-                .from("profiles")
+                .from("profiles_private")
                 .select(
                   "id, username, name, avatar_url, bio, created_at, education, " +
                     "high_school, college, degree, major, job, city_born, sex, " +
@@ -246,12 +246,12 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
                 .eq("id", p.author_id)
                 .maybeSingle(),
               supabase
-                .from("posts")
+                .from("posts_privileged")
                 .select("id, title, content, story, status, created_at, topic_id, topics(name)")
                 .eq("author_id", p.author_id)
                 .order("created_at", { ascending: false }),
               supabase
-                .from("comments")
+                .from("comments_privileged")
                 .select("id", { count: "exact", head: true })
                 .eq("author_id", p.author_id),
               supabase
@@ -403,7 +403,7 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
 
     if (authorSectionOpen && authorTab === "comments" && authorComments === null) {
       void supabase
-        .from("comments")
+        .from("comments_privileged")
         .select("id, content, created_at, post_id")
         .eq("author_id", author.id)
         .order("created_at", { ascending: false })
