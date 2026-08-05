@@ -150,6 +150,7 @@ const CommentsSection = ({ postId }: CommentsSectionProps) => {
               openReplyId={openReplyId}
               onReplyToggle={setOpenReplyId}
               onReplySubmitted={handleReplySubmitted}
+              onDeleted={invalidate}
             />
           ))}
         </div>
