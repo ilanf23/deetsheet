@@ -70,7 +70,7 @@ type DbPostRaw = {
   content?: string;
   story?: string | null;
   topic_id: string;
-  author_id: string;
+  public_author_id: string | null;
   score?: number;
   average_rating: number | null;
   rating_count: number | null;
