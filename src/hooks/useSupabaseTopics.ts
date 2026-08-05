@@ -123,7 +123,7 @@ const mapPost = (row: DbPostRaw): PostRow => {
 
 /**
  * Fetch every topic plus a derived post count. Uses a single round trip
- * (`select('*, posts(count)')`) instead of N+1 queries.
+ * (denormalized `topics.post_count`) instead of N+1 queries.
  */
 export const useTopics = () => {
   return useQuery({
@@ -131,13 +131,13 @@ export const useTopics = () => {
     queryFn: async (): Promise<TopicRow[]> => {
       const { data, error } = await supabase
         .from("topics")
-        .select("id, slug, name, category_name, description, image_url, subtitle_override, posts(count)")
+        .select("id, slug, name, category_name, description, image_url, subtitle_override, post_count")
         .order("name", { ascending: true });
 
       if (error) throw error;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (data ?? []).map((row: any) =>
-        mapTopic(row as DbTopicRaw, row.posts?.[0]?.count ?? 0)
+        mapTopic(row as DbTopicRaw, row.post_count ?? 0)
       );
     },
     staleTime: 60_000,
@@ -158,7 +158,7 @@ export const useTopicByName = (topicName: string | undefined) => {
       const decoded = decodeURIComponent(topicName);
       const { data, error } = await supabase
         .from("topics")
-        .select("id, slug, name, category_name, description, image_url, subtitle_override, posts(count)")
+        .select("id, slug, name, category_name, description, image_url, subtitle_override, post_count")
         .or(`name.eq.${decoded},slug.eq.${decoded.toLowerCase()}`)
         .limit(1)
         .maybeSingle();
@@ -167,7 +167,7 @@ export const useTopicByName = (topicName: string | undefined) => {
       if (!data) return null;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const row = data as any;
-      return mapTopic(row as DbTopicRaw, row.posts?.[0]?.count ?? 0);
+      return mapTopic(row as DbTopicRaw, row.post_count ?? 0);
     },
   });
 };
