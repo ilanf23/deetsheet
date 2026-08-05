@@ -15,7 +15,7 @@ interface DbComment {
   id: string;
   content: string;
   created_at: string;
-  author_id: string;
+  author_id: string | null;
   parent_comment_id: string | null;
   like_count: number | null;
   is_anonymous: boolean | null;
@@ -30,14 +30,30 @@ interface DbProfile {
 const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
   const { data, error } = await supabase
     .from("comments")
-    .select("id, content, created_at, author_id, parent_comment_id, like_count, is_anonymous")
+    .select("id, content, created_at, public_author_id, parent_comment_id, like_count, is_anonymous")
     .eq("post_id", postId)
     .order("created_at", { ascending: true });
   if (error) throw error;
-  const rows = (data ?? []) as unknown as DbComment[];
+  const rows = ((data ?? []) as unknown as Array<DbComment & { public_author_id: string | null }>).map(
+    (r) => ({ ...r, author_id: r.public_author_id ?? null })
+  );
+
+  // The signed-in reader may own anonymous comments here; the privileged view
+  // returns author ids only for the caller's own rows (or an admin's).
+  const { data: ownRows } = await supabase
+    .from("comments_privileged")
+    .select("id, author_id")
+    .eq("post_id", postId);
+  const ownAuthorById = new Map<string, string>();
+  for (const r of (ownRows ?? []) as Array<{ id: string; author_id: string }>) {
+    ownAuthorById.set(r.id, r.author_id);
+  }
+  for (const r of rows) {
+    if (!r.author_id) r.author_id = ownAuthorById.get(r.id) ?? null;
+  }
   if (rows.length === 0) return [];
 
-  const authorIds = Array.from(new Set(rows.map((r) => r.author_id)));
+  const authorIds = Array.from(new Set(rows.map((r) => r.author_id).filter((x): x is string => !!x)));
   const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
     .select("id, username, avatar_url")
@@ -50,7 +66,7 @@ const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
   }
 
   const authorIdByCommentId = new Map<string, string>();
-  for (const r of rows) authorIdByCommentId.set(r.id, r.author_id);
+  for (const r of rows) if (r.author_id) authorIdByCommentId.set(r.id, r.author_id);
 
   return rows.map((c) => {
     const parentAuthorId = c.parent_comment_id
@@ -65,8 +81,8 @@ const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
       id: c.id,
       username: isAnon
         ? "anonymous"
-        : profileByAuthorId.get(c.author_id)?.username || "anonymous",
-      avatarUrl: isAnon ? null : profileByAuthorId.get(c.author_id)?.avatar_url ?? null,
+        : (c.author_id ? profileByAuthorId.get(c.author_id)?.username : null) || "anonymous",
+      avatarUrl: isAnon ? null : (c.author_id ? profileByAuthorId.get(c.author_id)?.avatar_url : null) ?? null,
       content: c.content,
       createdAt: new Date(c.created_at),
       likeCount: c.like_count ?? 0,

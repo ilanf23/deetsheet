@@ -34,10 +34,17 @@ const UserPostsList = ({ userId }: { userId: string }) => {
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
 
   const fetchPosts = useCallback(async () => {
-    let query = supabase
-      .from("posts")
-      .select("id, title, content, score, comment_count, created_at, approved_at, status, is_anonymous, topics(name, slug)")
-      .eq("author_id", userId)
+    // Own/admin reads go through the privileged view (it returns author_id for
+    // anonymous rows too); public reads use the masked author reference.
+    let query = isOwnProfile
+      ? supabase
+          .from("posts_privileged")
+          .select("id, title, content, score, comment_count, created_at, approved_at, status, is_anonymous, topics(name, slug)")
+          .eq("author_id", userId)
+      : supabase
+          .from("posts")
+          .select("id, title, content, score, comment_count, created_at, approved_at, status, is_anonymous, topics(name, slug)")
+          .eq("public_author_id", userId)
       .order("created_at", { ascending: false });
 
     if (!isOwnProfile) {
