@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { buildPostSlug } from "@/lib/postSlug";
 import { isOtherReason, useReviewReasons, type ReviewReason } from "@/lib/reviewReasons";
+import { useTopics } from "@/hooks/useSupabaseTopics";
 
 
 
@@ -113,6 +114,7 @@ export default function ReviewActionDialog({
     content: string | null;
     story: string | null;
     image_url: string | null;
+    topic_id: string | null;
     topic_name: string | null;
   } | null>(null);
   const [postRefreshKey] = useState(0);
@@ -125,11 +127,15 @@ export default function ReviewActionDialog({
   const [newImage, setNewImage] = useState<File | null>(null);
   const [newImagePreview, setNewImagePreview] = useState<string | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
+  /** Topic the post will be filed under — admins can move it while reviewing. */
+  const [editTopicId, setEditTopicId] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [finalTextTouched, setFinalTextTouched] = useState(false);
   /** Once the admin edits the message themselves we stop regenerating it. */
   const [messageTouched, setMessageTouched] = useState(false);
 
+  const { data: topics } = useTopics();
+  const selectedTopic = topics?.find((t) => t.id === editTopicId) ?? null;
   const { data: reasons } = useReviewReasons();
   const reasonList: ReviewReason[] =
     action === "reject" ? reasons?.reject ?? [] : action === "edit" ? reasons?.edit ?? [] : [];
@@ -139,7 +145,9 @@ export default function ReviewActionDialog({
 
   /** Title as it currently reads in the left column — keeps the message in sync. */
   const liveTitle = (itemKind === "post" ? editTitle.trim() : "") || postDetail?.title || itemTitle;
-  const quotedTitle = [postDetail?.topic_name, liveTitle].filter(Boolean).join(": ");
+  /** Topic name as currently selected — the message follows any topic change. */
+  const liveTopicName = selectedTopic?.name ?? postDetail?.topic_name ?? null;
+  const quotedTitle = [liveTopicName, liveTitle].filter(Boolean).join(": ");
 
 
 
@@ -160,6 +168,7 @@ export default function ReviewActionDialog({
     setNewImage(null);
     setNewImagePreview(null);
     setRemoveImage(false);
+    setEditTopicId("");
     const c = defaultCopy(action, itemKind, itemTitle, "");
 
     setSubject(c.subject);
@@ -178,7 +187,7 @@ export default function ReviewActionDialog({
     (async () => {
       const { data } = await supabase
         .from("posts")
-        .select("title, content, story, image_url, topics(name)")
+        .select("title, content, story, image_url, topic_id, topics(name)")
         .eq("id", postId)
         .maybeSingle();
       if (cancelled || !data) return;
@@ -189,8 +198,10 @@ export default function ReviewActionDialog({
         content: data.content ?? null,
         story: data.story ?? null,
         image_url: data.image_url ?? null,
+        topic_id: (data as { topic_id: string | null }).topic_id ?? null,
         topic_name: topicName,
       });
+      setEditTopicId((data as { topic_id: string | null }).topic_id ?? "");
       setEditTitle(data.title ?? "");
       setEditContent(data.content ?? "");
       setEditStory(data.story ?? "");
@@ -214,7 +225,10 @@ export default function ReviewActionDialog({
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const currentImage = newImagePreview ?? (removeImage ? null : postDetail?.image_url ?? null);
+  const photoRemoved = removeImage || photoDenied;
+  const currentImage = photoDenied
+    ? null
+    : newImagePreview ?? (removeImage ? null : postDetail?.image_url ?? null);
 
   /** Whether the admin actually changed the post in the left column. */
   const postEdited =
@@ -222,8 +236,9 @@ export default function ReviewActionDialog({
     (editTitle !== (postDetail.title ?? "") ||
       editContent !== (postDetail.content ?? "") ||
       editStory !== (postDetail.story ?? "") ||
+      editTopicId !== (postDetail.topic_id ?? "") ||
       !!newImage ||
-      removeImage);
+      photoRemoved);
 
 
 
@@ -279,7 +294,7 @@ export default function ReviewActionDialog({
         .split("\n")
         .map((s) => s.trim())
         .filter(Boolean);
-      const topicName = postDetail?.topic_name ?? undefined;
+      const topicName = liveTopicName ?? undefined;
       const postTitle = (itemKind === "post" ? editTitle.trim() : "") || postDetail?.title || itemTitle;
       const profileUrl = "https://deetsheet.com/profile";
       const postUrl =
@@ -367,7 +382,9 @@ export default function ReviewActionDialog({
       // apply the review action.
       if (itemKind === "post" && postId && postEdited) {
         let nextImageUrl: string | null = postDetail?.image_url ?? null;
-        if (newImage) {
+        if (photoDenied) {
+          nextImageUrl = null;
+        } else if (newImage) {
           const uid = sess.session?.user?.id;
           const ext = newImage.name.split(".").pop() ?? "jpg";
           const path = `${uid}/${postId}-${Date.now()}.${ext}`;
@@ -379,6 +396,13 @@ export default function ReviewActionDialog({
         } else if (removeImage) {
           nextImageUrl = null;
         }
+
+        // A denied (or removed) photo must never survive in the topic image
+        // queue that was seeded from this post.
+        const droppedImage = postDetail?.image_url ?? null;
+        if (droppedImage && nextImageUrl !== droppedImage) {
+          await supabase.from("topic_images").delete().eq("url", droppedImage);
+        }
         const { error: updErr } = await supabase
           .from("posts")
           .update({
@@ -386,6 +410,9 @@ export default function ReviewActionDialog({
             content: editContent.trim(),
             story: editStory.trim() ? editStory : null,
             image_url: nextImageUrl,
+            ...(editTopicId && editTopicId !== (postDetail?.topic_id ?? "")
+              ? { topic_id: editTopicId }
+              : {}),
           })
           .eq("id", postId);
         if (updErr) throw updErr;
@@ -424,9 +451,9 @@ export default function ReviewActionDialog({
           <div className="space-y-3">
             <div className="text-xs uppercase tracking-wide text-muted-foreground">
               {itemKind === "topic" ? "Topic" : "Post"}
-              {postDetail?.topic_name && (
+              {liveTopicName && (
                 <span className="ml-2 normal-case tracking-normal">
-                  in <span className="text-primary">{postDetail.topic_name}</span>
+                  in <span className="text-primary">{liveTopicName}</span>
                 </span>
               )}
               <span className="ml-2 normal-case tracking-normal">· {authorLabel}</span>
@@ -434,6 +461,21 @@ export default function ReviewActionDialog({
 
             {itemKind === "post" && postDetail ? (
               <>
+                <div>
+                  <Label className="text-xs">Category / topic</Label>
+                  <Select value={editTopicId} onValueChange={setEditTopicId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a topic…" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72">
+                      {(topics ?? []).map((t) => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.name} · {t.categoryName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div>
                   <Label className="text-xs">Title</Label>
                   <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
@@ -469,7 +511,9 @@ export default function ReviewActionDialog({
                       }}
                     />
                   ) : (
-                    <p className="text-xs text-muted-foreground italic">No photo.</p>
+                    <p className="text-xs text-muted-foreground italic">
+                      {photoDenied ? "Photo denied — it will be removed from the live post." : "No photo."}
+                    </p>
                   )}
                   <input
                     ref={fileInputRef}
