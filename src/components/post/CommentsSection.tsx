@@ -39,17 +39,23 @@ const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
   );
 
   // The signed-in reader may own anonymous comments here; the privileged view
-  // returns author ids only for the caller's own rows (or an admin's).
-  const { data: ownRows } = await supabase
-    .from("comments_privileged")
-    .select("id, author_id")
-    .eq("post_id", postId);
-  const ownAuthorById = new Map<string, string>();
-  for (const r of (ownRows ?? []) as Array<{ id: string; author_id: string }>) {
-    ownAuthorById.set(r.id, r.author_id);
-  }
-  for (const r of rows) {
-    if (!r.author_id) r.author_id = ownAuthorById.get(r.id) ?? null;
+  // returns author ids only for the caller's own rows (or an admin's). Skipped
+  // entirely for signed-out readers, who have no access to it.
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (session) {
+    const { data: ownRows } = await supabase
+      .from("comments_privileged")
+      .select("id, author_id")
+      .eq("post_id", postId);
+    const ownAuthorById = new Map<string, string>();
+    for (const r of (ownRows ?? []) as Array<{ id: string; author_id: string }>) {
+      ownAuthorById.set(r.id, r.author_id);
+    }
+    for (const r of rows) {
+      if (!r.author_id) r.author_id = ownAuthorById.get(r.id) ?? null;
+    }
   }
   if (rows.length === 0) return [];
 
