@@ -70,6 +70,7 @@ const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
       content: c.content,
       createdAt: new Date(c.created_at),
       likeCount: c.like_count ?? 0,
+      authorId: c.author_id,
       parentCommentId: c.parent_comment_id,
       parentUsername:
         parentAuthorId && !parentIsAnon
@@ -149,6 +150,7 @@ const CommentsSection = ({ postId }: CommentsSectionProps) => {
               openReplyId={openReplyId}
               onReplyToggle={setOpenReplyId}
               onReplySubmitted={handleReplySubmitted}
+              onDeleted={invalidate}
             />
           ))}
         </div>

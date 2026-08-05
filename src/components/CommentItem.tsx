@@ -6,7 +6,11 @@ import {
   ThumbsDown,
   Minus,
   Plus,
+  Trash2,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import UserAvatar from "@/components/UserAvatar";
 import InlineCommentComposer from "@/components/post/InlineCommentComposer";
 import JudgementReactionsRow from "@/components/post/JudgementReactionsRow";
@@ -22,6 +26,7 @@ export interface DisplayComment {
   parentCommentId: string | null;
   parentUsername: string | null;
   isAnonymous?: boolean;
+  authorId?: string;
 }
 
 export type CommentNode = DisplayComment & {
@@ -36,6 +41,7 @@ interface CommentItemProps {
   openReplyId: string | null;
   onReplyToggle: (commentId: string | null) => void;
   onReplySubmitted: () => void;
+  onDeleted?: () => void;
 }
 
 const MAX_VISUAL_DEPTH = 8;
@@ -47,8 +53,26 @@ const CommentItem = ({
   openReplyId,
   onReplyToggle,
   onReplySubmitted,
+  onDeleted,
 }: CommentItemProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [deleting, setDeleting] = useState(false);
+  const isAuthor = !!user && !!node.authorId && user.id === node.authorId;
   const isReplyOpen = openReplyId === node.id;
+
+  const handleDelete = async () => {
+    if (!window.confirm("Delete this comment? This can't be undone.")) return;
+    setDeleting(true);
+    const { error } = await supabase.from("comments").delete().eq("id", node.id);
+    setDeleting(false);
+    if (error) {
+      toast({ title: "Could not delete comment", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Comment deleted" });
+    onDeleted?.();
+  };
   const [vote, setVote] = useState<"up" | "down" | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [isOverflowing, setIsOverflowing] = useState(false);
@@ -249,6 +273,19 @@ const CommentItem = ({
             ) : (
               <span />
             )}
+            <div className="flex items-center gap-3">
+            {isAuthor && (
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleting}
+                aria-label="Delete your comment"
+                className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-destructive transition-colors disabled:opacity-50"
+              >
+                <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                delete
+              </button>
+            )}
             <button
               type="button"
               onClick={() => onReplyToggle(isReplyOpen ? null : node.id)}
@@ -257,6 +294,7 @@ const CommentItem = ({
             >
               reply
             </button>
+            </div>
           </div>
 
           {isReplyOpen && (
@@ -285,6 +323,7 @@ const CommentItem = ({
               openReplyId={openReplyId}
               onReplyToggle={onReplyToggle}
               onReplySubmitted={onReplySubmitted}
+              onDeleted={onDeleted}
             />
           ))}
         </div>

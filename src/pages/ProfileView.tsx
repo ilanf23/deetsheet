@@ -395,6 +395,22 @@ const ProfileView = () => {
     };
   }, [commentsRequested, targetUserId]);
 
+  const handleDeleteComment = async (commentId: string) => {
+    if (!window.confirm("Delete this comment? This can't be undone.")) return;
+    const { error } = await supabase.from("comments").delete().eq("id", commentId);
+    if (error) {
+      toast({
+        title: "Could not delete comment",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+    setUserComments((prev) => prev.filter((c) => c.id !== commentId));
+    setCommentCount((c) => Math.max(0, c - 1));
+    toast({ title: "Comment deleted" });
+  };
+
   const username =
     (profile?.name as string) ||
     (profile?.username as string) ||
@@ -543,7 +559,14 @@ const ProfileView = () => {
     { value: "topics", label: "Topics", count: topicCount },
     { value: "comments", label: "Comments", count: commentCount },
     ...(isOwnProfile
-      ? [{ value: "messages", label: "Messages", count: unreadMessages ?? 0 }]
+      ? [
+          {
+            value: "messages",
+            label: "Messages",
+            count: unreadMessages ?? 0,
+            dot: (unreadMessages ?? 0) > 0,
+          },
+        ]
       : []),
     { value: "favorites", label: "Favorites", count: 0 },
     { value: "following", label: "Following", count: followingTotal },
@@ -858,9 +881,17 @@ const ProfileView = () => {
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-2.5 text-sm font-medium"
                   >
                     {tab.label}
-                    <span className="ml-1.5 text-xs text-muted-foreground">
-                      {tab.count}
-                    </span>
+                    {"dot" in tab && (tab as { dot?: boolean }).dot ? (
+                      <span
+                        aria-label="Unread messages"
+                        title="You have unread messages"
+                        className="ml-1.5 inline-block h-2 w-2 rounded-full bg-secondary"
+                      />
+                    ) : (
+                      <span className="ml-1.5 text-xs text-muted-foreground">
+                        {tab.count}
+                      </span>
+                    )}
                   </TabsTrigger>
                 ))}
               </TabsList>
@@ -1130,6 +1161,20 @@ const ProfileView = () => {
                                   <span className="tabular-nums">
                                     {comment.like_count} {comment.like_count === 1 ? "like" : "likes"}
                                   </span>
+                                </>
+                              )}
+                              {isOwnProfile && (
+                                <>
+                                  <span aria-hidden>·</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteComment(comment.id)}
+                                    className="inline-flex items-center gap-1 text-muted-foreground hover:text-destructive transition-colors"
+                                    aria-label="Delete this comment"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                                    Delete
+                                  </button>
                                 </>
                               )}
                             </div>

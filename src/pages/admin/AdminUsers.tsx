@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import UserRatingsDialog from "@/components/admin/UserRatingsDialog";
 
 type Profile = Tables<"profiles">;
 type RoleRow = Tables<"user_roles">;
@@ -76,6 +77,7 @@ export default function AdminUsers() {
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
   const [comingSoonFeature, setComingSoonFeature] = useState<"edit" | "add">("edit");
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [ratingsTarget, setRatingsTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
 
@@ -335,6 +337,13 @@ export default function AdminUsers() {
                 </span>
                 <span className="flex items-center justify-end gap-4">
                   <button
+                    onClick={() => setRatingsTarget({ id: u.id, name: displayName })}
+                    className="text-[14px]"
+                    style={{ color: "hsl(var(--admin-primary))" }}
+                  >
+                    Ratings
+                  </button>
+                  <button
                     onClick={() => handleEdit(u.id)}
                     className="text-[14px]"
                     style={{ color: "hsl(var(--admin-primary))" }}
@@ -402,6 +411,13 @@ export default function AdminUsers() {
           </div>
         </div>
       </div>
+
+      <UserRatingsDialog
+        open={!!ratingsTarget}
+        onOpenChange={(o) => !o && setRatingsTarget(null)}
+        userId={ratingsTarget?.id ?? null}
+        userLabel={ratingsTarget?.name ?? ""}
+      />
 
       <Dialog open={comingSoonOpen} onOpenChange={setComingSoonOpen}>
         <DialogContent className="sm:max-w-md">

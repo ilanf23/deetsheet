@@ -50,7 +50,7 @@ const PostBody = ({ content, imageSrc, imageAlt }: PostBodyProps) => {
           alt={imageAlt || ""}
           loading="lazy"
           onError={() => setImageFailed(true)}
-          className="mt-3 w-full max-w-[480px] rounded-lg border border-border object-contain bg-muted"
+          className="mt-[var(--space-rhythm-block)] w-full max-w-[480px] rounded-lg border border-border object-contain bg-muted"
         />
       )}
       {showToggle && (
