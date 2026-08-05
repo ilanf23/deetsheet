@@ -96,7 +96,7 @@ export const useFollowing = (userId: string | undefined, options?: { enabled?: b
         supabase
           .from("post_follows" as never)
           .select(
-            "post_id, created_at, posts!post_follows_post_id_fkey(id, title, content, topic_id, author_id, average_rating, rating_count, comment_count, topics!posts_topic_id_fkey(id, name), profiles!posts_author_id_profiles_fkey(username))"
+            "post_id, created_at, posts!post_follows_post_id_fkey(id, title, content, topic_id, public_author_id, average_rating, rating_count, comment_count, topics!posts_topic_id_fkey(id, name), profiles!posts_author_id_profiles_fkey(username))"
           )
           .eq("user_id", userId)
           .order("created_at", { ascending: false }),
@@ -152,7 +152,7 @@ export const useFollowing = (userId: string | undefined, options?: { enabled?: b
             content: p.content as string,
             topicId: p.topic_id as string,
             topicName: (t?.name as string) ?? "",
-            authorId: p.author_id as string,
+            authorId: (p.public_author_id as string) ?? null,
             authorUsername: (author?.username as string) ?? null,
             averageRating: Number(p.average_rating ?? 0),
             ratingCount: Number(p.rating_count ?? 0),

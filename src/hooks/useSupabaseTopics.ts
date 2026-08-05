@@ -107,7 +107,7 @@ const mapPost = (row: DbPostRaw): PostRow => {
     topicId: row.topic_id,
     topicName: row.topics?.name ?? "",
     categoryName: row.topics?.category_name ?? "Life",
-    authorId: row.author_id,
+    authorId: row.public_author_id ?? null,
     username: row.profiles?.username ?? "anonymous",
     ratingScore: Number(row.average_rating ?? 0),
     ratingCount: row.rating_count ?? 0,
@@ -207,9 +207,9 @@ export const usePostsByTopic = (topicId: string | undefined) => {
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, content, story, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, approved_at, image_url, status, is_anonymous, " +
+          "id, title, content, story, topic_id, public_author_id, score, average_rating, rating_count, comment_count, created_at, approved_at, image_url, status, is_anonymous, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
+            "profiles!posts_public_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
         .eq("topic_id", topicId)
         .eq("status", "approved");
@@ -238,9 +238,9 @@ export const useRecentPosts = (limit = 8) => {
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, topic_id, author_id, average_rating, rating_count, comment_count, created_at, approved_at, image_url, status, is_anonymous, " +
+          "id, title, topic_id, public_author_id, average_rating, rating_count, comment_count, created_at, approved_at, image_url, status, is_anonymous, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
+            "profiles!posts_public_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
         .eq("status", "approved")
         .not("approved_at", "is", null)
@@ -336,9 +336,9 @@ export const useRecentPostsByTopic = (topicId: string | undefined, limit = 5) =>
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, content, story, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, approved_at, image_url, status, is_anonymous, " +
+          "id, title, content, story, topic_id, public_author_id, score, average_rating, rating_count, comment_count, created_at, approved_at, image_url, status, is_anonymous, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
+            "profiles!posts_public_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
         .eq("topic_id", topicId)
         .eq("status", "approved")
