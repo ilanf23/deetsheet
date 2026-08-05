@@ -161,6 +161,11 @@ const EDUCATION_LABELS: Record<string, string> = {
 const PROFILE_COLUMNS =
   "id, name, username, avatar_url, bio, sex, orientation, birth_year, birth_month, birth_day, hide_age, city, state, country, education, high_school, college, degree, major, job, entity_type, favorite_movie, reading, city_born, created_at";
 
+// Birthday, sex and orientation are readable only by the member themselves
+// (and admins), so public profile reads request the safe subset.
+const PUBLIC_PROFILE_COLUMNS =
+  "id, name, username, avatar_url, bio, hide_age, city, state, country, education, high_school, college, degree, major, job, entity_type, favorite_movie, reading, city_born, created_at";
+
 function formatProfileValue(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
@@ -247,20 +252,25 @@ const ProfileView = () => {
     // Profile, posts, and comment-count load eagerly — they drive the always-
     // visible header, posts tab (default), and tab counters. Topics and
     // follow lists are deferred until their tabs are actually opened.
-    void supabase
-      .from("profiles")
-      .select(PROFILE_COLUMNS)
-      .eq("id", targetUserId)
-      .single()
+    void (isOwnProfile
+      ? supabase.from("profiles_private").select(PROFILE_COLUMNS).eq("id", targetUserId).single()
+      : supabase.from("profiles").select(PUBLIC_PROFILE_COLUMNS).eq("id", targetUserId).single())
       .then(({ data }) => {
         if (data) setProfile(data as unknown as Record<string, unknown>);
       });
 
     {
-      let postsQuery = supabase
-        .from("posts")
-        .select("id, title, content, created_at, approved_at, comment_count, score, topic_id, status, image_url, story, topics(name)")
-        .eq("author_id", targetUserId)
+      const POST_COLUMNS =
+        "id, title, content, created_at, approved_at, comment_count, score, topic_id, status, image_url, story, topics(name)";
+      let postsQuery = isOwnProfile
+        ? supabase
+            .from("posts_privileged")
+            .select(POST_COLUMNS)
+            .eq("author_id", targetUserId)
+        : supabase
+            .from("posts")
+            .select(POST_COLUMNS)
+            .eq("public_author_id", targetUserId)
         .neq("status", "deleted")
         .order("created_at", { ascending: false });
 
@@ -288,10 +298,15 @@ const ProfileView = () => {
     }
 
 
-    void supabase
-      .from("comments")
-      .select("id", { count: "exact", head: true })
-      .eq("author_id", targetUserId)
+    void (isOwnProfile
+      ? supabase
+          .from("comments_privileged")
+          .select("id", { count: "exact", head: true })
+          .eq("author_id", targetUserId)
+      : supabase
+          .from("comments")
+          .select("id", { count: "exact", head: true })
+          .eq("public_author_id", targetUserId))
       .then(({ count }) => {
         if (count !== null) setCommentCount(count);
       });
@@ -342,10 +357,15 @@ const ProfileView = () => {
     if (!commentsRequested || !targetUserId) return;
     let cancelled = false;
     void (async () => {
-      const { data } = await supabase
-        .from("comments")
-        .select("id, content, created_at, like_count, post_id")
-        .eq("author_id", targetUserId)
+      const { data } = await (isOwnProfile
+        ? supabase
+            .from("comments_privileged")
+            .select("id, content, created_at, like_count, post_id")
+            .eq("author_id", targetUserId)
+        : supabase
+            .from("comments")
+            .select("id, content, created_at, like_count, post_id")
+            .eq("public_author_id", targetUserId))
         .order("created_at", { ascending: false });
       if (cancelled || !data) return;
 
@@ -393,7 +413,7 @@ const ProfileView = () => {
     return () => {
       cancelled = true;
     };
-  }, [commentsRequested, targetUserId]);
+  }, [commentsRequested, targetUserId, isOwnProfile]);
 
   const handleDeleteComment = async (commentId: string) => {
     if (!window.confirm("Delete this comment? This can't be undone.")) return;

@@ -70,7 +70,7 @@ type DbPostRaw = {
   content?: string;
   story?: string | null;
   topic_id: string;
-  author_id: string;
+  public_author_id: string | null;
   score?: number;
   average_rating: number | null;
   rating_count: number | null;
@@ -107,7 +107,7 @@ const mapPost = (row: DbPostRaw): PostRow => {
     topicId: row.topic_id,
     topicName: row.topics?.name ?? "",
     categoryName: row.topics?.category_name ?? "Life",
-    authorId: row.author_id,
+    authorId: row.public_author_id ?? null,
     username: row.profiles?.username ?? "anonymous",
     ratingScore: Number(row.average_rating ?? 0),
     ratingCount: row.rating_count ?? 0,
@@ -123,7 +123,7 @@ const mapPost = (row: DbPostRaw): PostRow => {
 
 /**
  * Fetch every topic plus a derived post count. Uses a single round trip
- * (`select('*, posts(count)')`) instead of N+1 queries.
+ * (denormalized `topics.post_count`) instead of N+1 queries.
  */
 export const useTopics = () => {
   return useQuery({
@@ -131,13 +131,13 @@ export const useTopics = () => {
     queryFn: async (): Promise<TopicRow[]> => {
       const { data, error } = await supabase
         .from("topics")
-        .select("id, slug, name, category_name, description, image_url, subtitle_override, posts(count)")
+        .select("id, slug, name, category_name, description, image_url, subtitle_override, post_count")
         .order("name", { ascending: true });
 
       if (error) throw error;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return (data ?? []).map((row: any) =>
-        mapTopic(row as DbTopicRaw, row.posts?.[0]?.count ?? 0)
+        mapTopic(row as DbTopicRaw, row.post_count ?? 0)
       );
     },
     staleTime: 60_000,
@@ -158,7 +158,7 @@ export const useTopicByName = (topicName: string | undefined) => {
       const decoded = decodeURIComponent(topicName);
       const { data, error } = await supabase
         .from("topics")
-        .select("id, slug, name, category_name, description, image_url, subtitle_override, posts(count)")
+        .select("id, slug, name, category_name, description, image_url, subtitle_override, post_count")
         .or(`name.eq.${decoded},slug.eq.${decoded.toLowerCase()}`)
         .limit(1)
         .maybeSingle();
@@ -167,7 +167,7 @@ export const useTopicByName = (topicName: string | undefined) => {
       if (!data) return null;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const row = data as any;
-      return mapTopic(row as DbTopicRaw, row.posts?.[0]?.count ?? 0);
+      return mapTopic(row as DbTopicRaw, row.post_count ?? 0);
     },
   });
 };
@@ -207,9 +207,9 @@ export const usePostsByTopic = (topicId: string | undefined) => {
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, content, story, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, approved_at, image_url, status, is_anonymous, " +
+          "id, title, content, story, topic_id, public_author_id, score, average_rating, rating_count, comment_count, created_at, approved_at, image_url, status, is_anonymous, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
+            "profiles!posts_public_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
         .eq("topic_id", topicId)
         .eq("status", "approved");
@@ -238,9 +238,9 @@ export const useRecentPosts = (limit = 8) => {
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, topic_id, author_id, average_rating, rating_count, comment_count, created_at, approved_at, image_url, status, is_anonymous, " +
+          "id, title, topic_id, public_author_id, average_rating, rating_count, comment_count, created_at, approved_at, image_url, status, is_anonymous, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
+            "profiles!posts_public_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
         .eq("status", "approved")
         .not("approved_at", "is", null)
@@ -336,9 +336,9 @@ export const useRecentPostsByTopic = (topicId: string | undefined, limit = 5) =>
       const { data, error } = await supabase
         .from("posts")
         .select(
-          "id, title, content, story, topic_id, author_id, score, average_rating, rating_count, comment_count, created_at, approved_at, image_url, status, is_anonymous, " +
+          "id, title, content, story, topic_id, public_author_id, score, average_rating, rating_count, comment_count, created_at, approved_at, image_url, status, is_anonymous, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            "profiles!posts_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
+            "profiles!posts_public_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
         .eq("topic_id", topicId)
         .eq("status", "approved")

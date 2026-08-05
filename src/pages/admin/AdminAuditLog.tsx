@@ -85,7 +85,7 @@ export default function AdminAuditLog() {
           .order("created_at", { ascending: false })
           .limit(500),
         supabase
-          .from("posts")
+          .from("posts_privileged")
           .select("id, title, author_id, created_at")
           .order("created_at", { ascending: false })
           .limit(200),

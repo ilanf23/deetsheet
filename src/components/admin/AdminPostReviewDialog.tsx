@@ -104,7 +104,7 @@ export default function AdminPostReviewDialog({
       resetEditState(null);
 
       const { data: postRow } = await supabase
-        .from("posts")
+        .from("posts_privileged")
         .select("*")
         .eq("id", postId)
         .maybeSingle();
@@ -117,7 +117,7 @@ export default function AdminPostReviewDialog({
 
       const [topicRes, authorRes, postLocRes] = await Promise.all([
         supabase.from("topics").select("name, slug").eq("id", postRow.topic_id).maybeSingle(),
-        supabase.from("profiles").select("*").eq("id", postRow.author_id).maybeSingle(),
+        supabase.from("profiles_private").select("*").eq("id", postRow.author_id).maybeSingle(),
         postRow.location_id
           ? supabase.from("locations").select("city, state").eq("id", postRow.location_id).maybeSingle()
           : Promise.resolve({ data: null }),
@@ -141,7 +141,7 @@ export default function AdminPostReviewDialog({
       }
 
       const { data: authorPosts } = await supabase
-        .from("posts")
+        .from("posts_privileged")
         .select("id, title, status, created_at, topic_id, topics(name)")
         .eq("author_id", postRow.author_id)
         .order("created_at", { ascending: false });

@@ -45,7 +45,7 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
     (async () => {
       setLoading(true);
       const { data, error } = await supabase
-        .from("posts")
+        .from("posts_privileged")
         .select("id, title, content, story, image_url, author_id, topic_id, status, is_anonymous")
         .eq("id", postId)
         .maybeSingle();

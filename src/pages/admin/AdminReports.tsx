@@ -125,7 +125,7 @@ export default function AdminReports() {
           .from("reports")
           .select("id, post_id, user_id, reasons, created_at")
           .order("created_at", { ascending: false }),
-        supabase.from("posts").select("id, title, author_id"),
+        supabase.from("posts_privileged").select("id, title, author_id"),
         supabase.from("profiles").select("id, name, username"),
       ]);
       setReports((reportsRes.data ?? []) as Report[]);

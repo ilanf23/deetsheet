@@ -31,7 +31,7 @@ function AuthorPriorPosts({ authorId, excludePostId }: { authorId: string; exclu
     if (next && !loaded) {
       setLoading(true);
       const { data } = await supabase
-        .from("posts")
+        .from("posts_privileged")
         .select("id, title, status, created_at, topic_id")
         .eq("author_id", authorId)
         .neq("id", excludePostId)
@@ -205,7 +205,7 @@ export default function AdminReview() {
         .select("id, name, category_name, description, created_at, created_by")
         .eq("status", "pending"),
       supabase
-        .from("posts")
+        .from("posts_privileged")
         .select("id, title, content, story, image_url, topic_id, author_id, created_at, updated_at, approved_at")
         .eq("status", "pending"),
     ]);
