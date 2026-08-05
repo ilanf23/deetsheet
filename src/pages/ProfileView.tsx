@@ -161,6 +161,11 @@ const EDUCATION_LABELS: Record<string, string> = {
 const PROFILE_COLUMNS =
   "id, name, username, avatar_url, bio, sex, orientation, birth_year, birth_month, birth_day, hide_age, city, state, country, education, high_school, college, degree, major, job, entity_type, favorite_movie, reading, city_born, created_at";
 
+// Birthday, sex and orientation are readable only by the member themselves
+// (and admins), so public profile reads request the safe subset.
+const PUBLIC_PROFILE_COLUMNS =
+  "id, name, username, avatar_url, bio, hide_age, city, state, country, education, high_school, college, degree, major, job, entity_type, favorite_movie, reading, city_born, created_at";
+
 function formatProfileValue(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
@@ -247,11 +252,9 @@ const ProfileView = () => {
     // Profile, posts, and comment-count load eagerly — they drive the always-
     // visible header, posts tab (default), and tab counters. Topics and
     // follow lists are deferred until their tabs are actually opened.
-    void supabase
-      .from("profiles")
-      .select(PROFILE_COLUMNS)
-      .eq("id", targetUserId)
-      .single()
+    void (isOwnProfile
+      ? supabase.from("profiles_private").select(PROFILE_COLUMNS).eq("id", targetUserId).single()
+      : supabase.from("profiles").select(PUBLIC_PROFILE_COLUMNS).eq("id", targetUserId).single())
       .then(({ data }) => {
         if (data) setProfile(data as unknown as Record<string, unknown>);
       });
@@ -410,7 +413,7 @@ const ProfileView = () => {
     return () => {
       cancelled = true;
     };
-  }, [commentsRequested, targetUserId]);
+  }, [commentsRequested, targetUserId, isOwnProfile]);
 
   const handleDeleteComment = async (commentId: string) => {
     if (!window.confirm("Delete this comment? This can't be undone.")) return;
