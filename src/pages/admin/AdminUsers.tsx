@@ -77,6 +77,7 @@ export default function AdminUsers() {
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
   const [comingSoonFeature, setComingSoonFeature] = useState<"edit" | "add">("edit");
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [ratingsTarget, setRatingsTarget] = useState<{ id: string; name: string } | null>(null);
   const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
 
