@@ -1678,6 +1678,10 @@ export type Database = {
     }
     Functions: {
       build_post_link: { Args: { _post_id: string }; Returns: string }
+      count_changed_words: {
+        Args: { _new: string; _old: string }
+        Returns: number
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
