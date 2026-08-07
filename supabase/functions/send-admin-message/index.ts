@@ -25,6 +25,9 @@ interface Payload {
   /** Registered transactional template name, e.g. "post-approved". */
   email_template?: string;
   template_data?: Record<string, unknown>;
+  /** Default true. When false, no thread/message row is created (review outcomes). */
+  create_thread?: boolean;
+
 }
 
 
@@ -136,9 +139,13 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Review outcomes pass create_thread: false — they get email + in-app
+    // notification only, and must never appear in the member's inbox.
+    const createThread = payload.create_thread !== false;
+
     // Find or create thread
     let threadId = payload.thread_id ?? null;
-    if (!threadId) {
+    if (createThread && !threadId) {
       if (payload.post_id) {
         const { data: existing } = await admin
           .from("message_threads")
@@ -162,6 +169,7 @@ Deno.serve(async (req) => {
         threadId = created.id;
       }
     }
+
 
     const bodyHtml = renderSlipHtml(payload.subject, payload.slip, payload.body_html);
     const bodyText = [
@@ -236,31 +244,66 @@ Deno.serve(async (req) => {
     }
 
 
-    // Insert message row
-    const { data: message, error: msgErr } = await admin
-      .from("messages")
-      .insert({
-        thread_id: threadId,
-        sender_id: senderId,
-        sender_role: "admin",
-        body_html: bodyHtml,
-        body_text: bodyText,
-        slip: payload.slip ?? null,
-        email_sent: emailSent,
-        email_message_id: emailMessageId,
-      })
-      .select("id")
-      .single();
-    if (msgErr) throw msgErr;
+    let messageId: string | null = null;
 
-    // Reset thread status to open on admin send (was needs_contact after user reply)
-    await admin
-      .from("message_threads")
-      .update({ status: "open", subject: payload.subject })
-      .eq("id", threadId);
+    if (createThread) {
+      // Insert message row
+      const { data: message, error: msgErr } = await admin
+        .from("messages")
+        .insert({
+          thread_id: threadId,
+          sender_id: senderId,
+          sender_role: "admin",
+          body_html: bodyHtml,
+          body_text: bodyText,
+          slip: payload.slip ?? null,
+          email_sent: emailSent,
+          email_message_id: emailMessageId,
+        })
+        .select("id")
+        .single();
+      if (msgErr) throw msgErr;
+      messageId = message.id;
+
+      // Reset thread status to open on admin send (was needs_contact after user reply)
+      await admin
+        .from("message_threads")
+        .update({ status: "open", subject: payload.subject })
+        .eq("id", threadId);
+    } else {
+      // No inbox thread for review outcomes — the in-app notification is the
+      // only on-site surface. The posts status trigger already notifies on a
+      // status change, so skip if one was just written for this post.
+      const since = new Date(Date.now() - 60_000).toISOString();
+      const { data: recent } = await admin
+        .from("notifications")
+        .select("id")
+        .eq("user_id", payload.user_id)
+        .eq("post_id", payload.post_id ?? null)
+        .gte("created_at", since)
+        .limit(1);
+
+      if (!recent?.length) {
+        let link = "/profile";
+        if (payload.post_id) {
+          const { data: built } = await admin.rpc("build_post_link", {
+            _post_id: payload.post_id,
+          });
+          if (typeof built === "string" && built) link = built;
+        }
+        await admin.from("notifications").insert({
+          user_id: payload.user_id,
+          type: "post_status",
+          message: payload.subject,
+          link,
+          post_id: payload.post_id ?? null,
+        });
+      }
+    }
+
 
     return new Response(
-      JSON.stringify({ success: true, thread_id: threadId, message_id: message.id, email_sent: emailSent }),
+      JSON.stringify({ success: true, thread_id: threadId, message_id: messageId, email_sent: emailSent }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
