@@ -371,6 +371,9 @@ export default function ReviewActionDialog({
             send_email: sendEmail,
             email_template: emailTemplate,
             template_data: templateData,
+            // Review outcomes deliver email + in-app notification only —
+            // they must not create an inbox thread for the member.
+            create_thread: false,
           }),
         }
       );
