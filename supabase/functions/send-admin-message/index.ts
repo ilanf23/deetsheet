@@ -136,9 +136,13 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Review outcomes pass create_thread: false — they get email + in-app
+    // notification only, and must never appear in the member's inbox.
+    const createThread = payload.create_thread !== false;
+
     // Find or create thread
     let threadId = payload.thread_id ?? null;
-    if (!threadId) {
+    if (createThread && !threadId) {
       if (payload.post_id) {
         const { data: existing } = await admin
           .from("message_threads")
@@ -162,6 +166,7 @@ Deno.serve(async (req) => {
         threadId = created.id;
       }
     }
+
 
     const bodyHtml = renderSlipHtml(payload.subject, payload.slip, payload.body_html);
     const bodyText = [
