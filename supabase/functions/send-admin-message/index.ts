@@ -303,7 +303,7 @@ Deno.serve(async (req) => {
 
 
     return new Response(
-      JSON.stringify({ success: true, thread_id: threadId, message_id: message.id, email_sent: emailSent }),
+      JSON.stringify({ success: true, thread_id: threadId, message_id: messageId, email_sent: emailSent }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
