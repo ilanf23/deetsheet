@@ -25,6 +25,9 @@ interface Payload {
   /** Registered transactional template name, e.g. "post-approved". */
   email_template?: string;
   template_data?: Record<string, unknown>;
+  /** Default true. When false, no thread/message row is created (review outcomes). */
+  create_thread?: boolean;
+
 }
 
 
