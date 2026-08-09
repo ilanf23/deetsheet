@@ -510,7 +510,7 @@ export default function AdminMessages() {
       <Dialog open={composeOpen} onOpenChange={setComposeOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Review Slip — what {composeCtx?.userLabel} receives</DialogTitle>
+            <DialogTitle>Message {composeCtx?.userLabel}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             {templates.length > 0 && (
@@ -534,22 +534,14 @@ export default function AdminMessages() {
               <Label className="text-xs">Subject</Label>
               <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
             </div>
-            <div className="rounded-lg border overflow-hidden">
-              <div
-                className="px-4 py-2 text-[12px] uppercase tracking-wide font-semibold text-white"
-                style={{ backgroundColor: "#0e2a4a" }}
-              >
-                Review slip preview
-              </div>
-              <div className="divide-y">
-                {composeCtx?.postStatus && (
-                  <Row k="Status" v={composeCtx.postStatus === "pending" ? "Pending — not yet approved" : composeCtx.postStatus} />
-                )}
-                {composeCtx?.postTitle && <Row k="Post" v={composeCtx.postTitle} />}
-                <RowEdit k="Reason" v={reason} onChange={setReason} placeholder="e.g. too general — could describe any job" />
-                <RowEdit k="Suggestions" v={suggestions} onChange={setSuggestions} placeholder="e.g. one specific detail about what architects do" />
-                <RowEdit k="Deadline" v={deadline} onChange={setDeadline} />
-              </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Message</Label>
+              <Textarea
+                rows={9}
+                value={messageBody}
+                onChange={(e) => setMessageBody(e.target.value)}
+                placeholder="Write your message…"
+              />
             </div>
             <div className="flex items-center gap-2">
               <Checkbox
@@ -566,10 +558,11 @@ export default function AdminMessages() {
             <Button variant="outline" onClick={() => setComposeOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={sendSlip} disabled={sending}>
-              {sending ? "Sending…" : "Send slip"}
+            <Button onClick={sendMessage} disabled={sending || !messageBody.trim()}>
+              {sending ? "Sending…" : "Send Message"}
             </Button>
           </DialogFooter>
+
         </DialogContent>
       </Dialog>
 
