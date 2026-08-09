@@ -50,6 +50,22 @@ function escapeHtml(s: string) {
   );
 }
 
+/** True when the slip carries real review content (not just a default deadline). */
+function hasSlipContent(slip: Slip | undefined) {
+  return Boolean(slip?.status || slip?.post || slip?.reason || slip?.suggestions);
+}
+
+function renderPlainHtml(subject: string, bodyHtml: string | undefined) {
+  return `<!doctype html><html><body style="margin:0;padding:0;background:#f0f2f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+    <div style="max-width:600px;margin:0 auto;padding:24px;">
+      <div style="background:#fff;border:1px solid #e6e8ee;border-radius:8px;padding:20px;">
+        <h2 style="margin:0 0 12px;font-size:18px;color:#0e2a4a;">${escapeHtml(subject)}</h2>
+        <div style="color:#1a1a1a;font-size:14px;line-height:1.55;">${bodyHtml ?? ""}</div>
+      </div>
+    </div>
+  </body></html>`;
+}
+
 function renderSlipHtml(subject: string, slip: Slip | undefined, bodyHtml: string | undefined) {
   const rows: [string, string][] = [];
   if (slip?.status) rows.push(["Status", slip.status]);
@@ -84,6 +100,7 @@ function renderSlipHtml(subject: string, slip: Slip | undefined, bodyHtml: strin
     </div>
   </body></html>`;
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
