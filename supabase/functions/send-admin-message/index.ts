@@ -240,15 +240,15 @@ Deno.serve(async (req) => {
               idempotencyKey: `admin-message-${payload.user_id}-${Date.now()}`,
               templateData: {
                 eyebrow: "MESSAGE FROM DEETSHEET",
-                statusValue: payload.slip?.status ?? undefined,
+                statusValue: isSlip ? payload.slip?.status : undefined ?? undefined,
                 headline: payload.subject,
-                quotedTitle: payload.slip?.post ?? undefined,
-                reason: payload.slip?.reason ?? undefined,
+                quotedTitle: isSlip ? payload.slip?.post : undefined ?? undefined,
+                reason: isSlip ? payload.slip?.reason : undefined ?? undefined,
                 suggestions: payload.slip?.suggestions
                   ? [payload.slip.suggestions]
                   : undefined,
                 bodyText: htmlToText(payload.body_html ?? ""),
-                callout: payload.slip?.deadline_text ?? undefined,
+                callout: isSlip ? payload.slip?.deadline_text : undefined ?? undefined,
                 ...(payload.template_data ?? {}),
               },
             };
@@ -287,7 +287,7 @@ Deno.serve(async (req) => {
           sender_role: "admin",
           body_html: bodyHtml,
           body_text: bodyText,
-          slip: payload.slip ?? null,
+          slip: slipForStorage,
           email_sent: emailSent,
           email_message_id: emailMessageId,
         })
