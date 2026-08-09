@@ -244,9 +244,7 @@ export default function AdminMessages() {
   const openCompose = (ctx: NonNullable<typeof composeCtx>) => {
     setComposeCtx(ctx);
     setSubject(ctx.postTitle ? `Regarding your post: ${ctx.postTitle}` : "Message from DeetSheet");
-    setReason("");
-    setSuggestions("");
-    setDeadline("30 days to adjust, or the post is automatically deleted");
+    setMessageBody("");
     setAlsoEmail(true);
     setComposeOpen(true);
   };
@@ -267,17 +265,28 @@ export default function AdminMessages() {
     const t = templates.find((x) => x.id === id);
     if (!t) return;
     setSubject(t.subject ?? subject);
-    if (t.reason_default) setReason(t.reason_default);
-    if (t.suggestions_default) setSuggestions(t.suggestions_default);
-    if (t.deadline_default) setDeadline(t.deadline_default);
+    // Form letters are plain prose here — no slip rows in a direct message.
+    const parts = [
+      t.body_html ? htmlToPlainText(t.body_html) : "",
+      t.reason_default ?? "",
+      t.suggestions_default ?? "",
+    ].filter((s) => s && s.trim().length > 0);
+    if (parts.length) setMessageBody(parts.join("\n\n"));
   };
 
-  const sendSlip = async () => {
-    if (!composeCtx || !user) return;
+  const sendMessage = async () => {
+    if (!composeCtx || !user || !messageBody.trim()) return;
     setSending(true);
     try {
       const { data: sess } = await supabase.auth.getSession();
       const accessToken = sess.session?.access_token;
+      const html = messageBody
+        .split(/\n{2,}/)
+        .map(
+          (block) =>
+            `<p>${escapeHtml(block.trim()).replace(/\n/g, "<br/>")}</p>`,
+        )
+        .join("");
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-admin-message`,
         {
@@ -291,22 +300,17 @@ export default function AdminMessages() {
             user_id: composeCtx.userId,
             post_id: composeCtx.postId,
             subject,
-            slip: {
-              status: composeCtx.postStatus
-                ? `${composeCtx.postStatus === "pending" ? "Pending — not yet approved" : composeCtx.postStatus}`
-                : undefined,
-              post: composeCtx.postTitle ?? undefined,
-              reason,
-              suggestions,
-              deadline_text: deadline,
-            },
+            body_html: html,
             send_email: alsoEmail,
           }),
         }
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? "Failed to send");
-      toast({ title: "Slip sent", description: alsoEmail ? "Delivered in-app and by email." : "Delivered in-app." });
+      toast({
+        title: "Message sent",
+        description: alsoEmail ? "Delivered in-app and by email." : "Delivered in-app.",
+      });
       setComposeOpen(false);
       fetchAll();
     } catch (e: any) {
@@ -315,6 +319,7 @@ export default function AdminMessages() {
       setSending(false);
     }
   };
+
 
   const filtered = useMemo(() => {
     let rows = threads;
