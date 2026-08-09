@@ -635,40 +635,21 @@ export default function AdminMessages() {
   );
 }
 
-function Row({ k, v }: { k: string; v: string }) {
-  return (
-    <div className="grid grid-cols-[130px_1fr]">
-      <div className="px-3 py-2 text-[11px] uppercase tracking-wider font-semibold bg-muted/40" style={{ color: "#1e2a44" }}>
-        {k}
-      </div>
-      <div className="px-3 py-2 text-sm">{v}</div>
-    </div>
+function escapeHtml(s: string) {
+  return s.replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string),
   );
 }
 
-function RowEdit({
-  k,
-  v,
-  onChange,
-  placeholder,
-}: {
-  k: string;
-  v: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-}) {
-  return (
-    <div className="grid grid-cols-[130px_1fr]">
-      <div className="px-3 py-2 text-[11px] uppercase tracking-wider font-semibold bg-muted/40" style={{ color: "#1e2a44" }}>
-        {k}
-      </div>
-      <Textarea
-        rows={2}
-        value={v}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="border-0 rounded-none focus-visible:ring-0 resize-none text-sm"
-      />
-    </div>
-  );
+function htmlToPlainText(html: string) {
+  return html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|li|h[1-6])>/gi, "\n")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
