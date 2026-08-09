@@ -286,7 +286,7 @@ export default function ThreadConversation({
           />
           <div className="flex justify-end">
             <Button onClick={sendReply} disabled={sending || !reply.trim()}>
-              {sending ? "Sending…" : "Send reply"}
+              {sending ? "Sending…" : "Send Message"}
             </Button>
           </div>
         </div>
