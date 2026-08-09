@@ -226,9 +226,15 @@ export default function ThreadConversation({
                       ) : null,
                   )}
                 </div>
-              ) : m.body_text ? (
+              ) : m.body_text && m.body_text.trim() ? (
                 <div className="whitespace-pre-wrap text-sm leading-relaxed">{m.body_text}</div>
+              ) : m.body_html ? (
+                <div
+                  className="text-sm leading-relaxed [&_a]:text-primary [&_a]:underline"
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(m.body_html) }}
+                />
               ) : null}
+
             </div>
           );
         })}
