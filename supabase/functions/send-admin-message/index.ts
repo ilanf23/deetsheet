@@ -188,20 +188,29 @@ Deno.serve(async (req) => {
     }
 
 
-    const bodyHtml = renderSlipHtml(payload.subject, payload.slip, payload.body_html);
-    const slipText = [
-      payload.slip?.status && `Status: ${payload.slip.status}`,
-      payload.slip?.post && `Post: ${payload.slip.post}`,
-      payload.slip?.reason && `Reason: ${payload.slip.reason}`,
-      payload.slip?.suggestions && `Suggestions: ${payload.slip.suggestions}`,
-      payload.slip?.deadline_text && `Deadline: ${payload.slip.deadline_text}`,
-    ]
-      .filter(Boolean)
-      .join("\n");
+    // A plain direct message carries no review slip — render and store it as
+    // ordinary message text so no slip rows (or deadline) ever show up.
+    const isSlip = hasSlipContent(payload.slip);
+    const slipForStorage = isSlip ? payload.slip ?? null : null;
+    const bodyHtml = isSlip
+      ? renderSlipHtml(payload.subject, payload.slip, payload.body_html)
+      : renderPlainHtml(payload.subject, payload.body_html);
+    const slipText = isSlip
+      ? [
+          payload.slip?.status && `Status: ${payload.slip.status}`,
+          payload.slip?.post && `Post: ${payload.slip.post}`,
+          payload.slip?.reason && `Reason: ${payload.slip.reason}`,
+          payload.slip?.suggestions && `Suggestions: ${payload.slip.suggestions}`,
+          payload.slip?.deadline_text && `Deadline: ${payload.slip.deadline_text}`,
+        ]
+          .filter(Boolean)
+          .join("\n")
+      : "";
     // Without a slip the content lives only in body_html — always store a
     // plain-text copy so the in-app thread never renders an empty bubble.
     const bodyText =
       slipText.trim().length > 0 ? slipText : htmlToText(payload.body_html ?? "");
+
 
 
     // Fetch recipient email
