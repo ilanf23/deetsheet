@@ -45,7 +45,30 @@ export async function startDirectThread(
   return { threadId: created.id };
 }
 
+/**
+ * Removes a conversation from one participant's inbox only. The message rows
+ * are never deleted, so the other person keeps their copy — and a new incoming
+ * message un-hides the thread again (handled by a DB trigger).
+ */
+export async function hideThreadForMe(threadId: string, userId: string) {
+  const { data } = await supabase
+    .from("message_threads")
+    .select("user_id,other_user_id")
+    .eq("id", threadId)
+    .maybeSingle();
+  if (!data) return { error: "Conversation not found." };
+
+  const patch =
+    data.user_id === userId
+      ? { hidden_for_user_at: new Date().toISOString() }
+      : { hidden_for_other_at: new Date().toISOString() };
+
+  const { error } = await supabase.from("message_threads").update(patch).eq("id", threadId);
+  return { error: error?.message };
+}
+
 export async function blockMember(blockerId: string, blockedId: string) {
+
   return supabase.from("user_blocks").insert({ blocker_id: blockerId, blocked_id: blockedId });
 }
 

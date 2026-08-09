@@ -21,6 +21,8 @@ type Thread = {
   last_message_at: string;
   last_sender: string;
   last_read_at: string | null;
+  hidden_for_user_at: string | null;
+  hidden_for_other_at: string | null;
   other_last_read_at: string | null;
   post_id: string | null;
   request_status: string | null;
@@ -47,7 +49,7 @@ export default function Inbox() {
     const { data } = await supabase
       .from("message_threads")
       .select(
-        "id,subject,status,kind,user_id,other_user_id,last_message_at,last_sender,last_read_at,other_last_read_at,post_id,request_status,initiated_by",
+        "id,subject,status,kind,user_id,other_user_id,last_message_at,last_sender,last_read_at,other_last_read_at,hidden_for_user_at,hidden_for_other_at,post_id,request_status,initiated_by",
       )
       .or(`user_id.eq.${user.id},other_user_id.eq.${user.id}`)
       .order("last_message_at", { ascending: false });
@@ -85,11 +87,17 @@ export default function Inbox() {
   const isRequest = (t: Thread) =>
     t.kind === "direct" && t.request_status === "pending" && t.initiated_by !== user.id;
 
+  // A participant can remove a thread from their own inbox; the row stays for
+  // the other person and reappears here when they send something new.
+  const hiddenForMe = (t: Thread) =>
+    t.user_id === user.id ? Boolean(t.hidden_for_user_at) : Boolean(t.hidden_for_other_at);
+
   const visible = threads.filter((t) => {
+    if (hiddenForMe(t)) return false;
     if (t.kind === "direct" && t.request_status === "declined") return false;
     return tab === "requests" ? isRequest(t) : !isRequest(t);
   });
-  const requestCount = threads.filter(isRequest).length;
+  const requestCount = threads.filter((t) => isRequest(t) && !hiddenForMe(t)).length;
 
   const displayFor = (t: Thread) => {
     if (t.kind !== "direct") {

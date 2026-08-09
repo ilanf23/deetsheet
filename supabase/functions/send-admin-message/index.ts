@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
 
 
     const bodyHtml = renderSlipHtml(payload.subject, payload.slip, payload.body_html);
-    const bodyText = [
+    const slipText = [
       payload.slip?.status && `Status: ${payload.slip.status}`,
       payload.slip?.post && `Post: ${payload.slip.post}`,
       payload.slip?.reason && `Reason: ${payload.slip.reason}`,
@@ -181,6 +181,11 @@ Deno.serve(async (req) => {
     ]
       .filter(Boolean)
       .join("\n");
+    // Without a slip the content lives only in body_html — always store a
+    // plain-text copy so the in-app thread never renders an empty bubble.
+    const bodyText =
+      slipText.trim().length > 0 ? slipText : htmlToText(payload.body_html ?? "");
+
 
     // Fetch recipient email
     const { data: userInfo } = await admin.auth.admin.getUserById(payload.user_id);

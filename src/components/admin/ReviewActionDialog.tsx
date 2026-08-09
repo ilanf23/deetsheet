@@ -297,6 +297,8 @@ export default function ReviewActionDialog({
       const topicName = liveTopicName ?? undefined;
       const postTitle = (itemKind === "post" ? editTitle.trim() : "") || postDetail?.title || itemTitle;
       const profileUrl = "https://deetsheet.com/profile";
+      // Pending / rejected posts deep-link straight into the edit dialog.
+      const editUrl = postId ? `${profileUrl}?edit=${postId}` : profileUrl;
       const postUrl =
         topicName && postId
           ? `https://deetsheet.com/topic/${encodeURIComponent(topicName)}/post/${buildPostSlug(postTitle, postId)}`
@@ -342,7 +344,7 @@ export default function ReviewActionDialog({
             ...base,
             reasons: reasonText ? [reasonText] : [],
             suggestions: suggestionList,
-            ctaUrl: profileUrl,
+            ctaUrl: editUrl,
           };
         } else if (action === "reject") {
           emailTemplate = "post-denied";

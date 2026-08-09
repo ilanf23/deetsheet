@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Flag, MoreHorizontal, Ban } from "lucide-react";
+import { Flag, MoreHorizontal, Ban, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,19 +16,40 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { blockMember, reportThread, THREAD_REPORT_REASONS } from "@/lib/messaging";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  blockMember,
+  hideThreadForMe,
+  reportThread,
+  THREAD_REPORT_REASONS,
+} from "@/lib/messaging";
 
 interface ThreadActionsMenuProps {
   threadId: string;
   otherUserId: string | null;
+  /** Whether Report / Block apply (member-to-member threads only). */
+  isDirect?: boolean;
   /** Fired after a block, so the parent can close/refresh the thread view. */
   onBlocked?: () => void;
+  /** Fired after the thread is removed from this member's inbox. */
+  onDeleted?: () => void;
 }
 
 export default function ThreadActionsMenu({
   threadId,
   otherUserId,
+  isDirect = true,
   onBlocked,
+  onDeleted,
 }: ThreadActionsMenuProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -36,6 +57,7 @@ export default function ThreadActionsMenu({
   const [reason, setReason] = useState(THREAD_REPORT_REASONS[0]);
   const [details, setDetails] = useState("");
   const [busy, setBusy] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   if (!user) return null;
 
@@ -48,6 +70,20 @@ export default function ThreadActionsMenu({
     }
     toast({ title: "Member blocked", description: "They can no longer message you." });
     onBlocked?.();
+  };
+
+  const doDelete = async () => {
+    const { error } = await hideThreadForMe(threadId, user.id);
+    if (error) {
+      toast({ title: "Couldn't delete", description: error, variant: "destructive" });
+      return;
+    }
+    setDeleteOpen(false);
+    toast({
+      title: "Conversation deleted",
+      description: "It's been removed from your inbox.",
+    });
+    onDeleted?.();
   };
 
   const submitReport = async () => {
@@ -82,18 +118,45 @@ export default function ThreadActionsMenu({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem onSelect={() => setReportOpen(true)}>
-            <Flag className="mr-2 h-4 w-4" />
-            Report conversation
-          </DropdownMenuItem>
-          {otherUserId && (
+          {isDirect && (
+            <DropdownMenuItem onSelect={() => setReportOpen(true)}>
+              <Flag className="mr-2 h-4 w-4" />
+              Report conversation
+            </DropdownMenuItem>
+          )}
+          {isDirect && otherUserId && (
             <DropdownMenuItem onSelect={doBlock}>
               <Ban className="mr-2 h-4 w-4" />
               Block member
             </DropdownMenuItem>
           )}
+          <DropdownMenuItem onSelect={() => setDeleteOpen(true)}>
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete conversation
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this conversation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              It will be removed from your inbox only. If they message you again, the
+              conversation comes back.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={doDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={reportOpen} onOpenChange={setReportOpen}>
         <DialogContent className="max-w-md">

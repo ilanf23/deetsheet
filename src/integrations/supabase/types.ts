@@ -444,6 +444,8 @@ export type Database = {
       message_threads: {
         Row: {
           created_at: string
+          hidden_for_other_at: string | null
+          hidden_for_user_at: string | null
           id: string
           initiated_by: string | null
           kind: string
@@ -461,6 +463,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          hidden_for_other_at?: string | null
+          hidden_for_user_at?: string | null
           id?: string
           initiated_by?: string | null
           kind?: string
@@ -478,6 +482,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          hidden_for_other_at?: string | null
+          hidden_for_user_at?: string | null
           id?: string
           initiated_by?: string | null
           kind?: string

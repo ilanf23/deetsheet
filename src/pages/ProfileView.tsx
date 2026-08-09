@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate, useParams, Navigate } from "react-router-dom";
+import { useNavigate, useParams, Navigate, useSearchParams } from "react-router-dom";
 import { buildLoginPath } from "@/lib/authRedirect";
 import {
   Pencil,
@@ -222,6 +222,14 @@ const ProfileView = () => {
   const [createTopicOpen, setCreateTopicOpen] = useState(false);
   const [editPostId, setEditPostId] = useState<string | null>(null);
   const [postsRefreshKey, setPostsRefreshKey] = useState(0);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Deep link from the "pending post" email / notification: /profile?edit=<id>
+  // opens the edit dialog straight away for a post the signed-in user owns.
+  useEffect(() => {
+    const editParam = searchParams.get("edit");
+    if (editParam && isOwnProfile && user) setEditPostId(editParam);
+  }, [searchParams, isOwnProfile, user]);
 
   // Follow data — denormalized counts on profile + full lists for the tabs.
   // The full lists do heavy multi-table joins, so we only enable them when
@@ -596,7 +604,13 @@ const ProfileView = () => {
   // Own-profile route (/profile) requires auth. Email CTAs link here, so send
   // signed-out visitors through login and return them once authenticated.
   if (!userId && !authLoading && !user) {
-    return <Navigate to={buildLoginPath("/profile")} replace />;
+    return (
+      <Navigate
+        to={buildLoginPath(`/profile${window.location.search}`)}
+        replace
+      />
+    );
+
   }
 
   return (
@@ -1024,6 +1038,18 @@ const ProfileView = () => {
                                   />
                                 </a>
                               )}
+                              {isOwnProfile &&
+                                (post.status === "pending" || post.status === "rejected") && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="shrink-0 h-8"
+                                    onClick={() => setEditPostId(post.id)}
+                                  >
+                                    <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                                    Edit
+                                  </Button>
+                                )}
                               {isOwnProfile && (
                                 <div className="flex items-center gap-0.5 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                                   <Button
@@ -1412,7 +1438,14 @@ const ProfileView = () => {
         postId={editPostId}
         open={!!editPostId}
         onOpenChange={(open) => {
-          if (!open) setEditPostId(null);
+          if (!open) {
+            setEditPostId(null);
+            if (searchParams.get("edit")) {
+              const next = new URLSearchParams(searchParams);
+              next.delete("edit");
+              setSearchParams(next, { replace: true });
+            }
+          }
         }}
         onSaved={() => setPostsRefreshKey((k) => k + 1)}
       />

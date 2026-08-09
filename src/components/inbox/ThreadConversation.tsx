@@ -5,6 +5,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { format, parseISO } from "date-fns";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
+
 
 type Message = {
   id: string;
@@ -226,9 +228,15 @@ export default function ThreadConversation({
                       ) : null,
                   )}
                 </div>
-              ) : m.body_text ? (
+              ) : m.body_text && m.body_text.trim() ? (
                 <div className="whitespace-pre-wrap text-sm leading-relaxed">{m.body_text}</div>
+              ) : m.body_html ? (
+                <div
+                  className="text-sm leading-relaxed [&_a]:text-primary [&_a]:underline"
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(m.body_html) }}
+                />
               ) : null}
+
             </div>
           );
         })}
@@ -278,7 +286,7 @@ export default function ThreadConversation({
           />
           <div className="flex justify-end">
             <Button onClick={sendReply} disabled={sending || !reply.trim()}>
-              {sending ? "Sending…" : "Send reply"}
+              {sending ? "Sending…" : "Send Message"}
             </Button>
           </div>
         </div>
