@@ -211,7 +211,11 @@ export default function ThreadConversation({
               <div className="text-xs text-muted-foreground mb-2">
                 {senderLabel(m)} · {format(parseISO(m.created_at), "MMM d, yyyy · h:mm a")}
               </div>
-              {m.slip && Object.keys(m.slip).length > 0 ? (
+              {m.slip &&
+              (["status", "post", "reason", "suggestions"] as const).some((k) =>
+                String(m.slip?.[k] ?? "").trim(),
+              ) ? (
+
                 <div className="rounded border overflow-hidden text-sm">
                   {(["status", "post", "reason", "suggestions", "deadline_text"] as const).map(
                     (k) =>

@@ -50,6 +50,22 @@ function escapeHtml(s: string) {
   );
 }
 
+/** True when the slip carries real review content (not just a default deadline). */
+function hasSlipContent(slip: Slip | undefined) {
+  return Boolean(slip?.status || slip?.post || slip?.reason || slip?.suggestions);
+}
+
+function renderPlainHtml(subject: string, bodyHtml: string | undefined) {
+  return `<!doctype html><html><body style="margin:0;padding:0;background:#f0f2f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+    <div style="max-width:600px;margin:0 auto;padding:24px;">
+      <div style="background:#fff;border:1px solid #e6e8ee;border-radius:8px;padding:20px;">
+        <h2 style="margin:0 0 12px;font-size:18px;color:#0e2a4a;">${escapeHtml(subject)}</h2>
+        <div style="color:#1a1a1a;font-size:14px;line-height:1.55;">${bodyHtml ?? ""}</div>
+      </div>
+    </div>
+  </body></html>`;
+}
+
 function renderSlipHtml(subject: string, slip: Slip | undefined, bodyHtml: string | undefined) {
   const rows: [string, string][] = [];
   if (slip?.status) rows.push(["Status", slip.status]);
@@ -84,6 +100,7 @@ function renderSlipHtml(subject: string, slip: Slip | undefined, bodyHtml: strin
     </div>
   </body></html>`;
 }
+
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -171,20 +188,29 @@ Deno.serve(async (req) => {
     }
 
 
-    const bodyHtml = renderSlipHtml(payload.subject, payload.slip, payload.body_html);
-    const slipText = [
-      payload.slip?.status && `Status: ${payload.slip.status}`,
-      payload.slip?.post && `Post: ${payload.slip.post}`,
-      payload.slip?.reason && `Reason: ${payload.slip.reason}`,
-      payload.slip?.suggestions && `Suggestions: ${payload.slip.suggestions}`,
-      payload.slip?.deadline_text && `Deadline: ${payload.slip.deadline_text}`,
-    ]
-      .filter(Boolean)
-      .join("\n");
+    // A plain direct message carries no review slip — render and store it as
+    // ordinary message text so no slip rows (or deadline) ever show up.
+    const isSlip = hasSlipContent(payload.slip);
+    const slipForStorage = isSlip ? payload.slip ?? null : null;
+    const bodyHtml = isSlip
+      ? renderSlipHtml(payload.subject, payload.slip, payload.body_html)
+      : renderPlainHtml(payload.subject, payload.body_html);
+    const slipText = isSlip
+      ? [
+          payload.slip?.status && `Status: ${payload.slip.status}`,
+          payload.slip?.post && `Post: ${payload.slip.post}`,
+          payload.slip?.reason && `Reason: ${payload.slip.reason}`,
+          payload.slip?.suggestions && `Suggestions: ${payload.slip.suggestions}`,
+          payload.slip?.deadline_text && `Deadline: ${payload.slip.deadline_text}`,
+        ]
+          .filter(Boolean)
+          .join("\n")
+      : "";
     // Without a slip the content lives only in body_html — always store a
     // plain-text copy so the in-app thread never renders an empty bubble.
     const bodyText =
       slipText.trim().length > 0 ? slipText : htmlToText(payload.body_html ?? "");
+
 
 
     // Fetch recipient email
@@ -214,15 +240,15 @@ Deno.serve(async (req) => {
               idempotencyKey: `admin-message-${payload.user_id}-${Date.now()}`,
               templateData: {
                 eyebrow: "MESSAGE FROM DEETSHEET",
-                statusValue: payload.slip?.status ?? undefined,
+                statusValue: isSlip ? payload.slip?.status : undefined,
                 headline: payload.subject,
-                quotedTitle: payload.slip?.post ?? undefined,
-                reason: payload.slip?.reason ?? undefined,
-                suggestions: payload.slip?.suggestions
-                  ? [payload.slip.suggestions]
-                  : undefined,
+                quotedTitle: isSlip ? payload.slip?.post : undefined,
+                reason: isSlip ? payload.slip?.reason : undefined,
+                suggestions:
+                  isSlip && payload.slip?.suggestions ? [payload.slip.suggestions] : undefined,
                 bodyText: htmlToText(payload.body_html ?? ""),
-                callout: payload.slip?.deadline_text ?? undefined,
+                callout: isSlip ? payload.slip?.deadline_text : undefined,
+
                 ...(payload.template_data ?? {}),
               },
             };
@@ -261,7 +287,7 @@ Deno.serve(async (req) => {
           sender_role: "admin",
           body_html: bodyHtml,
           body_text: bodyText,
-          slip: payload.slip ?? null,
+          slip: slipForStorage,
           email_sent: emailSent,
           email_message_id: emailMessageId,
         })

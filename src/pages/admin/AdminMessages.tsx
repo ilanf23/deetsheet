@@ -93,10 +93,9 @@ export default function AdminMessages() {
     postStatus: string | null;
   } | null>(null);
   const [subject, setSubject] = useState("");
-  const [reason, setReason] = useState("");
-  const [suggestions, setSuggestions] = useState("");
-  const [deadline, setDeadline] = useState("30 days to adjust, or the post is automatically deleted");
+  const [messageBody, setMessageBody] = useState("");
   const [alsoEmail, setAlsoEmail] = useState(true);
+
   const [sending, setSending] = useState(false);
   const [templates, setTemplates] = useState<any[]>([]);
 
@@ -245,9 +244,7 @@ export default function AdminMessages() {
   const openCompose = (ctx: NonNullable<typeof composeCtx>) => {
     setComposeCtx(ctx);
     setSubject(ctx.postTitle ? `Regarding your post: ${ctx.postTitle}` : "Message from DeetSheet");
-    setReason("");
-    setSuggestions("");
-    setDeadline("30 days to adjust, or the post is automatically deleted");
+    setMessageBody("");
     setAlsoEmail(true);
     setComposeOpen(true);
   };
@@ -268,17 +265,28 @@ export default function AdminMessages() {
     const t = templates.find((x) => x.id === id);
     if (!t) return;
     setSubject(t.subject ?? subject);
-    if (t.reason_default) setReason(t.reason_default);
-    if (t.suggestions_default) setSuggestions(t.suggestions_default);
-    if (t.deadline_default) setDeadline(t.deadline_default);
+    // Form letters are plain prose here — no slip rows in a direct message.
+    const parts = [
+      t.body_html ? htmlToPlainText(t.body_html) : "",
+      t.reason_default ?? "",
+      t.suggestions_default ?? "",
+    ].filter((s) => s && s.trim().length > 0);
+    if (parts.length) setMessageBody(parts.join("\n\n"));
   };
 
-  const sendSlip = async () => {
-    if (!composeCtx || !user) return;
+  const sendMessage = async () => {
+    if (!composeCtx || !user || !messageBody.trim()) return;
     setSending(true);
     try {
       const { data: sess } = await supabase.auth.getSession();
       const accessToken = sess.session?.access_token;
+      const html = messageBody
+        .split(/\n{2,}/)
+        .map(
+          (block) =>
+            `<p>${escapeHtml(block.trim()).replace(/\n/g, "<br/>")}</p>`,
+        )
+        .join("");
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-admin-message`,
         {
@@ -292,22 +300,17 @@ export default function AdminMessages() {
             user_id: composeCtx.userId,
             post_id: composeCtx.postId,
             subject,
-            slip: {
-              status: composeCtx.postStatus
-                ? `${composeCtx.postStatus === "pending" ? "Pending — not yet approved" : composeCtx.postStatus}`
-                : undefined,
-              post: composeCtx.postTitle ?? undefined,
-              reason,
-              suggestions,
-              deadline_text: deadline,
-            },
+            body_html: html,
             send_email: alsoEmail,
           }),
         }
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error ?? "Failed to send");
-      toast({ title: "Slip sent", description: alsoEmail ? "Delivered in-app and by email." : "Delivered in-app." });
+      toast({
+        title: "Message sent",
+        description: alsoEmail ? "Delivered in-app and by email." : "Delivered in-app.",
+      });
       setComposeOpen(false);
       fetchAll();
     } catch (e: any) {
@@ -316,6 +319,7 @@ export default function AdminMessages() {
       setSending(false);
     }
   };
+
 
   const filtered = useMemo(() => {
     let rows = threads;
@@ -506,7 +510,7 @@ export default function AdminMessages() {
       <Dialog open={composeOpen} onOpenChange={setComposeOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Review Slip — what {composeCtx?.userLabel} receives</DialogTitle>
+            <DialogTitle>Message {composeCtx?.userLabel}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             {templates.length > 0 && (
@@ -530,22 +534,14 @@ export default function AdminMessages() {
               <Label className="text-xs">Subject</Label>
               <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
             </div>
-            <div className="rounded-lg border overflow-hidden">
-              <div
-                className="px-4 py-2 text-[12px] uppercase tracking-wide font-semibold text-white"
-                style={{ backgroundColor: "#0e2a4a" }}
-              >
-                Review slip preview
-              </div>
-              <div className="divide-y">
-                {composeCtx?.postStatus && (
-                  <Row k="Status" v={composeCtx.postStatus === "pending" ? "Pending — not yet approved" : composeCtx.postStatus} />
-                )}
-                {composeCtx?.postTitle && <Row k="Post" v={composeCtx.postTitle} />}
-                <RowEdit k="Reason" v={reason} onChange={setReason} placeholder="e.g. too general — could describe any job" />
-                <RowEdit k="Suggestions" v={suggestions} onChange={setSuggestions} placeholder="e.g. one specific detail about what architects do" />
-                <RowEdit k="Deadline" v={deadline} onChange={setDeadline} />
-              </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Message</Label>
+              <Textarea
+                rows={9}
+                value={messageBody}
+                onChange={(e) => setMessageBody(e.target.value)}
+                placeholder="Write your message…"
+              />
             </div>
             <div className="flex items-center gap-2">
               <Checkbox
@@ -562,10 +558,11 @@ export default function AdminMessages() {
             <Button variant="outline" onClick={() => setComposeOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={sendSlip} disabled={sending}>
-              {sending ? "Sending…" : "Send slip"}
+            <Button onClick={sendMessage} disabled={sending || !messageBody.trim()}>
+              {sending ? "Sending…" : "Send Message"}
             </Button>
           </DialogFooter>
+
         </DialogContent>
       </Dialog>
 
@@ -638,40 +635,21 @@ export default function AdminMessages() {
   );
 }
 
-function Row({ k, v }: { k: string; v: string }) {
-  return (
-    <div className="grid grid-cols-[130px_1fr]">
-      <div className="px-3 py-2 text-[11px] uppercase tracking-wider font-semibold bg-muted/40" style={{ color: "#1e2a44" }}>
-        {k}
-      </div>
-      <div className="px-3 py-2 text-sm">{v}</div>
-    </div>
+function escapeHtml(s: string) {
+  return s.replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string),
   );
 }
 
-function RowEdit({
-  k,
-  v,
-  onChange,
-  placeholder,
-}: {
-  k: string;
-  v: string;
-  onChange: (v: string) => void;
-  placeholder?: string;
-}) {
-  return (
-    <div className="grid grid-cols-[130px_1fr]">
-      <div className="px-3 py-2 text-[11px] uppercase tracking-wider font-semibold bg-muted/40" style={{ color: "#1e2a44" }}>
-        {k}
-      </div>
-      <Textarea
-        rows={2}
-        value={v}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="border-0 rounded-none focus-visible:ring-0 resize-none text-sm"
-      />
-    </div>
-  );
+function htmlToPlainText(html: string) {
+  return html
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|li|h[1-6])>/gi, "\n")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
