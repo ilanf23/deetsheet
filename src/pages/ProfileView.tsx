@@ -604,7 +604,13 @@ const ProfileView = () => {
   // Own-profile route (/profile) requires auth. Email CTAs link here, so send
   // signed-out visitors through login and return them once authenticated.
   if (!userId && !authLoading && !user) {
-    return <Navigate to={buildLoginPath("/profile")} replace />;
+    return (
+      <Navigate
+        to={buildLoginPath(`/profile${window.location.search}`)}
+        replace
+      />
+    );
+
   }
 
   return (
