@@ -43,11 +43,16 @@ export default function ThreadDialog({
         <DialogHeader className="border-b px-5 py-4 text-left">
           <div className="flex items-start justify-between gap-3 pr-8">
             <DialogTitle className="text-lg leading-snug">{title}</DialogTitle>
-            {threadId && meta.isDirect && (
+            {threadId && (
               <ThreadActionsMenu
                 threadId={threadId}
                 otherUserId={meta.otherUserId}
+                isDirect={meta.isDirect}
                 onBlocked={() => {
+                  onChanged?.();
+                  onOpenChange(false);
+                }}
+                onDeleted={() => {
                   onChanged?.();
                   onOpenChange(false);
                 }}
