@@ -240,15 +240,15 @@ Deno.serve(async (req) => {
               idempotencyKey: `admin-message-${payload.user_id}-${Date.now()}`,
               templateData: {
                 eyebrow: "MESSAGE FROM DEETSHEET",
-                statusValue: isSlip ? payload.slip?.status : undefined ?? undefined,
+                statusValue: isSlip ? payload.slip?.status : undefined,
                 headline: payload.subject,
-                quotedTitle: isSlip ? payload.slip?.post : undefined ?? undefined,
-                reason: isSlip ? payload.slip?.reason : undefined ?? undefined,
-                suggestions: payload.slip?.suggestions
-                  ? [payload.slip.suggestions]
-                  : undefined,
+                quotedTitle: isSlip ? payload.slip?.post : undefined,
+                reason: isSlip ? payload.slip?.reason : undefined,
+                suggestions:
+                  isSlip && payload.slip?.suggestions ? [payload.slip.suggestions] : undefined,
                 bodyText: htmlToText(payload.body_html ?? ""),
-                callout: isSlip ? payload.slip?.deadline_text : undefined ?? undefined,
+                callout: isSlip ? payload.slip?.deadline_text : undefined,
+
                 ...(payload.template_data ?? {}),
               },
             };
