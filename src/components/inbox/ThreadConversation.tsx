@@ -5,6 +5,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { format, parseISO } from "date-fns";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
+
 
 type Message = {
   id: string;
