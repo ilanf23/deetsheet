@@ -93,10 +93,9 @@ export default function AdminMessages() {
     postStatus: string | null;
   } | null>(null);
   const [subject, setSubject] = useState("");
-  const [reason, setReason] = useState("");
-  const [suggestions, setSuggestions] = useState("");
-  const [deadline, setDeadline] = useState("30 days to adjust, or the post is automatically deleted");
+  const [messageBody, setMessageBody] = useState("");
   const [alsoEmail, setAlsoEmail] = useState(true);
+
   const [sending, setSending] = useState(false);
   const [templates, setTemplates] = useState<any[]>([]);
 
