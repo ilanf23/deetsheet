@@ -16,6 +16,8 @@ type Thread = {
   last_sender: string;
   last_read_at: string | null;
   other_last_read_at: string | null;
+  hidden_for_user_at: string | null;
+  hidden_for_other_at: string | null;
 };
 
 type ProfileLite = { id: string; name: string | null; username: string | null };
@@ -27,6 +29,7 @@ export default function ProfileMessagesPanel() {
   const [loading, setLoading] = useState(true);
   const [openThreadId, setOpenThreadId] = useState<string | null>(null);
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -34,11 +37,14 @@ export default function ProfileMessagesPanel() {
       const { data } = await supabase
         .from("message_threads")
         .select(
-          "id,subject,status,kind,user_id,other_user_id,last_message_at,last_sender,last_read_at,other_last_read_at",
+          "id,subject,status,kind,user_id,other_user_id,last_message_at,last_sender,last_read_at,other_last_read_at,hidden_for_user_at,hidden_for_other_at",
         )
         .or(`user_id.eq.${user.id},other_user_id.eq.${user.id}`)
         .order("last_message_at", { ascending: false });
-      const rows = (data ?? []) as Thread[];
+      // Threads the member removed from their own inbox stay hidden here too.
+      const rows = ((data ?? []) as Thread[]).filter((t) =>
+        t.user_id === user.id ? !t.hidden_for_user_at : !t.hidden_for_other_at,
+      );
       setThreads(rows);
 
       const otherIds = Array.from(
@@ -60,7 +66,7 @@ export default function ProfileMessagesPanel() {
       }
       setLoading(false);
     })();
-  }, [user]);
+  }, [user, refreshKey]);
 
   if (loading) {
     return (
@@ -148,6 +154,7 @@ export default function ProfileMessagesPanel() {
         threadId={openThreadId}
         onOpenChange={(open) => !open && setOpenThreadId(null)}
         onRead={(id) => setReadIds((prev) => new Set(prev).add(id))}
+        onChanged={() => setRefreshKey((k) => k + 1)}
       />
     </>
   );

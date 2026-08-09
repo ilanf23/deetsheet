@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export type ThreadCounts = { unread: number; requests: number };
 
 const SELECT =
-  "id,kind,user_id,other_user_id,last_message_at,last_read_at,other_last_read_at,last_sender,request_status,initiated_by";
+  "id,kind,user_id,other_user_id,last_message_at,last_read_at,other_last_read_at,hidden_for_user_at,hidden_for_other_at,last_sender,request_status,initiated_by";
 
 /**
  * Unread threads plus pending message requests for the current user.
@@ -30,6 +30,9 @@ export function useThreadCounts() {
       let unread = 0;
       let requests = 0;
       (data ?? []).forEach((t: any) => {
+        // Threads removed from this member's inbox don't count toward badges.
+        const hidden = t.user_id === user.id ? t.hidden_for_user_at : t.hidden_for_other_at;
+        if (hidden) return;
         if (t.kind !== "direct") {
           if (
             t.last_sender === "admin" &&
