@@ -46,12 +46,12 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
       setLoading(true);
       const { data, error } = await supabase
         .from("posts_privileged")
-        .select("id, title, content, story, image_url, author_id, topic_id, status, is_anonymous")
+        .select("id, title, content, story, image_url, author_id, topic_id, status, is_anonymous, deleted_at")
         .eq("id", postId)
         .maybeSingle();
       if (cancelled) return;
-      if (error || !data) {
-        toast({ title: "Could not load post", variant: "destructive" });
+      if (error || !data || (data as { deleted_at?: string | null }).deleted_at) {
+        toast({ title: "This post is no longer available", variant: "destructive" });
         onOpenChange(false);
         setLoading(false);
         return;
@@ -169,9 +169,7 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
         <DialogHeader>
           <DialogTitle>Edit post</DialogTitle>
           <DialogDescription>
-            {currentStatus === "rejected"
-              ? "This post was rejected. You can revise and resubmit it."
-              : "Save changes to update this post."}
+            Save changes to update this post.
           </DialogDescription>
         </DialogHeader>
 

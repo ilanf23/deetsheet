@@ -144,7 +144,7 @@ const UserPostsList = ({ userId }: { userId: string }) => {
                       <MessageSquare className="h-3.5 w-3.5" />
                       {post.comment_count}
                     </span>
-                    {isOwnProfile && (
+                    {isOwnProfile && post.status !== "rejected" && (
                       <button
                         type="button"
                         onClick={(e) => {
