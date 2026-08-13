@@ -87,6 +87,7 @@ export default function AdminPosts() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [authors, setAuthors] = useState<Map<string, Profile>>(new Map());
   const [reportedIds, setReportedIds] = useState<Set<string>>(new Set());
+  const [topicNames, setTopicNames] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<SortKey>("newest");
@@ -103,13 +104,16 @@ export default function AdminPosts() {
       setLoading(true);
       // Only pull columns the table actually displays. The full `posts` row
       // includes rich-text body content which is expensive over the wire.
-      const [postsRes, profilesRes, reportsRes] = await Promise.all([
+      const [postsRes, profilesRes, reportsRes, topicsRes] = await Promise.all([
         supabase
           .from("posts_privileged")
-          .select("id, title, author_id, created_at, status")
+          .select(
+            "id, title, author_id, created_at, status, topic_id, deleted_at, deleted_by, deleted_reason",
+          )
           .order("created_at", { ascending: false }),
         supabase.from("profiles").select("id, name, username, avatar_url"),
         supabase.from("reports").select("post_id"),
+        supabase.from("topics").select("id, name"),
       ]);
       setPosts((postsRes.data ?? []) as Post[]);
       const map = new Map<string, Profile>();
@@ -120,6 +124,9 @@ export default function AdminPosts() {
         if (r.post_id) ids.add(r.post_id);
       });
       setReportedIds(ids);
+      const tmap = new Map<string, string>();
+      (topicsRes.data ?? []).forEach((t: any) => tmap.set(t.id, t.name));
+      setTopicNames(tmap);
       setLoading(false);
     };
     fetchAll();
@@ -127,11 +134,13 @@ export default function AdminPosts() {
 
   const visiblePosts = useMemo(() => {
     let rows: Post[];
-    if (tab === "pending") rows = posts.filter((p) => p.status === "pending");
-    else if (tab === "rejected") rows = posts.filter((p) => p.status === "rejected");
-    else if (tab === "deleted") rows = [];
-    else if (tab === "reported") rows = posts.filter((p) => reportedIds.has(p.id));
-    else rows = posts.filter((p) => p.status === "approved");
+    // Deleted (soft-deleted) posts only ever appear on the Deleted tab.
+    const live = posts.filter((p) => !p.deleted_at);
+    if (tab === "pending") rows = live.filter((p) => p.status === "pending");
+    else if (tab === "rejected") rows = live.filter((p) => p.status === "rejected");
+    else if (tab === "deleted") rows = posts.filter((p) => !!p.deleted_at);
+    else if (tab === "reported") rows = live.filter((p) => reportedIds.has(p.id));
+    else rows = live.filter((p) => p.status === "approved");
 
     const q = search.trim().toLowerCase();
     if (q) {
@@ -175,12 +184,13 @@ export default function AdminPosts() {
     return sorted;
   }, [posts, reportedIds, tab, sort, authors, search]);
 
+  const livePosts = posts.filter((p) => !p.deleted_at);
   const tabCounts = {
-    pending: posts.filter((p) => p.status === "pending").length,
-    published: posts.filter((p) => p.status === "approved").length,
-    reported: posts.filter((p) => reportedIds.has(p.id)).length,
-    rejected: posts.filter((p) => p.status === "rejected").length,
-    deleted: 0,
+    pending: livePosts.filter((p) => p.status === "pending").length,
+    published: livePosts.filter((p) => p.status === "approved").length,
+    reported: livePosts.filter((p) => reportedIds.has(p.id)).length,
+    rejected: livePosts.filter((p) => p.status === "rejected").length,
+    deleted: posts.filter((p) => !!p.deleted_at).length,
   };
 
   const total = visiblePosts.length;
@@ -190,12 +200,19 @@ export default function AdminPosts() {
   const visibleEnd = Math.min(page * PAGE_SIZE, total);
 
   const updateStatus = async (id: string, status: "approved" | "rejected") => {
-    const { error } = await supabase.from("posts").update({ status }).eq("id", id);
+    // Rejection soft-deletes the post — it leaves every user-facing surface.
+    const updates: Record<string, unknown> =
+      status === "rejected"
+        ? { status, deleted_at: new Date().toISOString(), deleted_by: user?.id ?? null }
+        : { status };
+    const { error } = await supabase.from("posts").update(updates as never).eq("id", id);
     if (error) {
       toast({ title: `Error ${status === "approved" ? "approving" : "rejecting"} post`, description: error.message, variant: "destructive" });
       return;
     }
-    setPosts((prev) => prev.map((p) => (p.id === id ? ({ ...p, status } as Post) : p)));
+    setPosts((prev) =>
+      prev.map((p) => (p.id === id ? ({ ...p, ...updates } as Post) : p)),
+    );
     if (user) {
       await logAdminAction({
         actorId: user.id,
@@ -211,6 +228,39 @@ export default function AdminPosts() {
   };
   const handleApprove = (id: string) => updateStatus(id, "approved");
   const handleReject = (id: string) => updateStatus(id, "rejected");
+
+  const handleRestore = async (post: Post) => {
+    const { error } = await supabase
+      .from("posts")
+      .update({
+        status: "pending",
+        deleted_at: null,
+        deleted_by: null,
+        deleted_reason: null,
+      } as never)
+      .eq("id", post.id);
+    if (error) {
+      toast({ title: "Error restoring post", description: error.message, variant: "destructive" });
+      return;
+    }
+    setPosts((prev) =>
+      prev.map((p) =>
+        p.id === post.id
+          ? ({ ...p, status: "pending", deleted_at: null, deleted_by: null, deleted_reason: null } as Post)
+          : p,
+      ),
+    );
+    if (user) {
+      await logAdminAction({
+        actorId: user.id,
+        action: "post.restore",
+        entityType: "post",
+        entityId: post.id,
+        details: { title: post.title },
+      });
+    }
+    toast({ title: "Post restored to pending review" });
+  };
 
   const handleDelete = async (post: Post) => {
     const { error } = await supabase.from("posts").delete().eq("id", post.id);
@@ -386,16 +436,31 @@ export default function AdminPosts() {
         }}
       >
         <div
-          className="grid grid-cols-[3fr_1fr_1fr_1fr_1fr] bg-slate-50 px-6 py-3 text-[11px] font-semibold uppercase tracking-wide"
+          className={`grid ${
+            tab === "deleted"
+              ? "grid-cols-[2.4fr_1fr_1fr_1fr_1fr_1.4fr_0.8fr]"
+              : "grid-cols-[3fr_1fr_1fr_1fr_1fr]"
+          } bg-slate-50 px-6 py-3 text-[11px] font-semibold uppercase tracking-wide`}
           style={{
             color: "rgb(100 116 139)",
             borderBottom: "1px solid hsl(var(--admin-border))",
           }}
         >
           <span>Title</span>
+          {tab === "deleted" && <span>Topic</span>}
           <span>Author</span>
-          <span>Status</span>
-          <span>Submitted</span>
+          {tab === "deleted" ? (
+            <>
+              <span>Deleted</span>
+              <span>Deleted by</span>
+              <span>Reason</span>
+            </>
+          ) : (
+            <>
+              <span>Status</span>
+              <span>Submitted</span>
+            </>
+          )}
           <span className="text-right">Actions</span>
         </div>
 
@@ -409,6 +474,41 @@ export default function AdminPosts() {
         ) : (
           pageRows.map((p) => {
             const author = authors.get(p.author_id);
+            if (tab === "deleted") {
+              const remover = p.deleted_by ? authors.get(p.deleted_by) : null;
+              return (
+                <div
+                  key={p.id}
+                  className="grid grid-cols-[2.4fr_1fr_1fr_1fr_1fr_1.4fr_0.8fr] items-center bg-white px-6 py-4 text-[14px]"
+                  style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}
+                >
+                  <span className="truncate font-medium text-slate-900">{p.title}</span>
+                  <span className="truncate text-slate-600">
+                    {(p.topic_id && topicNames.get(p.topic_id)) || "—"}
+                  </span>
+                  <span className="truncate text-slate-600">
+                    {author?.name ?? author?.username ?? "Unknown"}
+                  </span>
+                  <span className="text-slate-600">
+                    {p.deleted_at ? `${formatDistanceToNow(parseISO(p.deleted_at))} ago` : "—"}
+                  </span>
+                  <span className="truncate text-slate-600">
+                    {remover?.name ?? remover?.username ?? "—"}
+                  </span>
+                  <span className="truncate text-slate-600" title={p.deleted_reason ?? ""}>
+                    {p.deleted_reason || "—"}
+                  </span>
+                  <span className="flex items-center justify-end">
+                    <button
+                      onClick={() => handleRestore(p)}
+                      style={{ color: "hsl(var(--admin-primary))" }}
+                    >
+                      Restore
+                    </button>
+                  </span>
+                </div>
+              );
+            }
             return (
               <div
                 key={p.id}
