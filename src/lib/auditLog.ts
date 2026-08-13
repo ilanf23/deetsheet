@@ -5,6 +5,7 @@ type AuditAction =
   | "post.approve"
   | "post.reject"
   | "post.delete"
+  | "post.restore"
   | "comment.edit"
   | "comment.delete"
   | "topic.approve"

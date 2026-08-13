@@ -318,9 +318,24 @@ export default function AdminReview() {
    * Persist the actual approve/reject decision. Called from ReviewActionDialog
    * *after* the author message has been sent successfully.
    */
-  const applyDecision = async (item: PendingItem, status: "approved" | "rejected") => {
+  const applyDecision = async (
+    item: PendingItem,
+    status: "approved" | "rejected",
+    reason?: string,
+  ) => {
     const table = item.kind === "topic" ? "topics" : "posts";
-    const { error } = await supabase.from(table).update({ status }).eq("id", item.id);
+    // Rejecting a post soft-deletes it: it leaves every user-facing surface and
+    // the author can no longer edit or resubmit it.
+    const updates: Record<string, unknown> =
+      item.kind === "post" && status === "rejected"
+        ? {
+            status,
+            deleted_at: new Date().toISOString(),
+            deleted_by: user?.id ?? null,
+            deleted_reason: reason?.trim() || null,
+          }
+        : { status };
+    const { error } = await supabase.from(table).update(updates as never).eq("id", item.id);
     if (error) throw error;
     setItems((prev) => prev.filter((i) => !(i.kind === item.kind && i.id === item.id)));
   };
@@ -604,11 +619,11 @@ export default function AdminReview() {
             "the author"
           }
           postId={reviewDialog.item.kind === "post" ? reviewDialog.item.id : null}
-          onConfirmed={async () => {
+          onConfirmed={async (meta) => {
             if (reviewDialog.action === "approve") {
               await applyDecision(reviewDialog.item, "approved");
             } else if (reviewDialog.action === "reject") {
-              await applyDecision(reviewDialog.item, "rejected");
+              await applyDecision(reviewDialog.item, "rejected", meta?.reason);
             } else if (reviewDialog.action === "edit") {
               // "Suggest" flow: message sent to author; post stays pending
               // until they update and resubmit. No DB change here.

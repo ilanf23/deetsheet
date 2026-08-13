@@ -27,7 +27,7 @@ interface Props {
   authorLabel: string;
   postId?: string | null;
   /** Called after the message is sent successfully. Perform the DB action here. */
-  onConfirmed: () => Promise<void>;
+  onConfirmed: (meta?: { reason?: string }) => Promise<void>;
 }
 
 const RULES_URL = "https://deetsheet.com/rules";
@@ -142,6 +142,10 @@ export default function ReviewActionDialog({
   const showReasonPicker = action === "reject" || action === "edit";
   const pickedReason = reasonList.find((r) => r.id === reasonKey) ?? null;
   const isOther = !!pickedReason && isOtherReason(pickedReason.label);
+  /** Human-readable reason, stored alongside the soft delete on rejection. */
+  const reasonTextForAction = (
+    isOther ? customReason : pickedReason?.detail || pickedReason?.label || ""
+  ).trim();
 
   /** Title as it currently reads in the left column — keeps the message in sync. */
   const liveTitle = (itemKind === "post" ? editTitle.trim() : "") || postDetail?.title || itemTitle;
@@ -424,7 +428,7 @@ export default function ReviewActionDialog({
       }
 
       // Now perform the actual action.
-      await onConfirmed();
+      await onConfirmed({ reason: reasonTextForAction });
 
 
       toast({
