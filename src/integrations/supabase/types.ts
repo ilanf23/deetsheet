@@ -643,6 +643,9 @@ export type Database = {
           comment_count: number
           content: string
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          deleted_reason: string | null
           follower_count: number
           id: string
           image_url: string | null
@@ -665,6 +668,9 @@ export type Database = {
           comment_count?: number
           content: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deleted_reason?: string | null
           follower_count?: number
           id?: string
           image_url?: string | null
@@ -687,6 +693,9 @@ export type Database = {
           comment_count?: number
           content?: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deleted_reason?: string | null
           follower_count?: number
           id?: string
           image_url?: string | null
@@ -1458,6 +1467,9 @@ export type Database = {
           comment_count: number | null
           content: string | null
           created_at: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          deleted_reason: string | null
           follower_count: number | null
           id: string | null
           image_url: string | null
@@ -1480,6 +1492,9 @@ export type Database = {
           comment_count?: number | null
           content?: string | null
           created_at?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deleted_reason?: string | null
           follower_count?: number | null
           id?: string | null
           image_url?: string | null
@@ -1502,6 +1517,9 @@ export type Database = {
           comment_count?: number | null
           content?: string | null
           created_at?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          deleted_reason?: string | null
           follower_count?: number | null
           id?: string | null
           image_url?: string | null
