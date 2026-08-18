@@ -696,7 +696,14 @@ export default function ReviewActionDialog({
 
           <div>
             <Label className="text-xs">Subject</Label>
-            <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
+            <Input
+              value={subject}
+              onChange={(e) => {
+                setMessageTouched(true);
+                setSubject(e.target.value);
+              }}
+            />
+
           </div>
           <div>
             <Label className="text-xs">Message to author</Label>
