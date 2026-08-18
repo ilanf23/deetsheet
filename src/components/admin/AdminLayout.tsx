@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
 import { Outlet, NavLink, Link, useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+
 import {
   LayoutGrid,
   Users,
