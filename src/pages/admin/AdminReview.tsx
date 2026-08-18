@@ -596,42 +596,44 @@ export default function AdminReview() {
         }}
         onSaved={fetchAll}
       />
-      {reviewDialog && reviewDialog.item.author?.id && (
-        <ReviewActionDialog
-          open={!!reviewDialog}
-          onOpenChange={(o) => {
-            if (!o) {
-              setReviewDialog(null);
-              setPendingEditPayload(null);
-            }
-          }}
-          action={reviewDialog.action}
-          itemKind={reviewDialog.item.kind}
-          itemTitle={
-            reviewDialog.item.kind === "topic"
+      <ReviewActionDialog
+        open={!!reviewDialog && !!reviewDialog.item.author?.id}
+        onOpenChange={(o) => {
+          if (!o) {
+            setReviewDialog(null);
+            setPendingEditPayload(null);
+          }
+        }}
+        action={reviewDialog?.action ?? "approve"}
+        itemKind={reviewDialog?.item.kind ?? "post"}
+        itemTitle={
+          reviewDialog
+            ? reviewDialog.item.kind === "topic"
               ? reviewDialog.item.name
               : reviewDialog.item.title
+            : ""
+        }
+        authorId={reviewDialog?.item.author?.id ?? ""}
+        authorLabel={
+          reviewDialog?.item.author?.name ??
+          reviewDialog?.item.author?.username ??
+          "the author"
+        }
+        postId={reviewDialog && reviewDialog.item.kind === "post" ? reviewDialog.item.id : null}
+        onConfirmed={async (meta) => {
+          if (!reviewDialog) return;
+          if (reviewDialog.action === "approve") {
+            await applyDecision(reviewDialog.item, "approved");
+          } else if (reviewDialog.action === "reject") {
+            await applyDecision(reviewDialog.item, "rejected", meta?.reason);
+          } else if (reviewDialog.action === "edit") {
+            // "Suggest" flow: message sent to author; post stays pending
+            // until they update and resubmit. No DB change here.
+            setItems((prev) => prev.filter((i) => !(i.kind === reviewDialog.item.kind && i.id === reviewDialog.item.id)));
           }
-          authorId={reviewDialog.item.author.id}
-          authorLabel={
-            reviewDialog.item.author.name ??
-            reviewDialog.item.author.username ??
-            "the author"
-          }
-          postId={reviewDialog.item.kind === "post" ? reviewDialog.item.id : null}
-          onConfirmed={async (meta) => {
-            if (reviewDialog.action === "approve") {
-              await applyDecision(reviewDialog.item, "approved");
-            } else if (reviewDialog.action === "reject") {
-              await applyDecision(reviewDialog.item, "rejected", meta?.reason);
-            } else if (reviewDialog.action === "edit") {
-              // "Suggest" flow: message sent to author; post stays pending
-              // until they update and resubmit. No DB change here.
-              setItems((prev) => prev.filter((i) => !(i.kind === reviewDialog.item.kind && i.id === reviewDialog.item.id)));
-            }
-          }}
-        />
-      )}
+        }}
+      />
+
     </div>
   );
 }
