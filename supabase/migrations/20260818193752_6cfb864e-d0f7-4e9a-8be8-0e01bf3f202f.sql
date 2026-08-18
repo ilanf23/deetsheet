@@ -1,0 +1,1 @@
+UPDATE public.posts SET content = title WHERE id = '5285058a-0000-0000-0000-000000000000';
