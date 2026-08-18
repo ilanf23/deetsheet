@@ -93,27 +93,23 @@ export default function AdminPostReviewDialog({
     let cancelled = false;
 
     (async () => {
+      // Keep whatever is already on screen while we refetch — blanking state
+      // up front made the dialog visibly flash and wiped in-progress edits.
       setLoading(true);
-      setPost(null);
-      setAuthor(null);
-      setStats(null);
-      setTopicName(null);
-      setTopicSlug(null);
-      setPostLocation(null);
-      setAuthorLocation(null);
-      resetEditState(null);
 
       const { data: postRow } = await supabase
         .from("posts_privileged")
         .select("*")
         .eq("id", postId)
         .maybeSingle();
-      if (cancelled || !postRow) {
+      if (cancelled) return;
+      if (!postRow) {
         setLoading(false);
         return;
       }
       setPost(postRow as Post);
       resetEditState(postRow as Post);
+
 
       const [topicRes, authorRes, postLocRes] = await Promise.all([
         supabase.from("topics").select("name, slug").eq("id", postRow.topic_id).maybeSingle(),
