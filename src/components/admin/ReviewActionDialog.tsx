@@ -175,9 +175,11 @@ export default function ReviewActionDialog({
     setEditTopicId("");
     const c = defaultCopy(action, itemKind, itemTitle, "");
 
+    lastGeneratedRef.current = { subject: c.subject, body: c.body };
     setSubject(c.subject);
     setBody(c.body);
   }, [open, action, itemKind, itemTitle]);
+
 
 
   // Fetch the full post so the admin can review it (and optionally edit it)
