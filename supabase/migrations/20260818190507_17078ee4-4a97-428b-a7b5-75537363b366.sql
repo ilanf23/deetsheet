@@ -1,0 +1,1 @@
+UPDATE public.posts SET title = content WHERE id = 'b2c3d082-9530-4591-b993-5c748ed601c8';
