@@ -121,7 +121,7 @@ export default function ReviewActionDialog({
 
   // Editable copy of the post — the admin adjusts it in the left column and it
   // is saved when the action is submitted.
-  const [editTitle, setEditTitle] = useState("");
+  /** Single source of truth for the post sentence — written to title AND content. */
   const [editContent, setEditContent] = useState("");
   const [editStory, setEditStory] = useState("");
   const [newImage, setNewImage] = useState<File | null>(null);
@@ -148,7 +148,7 @@ export default function ReviewActionDialog({
   ).trim();
 
   /** Title as it currently reads in the left column — keeps the message in sync. */
-  const liveTitle = (itemKind === "post" ? editTitle.trim() : "") || postDetail?.title || itemTitle;
+  const liveTitle = (itemKind === "post" ? editContent.trim() : "") || postDetail?.title || itemTitle;
   /** Topic name as currently selected — the message follows any topic change. */
   const liveTopicName = selectedTopic?.name ?? postDetail?.topic_name ?? null;
   const quotedTitle = [liveTopicName, liveTitle].filter(Boolean).join(": ");
@@ -206,8 +206,7 @@ export default function ReviewActionDialog({
         topic_name: topicName,
       });
       setEditTopicId((data as { topic_id: string | null }).topic_id ?? "");
-      setEditTitle(data.title ?? "");
-      setEditContent(data.content ?? "");
+      setEditContent(data.title ?? data.content ?? "");
       setEditStory(data.story ?? "");
     })();
     return () => {
@@ -237,8 +236,7 @@ export default function ReviewActionDialog({
   /** Whether the admin actually changed the post in the left column. */
   const postEdited =
     !!postDetail &&
-    (editTitle !== (postDetail.title ?? "") ||
-      editContent !== (postDetail.content ?? "") ||
+    (editContent !== (postDetail.title ?? "") ||
       editStory !== (postDetail.story ?? "") ||
       editTopicId !== (postDetail.topic_id ?? "") ||
       !!newImage ||
@@ -299,7 +297,7 @@ export default function ReviewActionDialog({
         .map((s) => s.trim())
         .filter(Boolean);
       const topicName = liveTopicName ?? undefined;
-      const postTitle = (itemKind === "post" ? editTitle.trim() : "") || postDetail?.title || itemTitle;
+      const postTitle = (itemKind === "post" ? editContent.trim() : "") || postDetail?.title || itemTitle;
       const profileUrl = "https://deetsheet.com/profile";
       // Pending / rejected posts deep-link straight into the edit dialog.
       const editUrl = postId ? `${profileUrl}?edit=${postId}` : profileUrl;
@@ -415,8 +413,8 @@ export default function ReviewActionDialog({
         const { error: updErr } = await supabase
           .from("posts")
           .update({
-            title: editTitle.trim() || postDetail?.title,
-            content: editContent.trim(),
+            title: editContent.trim() || postDetail?.title,
+            content: editContent.trim() || postDetail?.title,
             story: editStory.trim() ? editStory : null,
             image_url: nextImageUrl,
             ...(editTopicId && editTopicId !== (postDetail?.topic_id ?? "")
@@ -486,11 +484,7 @@ export default function ReviewActionDialog({
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-xs">Title</Label>
-                  <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
-                </div>
-                <div>
-                  <Label className="text-xs">Post text</Label>
+                  <Label className="text-xs">Post</Label>
                   <Textarea
                     rows={4}
                     value={editContent}
