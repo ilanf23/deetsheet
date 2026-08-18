@@ -41,25 +41,23 @@ const navItems = [
 export default function AdminLayout() {
   const { user, signOut } = useAuth();
   const location = useLocation();
-  const [pendingCount, setPendingCount] = useState(0);
   const { data: messagesCount = 0 } = useAdminUnreadThreadsCount();
 
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
+  // react-query instead of a raw setInterval + setState: structural sharing
+  // means an unchanged count does not re-render this subtree every 30s.
+  const { data: pendingCount = 0 } = useQuery({
+    queryKey: ["admin-pending-count"],
+    queryFn: async () => {
       const [t, p] = await Promise.all([
         supabase.from("topics").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("posts").select("id", { count: "exact", head: true }).eq("status", "pending"),
       ]);
-      if (!cancelled) setPendingCount((t.count ?? 0) + (p.count ?? 0));
-    };
-    load();
-    const id = setInterval(load, 30000);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-  }, [location.pathname]);
+      return (t.count ?? 0) + (p.count ?? 0);
+    },
+    refetchInterval: 30000,
+    refetchOnWindowFocus: false,
+  });
+
 
   return (
     <div className="admin-shell min-h-screen flex">

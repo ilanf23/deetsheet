@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -10,11 +10,19 @@ export default function AdminRouteGuard() {
   const { isAdmin, isLoading, user } = useAdminAuth();
   const { toast } = useToast();
 
+  // Once we have admitted an admin we must never render the spinner branch
+  // again: doing so unmounts the page (and any dialog the admin is typing in).
+  const admitted = useRef(false);
+  if (!isLoading && isAdmin && user) admitted.current = true;
+  if (!user && !isLoading) admitted.current = false;
+
   useEffect(() => {
     if (!isLoading && user && !isAdmin) {
       toast({ title: "Access denied", description: "You do not have admin privileges.", variant: "destructive" });
     }
   }, [isLoading, user, isAdmin, toast]);
+
+  if (admitted.current) return <Outlet />;
 
   if (isLoading) {
     return (
@@ -32,3 +40,4 @@ export default function AdminRouteGuard() {
 
   return <Outlet />;
 }
+
