@@ -175,9 +175,11 @@ export default function ReviewActionDialog({
     setEditTopicId("");
     const c = defaultCopy(action, itemKind, itemTitle, "");
 
+    lastGeneratedRef.current = { subject: c.subject, body: c.body };
     setSubject(c.subject);
     setBody(c.body);
   }, [open, action, itemKind, itemTitle]);
+
 
 
   // Fetch the full post so the admin can review it (and optionally edit it)
@@ -244,16 +246,25 @@ export default function ReviewActionDialog({
 
 
 
-  // Re-render the default message whenever the admin picks a reason or edits
-  // the post title — unless the admin already customised the message body.
+  // Re-render the default message whenever the admin picks a reason — unless
+  // the admin already customised (or could have typed into) the message. A
+  // background refetch must never be able to overwrite typed copy.
+  const lastGeneratedRef = useRef<{ subject: string; body: string } | null>(null);
   useEffect(() => {
     if (!open || messageTouched) return;
     const detail = isOther ? customReason : pickedReason?.detail ?? "";
     const c = defaultCopy(action, itemKind, quotedTitle || itemTitle, detail);
+    const last = lastGeneratedRef.current;
+    // Only overwrite fields that still hold copy we generated (or are empty).
+    const subjectIsOurs = !subject.trim() || subject === last?.subject;
+    const bodyIsOurs = !body.trim() || body === last?.body;
+    if (!subjectIsOurs || !bodyIsOurs) return;
+    lastGeneratedRef.current = { subject: c.subject, body: c.body };
     setSubject(c.subject);
     setBody(c.body);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reasonKey, customReason, open, quotedTitle, messageTouched]);
+
 
 
   const submit = async () => {
@@ -685,7 +696,14 @@ export default function ReviewActionDialog({
 
           <div>
             <Label className="text-xs">Subject</Label>
-            <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
+            <Input
+              value={subject}
+              onChange={(e) => {
+                setMessageTouched(true);
+                setSubject(e.target.value);
+              }}
+            />
+
           </div>
           <div>
             <Label className="text-xs">Message to author</Label>

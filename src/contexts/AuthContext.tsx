@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -55,9 +55,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+      (event, nextSession) => {
+        // The supabase client ticks an auto-refresh every ~30s. Without this
+        // guard every tick produced brand new `user`/`session` identities and
+        // re-rendered the entire app (blowing away open dialogs mid-typing).
+        setSession((prev) => {
+          if (prev?.access_token === nextSession?.access_token) return prev;
+          return nextSession;
+        });
+        // Only swap the user object when the *identity* actually changed.
+        // TOKEN_REFRESHED is a no-op for `user`.
+        if (event !== "TOKEN_REFRESHED") {
+          setUser((prev) => {
+            const nextUser = nextSession?.user ?? null;
+            if (prev?.id && nextUser?.id && prev.id === nextUser.id) return prev;
+            if (!prev && !nextUser) return prev;
+            return nextUser;
+          });
+        }
         setLoading(false);
       }
     );
@@ -70,6 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => subscription.unsubscribe();
   }, []);
+
 
   // Fire the branded welcome email once per account. The edge function is
   // idempotent (deduped server-side), this just avoids repeat calls per tab.
@@ -84,13 +100,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user?.id]);
 
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     await supabase.auth.signOut();
-  };
+  }, []);
+
+  const value = useMemo(
+    () => ({ user, session, loading, signOut, avatarUrl, refreshProfile }),
+    [user, session, loading, signOut, avatarUrl, refreshProfile]
+  );
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut, avatarUrl, refreshProfile }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
+
   );
 };
