@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -10,11 +10,23 @@ export default function AdminRouteGuard() {
   const { isAdmin, isLoading, user } = useAdminAuth();
   const { toast } = useToast();
 
-  // Once we have admitted an admin we must never render the spinner branch
-  // again: doing so unmounts the page (and any dialog the admin is typing in).
-  const admitted = useRef(false);
-  if (!isLoading && isAdmin && user) admitted.current = true;
-  if (!user && !isLoading) admitted.current = false;
+  // Latch: once we have admitted an admin we must never render the spinner
+  // branch again — doing so unmounts the page (and any dialog the admin is
+  // typing in). State + effect (not a ref mutated during render) keeps this
+  // concurrent-safe; the `resolvedAdmin` term below covers the very first
+  // admitted render, before the effect has run.
+  const [admitted, setAdmitted] = useState(false);
+  const resolvedAdmin = !isLoading && isAdmin && !!user;
+
+  useEffect(() => {
+    if (resolvedAdmin) {
+      setAdmitted(true);
+      return;
+    }
+    // Reset on sign-out *and* on a resolved non-admin result, so a revoked or
+    // downgraded role ejects on the next resolved render.
+    if (!isLoading && (!user || !isAdmin)) setAdmitted(false);
+  }, [resolvedAdmin, isLoading, user, isAdmin]);
 
   useEffect(() => {
     if (!isLoading && user && !isAdmin) {
@@ -22,7 +34,11 @@ export default function AdminRouteGuard() {
     }
   }, [isLoading, user, isAdmin, toast]);
 
-  if (admitted.current) return <Outlet />;
+  if (!isLoading && user && !isAdmin) return <Navigate to="/" replace />;
+  if (!isLoading && !user) return <Navigate to="/login" replace />;
+
+  if (admitted || resolvedAdmin) return <Outlet />;
+
 
   if (isLoading) {
     return (
