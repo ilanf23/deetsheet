@@ -41,7 +41,7 @@ const navItems = [
 
 export default function AdminLayout() {
   const { user, signOut } = useAuth();
-  const location = useLocation();
+  
   const { data: messagesCount = 0 } = useAdminUnreadThreadsCount();
 
   // react-query instead of a raw setInterval + setState: structural sharing
