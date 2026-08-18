@@ -241,11 +241,13 @@ const PostPage = () => {
                     // user's "detail") — render the optional Comment / Story
                     // as the body, and fall back to content only when it
                     // diverges from the title (legacy or admin-edited posts).
+                    const normalize = (s?: string | null) =>
+                      (s ?? "").trim().replace(/\s+/g, " ").toLowerCase();
                     const trimmedStory = post.story?.trim();
                     const trimmedContent = post.content?.trim();
                     const bodyText = trimmedStory
                       ? post.story!
-                      : trimmedContent && trimmedContent !== post.title.trim()
+                      : trimmedContent && normalize(post.content) !== normalize(post.title)
                         ? post.content
                         : "";
                     if (!bodyText && !post.imageUrl) return null;

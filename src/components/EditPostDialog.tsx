@@ -120,9 +120,11 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
       }
 
       const trimmedStory = story.trim();
+      const trimmedTitle = title.trim();
+      // Title and content always hold the same sentence — never let them drift.
       const updates: Record<string, unknown> = {
-        title: title.trim(),
-        content,
+        title: trimmedTitle,
+        content: trimmedTitle,
         image_url: nextImageUrl,
         is_anonymous: isAnonymous,
       };
@@ -184,7 +186,7 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
         ) : (
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="edit-post-title">Title</Label>
+              <Label htmlFor="edit-post-title">Post</Label>
               <Input
                 id="edit-post-title"
                 value={title}

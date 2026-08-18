@@ -233,7 +233,7 @@ export default function AdminPostReviewDialog({
       // Status intentionally untouched — inline edits keep the post where it is.
       const updates: Record<string, unknown> = {
         title: title.trim(),
-        content: content.trim() || title.trim(),
+        content: title.trim(),
         story: story.trim() || null,
         image_url: nextImageUrl,
       };
@@ -308,20 +308,12 @@ export default function AdminPostReviewDialog({
                 {editing ? (
                   <div className="space-y-3">
                     <div className="space-y-1.5">
-                      <Label htmlFor="review-title">Title</Label>
-                      <Input
+                      <Label htmlFor="review-title">Post</Label>
+                      <Textarea
                         id="review-title"
+                        rows={3}
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="review-content">Post text</Label>
-                      <Textarea
-                        id="review-content"
-                        rows={3}
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
                       />
                     </div>
                     <div className="space-y-1.5">
