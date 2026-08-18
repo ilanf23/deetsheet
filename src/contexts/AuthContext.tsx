@@ -100,13 +100,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [user?.id]);
 
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     await supabase.auth.signOut();
-  };
+  }, []);
+
+  const value = useMemo(
+    () => ({ user, session, loading, signOut, avatarUrl, refreshProfile }),
+    [user, session, loading, signOut, avatarUrl, refreshProfile]
+  );
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signOut, avatarUrl, refreshProfile }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
+
   );
 };
