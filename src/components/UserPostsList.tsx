@@ -40,7 +40,7 @@ const UserPostsList = ({ userId }: { userId: string }) => {
     let query = isOwnProfile
       ? supabase
           .from("posts_privileged")
-          .select("id, title, content, score, comment_count, created_at, approved_at, status, is_anonymous, needs_author_edit, topics(name, slug)")
+          .select("id, title, content, score, comment_count, created_at, approved_at, status, is_anonymous, needs_author_edit, topic_name, topic_slug")
           .eq("author_id", userId)
       : supabase
           .from("posts")
@@ -56,11 +56,17 @@ const UserPostsList = ({ userId }: { userId: string }) => {
 
     if (!error && data) {
       type Row = Omit<UserPost, "topic"> & {
-        topics: { name: string; slug: string } | { name: string; slug: string }[] | null;
+        topics?: { name: string; slug: string } | { name: string; slug: string }[] | null;
+        topic_name?: string | null;
+        topic_slug?: string | null;
       };
       const mapped = (data as unknown as Row[]).map((p) => ({
         ...p,
-        topic: Array.isArray(p.topics) ? (p.topics[0] ?? null) : p.topics,
+        topic: p.topics
+          ? (Array.isArray(p.topics) ? (p.topics[0] ?? null) : p.topics)
+          : p.topic_name
+            ? { name: p.topic_name, slug: p.topic_slug ?? "" }
+            : null,
       }));
       // Posts the reviewer asked the author to revise float to the very top.
       // Stable sort keeps the existing created_at ordering inside each group.

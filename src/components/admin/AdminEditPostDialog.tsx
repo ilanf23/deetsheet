@@ -247,7 +247,7 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
                 .maybeSingle(),
               supabase
                 .from("posts_privileged")
-                .select("id, title, content, story, status, created_at, topic_id, topics(name)")
+                .select("id, title, content, story, status, created_at, topic_id, topic_name")
                 .eq("author_id", p.author_id)
                 .order("created_at", { ascending: false }),
               supabase
@@ -295,11 +295,9 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
               status: string | null;
               created_at: string;
               topic_id: string;
-              topics: { name: string } | { name: string }[] | null;
+              topic_name: string | null;
             };
             const rows = (postsRes.data ?? []) as AuthorPostRow[];
-            const topicNameOf = (t: AuthorPostRow["topics"]) =>
-              Array.isArray(t) ? (t[0]?.name ?? null) : (t?.name ?? null);
             const counts = rows.reduce(
               (acc, r) => {
                 acc.total += 1;
@@ -346,7 +344,7 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
                 story: r.story ?? null,
                 status: r.status ?? "approved",
                 createdAt: r.created_at,
-                topicName: topicNameOf(r.topics),
+                topicName: r.topic_name ?? null,
               })),
             });
           }
