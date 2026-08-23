@@ -79,6 +79,9 @@ interface UserPost {
   image_url: string | null;
   story: string | null;
   status: string;
+  /** Reviewer asked the author to revise before approval (own profile only). */
+  needs_author_edit?: boolean;
+
 }
 
 interface UserTopic {
@@ -268,16 +271,18 @@ const ProfileView = () => {
       });
 
     {
-      const POST_COLUMNS =
+      const BASE_POST_COLUMNS =
         "id, title, content, created_at, approved_at, comment_count, score, topic_id, status, image_url, story, topics(name)";
+      // `needs_author_edit` is only readable through the author-scoped view;
+      // the public `posts` read must not ask for it.
       let postsQuery = isOwnProfile
         ? supabase
             .from("posts_privileged")
-            .select(POST_COLUMNS)
+            .select(`${BASE_POST_COLUMNS}, needs_author_edit`)
             .eq("author_id", targetUserId)
         : supabase
             .from("posts")
-            .select(POST_COLUMNS)
+            .select(BASE_POST_COLUMNS)
             .eq("public_author_id", targetUserId)
         .neq("status", "deleted")
         .order("created_at", { ascending: false });
@@ -299,11 +304,13 @@ const ProfileView = () => {
           image_url: (p.image_url as string) || null,
           story: (p.story as string) || null,
           status: (p.status as string) || "approved",
+          needs_author_edit: Boolean(p.needs_author_edit),
         }));
         setUserPosts(mapped);
         setPostCount(mapped.length);
       });
     }
+
 
 
     void (isOwnProfile
@@ -548,13 +555,20 @@ const ProfileView = () => {
   // are fully fetched, so filtering is instant and needs no extra DB calls.
   const trimmedQuery = query.trim().toLowerCase();
   const filteredPosts = useMemo(() => {
-    if (!trimmedQuery) return userPosts;
-    return userPosts.filter(
-      (p) =>
-        p.title?.toLowerCase().includes(trimmedQuery) ||
-        p.content?.toLowerCase().includes(trimmedQuery)
+    const base = !trimmedQuery
+      ? userPosts
+      : userPosts.filter(
+          (p) =>
+            p.title?.toLowerCase().includes(trimmedQuery) ||
+            p.content?.toLowerCase().includes(trimmedQuery)
+        );
+    // Posts the reviewer asked the author to revise float to the very top.
+    // Stable sort keeps the existing created_at ordering inside each group.
+    return [...base].sort(
+      (a, b) => Number(Boolean(b.needs_author_edit)) - Number(Boolean(a.needs_author_edit)),
     );
   }, [userPosts, trimmedQuery]);
+
   const filteredTopics = useMemo(() => {
     if (!trimmedQuery) return userTopics;
     return userTopics.filter(
@@ -987,16 +1001,23 @@ const ProfileView = () => {
                                     className="font-semibold text-base text-primary hover:underline mb-1 flex items-center gap-2 min-w-0"
                                   >
                                     <span className="truncate">{formatTitle(post.title)}</span>
-                                    {post.status === "pending" && (
-                                      <span className="inline-flex items-center gap-1 shrink-0 text-secondary">
-                                        <Clock
-                                          className="h-[1em] w-[1em]"
-                                          strokeWidth={2.5}
-                                          aria-label="Pending review"
-                                        />
-                                        <span className="text-xs font-medium">Pending</span>
+                                    {post.needs_author_edit ? (
+                                      <span className="inline-flex items-center shrink-0 px-2 py-0.5 rounded text-[11px] font-semibold bg-secondary text-secondary-foreground">
+                                        Needs Editing Before Approval
                                       </span>
+                                    ) : (
+                                      post.status === "pending" && (
+                                        <span className="inline-flex items-center gap-1 shrink-0 text-secondary">
+                                          <Clock
+                                            className="h-[1em] w-[1em]"
+                                            strokeWidth={2.5}
+                                            aria-label="Pending review"
+                                          />
+                                          <span className="text-xs font-medium">Pending</span>
+                                        </span>
+                                      )
                                     )}
+
                                   </a>
                                 )}
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1.5">
