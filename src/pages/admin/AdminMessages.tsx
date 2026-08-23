@@ -517,7 +517,7 @@ export default function AdminMessages() {
                   >
                     {label.slice(0, 1).toUpperCase()}
                   </div>
-                  <Link to={`/profile/${t.user_id}`} className="truncate hover:underline" style={{ color: "hsl(var(--admin-primary))" }}>
+                  <Link to={`/profile/${t.user_id}`} onClick={(e) => e.stopPropagation()} className="truncate hover:underline" style={{ color: "hsl(var(--admin-primary))" }}>
                     {label}
                   </Link>
                 </div>
@@ -532,7 +532,10 @@ export default function AdminMessages() {
                 </div>
                 <div className="flex justify-end">
                   <button
-                    onClick={() => openComposeForThread(t)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openComposeForThread(t);
+                    }}
                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-[13px] font-semibold"
                     style={{ color: "hsl(var(--admin-primary))" }}
                   >
