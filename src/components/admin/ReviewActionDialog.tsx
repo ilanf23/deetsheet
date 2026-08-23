@@ -464,6 +464,16 @@ export default function ReviewActionDialog({
         if (updErr) throw updErr;
       }
 
+      // "Suggest changes" flags the post so the author sees an actionable
+      // "Needs Editing Before Approval" state. Written through an admin-only
+      // security-definer RPC — clients never write the column directly.
+      if (action === "edit" && itemKind === "post" && postId) {
+        const { error: flagErr } = await supabase.rpc("mark_post_needs_author_edit", {
+          _post_id: postId,
+        });
+        if (flagErr) throw flagErr;
+      }
+
       // Now perform the actual action.
       await onConfirmed({ reason: reasonTextForAction });
 
