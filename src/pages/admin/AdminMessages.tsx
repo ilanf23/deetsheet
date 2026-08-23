@@ -18,6 +18,7 @@ import { LINK_SHORTCUTS, insertMarkdownLink } from "@/lib/linkShortcuts";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
+import ThreadConversation from "@/components/inbox/ThreadConversation";
 import ManageTemplatesDialog from "@/components/admin/ManageTemplatesDialog";
 import { ChevronDown, FileText, PenSquare, Search } from "lucide-react";
 
@@ -82,6 +83,9 @@ export default function AdminMessages() {
   const [sort, setSort] = useState<SortKey>("recent");
   const [search, setSearch] = useState("");
   const [templatesOpen, setTemplatesOpen] = useState(false);
+
+  // Read-a-conversation dialog (separate from Compose)
+  const [viewThread, setViewThread] = useState<Thread | null>(null);
 
   // Compose state
   const [composeOpen, setComposeOpen] = useState(false);
