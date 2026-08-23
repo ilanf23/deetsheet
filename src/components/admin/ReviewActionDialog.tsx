@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { buildPostSlug } from "@/lib/postSlug";
 import { isOtherReason, useReviewReasons, type ReviewReason } from "@/lib/reviewReasons";
 import { useTopics } from "@/hooks/useSupabaseTopics";
-import { PENDING_CLOSING } from "@/lib/reviewCopy";
+import { absolutizeMarkdownLinks, pendingClosingWithEditLink } from "@/lib/reviewCopy";
 import { LINK_SHORTCUTS } from "@/lib/linkShortcuts";
 
 
@@ -39,6 +39,7 @@ function defaultCopy(
   itemKind: "topic" | "post",
   quotedTitle: string,
   reasonDetail: string,
+  editPostId?: string | null,
 ) {
   const label = itemKind === "topic" ? "topic" : "post";
   const quoted = `"${quotedTitle}"`;
@@ -65,7 +66,7 @@ function defaultCopy(
     body:
       `Hi,\n\nThanks for submitting your ${label} ${quoted}. Before we can approve it, we'd like you to make a few changes.\n\n` +
       `Suggestion: ${reasonDetail || "[select a suggestion above or write your own]"}\n\n` +
-      `${PENDING_CLOSING}\n\nReply here if you have questions.\n\n— The DeetSheet team`,
+      `${pendingClosingWithEditLink(editPostId)}\n\nReply here if you have questions.\n\n— The DeetSheet team`,
   };
 }
 
@@ -276,7 +277,7 @@ export default function ReviewActionDialog({
   useEffect(() => {
     if (!open || messageTouched) return;
     const detail = isOther ? customReason : pickedReason?.detail ?? "";
-    const c = defaultCopy(action, itemKind, quotedTitle || itemTitle, detail);
+    const c = defaultCopy(action, itemKind, quotedTitle || itemTitle, detail, postId);
     const last = lastGeneratedRef.current;
     // Only overwrite fields that still hold copy we generated (or are empty).
     const subjectIsOurs = !subject.trim() || subject === last?.subject;
@@ -286,7 +287,7 @@ export default function ReviewActionDialog({
     setSubject(c.subject);
     setBody(c.body);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reasonKey, customReason, open, quotedTitle, messageTouched]);
+  }, [reasonKey, customReason, open, quotedTitle, messageTouched, postId]);
 
 
 
@@ -340,10 +341,13 @@ export default function ReviewActionDialog({
           ? `https://deetsheet.com/topic/${encodeURIComponent(topicName)}/post/${buildPostSlug(postTitle, postId)}`
           : profileUrl;
 
+      // The in-app thread keeps site-relative links; email copy must not.
+      const emailBody = absolutizeMarkdownLinks(body);
+
       let emailTemplate = "admin-message";
       let templateData: Record<string, unknown> = {
         headline: subject,
-        bodyText: body,
+        bodyText: emailBody,
         quotedTitle: [topicName, postTitle].filter(Boolean).join(": "),
         reasons: reasonText ? [reasonText] : undefined,
         suggestions: suggestionList.length ? suggestionList : undefined,
@@ -355,7 +359,7 @@ export default function ReviewActionDialog({
         const base = {
           topic: topicName,
           title: postTitle,
-          adminNote: body,
+          adminNote: emailBody,
         };
         if (action === "approve" && photoDenied) {
           emailTemplate = "post-photo-denied";
@@ -381,7 +385,7 @@ export default function ReviewActionDialog({
             // Only forward a genuinely custom note. The auto-generated default
             // already restates the reason + suggestions, which the email
             // renders as its own REASON / SUGGESTIONS boxes.
-            adminNote: messageTouched ? body : undefined,
+            adminNote: messageTouched ? emailBody : undefined,
             reasons: reasonText ? [reasonText] : [],
             suggestions: suggestionList,
             ctaUrl: editUrl,
