@@ -15,7 +15,13 @@ type ThreadReport = {
   created_at: string;
 };
 
-type MessageRow = { id: string; sender_id: string; body_text: string | null; created_at: string };
+type MessageRow = {
+  id: string;
+  sender_id: string;
+  body_text: string | null;
+  created_at: string;
+  deleted_at: string | null;
+};
 
 /**
  * Message-thread reports filed by members, shown alongside post reports so
@@ -51,7 +57,7 @@ export default function MessageReportsPanel() {
     if (!messages[r.thread_id]) {
       const { data } = await supabase
         .from("messages")
-        .select("id,sender_id,body_text,created_at")
+        .select("id,sender_id,body_text,created_at,deleted_at")
         .eq("thread_id", r.thread_id)
         .order("created_at");
       setMessages((prev) => ({ ...prev, [r.thread_id]: (data ?? []) as MessageRow[] }));
@@ -137,7 +143,13 @@ export default function MessageReportsPanel() {
                       {m.sender_id === r.reported_user_id ? "Reported member" : "Reporter"} ·{" "}
                       {format(parseISO(m.created_at), "MMM d, h:mm a")}
                     </p>
-                    <p className="mt-1 whitespace-pre-wrap text-[13px]">{m.body_text}</p>
+                    {m.deleted_at ? (
+                      <p className="mt-1 text-[13px] italic text-muted-foreground">
+                        This message was deleted
+                      </p>
+                    ) : (
+                      <p className="mt-1 whitespace-pre-wrap text-[13px]">{m.body_text}</p>
+                    )}
                   </div>
                 ))}
                 {(messages[r.thread_id] ?? []).length === 0 && (
