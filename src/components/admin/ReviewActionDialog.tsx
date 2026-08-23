@@ -12,7 +12,7 @@ import { buildPostSlug } from "@/lib/postSlug";
 import { isOtherReason, useReviewReasons, type ReviewReason } from "@/lib/reviewReasons";
 import { useTopics } from "@/hooks/useSupabaseTopics";
 import { absolutizeMarkdownLinks, pendingClosingWithEditLink } from "@/lib/reviewCopy";
-import { LINK_SHORTCUTS } from "@/lib/linkShortcuts";
+import { LINK_SHORTCUTS, insertMarkdownLink } from "@/lib/linkShortcuts";
 
 
 

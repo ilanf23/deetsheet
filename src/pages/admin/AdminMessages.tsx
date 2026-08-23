@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { LINK_SHORTCUTS } from "@/lib/linkShortcuts";
+import { LINK_SHORTCUTS, insertMarkdownLink } from "@/lib/linkShortcuts";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
