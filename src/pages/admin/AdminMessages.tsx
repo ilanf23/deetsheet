@@ -18,6 +18,7 @@ import { LINK_SHORTCUTS, insertMarkdownLink } from "@/lib/linkShortcuts";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
+import ThreadConversation from "@/components/inbox/ThreadConversation";
 import ManageTemplatesDialog from "@/components/admin/ManageTemplatesDialog";
 import { ChevronDown, FileText, PenSquare, Search } from "lucide-react";
 
@@ -82,6 +83,9 @@ export default function AdminMessages() {
   const [sort, setSort] = useState<SortKey>("recent");
   const [search, setSearch] = useState("");
   const [templatesOpen, setTemplatesOpen] = useState(false);
+
+  // Read-a-conversation dialog (separate from Compose)
+  const [viewThread, setViewThread] = useState<Thread | null>(null);
 
   // Compose state
   const [composeOpen, setComposeOpen] = useState(false);
@@ -488,7 +492,17 @@ export default function AdminMessages() {
             return (
               <div
                 key={t.id}
-                className="grid grid-cols-[1.2fr_1.6fr_0.8fr_1fr_0.7fr] gap-6 items-center px-6 py-4 text-[14px]"
+                role="button"
+                tabIndex={0}
+                title="Open conversation"
+                onClick={() => setViewThread(t)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setViewThread(t);
+                  }
+                }}
+                className="grid grid-cols-[1.2fr_1.6fr_0.8fr_1fr_0.7fr] gap-6 items-center px-6 py-4 text-[14px] cursor-pointer transition-colors hover:bg-muted/50"
                 style={{
                   borderBottom:
                     idx === filtered.length - 1
@@ -503,7 +517,7 @@ export default function AdminMessages() {
                   >
                     {label.slice(0, 1).toUpperCase()}
                   </div>
-                  <Link to={`/profile/${t.user_id}`} className="truncate hover:underline" style={{ color: "hsl(var(--admin-primary))" }}>
+                  <Link to={`/profile/${t.user_id}`} onClick={(e) => e.stopPropagation()} className="truncate hover:underline" style={{ color: "hsl(var(--admin-primary))" }}>
                     {label}
                   </Link>
                 </div>
@@ -518,7 +532,10 @@ export default function AdminMessages() {
                 </div>
                 <div className="flex justify-end">
                   <button
-                    onClick={() => openComposeForThread(t)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openComposeForThread(t);
+                    }}
                     className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-[13px] font-semibold"
                     style={{ color: "hsl(var(--admin-primary))" }}
                   >
@@ -530,6 +547,32 @@ export default function AdminMessages() {
           })}
         </div>
       )}
+
+      {/* Read-conversation dialog — same renderer the member sees */}
+      <Dialog open={Boolean(viewThread)} onOpenChange={(o) => !o && setViewThread(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-left leading-snug">
+              {viewThread?.post_title
+                ? `"${viewThread.post_title}"`
+                : viewThread?.subject ?? "Conversation"}
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground text-left">
+              With {viewThread?.user_name ?? viewThread?.user_username ?? "member"}
+            </p>
+          </DialogHeader>
+          {viewThread && (
+            <ThreadConversation
+              threadId={viewThread.id}
+              adminView
+              senderRole="admin"
+              markRead={false}
+              memberLabel={viewThread.user_name ?? viewThread.user_username ?? null}
+              onNotFound={() => setViewThread(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Compose dialog */}
       <Dialog open={composeOpen} onOpenChange={setComposeOpen}>

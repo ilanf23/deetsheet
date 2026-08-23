@@ -44,6 +44,14 @@ interface ThreadConversationProps {
   onMeta?: (meta: { otherUserId: string | null; isDirect: boolean }) => void;
   /** Called after a request is accepted or declined. */
   onRequestResolved?: () => void;
+  /** Update the thread's read timestamps. Admins viewing a member thread pass false. */
+  markRead?: boolean;
+  /** Role stamped on replies sent from this view. */
+  senderRole?: "user" | "admin";
+  /** Admin reading a member's thread — changes the sender labels only. */
+  adminView?: boolean;
+  /** Display name for the member, used by the admin view's sender labels. */
+  memberLabel?: string | null;
 }
 
 export default function ThreadConversation({
@@ -53,6 +61,10 @@ export default function ThreadConversation({
   onRead,
   onMeta,
   onRequestResolved,
+  markRead = true,
+  senderRole = "user",
+  adminView = false,
+  memberLabel,
 }: ThreadConversationProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -123,14 +135,17 @@ export default function ThreadConversation({
     setLoading(false);
 
     // Per-participant read state: primary user updates last_read_at; the
-    // direct-thread counterpart updates other_last_read_at.
-    const isCounterpart =
-      (t as Thread).kind === "direct" && (t as Thread).other_user_id === user.id;
-    const patch = isCounterpart
-      ? { other_last_read_at: new Date().toISOString() }
-      : { last_read_at: new Date().toISOString() };
-    await supabase.from("message_threads").update(patch).eq("id", threadId);
-    onRead?.();
+    // direct-thread counterpart updates other_last_read_at. Admins reading a
+    // member's thread must not touch the member's read state.
+    if (markRead) {
+      const isCounterpart =
+        (t as Thread).kind === "direct" && (t as Thread).other_user_id === user.id;
+      const patch = isCounterpart
+        ? { other_last_read_at: new Date().toISOString() }
+        : { last_read_at: new Date().toISOString() };
+      await supabase.from("message_threads").update(patch).eq("id", threadId);
+      onRead?.();
+    }
   };
 
   useEffect(() => {
@@ -143,6 +158,11 @@ export default function ThreadConversation({
   const otherName = otherProfile?.name || otherProfile?.username || "user";
 
   const senderLabel = (m: Message) => {
+    if (adminView) {
+      return m.sender_role === "admin"
+        ? "DeetSheet team"
+        : memberLabel || otherName || "Member";
+    }
     if (thread?.kind === "direct") {
       return m.sender_id === user.id ? "You" : otherName;
     }
@@ -155,7 +175,7 @@ export default function ThreadConversation({
     const { error } = await supabase.from("messages").insert({
       thread_id: thread.id,
       sender_id: user.id,
-      sender_role: "user",
+      sender_role: senderRole,
       body_text: reply.trim(),
       body_html: `<p>${reply.trim().replace(/\n/g, "<br/>")}</p>`,
     });
