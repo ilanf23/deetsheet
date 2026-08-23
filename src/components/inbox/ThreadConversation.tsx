@@ -75,6 +75,12 @@ interface ThreadConversationProps {
   memberLabel?: string | null;
   /** Called after a reply is sent or a message is deleted, so lists can refresh. */
   onChanged?: () => void;
+  /**
+   * Which side of the conversation counts as "own" (right-aligned, green).
+   * "viewer" — the signed-in user's own messages (member inbox).
+   * "team" — every admin-authored message, regardless of which admin sent it.
+   */
+  ownSide?: "viewer" | "team";
 }
 
 export default function ThreadConversation({
