@@ -161,6 +161,23 @@ export default function ThreadConversation({
       .order("created_at");
     setMessages((m ?? []) as Message[]);
 
+    // Avatars/names for every sender in the thread (members only; admin
+    // messages use the DeetSheet mark).
+    const senderIds = Array.from(
+      new Set(((m ?? []) as Message[]).map((x) => x.sender_id).filter(Boolean)),
+    );
+    if (senderIds.length) {
+      const { data: ps } = await supabase
+        .from("profiles")
+        .select("id,name,username,avatar_url")
+        .in("id", senderIds);
+      const map: Record<string, ProfileLite> = {};
+      (ps ?? []).forEach((p: any) => {
+        map[p.id] = p as ProfileLite;
+      });
+      setSenderProfiles(map);
+    }
+
     setLoading(false);
 
     // Per-participant read state: primary user updates last_read_at; the
