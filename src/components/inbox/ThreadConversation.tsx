@@ -135,14 +135,17 @@ export default function ThreadConversation({
     setLoading(false);
 
     // Per-participant read state: primary user updates last_read_at; the
-    // direct-thread counterpart updates other_last_read_at.
-    const isCounterpart =
-      (t as Thread).kind === "direct" && (t as Thread).other_user_id === user.id;
-    const patch = isCounterpart
-      ? { other_last_read_at: new Date().toISOString() }
-      : { last_read_at: new Date().toISOString() };
-    await supabase.from("message_threads").update(patch).eq("id", threadId);
-    onRead?.();
+    // direct-thread counterpart updates other_last_read_at. Admins reading a
+    // member's thread must not touch the member's read state.
+    if (markRead) {
+      const isCounterpart =
+        (t as Thread).kind === "direct" && (t as Thread).other_user_id === user.id;
+      const patch = isCounterpart
+        ? { other_last_read_at: new Date().toISOString() }
+        : { last_read_at: new Date().toISOString() };
+      await supabase.from("message_threads").update(patch).eq("id", threadId);
+      onRead?.();
+    }
   };
 
   useEffect(() => {
