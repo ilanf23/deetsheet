@@ -4,7 +4,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { format, parseISO } from "date-fns";
+import { format, isSameDay, parseISO } from "date-fns";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Trash2 } from "lucide-react";
 import MarkdownLinkText from "@/components/MarkdownLinkText";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
@@ -45,7 +46,12 @@ type Thread = {
   initiated_by: string | null;
 };
 
-type ProfileLite = { id: string; name: string | null; username: string | null };
+type ProfileLite = {
+  id: string;
+  name: string | null;
+  username: string | null;
+  avatar_url?: string | null;
+};
 
 interface ThreadConversationProps {
   threadId: string;
@@ -88,6 +94,7 @@ export default function ThreadConversation({
   const { toast } = useToast();
   const [thread, setThread] = useState<Thread | null>(null);
   const [otherProfile, setOtherProfile] = useState<ProfileLite | null>(null);
+  const [senderProfiles, setSenderProfiles] = useState<Record<string, ProfileLite>>({});
   const [messages, setMessages] = useState<Message[]>([]);
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
@@ -131,7 +138,7 @@ export default function ThreadConversation({
       if (otherId) {
         const { data: p } = await supabase
           .from("profiles")
-          .select("id,name,username")
+          .select("id,name,username,avatar_url")
           .eq("id", otherId)
           .maybeSingle();
         if (p) {
@@ -155,6 +162,23 @@ export default function ThreadConversation({
       .eq("thread_id", threadId)
       .order("created_at");
     setMessages((m ?? []) as Message[]);
+
+    // Avatars/names for every sender in the thread (members only; admin
+    // messages use the DeetSheet mark).
+    const senderIds = Array.from(
+      new Set(((m ?? []) as Message[]).map((x) => x.sender_id).filter(Boolean)),
+    );
+    if (senderIds.length) {
+      const { data: ps } = await supabase
+        .from("profiles")
+        .select("id,name,username,avatar_url")
+        .in("id", senderIds);
+      const map: Record<string, ProfileLite> = {};
+      (ps ?? []).forEach((p: any) => {
+        map[p.id] = p as ProfileLite;
+      });
+      setSenderProfiles(map);
+    }
 
     setLoading(false);
 
@@ -266,74 +290,165 @@ export default function ThreadConversation({
 
   return (
     <div className="space-y-6">
-      <div className="space-y-3">
-        {messages.map((m) => {
+      <div className="space-y-1">
+        {messages.map((m, i) => {
           const mine = m.sender_id === user.id;
-          if (m.deleted_at) {
-            return (
-              <div
-                key={m.id}
-                className="rounded-lg border border-dashed p-4 text-sm italic text-muted-foreground"
-              >
-                This message was deleted
-              </div>
-            );
-          }
+          const prev = messages[i - 1];
+          const next = messages[i + 1];
+          const prevDate = prev ? parseISO(prev.created_at) : null;
+          const date = parseISO(m.created_at);
+          const showDateSeparator = !prev || !isSameDay(prevDate as Date, date);
+          const runStart =
+            showDateSeparator || !prev || prev.sender_id !== m.sender_id;
+          const runEnd =
+            !next ||
+            next.sender_id !== m.sender_id ||
+            !isSameDay(parseISO(next.created_at), date);
+
+          const profile = senderProfiles[m.sender_id];
+          const isAdminSender = m.sender_role === "admin";
+          const label = senderLabel(m);
+
+          const avatar = runEnd ? (
+            <Avatar className="h-7 w-7 shrink-0">
+              {isAdminSender ? (
+                <AvatarImage src="/logo.png" alt="DeetSheet" className="object-contain" />
+              ) : (
+                <AvatarImage
+                  src={profile?.avatar_url ?? undefined}
+                  alt={label}
+                  className="object-cover"
+                />
+              )}
+              <AvatarFallback className="bg-primary/10 text-[10px] font-semibold text-primary">
+                {(label || "?").trim().charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <span className="h-7 w-7 shrink-0" aria-hidden="true" />
+          );
+
           return (
-            <div
-              key={m.id}
-              className={`rounded-lg border p-4 ${mine ? "bg-background" : "bg-muted/30"}`}
-            >
-              <div className="mb-2 flex items-start justify-between gap-3">
-                <div className="text-xs text-muted-foreground">
-                  {senderLabel(m)} · {format(parseISO(m.created_at), "MMM d, yyyy · h:mm a")}
+            <div key={m.id}>
+              {showDateSeparator && (
+                <div className="my-4 flex items-center justify-center">
+                  <span className="rounded-full bg-muted px-3 py-1 text-[11px] font-medium text-muted-foreground">
+                    {format(date, "MMM d, yyyy")}
+                  </span>
                 </div>
-                {canDelete(m) && (
-                  <button
-                    type="button"
-                    aria-label="Delete message"
-                    title="Delete message"
-                    onClick={() => setPendingDelete(m)}
-                    className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                )}
-              </div>
-              {m.slip &&
-              (["status", "post", "reason", "suggestions"] as const).some((k) =>
-                String(m.slip?.[k] ?? "").trim(),
-              ) ? (
-
-                <div className="rounded border overflow-hidden text-sm">
-                  {(["status", "post", "reason", "suggestions", "deadline_text"] as const).map(
-                    (k) =>
-                      m.slip?.[k] ? (
-                        <div
-                          key={k}
-                          className="grid grid-cols-[110px_1fr] border-b last:border-b-0"
-                        >
-                          <div className="px-3 py-2 text-[11px] uppercase font-semibold bg-muted/40">
-                            {k === "deadline_text" ? "Deadline" : k}
-                          </div>
-                          <div className="px-3 py-2 whitespace-pre-wrap">{m.slip[k]}</div>
-                        </div>
-                      ) : null,
-                  )}
-                </div>
-              ) : m.body_text && m.body_text.trim() ? (
-                <MarkdownLinkText
-                  text={m.body_text}
-                  className="block whitespace-pre-wrap text-sm leading-relaxed [&_a]:text-primary [&_a]:underline"
-                />
-              ) : m.body_html ? (
+              )}
+              <div
+                className={`flex items-end gap-2 ${runStart ? "mt-4" : "mt-1"} ${
+                  mine ? "flex-row-reverse" : "flex-row"
+                }`}
+              >
+                {avatar}
                 <div
-                  className="text-sm leading-relaxed [&_a]:text-primary [&_a]:underline"
-                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(m.body_html) }}
-                />
-              ) : null}
+                  className={`flex min-w-0 max-w-[78%] flex-col sm:max-w-[70%] ${
+                    mine ? "items-end" : "items-start"
+                  }`}
+                >
+                  {runStart && (
+                    <span className="mb-1 px-1 text-[11px] font-medium text-muted-foreground">
+                      {label}
+                    </span>
+                  )}
 
+                  {m.deleted_at ? (
+                    <div className="rounded-2xl border border-dashed px-3 py-2 text-sm italic text-muted-foreground">
+                      This message was deleted
+                    </div>
+                  ) : (
+                    <div className="group relative">
+                      {/* CSS triangle tail, drawn on the sender's side and
+                          aligned to the bubble's top edge. */}
+                      {runStart && (
+                        <span
+                          aria-hidden="true"
+                          className={`absolute top-0 h-0 w-0 border-y-8 border-y-transparent ${
+                            mine
+                              ? "-right-[7px] border-l-8 border-l-primary"
+                              : "-left-[7px] border-r-8 border-r-muted"
+                          }`}
+                        />
+                      )}
+                      <div
+                        className={`relative rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                          mine
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-foreground"
+                        } ${
+                          runStart
+                            ? mine
+                              ? "rounded-tr-[4px]"
+                              : "rounded-tl-[4px]"
+                            : ""
+                        }`}
+                      >
+                        {m.slip &&
+                        (["status", "post", "reason", "suggestions"] as const).some((k) =>
+                          String(m.slip?.[k] ?? "").trim(),
+                        ) ? (
+                          <div className="overflow-hidden rounded border bg-background text-sm text-foreground">
+                            {(
+                              ["status", "post", "reason", "suggestions", "deadline_text"] as const
+                            ).map((k) =>
+                              m.slip?.[k] ? (
+                                <div
+                                  key={k}
+                                  className="grid grid-cols-[110px_1fr] border-b last:border-b-0"
+                                >
+                                  <div className="bg-muted/40 px-3 py-2 text-[11px] font-semibold uppercase">
+                                    {k === "deadline_text" ? "Deadline" : k}
+                                  </div>
+                                  <div className="whitespace-pre-wrap px-3 py-2">
+                                    {m.slip[k]}
+                                  </div>
+                                </div>
+                              ) : null,
+                            )}
+                          </div>
+                        ) : m.body_text && m.body_text.trim() ? (
+                          <MarkdownLinkText
+                            text={m.body_text}
+                            className={`block whitespace-pre-wrap [&_a]:underline ${
+                              mine ? "[&_a]:text-primary-foreground" : "[&_a]:text-primary"
+                            }`}
+                          />
+                        ) : m.body_html ? (
+                          <div
+                            className={`[&_a]:underline ${
+                              mine ? "[&_a]:text-primary-foreground" : "[&_a]:text-primary"
+                            }`}
+                            dangerouslySetInnerHTML={{ __html: sanitizeHtml(m.body_html) }}
+                          />
+                        ) : null}
+                      </div>
+                    </div>
+                  )}
 
+                  <div
+                    className={`mt-1 flex items-center gap-2 px-1 ${
+                      mine ? "flex-row-reverse" : "flex-row"
+                    }`}
+                  >
+                    <span className="text-[11px] text-muted-foreground">
+                      {format(date, "h:mm a")}
+                    </span>
+                    {canDelete(m) && (
+                      <button
+                        type="button"
+                        aria-label="Delete message"
+                        title="Delete message"
+                        onClick={() => setPendingDelete(m)}
+                        className="rounded p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           );
         })}
