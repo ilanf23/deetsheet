@@ -301,7 +301,10 @@ const ProfileView = () => {
           created_at: (p.approved_at as string) || (p.created_at as string),
           comment_count: p.comment_count as number,
           score: p.score as number,
-          topic_name: ((p.topics as Record<string, unknown>)?.name as string) || "General",
+          topic_name:
+            (p.topic_name as string) ||
+            ((p.topics as Record<string, unknown>)?.name as string) ||
+            "General",
           image_url: (p.image_url as string) || null,
           story: (p.story as string) || null,
           status: (p.status as string) || "approved",
