@@ -149,10 +149,13 @@ export default function ThreadConversation({
 
     const { data: m } = await supabase
       .from("messages")
-      .select("id,sender_id,sender_role,body_html,body_text,slip,created_at")
+      .select(
+        "id,sender_id,sender_role,body_html,body_text,slip,created_at,deleted_at,deleted_by",
+      )
       .eq("thread_id", threadId)
       .order("created_at");
     setMessages((m ?? []) as Message[]);
+
     setLoading(false);
 
     // Per-participant read state: primary user updates last_read_at; the
