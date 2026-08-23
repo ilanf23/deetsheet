@@ -3,6 +3,7 @@ import type { TemplateEntry } from './registry.ts'
 import {
   Cta,
   DeadlineStrip,
+  MdLine,
   H1,
   P,
   Quote,
@@ -44,7 +45,14 @@ const Email = ({ topic, title, reasons, suggestions, adminNote, ctaUrl }: Props)
       </>
     )}
     {adminNote && adminNote.trim() && (
-      <ReasonBox label={REVIEWER_NOTE_LABEL} items={adminNote.trim().split('\n').filter((l) => l.trim())} />
+      <ReasonBox
+        label={REVIEWER_NOTE_LABEL}
+        items={adminNote
+          .trim()
+          .split('\n')
+          .filter((l) => l.trim())
+          .map((l, i) => <MdLine key={i} text={l} />)}
+      />
     )}
     <P>{PENDING_CLOSING}</P>
     <Cta href={ctaUrl || `${SITE_URL}/profile`} label="Edit your post" />
