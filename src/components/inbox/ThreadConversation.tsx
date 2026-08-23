@@ -392,7 +392,7 @@ export default function ThreadConversation({
                         />
                       )}
                       <div
-                        className={`relative rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                        className={`relative max-w-full overflow-hidden break-words rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                           mine
                             ? "bg-primary text-primary-foreground"
                             : "bg-muted text-foreground"
