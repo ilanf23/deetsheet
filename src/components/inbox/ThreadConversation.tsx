@@ -175,7 +175,7 @@ export default function ThreadConversation({
     const { error } = await supabase.from("messages").insert({
       thread_id: thread.id,
       sender_id: user.id,
-      sender_role: "user",
+      sender_role: senderRole,
       body_text: reply.trim(),
       body_html: `<p>${reply.trim().replace(/\n/g, "<br/>")}</p>`,
     });
