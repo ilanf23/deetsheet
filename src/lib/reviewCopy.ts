@@ -20,3 +20,26 @@ export const PENDING_DEADLINE =
 /** Short form of the deadline used as the default in admin form letters. */
 export const PENDING_DEADLINE_SHORT =
   "30 days to adjust, or the post is automatically deleted";
+
+/** Public origin used when a relative link has to be made absolute for email. */
+export const SITE_ORIGIN = "https://deetsheet.com";
+
+const EDIT_PHRASE = "edit your pending post";
+
+/**
+ * The pending closing paragraph with the existing "edit your pending post"
+ * phrase turned into a markdown link to that post's edit surface. Falls back to
+ * the plain copy when no post id is available.
+ */
+export function pendingClosingWithEditLink(postId?: string | null): string {
+  if (!postId) return PENDING_CLOSING;
+  return PENDING_CLOSING.replace(EDIT_PHRASE, `[${EDIT_PHRASE}](/profile?edit=${postId})`);
+}
+
+/**
+ * Rewrite site-relative markdown link targets to absolute URLs. Emails must
+ * never contain a relative href.
+ */
+export function absolutizeMarkdownLinks(text: string, origin: string = SITE_ORIGIN): string {
+  return (text ?? "").replace(/\]\((\/(?!\/)[^)\s]*)\)/g, (_m, path) => `](${origin}${path})`);
+}

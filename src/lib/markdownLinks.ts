@@ -42,8 +42,9 @@ export function parseMarkdownLinks(input: string): MarkdownToken[] {
     if (isSafeHref(href)) {
       tokens.push({ type: "link", text: label, href });
     } else {
-      // Unsafe/unknown scheme — render the label as literal text, never a link.
-      tokens.push({ type: "text", text: label });
+      // Unsafe/unknown scheme — fall back to the literal source span so no
+      // stray bracket or paren leaks out.
+      tokens.push({ type: "text", text: full });
     }
     last = m.index + full.length;
   }
