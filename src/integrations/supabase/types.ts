@@ -1352,6 +1352,8 @@ export type Database = {
           story: string | null
           title: string | null
           topic_id: string | null
+          topic_name: string | null
+          topic_slug: string | null
           updated_at: string | null
         }
         Relationships: []
@@ -1459,37 +1461,33 @@ export type Database = {
       privileged_posts: {
         Args: never
         Returns: {
-          approved_at: string | null
+          approved_at: string
           author_id: string
           average_rating: number
           comment_count: number
           content: string
           created_at: string
-          deleted_at: string | null
-          deleted_by: string | null
-          deleted_reason: string | null
+          deleted_at: string
+          deleted_by: string
+          deleted_reason: string
           follower_count: number
           id: string
-          image_url: string | null
+          image_url: string
           is_anonymous: boolean
           is_national: boolean
-          location_id: string | null
+          location_id: string
           needs_author_edit: boolean
-          public_author_id: string | null
+          public_author_id: string
           rating_count: number
           score: number
           status: string
-          story: string | null
+          story: string
           title: string
           topic_id: string
+          topic_name: string
+          topic_slug: string
           updated_at: string
         }[]
-        SetofOptions: {
-          from: "*"
-          to: "posts"
-          isOneToOne: false
-          isSetofReturn: true
-        }
       }
       privileged_profiles: {
         Args: never
