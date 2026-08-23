@@ -269,13 +269,36 @@ export default function ThreadConversation({
       <div className="space-y-3">
         {messages.map((m) => {
           const mine = m.sender_id === user.id;
+          if (m.deleted_at) {
+            return (
+              <div
+                key={m.id}
+                className="rounded-lg border border-dashed p-4 text-sm italic text-muted-foreground"
+              >
+                This message was deleted
+              </div>
+            );
+          }
           return (
             <div
               key={m.id}
               className={`rounded-lg border p-4 ${mine ? "bg-background" : "bg-muted/30"}`}
             >
-              <div className="text-xs text-muted-foreground mb-2">
-                {senderLabel(m)} · {format(parseISO(m.created_at), "MMM d, yyyy · h:mm a")}
+              <div className="mb-2 flex items-start justify-between gap-3">
+                <div className="text-xs text-muted-foreground">
+                  {senderLabel(m)} · {format(parseISO(m.created_at), "MMM d, yyyy · h:mm a")}
+                </div>
+                {canDelete(m) && (
+                  <button
+                    type="button"
+                    aria-label="Delete message"
+                    title="Delete message"
+                    onClick={() => setPendingDelete(m)}
+                    className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
               {m.slip &&
               (["status", "post", "reason", "suggestions"] as const).some((k) =>
@@ -309,6 +332,7 @@ export default function ThreadConversation({
                   dangerouslySetInnerHTML={{ __html: sanitizeHtml(m.body_html) }}
                 />
               ) : null}
+
 
             </div>
           );
