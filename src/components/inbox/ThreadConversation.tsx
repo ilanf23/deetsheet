@@ -158,6 +158,11 @@ export default function ThreadConversation({
   const otherName = otherProfile?.name || otherProfile?.username || "user";
 
   const senderLabel = (m: Message) => {
+    if (adminView) {
+      return m.sender_role === "admin"
+        ? "DeetSheet team"
+        : memberLabel || otherName || "Member";
+    }
     if (thread?.kind === "direct") {
       return m.sender_id === user.id ? "You" : otherName;
     }
