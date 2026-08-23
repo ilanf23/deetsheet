@@ -45,7 +45,12 @@ type Thread = {
   initiated_by: string | null;
 };
 
-type ProfileLite = { id: string; name: string | null; username: string | null };
+type ProfileLite = {
+  id: string;
+  name: string | null;
+  username: string | null;
+  avatar_url?: string | null;
+};
 
 interface ThreadConversationProps {
   threadId: string;
