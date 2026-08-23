@@ -103,3 +103,21 @@ export const THREAD_REPORT_REASONS = [
   "Sexual or explicit content",
   "Something else",
 ];
+
+/**
+ * Soft-deletes a single message. The row is never removed — RLS only lets the
+ * original sender (or an admin) stamp the two deletion columns, and a DB
+ * trigger rejects any attempt to alter the body.
+ */
+export async function deleteMessage(messageId: string, userId: string) {
+  const { error } = await supabase
+    .from("messages")
+    .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
+    .eq("id", messageId);
+  return { error: error?.message };
+}
+
+export const DELETE_MESSAGE_WARNING =
+  "This removes the message from DeetSheet for both people and replaces it with " +
+  "“This message was deleted”. It cannot recall an email that was already sent — " +
+  "if this message went out by email, that copy still exists in their mailbox.";
