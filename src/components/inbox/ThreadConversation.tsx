@@ -5,8 +5,20 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { format, parseISO } from "date-fns";
+import { Trash2 } from "lucide-react";
 import MarkdownLinkText from "@/components/MarkdownLinkText";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import { deleteMessage, DELETE_MESSAGE_WARNING } from "@/lib/messaging";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 
 type Message = {
@@ -17,7 +29,10 @@ type Message = {
   body_text: string | null;
   slip: any;
   created_at: string;
+  deleted_at: string | null;
+  deleted_by: string | null;
 };
+
 
 type Thread = {
   id: string;
@@ -52,6 +67,8 @@ interface ThreadConversationProps {
   adminView?: boolean;
   /** Display name for the member, used by the admin view's sender labels. */
   memberLabel?: string | null;
+  /** Called after a reply is sent or a message is deleted, so lists can refresh. */
+  onChanged?: () => void;
 }
 
 export default function ThreadConversation({
@@ -65,6 +82,7 @@ export default function ThreadConversation({
   senderRole = "user",
   adminView = false,
   memberLabel,
+  onChanged,
 }: ThreadConversationProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -74,6 +92,9 @@ export default function ThreadConversation({
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [pendingDelete, setPendingDelete] = useState<Message | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
 
   const load = async () => {
     if (!threadId || !user) return;
@@ -128,10 +149,13 @@ export default function ThreadConversation({
 
     const { data: m } = await supabase
       .from("messages")
-      .select("id,sender_id,sender_role,body_html,body_text,slip,created_at")
+      .select(
+        "id,sender_id,sender_role,body_html,body_text,slip,created_at,deleted_at,deleted_by",
+      )
       .eq("thread_id", threadId)
       .order("created_at");
     setMessages((m ?? []) as Message[]);
+
     setLoading(false);
 
     // Per-participant read state: primary user updates last_read_at; the
@@ -169,6 +193,25 @@ export default function ThreadConversation({
     return m.sender_role === "admin" ? "DeetSheet team" : "You";
   };
 
+  // Only the original sender may delete — plus admins, from the admin console.
+  // RLS enforces the same rule server-side; this just hides the affordance.
+  const canDelete = (m: Message) => !m.deleted_at && (adminView || m.sender_id === user.id);
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    const { error } = await deleteMessage(pendingDelete.id, user.id);
+    setDeleting(false);
+    if (error) {
+      toast({ title: "Couldn't delete", description: error, variant: "destructive" });
+      return;
+    }
+    setPendingDelete(null);
+    toast({ title: "Message deleted", description: "It no longer appears for either person." });
+    await load();
+    onChanged?.();
+  };
+
   const sendReply = async () => {
     if (!reply.trim() || !thread) return;
     setSending(true);
@@ -185,8 +228,10 @@ export default function ThreadConversation({
       return;
     }
     setReply("");
-    load();
+    await load();
+    onChanged?.();
   };
+
 
   const isPendingRequest =
     thread?.kind === "direct" && thread?.request_status === "pending";
@@ -224,13 +269,36 @@ export default function ThreadConversation({
       <div className="space-y-3">
         {messages.map((m) => {
           const mine = m.sender_id === user.id;
+          if (m.deleted_at) {
+            return (
+              <div
+                key={m.id}
+                className="rounded-lg border border-dashed p-4 text-sm italic text-muted-foreground"
+              >
+                This message was deleted
+              </div>
+            );
+          }
           return (
             <div
               key={m.id}
               className={`rounded-lg border p-4 ${mine ? "bg-background" : "bg-muted/30"}`}
             >
-              <div className="text-xs text-muted-foreground mb-2">
-                {senderLabel(m)} · {format(parseISO(m.created_at), "MMM d, yyyy · h:mm a")}
+              <div className="mb-2 flex items-start justify-between gap-3">
+                <div className="text-xs text-muted-foreground">
+                  {senderLabel(m)} · {format(parseISO(m.created_at), "MMM d, yyyy · h:mm a")}
+                </div>
+                {canDelete(m) && (
+                  <button
+                    type="button"
+                    aria-label="Delete message"
+                    title="Delete message"
+                    onClick={() => setPendingDelete(m)}
+                    className="shrink-0 rounded p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
               {m.slip &&
               (["status", "post", "reason", "suggestions"] as const).some((k) =>
@@ -264,6 +332,7 @@ export default function ThreadConversation({
                   dangerouslySetInnerHTML={{ __html: sanitizeHtml(m.body_html) }}
                 />
               ) : null}
+
 
             </div>
           );
@@ -319,6 +388,32 @@ export default function ThreadConversation({
           </div>
         </div>
       )}
+
+      <AlertDialog
+        open={Boolean(pendingDelete)}
+        onOpenChange={(o) => !o && setPendingDelete(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this message?</AlertDialogTitle>
+            <AlertDialogDescription>{DELETE_MESSAGE_WARNING}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deleting}
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDelete();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting…" : "Delete message"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+

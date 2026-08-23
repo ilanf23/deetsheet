@@ -175,6 +175,8 @@ const App = () => (
                 <Route path="review-reasons" element={<AdminReviewReasons />} />
                 <Route path="settings" element={<AdminSettings />} />
                 <Route path="messages" element={<AdminMessages />} />
+                <Route path="messages/:threadId" element={<AdminMessages />} />
+
 
               </Route>
             </Route>

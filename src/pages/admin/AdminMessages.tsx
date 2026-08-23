@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { formatDistanceToNow, parseISO, format } from "date-fns";
+import { parseISO, format } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
 import ThreadConversation from "@/components/inbox/ThreadConversation";
 import ManageTemplatesDialog from "@/components/admin/ManageTemplatesDialog";
-import { ChevronDown, FileText, PenSquare, Search } from "lucide-react";
+import { ArrowLeft, ChevronDown, MessagesSquare, PenSquare, Search } from "lucide-react";
 
 type Thread = {
   id: string;
@@ -35,6 +35,8 @@ type Thread = {
   user_email?: string;
   post_title?: string | null;
   post_status?: string | null;
+  /** Last non-deleted message text, used for the list preview. */
+  snippet?: string | null;
 };
 
 type FilterTab = "needs_contact" | "all";
@@ -64,7 +66,7 @@ function StatusPill({ status, lastSender }: { status: string; lastSender: string
   }
   return (
     <span
-      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[12px] font-medium"
+      className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium"
       style={{ backgroundColor: bg, color: fg }}
     >
       {label}
@@ -75,6 +77,8 @@ function StatusPill({ status, lastSender }: { status: string; lastSender: string
 export default function AdminMessages() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { threadId: routeThreadId } = useParams<{ threadId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -83,9 +87,6 @@ export default function AdminMessages() {
   const [sort, setSort] = useState<SortKey>("recent");
   const [search, setSearch] = useState("");
   const [templatesOpen, setTemplatesOpen] = useState(false);
-
-  // Read-a-conversation dialog (separate from Compose)
-  const [viewThread, setViewThread] = useState<Thread | null>(null);
 
   // Compose state
   const [composeOpen, setComposeOpen] = useState(false);
@@ -134,8 +135,8 @@ export default function AdminMessages() {
   const [pickerResults, setPickerResults] = useState<any[]>([]);
   const [pickerLoading, setPickerLoading] = useState(false);
 
-  const fetchAll = async () => {
-    setLoading(true);
+  const fetchAll = useCallback(async (opts?: { quiet?: boolean }) => {
+    if (!opts?.quiet) setLoading(true);
     const { data: threadRows } = await supabase
       .from("message_threads")
       .select("id,user_id,post_id,subject,status,last_message_at,last_sender")
@@ -145,24 +146,42 @@ export default function AdminMessages() {
 
     const userIds = Array.from(new Set(rows.map((r) => r.user_id)));
     const postIds = Array.from(new Set(rows.map((r) => r.post_id).filter(Boolean) as string[]));
+    const threadIds = rows.map((r) => r.id);
 
-    const [profRes, postsRes] = await Promise.all([
+    const [profRes, postsRes, msgRes] = await Promise.all([
       userIds.length
         ? supabase.from("profiles").select("id,name,username").in("id", userIds)
         : Promise.resolve({ data: [] as any[] }),
       postIds.length
         ? supabase.from("posts").select("id,title,status").in("id", postIds)
         : Promise.resolve({ data: [] as any[] }),
+      threadIds.length
+        ? supabase
+            .from("messages")
+            // Deleted messages are excluded here so a removed message can never
+            // resurface as the list preview.
+            .select("thread_id,body_text,body_html,slip,created_at")
+            .in("thread_id", threadIds)
+            .is("deleted_at", null)
+            .order("created_at", { ascending: false })
+            .limit(1000)
+        : Promise.resolve({ data: [] as any[] }),
     ]);
     const pMap = new Map<string, any>();
     (profRes.data ?? []).forEach((p: any) => pMap.set(p.id, p));
     const postMap = new Map<string, any>();
     (postsRes.data ?? []).forEach((p: any) => postMap.set(p.id, p));
+    const snippetMap = new Map<string, string>();
+    (msgRes.data ?? []).forEach((m: any) => {
+      if (snippetMap.has(m.thread_id)) return;
+      snippetMap.set(m.thread_id, previewOf(m));
+    });
 
     rows.forEach((r) => {
       const p = pMap.get(r.user_id);
       r.user_name = p?.name ?? null;
       r.user_username = p?.username ?? null;
+      r.snippet = snippetMap.get(r.id) ?? null;
       if (r.post_id) {
         const post = postMap.get(r.post_id);
         r.post_title = post?.title ?? null;
@@ -172,7 +191,7 @@ export default function AdminMessages() {
 
     setThreads(rows);
     setLoading(false);
-  };
+  }, []);
 
   const fetchTemplates = async () => {
     const { data } = await supabase
@@ -185,7 +204,7 @@ export default function AdminMessages() {
   useEffect(() => {
     fetchAll();
     fetchTemplates();
-  }, []);
+  }, [fetchAll]);
 
   // Live user search for new-thread picker
   useEffect(() => {
@@ -341,14 +360,13 @@ export default function AdminMessages() {
         description: alsoEmail ? "Delivered in-app and by email." : "Delivered in-app.",
       });
       setComposeOpen(false);
-      fetchAll();
+      fetchAll({ quiet: true });
     } catch (e: any) {
       toast({ title: "Send failed", description: e?.message ?? "Unknown error", variant: "destructive" });
     } finally {
       setSending(false);
     }
   };
-
 
   const filtered = useMemo(() => {
     let rows = threads;
@@ -373,9 +391,15 @@ export default function AdminMessages() {
 
   const needsContactCount = threads.filter((t) => t.status === "needs_contact" || t.last_sender === "user").length;
 
+  const selected = threads.find((t) => t.id === routeThreadId) ?? null;
+  const selectedLabel = selected?.user_name ?? selected?.user_username ?? "member";
+
+  const selectThread = (id: string) => navigate(`/admin/messages/${id}`);
+  const clearThread = () => navigate("/admin/messages");
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
+    <div className="space-y-5">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <h1 className="text-[40px] font-bold leading-none tracking-tight" style={{ color: "hsl(var(--admin-fg))" }}>
           Messaging
         </h1>
@@ -406,173 +430,242 @@ export default function AdminMessages() {
         </div>
       </div>
 
-      <div className="flex items-center gap-3 flex-wrap">
-        <Input
-          placeholder="Search by user or post…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-md rounded-full"
-        />
+      <div
+        className="grid gap-0 rounded-xl overflow-hidden md:grid-cols-[minmax(280px,360px)_1fr]"
+        style={{
+          backgroundColor: "hsl(var(--admin-surface))",
+          border: "1px solid hsl(var(--admin-border))",
+          height: "calc(100vh - 210px)",
+          minHeight: "520px",
+        }}
+      >
+        {/* LEFT — conversation list */}
         <div
-          className="inline-flex items-center gap-1 p-1 rounded-full"
-          style={{ backgroundColor: "hsl(var(--admin-primary-soft))" }}
-        >
-          {(
-            [
-              ["needs_contact", `Needs contact (${needsContactCount})`],
-              ["all", "All"],
-            ] as [FilterTab, string][]
-          ).map(([key, label]) => {
-            const active = tab === key;
-            return (
-              <button
-                key={key}
-                onClick={() => setTab(key)}
-                className="px-4 py-1.5 rounded-full text-[13px]"
-                style={{
-                  backgroundColor: active ? "hsl(var(--admin-primary))" : "transparent",
-                  color: active ? "#fff" : "hsl(var(--admin-primary))",
-                  fontWeight: active ? 600 : 500,
-                }}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
-        <AdminSortSelect
-          label="Sort by"
-          value={sort}
-          onChange={(v) => setSort(v as SortKey)}
-          options={SORT_OPTIONS}
-        />
-      </div>
-
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <div
-            className="h-7 w-7 rounded-full animate-spin border-2"
-            style={{ borderColor: "hsl(var(--admin-primary))", borderTopColor: "transparent" }}
-          />
-        </div>
-      ) : filtered.length === 0 ? (
-        <div
-          className="rounded-xl px-6 py-20 text-center text-[14px]"
-          style={{
-            backgroundColor: "hsl(var(--admin-surface))",
-            border: "1px solid hsl(var(--admin-border))",
-            color: "hsl(var(--admin-fg-muted))",
-          }}
-        >
-          No threads to show.
-        </div>
-      ) : (
-        <div
-          className="rounded-xl overflow-hidden"
-          style={{
-            backgroundColor: "hsl(var(--admin-surface))",
-            border: "1px solid hsl(var(--admin-border))",
-          }}
+          className={`flex min-h-0 flex-col ${selected ? "hidden md:flex" : "flex"}`}
+          style={{ borderRight: "1px solid hsl(var(--admin-border))" }}
         >
           <div
-            className="grid grid-cols-[1.2fr_1.6fr_0.8fr_1fr_0.7fr] gap-6 px-6 py-3 text-[12px] font-semibold uppercase tracking-wide"
-            style={{
-              color: "hsl(var(--admin-fg-muted))",
-              borderBottom: "1px solid hsl(var(--admin-border))",
-            }}
+            className="space-y-3 p-3"
+            style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}
           >
-            <div>User</div>
-            <div>Post</div>
-            <div>Status</div>
-            <div>Last contact</div>
-            <div className="text-right">Action</div>
-          </div>
-          {filtered.map((t, idx) => {
-            const label = t.user_name ?? t.user_username ?? "Unknown";
-            return (
+            <Input
+              placeholder="Search by user or post…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="rounded-full"
+            />
+            <div className="flex items-center gap-2 flex-wrap">
               <div
-                key={t.id}
-                role="button"
-                tabIndex={0}
-                title="Open conversation"
-                onClick={() => setViewThread(t)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setViewThread(t);
-                  }
-                }}
-                className="grid grid-cols-[1.2fr_1.6fr_0.8fr_1fr_0.7fr] gap-6 items-center px-6 py-4 text-[14px] cursor-pointer transition-colors hover:bg-muted/50"
-                style={{
-                  borderBottom:
-                    idx === filtered.length - 1
-                      ? "none"
-                      : "1px solid hsl(var(--admin-border))",
-                }}
+                className="inline-flex items-center gap-1 p-1 rounded-full"
+                style={{ backgroundColor: "hsl(var(--admin-primary-soft))" }}
               >
-                <div className="flex items-center gap-3 min-w-0">
+                {(
+                  [
+                    ["needs_contact", `Needs contact (${needsContactCount})`],
+                    ["all", "All"],
+                  ] as [FilterTab, string][]
+                ).map(([key, label]) => {
+                  const active = tab === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => setTab(key)}
+                      className="px-3 py-1 rounded-full text-[12px]"
+                      style={{
+                        backgroundColor: active ? "hsl(var(--admin-primary))" : "transparent",
+                        color: active ? "#fff" : "hsl(var(--admin-primary))",
+                        fontWeight: active ? 600 : 500,
+                      }}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+              <AdminSortSelect
+                label="Sort"
+                value={sort}
+                onChange={(v) => setSort(v as SortKey)}
+                options={SORT_OPTIONS}
+              />
+            </div>
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {loading ? (
+              <div className="flex items-center justify-center py-20">
+                <div
+                  className="h-7 w-7 rounded-full animate-spin border-2"
+                  style={{ borderColor: "hsl(var(--admin-primary))", borderTopColor: "transparent" }}
+                />
+              </div>
+            ) : filtered.length === 0 ? (
+              <div
+                className="px-6 py-16 text-center text-[14px]"
+                style={{ color: "hsl(var(--admin-fg-muted))" }}
+              >
+                No threads to show.
+              </div>
+            ) : (
+              filtered.map((t) => {
+                const label = t.user_name ?? t.user_username ?? "Unknown";
+                const active = t.id === routeThreadId;
+                const unread = t.last_sender === "user";
+                return (
                   <div
-                    className="h-8 w-8 shrink-0 rounded-full flex items-center justify-center text-[13px] font-semibold leading-none text-white"
-                    style={{ backgroundColor: "hsl(var(--secondary))" }}
-                  >
-                    {label.slice(0, 1).toUpperCase()}
-                  </div>
-                  <Link to={`/profile/${t.user_id}`} onClick={(e) => e.stopPropagation()} className="truncate hover:underline" style={{ color: "hsl(var(--admin-primary))" }}>
-                    {label}
-                  </Link>
-                </div>
-                <div className="truncate" style={{ color: "hsl(var(--admin-fg))" }}>
-                  {t.post_title ? `"${t.post_title}"` : t.subject}
-                </div>
-                <div>
-                  <StatusPill status={t.status} lastSender={t.last_sender} />
-                </div>
-                <div style={{ color: "hsl(var(--admin-fg-muted))" }} className="text-[13px]">
-                  {format(parseISO(t.last_message_at), "MMM d")} · {t.last_sender === "user" ? "replied" : "no reply"}
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openComposeForThread(t);
+                    key={t.id}
+                    role="button"
+                    tabIndex={0}
+                    title="Open conversation"
+                    onClick={() => selectThread(t.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        selectThread(t.id);
+                      }
                     }}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-md text-[13px] font-semibold"
+                    className="flex cursor-pointer items-start gap-3 px-3 py-3 transition-colors hover:bg-muted/50"
+                    style={{
+                      borderBottom: "1px solid hsl(var(--admin-border))",
+                      backgroundColor: active ? "hsl(var(--admin-primary-soft))" : undefined,
+                    }}
+                  >
+                    <div
+                      className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center text-[13px] font-semibold leading-none text-white"
+                      style={{ backgroundColor: "hsl(var(--secondary))" }}
+                    >
+                      {label.slice(0, 1).toUpperCase()}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span
+                          className="truncate text-[14px] font-semibold"
+                          style={{ color: "hsl(var(--admin-fg))" }}
+                        >
+                          {label}
+                        </span>
+                        <span
+                          className="shrink-0 text-[11px]"
+                          style={{ color: "hsl(var(--admin-fg-muted))" }}
+                        >
+                          {format(parseISO(t.last_message_at), "MMM d")}
+                        </span>
+                      </div>
+                      <div
+                        className="truncate text-[12px]"
+                        style={{ color: "hsl(var(--admin-fg-muted))" }}
+                      >
+                        {t.post_title ? `"${t.post_title}"` : t.subject}
+                      </div>
+                      {t.snippet && (
+                        <div
+                          className="mt-0.5 truncate text-[12px]"
+                          style={{ color: "hsl(var(--admin-fg-muted))" }}
+                        >
+                          {t.snippet}
+                        </div>
+                      )}
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <StatusPill status={t.status} lastSender={t.last_sender} />
+                        {unread && (
+                          <span
+                            className="h-2 w-2 rounded-full bg-secondary"
+                            aria-label="awaiting reply"
+                          />
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openComposeForThread(t);
+                          }}
+                          className="ml-auto inline-flex items-center gap-1 text-[12px] font-semibold"
+                          style={{ color: "hsl(var(--admin-primary))" }}
+                        >
+                          Compose <ChevronDown className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT — selected conversation */}
+        <div className={`flex min-h-0 flex-col ${selected ? "flex" : "hidden md:flex"}`}>
+          {routeThreadId ? (
+            <>
+              <div
+                className="flex items-center gap-3 px-4 py-3"
+                style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}
+              >
+                <button
+                  type="button"
+                  onClick={clearThread}
+                  aria-label="Back to conversations"
+                  className="rounded-md p-1.5 text-muted-foreground hover:bg-muted md:hidden"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+                <div className="min-w-0">
+                  <div
+                    className="truncate text-[15px] font-semibold"
+                    style={{ color: "hsl(var(--admin-fg))" }}
+                  >
+                    {selected?.post_title
+                      ? `"${selected.post_title}"`
+                      : selected?.subject ?? "Conversation"}
+                  </div>
+                  <div className="truncate text-[12px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>
+                    With{" "}
+                    {selected ? (
+                      <Link
+                        to={`/profile/${selected.user_id}`}
+                        className="hover:underline"
+                        style={{ color: "hsl(var(--admin-primary))" }}
+                      >
+                        {selectedLabel}
+                      </Link>
+                    ) : (
+                      "member"
+                    )}
+                  </div>
+                </div>
+                {selected && (
+                  <button
+                    onClick={() => openComposeForThread(selected)}
+                    className="ml-auto inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-[13px] font-semibold"
                     style={{ color: "hsl(var(--admin-primary))" }}
                   >
                     Compose <ChevronDown className="h-3.5 w-3.5" />
                   </button>
-                </div>
+                )}
               </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Read-conversation dialog — same renderer the member sees */}
-      <Dialog open={Boolean(viewThread)} onOpenChange={(o) => !o && setViewThread(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-left leading-snug">
-              {viewThread?.post_title
-                ? `"${viewThread.post_title}"`
-                : viewThread?.subject ?? "Conversation"}
-            </DialogTitle>
-            <p className="text-xs text-muted-foreground text-left">
-              With {viewThread?.user_name ?? viewThread?.user_username ?? "member"}
-            </p>
-          </DialogHeader>
-          {viewThread && (
-            <ThreadConversation
-              threadId={viewThread.id}
-              adminView
-              senderRole="admin"
-              markRead={false}
-              memberLabel={viewThread.user_name ?? viewThread.user_username ?? null}
-              onNotFound={() => setViewThread(null)}
-            />
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+                <ThreadConversation
+                  key={routeThreadId}
+                  threadId={routeThreadId}
+                  adminView
+                  senderRole="admin"
+                  markRead={false}
+                  memberLabel={selected?.user_name ?? selected?.user_username ?? null}
+                  onNotFound={clearThread}
+                  onChanged={() => fetchAll({ quiet: true })}
+                />
+              </div>
+            </>
+          ) : (
+            <div
+              className="flex flex-1 flex-col items-center justify-center gap-2 px-6 text-center"
+              style={{ color: "hsl(var(--admin-fg-muted))" }}
+            >
+              <MessagesSquare className="h-8 w-8" />
+              <p className="text-[14px]">Select a conversation to read it here.</p>
+            </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
 
       {/* Compose dialog */}
       <Dialog open={composeOpen} onOpenChange={setComposeOpen}>
@@ -722,6 +815,18 @@ export default function AdminMessages() {
       />
     </div>
   );
+}
+
+/** One-line preview for the list: slip rows fall back to a neutral label. */
+function previewOf(m: { body_text: string | null; body_html: string | null; slip: any }) {
+  if (m.body_text && m.body_text.trim()) return truncate(m.body_text.replace(/\s+/g, " ").trim());
+  if (m.body_html) return truncate(htmlToPlainText(m.body_html).replace(/\s+/g, " ").trim());
+  if (m.slip) return "Review update";
+  return "";
+}
+
+function truncate(s: string, n = 90) {
+  return s.length > n ? `${s.slice(0, n)}…` : s;
 }
 
 function escapeHtml(s: string) {
