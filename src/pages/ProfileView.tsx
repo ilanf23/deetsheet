@@ -79,6 +79,9 @@ interface UserPost {
   image_url: string | null;
   story: string | null;
   status: string;
+  /** Reviewer asked the author to revise before approval (own profile only). */
+  needs_author_edit?: boolean;
+
 }
 
 interface UserTopic {
@@ -552,13 +555,20 @@ const ProfileView = () => {
   // are fully fetched, so filtering is instant and needs no extra DB calls.
   const trimmedQuery = query.trim().toLowerCase();
   const filteredPosts = useMemo(() => {
-    if (!trimmedQuery) return userPosts;
-    return userPosts.filter(
-      (p) =>
-        p.title?.toLowerCase().includes(trimmedQuery) ||
-        p.content?.toLowerCase().includes(trimmedQuery)
+    const base = !trimmedQuery
+      ? userPosts
+      : userPosts.filter(
+          (p) =>
+            p.title?.toLowerCase().includes(trimmedQuery) ||
+            p.content?.toLowerCase().includes(trimmedQuery)
+        );
+    // Posts the reviewer asked the author to revise float to the very top.
+    // Stable sort keeps the existing created_at ordering inside each group.
+    return [...base].sort(
+      (a, b) => Number(Boolean(b.needs_author_edit)) - Number(Boolean(a.needs_author_edit)),
     );
   }, [userPosts, trimmedQuery]);
+
   const filteredTopics = useMemo(() => {
     if (!trimmedQuery) return userTopics;
     return userTopics.filter(
