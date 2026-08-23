@@ -12,6 +12,7 @@ import { buildPostSlug } from "@/lib/postSlug";
 import { isOtherReason, useReviewReasons, type ReviewReason } from "@/lib/reviewReasons";
 import { useTopics } from "@/hooks/useSupabaseTopics";
 import { PENDING_CLOSING } from "@/lib/reviewCopy";
+import { LINK_SHORTCUTS } from "@/lib/linkShortcuts";
 
 
 
@@ -134,6 +135,27 @@ export default function ReviewActionDialog({
   const [finalTextTouched, setFinalTextTouched] = useState(false);
   /** Once the admin edits the message themselves we stop regenerating it. */
   const [messageTouched, setMessageTouched] = useState(false);
+  const bodyRef = useRef<HTMLTextAreaElement | null>(null);
+
+  /** Insert a markdown link at the caret (or append when unfocused). */
+  const insertLink = (label: string, path: string) => {
+    const snippet = `[${label}](${path})`;
+    const el = bodyRef.current;
+    setMessageTouched(true);
+    if (!el) {
+      setBody((prev) => (prev ? `${prev}${prev.endsWith(" ") ? "" : " "}${snippet}` : snippet));
+      return;
+    }
+    const start = el.selectionStart ?? el.value.length;
+    const end = el.selectionEnd ?? start;
+    const next = `${el.value.slice(0, start)}${snippet}${el.value.slice(end)}`;
+    setBody(next);
+    requestAnimationFrame(() => {
+      el.focus();
+      const caret = start + snippet.length;
+      el.setSelectionRange(caret, caret);
+    });
+  };
 
   const { data: topics } = useTopics();
   const selectedTopic = topics?.find((t) => t.id === editTopicId) ?? null;
@@ -711,8 +733,26 @@ export default function ReviewActionDialog({
 
           </div>
           <div>
-            <Label className="text-xs">Message to author</Label>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Label className="text-xs">Message to author</Label>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] text-muted-foreground">Insert link:</span>
+                {LINK_SHORTCUTS.map((l) => (
+                  <Button
+                    key={l.path}
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-6 px-2 text-[11px]"
+                    onClick={() => insertLink(l.label, l.path)}
+                  >
+                    {l.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
             <Textarea
+              ref={bodyRef}
               rows={10}
               value={body}
               onChange={(e) => {
@@ -722,6 +762,10 @@ export default function ReviewActionDialog({
 
               className="text-sm"
             />
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Tip: you can write links by hand as [Rules](/rules) — the label becomes a link
+              in the email and in the member&apos;s inbox.
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <Checkbox

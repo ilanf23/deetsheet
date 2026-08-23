@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { format, parseISO } from "date-fns";
+import MarkdownLinkText from "@/components/MarkdownLinkText";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 
@@ -233,7 +234,10 @@ export default function ThreadConversation({
                   )}
                 </div>
               ) : m.body_text && m.body_text.trim() ? (
-                <div className="whitespace-pre-wrap text-sm leading-relaxed">{m.body_text}</div>
+                <MarkdownLinkText
+                  text={m.body_text}
+                  className="block whitespace-pre-wrap text-sm leading-relaxed [&_a]:text-primary [&_a]:underline"
+                />
               ) : m.body_html ? (
                 <div
                   className="text-sm leading-relaxed [&_a]:text-primary [&_a]:underline"

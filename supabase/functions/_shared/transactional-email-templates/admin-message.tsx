@@ -5,6 +5,7 @@ import { PENDING_CLOSING, PENDING_DEADLINE } from './copy.ts'
 import {
   Cta,
   DeadlineStrip,
+  MdLine,
   H1,
   P,
   Quote,
@@ -78,7 +79,7 @@ const Email = ({
               key={i}
               style={{ color: '#1a1a1a', fontSize: '16px', lineHeight: 1.55, margin: '0 0 14px' }}
             >
-              {line}
+              <MdLine text={line} />
             </Text>
           ))}
       {callout && <DeadlineStrip>{callout}</DeadlineStrip>}
