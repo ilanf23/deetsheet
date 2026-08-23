@@ -44,6 +44,14 @@ interface ThreadConversationProps {
   onMeta?: (meta: { otherUserId: string | null; isDirect: boolean }) => void;
   /** Called after a request is accepted or declined. */
   onRequestResolved?: () => void;
+  /** Update the thread's read timestamps. Admins viewing a member thread pass false. */
+  markRead?: boolean;
+  /** Role stamped on replies sent from this view. */
+  senderRole?: "user" | "admin";
+  /** Admin reading a member's thread — changes the sender labels only. */
+  adminView?: boolean;
+  /** Display name for the member, used by the admin view's sender labels. */
+  memberLabel?: string | null;
 }
 
 export default function ThreadConversation({
@@ -53,6 +61,10 @@ export default function ThreadConversation({
   onRead,
   onMeta,
   onRequestResolved,
+  markRead = true,
+  senderRole = "user",
+  adminView = false,
+  memberLabel,
 }: ThreadConversationProps) {
   const { user } = useAuth();
   const { toast } = useToast();
