@@ -149,11 +149,9 @@ export default function AdminPostReviewDialog({
         status: string;
         created_at: string;
         topic_id: string;
-        topics: { name: string } | { name: string }[] | null;
+        topic_name: string | null;
       };
       const rows = (authorPosts ?? []) as AuthorPostRow[];
-      const topicNameOf = (t: AuthorPostRow["topics"]) =>
-        Array.isArray(t) ? (t[0]?.name ?? null) : (t?.name ?? null);
       setStats({
         totalPosts: rows.length,
         approvedPosts: rows.filter((r) => r.status === "approved").length,
@@ -163,7 +161,7 @@ export default function AdminPostReviewDialog({
           title: r.title,
           status: r.status,
           created_at: r.created_at,
-          topic_name: topicNameOf(r.topics),
+          topic_name: r.topic_name ?? null,
         })),
       });
 

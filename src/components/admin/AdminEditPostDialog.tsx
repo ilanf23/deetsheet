@@ -295,11 +295,9 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
               status: string | null;
               created_at: string;
               topic_id: string;
-              topics: { name: string } | { name: string }[] | null;
+              topic_name: string | null;
             };
             const rows = (postsRes.data ?? []) as AuthorPostRow[];
-            const topicNameOf = (t: AuthorPostRow["topics"]) =>
-              Array.isArray(t) ? (t[0]?.name ?? null) : (t?.name ?? null);
             const counts = rows.reduce(
               (acc, r) => {
                 acc.total += 1;
