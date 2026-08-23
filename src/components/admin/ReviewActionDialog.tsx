@@ -413,9 +413,10 @@ export default function ReviewActionDialog({
             send_email: sendEmail,
             email_template: emailTemplate,
             template_data: templateData,
-            // Review outcomes deliver email + in-app notification only —
-            // they must not create an inbox thread for the member.
-            create_thread: false,
+            // Approve / reject deliver email + in-app notification only — they
+            // must not create an inbox thread. A "suggest changes" outcome is
+            // actionable, so it does get a thread the author can reply in.
+            create_thread: action === "edit",
           }),
         }
       );
@@ -461,6 +462,16 @@ export default function ReviewActionDialog({
           })
           .eq("id", postId);
         if (updErr) throw updErr;
+      }
+
+      // "Suggest changes" flags the post so the author sees an actionable
+      // "Needs Editing Before Approval" state. Written through an admin-only
+      // security-definer RPC — clients never write the column directly.
+      if (action === "edit" && itemKind === "post" && postId) {
+        const { error: flagErr } = await supabase.rpc("mark_post_needs_author_edit", {
+          _post_id: postId,
+        });
+        if (flagErr) throw flagErr;
       }
 
       // Now perform the actual action.

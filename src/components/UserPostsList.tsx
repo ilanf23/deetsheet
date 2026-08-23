@@ -17,6 +17,7 @@ interface UserPost {
   approved_at?: string | null;
   status: string;
   is_anonymous?: boolean;
+  needs_author_edit?: boolean | null;
   topic: { name: string; slug: string } | null;
 }
 
@@ -39,7 +40,7 @@ const UserPostsList = ({ userId }: { userId: string }) => {
     let query = isOwnProfile
       ? supabase
           .from("posts_privileged")
-          .select("id, title, content, score, comment_count, created_at, approved_at, status, is_anonymous, topics(name, slug)")
+          .select("id, title, content, score, comment_count, created_at, approved_at, status, is_anonymous, needs_author_edit, topics(name, slug)")
           .eq("author_id", userId)
       : supabase
           .from("posts")
@@ -57,12 +58,16 @@ const UserPostsList = ({ userId }: { userId: string }) => {
       type Row = Omit<UserPost, "topic"> & {
         topics: { name: string; slug: string } | { name: string; slug: string }[] | null;
       };
-      setPosts(
-        (data as unknown as Row[]).map((p) => ({
-          ...p,
-          topic: Array.isArray(p.topics) ? (p.topics[0] ?? null) : p.topics,
-        }))
+      const mapped = (data as unknown as Row[]).map((p) => ({
+        ...p,
+        topic: Array.isArray(p.topics) ? (p.topics[0] ?? null) : p.topics,
+      }));
+      // Posts the reviewer asked the author to revise float to the very top.
+      // Stable sort keeps the existing created_at ordering inside each group.
+      mapped.sort(
+        (a, b) => Number(Boolean(b.needs_author_edit)) - Number(Boolean(a.needs_author_edit))
       );
+      setPosts(mapped);
     }
     setLoading(false);
   }, [userId, isOwnProfile]);
@@ -93,6 +98,7 @@ const UserPostsList = ({ userId }: { userId: string }) => {
       <div className="space-y-3">
         {posts.map((post) => {
           const timeAgo = getTimeAgo(post.approved_at || post.created_at);
+          const needsEdit = Boolean(post.needs_author_edit);
           const pill = STATUS_PILL[post.status] ?? STATUS_PILL.approved;
           return (
             <Card key={post.id} className="bg-card hover:shadow-md transition-all duration-200">
@@ -104,7 +110,7 @@ const UserPostsList = ({ userId }: { userId: string }) => {
                   >
                     <h4 className="text-sm font-semibold text-primary group-hover:underline truncate flex items-center gap-2">
                       <span className="truncate">{formatTitle(post.title)}</span>
-                      {post.status === "pending" && (
+                      {post.status === "pending" && !needsEdit && (
                         <span className="inline-flex items-center gap-1 shrink-0 text-secondary">
                           <Clock
                             className="h-[1em] w-[1em]"
@@ -123,11 +129,17 @@ const UserPostsList = ({ userId }: { userId: string }) => {
                         <span className="text-primary font-medium">{post.topic.name}</span>
                       )}
                       <span>{timeAgo}</span>
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium ${pill.className}`}
-                      >
-                        {pill.label}
-                      </span>
+                      {needsEdit ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-secondary text-secondary-foreground">
+                          Needs Editing Before Approval
+                        </span>
+                      ) : (
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium ${pill.className}`}
+                        >
+                          {pill.label}
+                        </span>
+                      )}
                       {post.is_anonymous && (
                         <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-muted text-muted-foreground">
                           Anonymous
