@@ -299,17 +299,24 @@ export default function ThreadConversation({
     <div className="space-y-6">
       <div className="space-y-1">
         {messages.map((m, i) => {
-          const mine = m.sender_id === user.id;
+          // "Own" side: the team perspective treats every admin-authored
+          // message as ours; the member inbox stays viewer-based.
+          const mine =
+            ownSide === "team" ? m.sender_role === "admin" : m.sender_id === user.id;
+          // Runs group by conversational party, so two different admins in the
+          // team view still read as one DeetSheet run.
+          const partyOf = (x: Message) =>
+            ownSide === "team" && x.sender_role === "admin" ? "team" : x.sender_id;
+          const party = partyOf(m);
           const prev = messages[i - 1];
           const next = messages[i + 1];
           const prevDate = prev ? parseISO(prev.created_at) : null;
           const date = parseISO(m.created_at);
           const showDateSeparator = !prev || !isSameDay(prevDate as Date, date);
-          const runStart =
-            showDateSeparator || !prev || prev.sender_id !== m.sender_id;
+          const runStart = showDateSeparator || !prev || partyOf(prev) !== party;
           const runEnd =
             !next ||
-            next.sender_id !== m.sender_id ||
+            partyOf(next) !== party ||
             !isSameDay(parseISO(next.created_at), date);
 
           const profile = senderProfiles[m.sender_id];
@@ -317,20 +324,25 @@ export default function ThreadConversation({
           const label = senderLabel(m);
 
           const avatar = runEnd ? (
-            <Avatar className="h-7 w-7 shrink-0">
-              {isAdminSender ? (
-                <AvatarImage src="/logo.png" alt="DeetSheet" className="object-contain" />
-              ) : (
+            isAdminSender ? (
+              <span
+                aria-label="DeetSheet team"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground"
+              >
+                D
+              </span>
+            ) : (
+              <Avatar className="h-7 w-7 shrink-0">
                 <AvatarImage
                   src={profile?.avatar_url ?? undefined}
                   alt={label}
                   className="object-cover"
                 />
-              )}
-              <AvatarFallback className="bg-primary/10 text-[10px] font-semibold text-primary">
-                {(label || "?").trim().charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+                <AvatarFallback className="bg-primary/10 text-[10px] font-semibold text-primary">
+                  {(label || "?").trim().charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            )
           ) : (
             <span className="h-7 w-7 shrink-0" aria-hidden="true" />
           );
