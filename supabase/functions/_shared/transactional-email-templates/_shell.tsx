@@ -26,6 +26,8 @@ import {
  * pipeline (handle-email-unsubscribe token), so templates must not add one.
  */
 
+import { parseMarkdownLinks } from './markdownLinks.ts'
+
 export const SITE_URL = 'https://deetsheet.com'
 // Whitespace-trimmed wordmark so the logo optically aligns flush-left with the
 // body copy below it (the original logo.png carries ~94px of baked-in padding).
@@ -154,12 +156,37 @@ export const Quote = ({ children }: { children: React.ReactNode }) => (
   </div>
 )
 
+/** Brand style for inline links inside email body copy. */
+export const bodyLink = {
+  color: GREEN_DARK,
+  textDecoration: 'underline',
+  fontWeight: 500,
+}
+
+/**
+ * Renders one line of admin-authored plain text, turning `[label](url)`
+ * markdown links into real anchors. Everything else is escaped by React.
+ */
+export const MdLine = ({ text }: { text: string }) => (
+  <>
+    {parseMarkdownLinks(text).map((t, i) =>
+      t.type === 'link' ? (
+        <Link key={i} href={t.href} style={bodyLink}>
+          {t.text}
+        </Link>
+      ) : (
+        <React.Fragment key={i}>{t.text}</React.Fragment>
+      ),
+    )}
+  </>
+)
+
 export const ReasonBox = ({
   label = 'REASON',
   items,
 }: {
   label?: string
-  items: string[]
+  items: React.ReactNode[]
 }) => (
   <div style={reasonBox}>
     <Text style={reasonLabel}>{label}</Text>
@@ -176,7 +203,7 @@ export const SuggestionsBox = ({
   items,
 }: {
   label?: string
-  items: string[]
+  items: React.ReactNode[]
 }) => (
   <div style={suggestionsBox}>
     <Text style={suggestionsLabel}>{label}</Text>
