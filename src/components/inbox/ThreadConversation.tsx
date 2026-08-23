@@ -67,6 +67,8 @@ interface ThreadConversationProps {
   adminView?: boolean;
   /** Display name for the member, used by the admin view's sender labels. */
   memberLabel?: string | null;
+  /** Called after a reply is sent or a message is deleted, so lists can refresh. */
+  onChanged?: () => void;
 }
 
 export default function ThreadConversation({
@@ -80,6 +82,7 @@ export default function ThreadConversation({
   senderRole = "user",
   adminView = false,
   memberLabel,
+  onChanged,
 }: ThreadConversationProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -89,6 +92,9 @@ export default function ThreadConversation({
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [pendingDelete, setPendingDelete] = useState<Message | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
 
   const load = async () => {
     if (!threadId || !user) return;
