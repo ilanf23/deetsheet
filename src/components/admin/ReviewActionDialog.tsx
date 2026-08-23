@@ -197,12 +197,12 @@ export default function ReviewActionDialog({
     setNewImagePreview(null);
     setRemoveImage(false);
     setEditTopicId("");
-    const c = defaultCopy(action, itemKind, itemTitle, "");
+    const c = defaultCopy(action, itemKind, itemTitle, "", postId);
 
     lastGeneratedRef.current = { subject: c.subject, body: c.body };
     setSubject(c.subject);
     setBody(c.body);
-  }, [open, action, itemKind, itemTitle]);
+  }, [open, action, itemKind, itemTitle, postId]);
 
 
 
