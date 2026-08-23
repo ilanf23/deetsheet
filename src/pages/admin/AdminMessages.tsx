@@ -492,7 +492,17 @@ export default function AdminMessages() {
             return (
               <div
                 key={t.id}
-                className="grid grid-cols-[1.2fr_1.6fr_0.8fr_1fr_0.7fr] gap-6 items-center px-6 py-4 text-[14px]"
+                role="button"
+                tabIndex={0}
+                title="Open conversation"
+                onClick={() => setViewThread(t)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setViewThread(t);
+                  }
+                }}
+                className="grid grid-cols-[1.2fr_1.6fr_0.8fr_1fr_0.7fr] gap-6 items-center px-6 py-4 text-[14px] cursor-pointer transition-colors hover:bg-muted/50"
                 style={{
                   borderBottom:
                     idx === filtered.length - 1
