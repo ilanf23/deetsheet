@@ -1001,16 +1001,23 @@ const ProfileView = () => {
                                     className="font-semibold text-base text-primary hover:underline mb-1 flex items-center gap-2 min-w-0"
                                   >
                                     <span className="truncate">{formatTitle(post.title)}</span>
-                                    {post.status === "pending" && (
-                                      <span className="inline-flex items-center gap-1 shrink-0 text-secondary">
-                                        <Clock
-                                          className="h-[1em] w-[1em]"
-                                          strokeWidth={2.5}
-                                          aria-label="Pending review"
-                                        />
-                                        <span className="text-xs font-medium">Pending</span>
+                                    {post.needs_author_edit ? (
+                                      <span className="inline-flex items-center shrink-0 px-2 py-0.5 rounded text-[11px] font-semibold bg-secondary text-secondary-foreground">
+                                        Needs Editing Before Approval
                                       </span>
+                                    ) : (
+                                      post.status === "pending" && (
+                                        <span className="inline-flex items-center gap-1 shrink-0 text-secondary">
+                                          <Clock
+                                            className="h-[1em] w-[1em]"
+                                            strokeWidth={2.5}
+                                            aria-label="Pending review"
+                                          />
+                                          <span className="text-xs font-medium">Pending</span>
+                                        </span>
+                                      )
                                     )}
+
                                   </a>
                                 )}
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1.5">
