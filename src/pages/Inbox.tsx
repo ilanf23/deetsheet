@@ -42,6 +42,8 @@ export default function Inbox() {
   const [newOpen, setNewOpen] = useState(false);
   const [tab, setTab] = useState<"inbox" | "requests">("inbox");
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
+  // Post ids (linked from threads) that the reviewer asked the author to revise.
+  const [needsEditPostIds, setNeedsEditPostIds] = useState<Set<string>>(new Set());
 
   const loadThreads = useCallback(async () => {
     if (!user) return;
@@ -75,6 +77,24 @@ export default function Inbox() {
       (profs ?? []).forEach((p: any) => m.set(p.id, p));
       setProfileMap(m);
     }
+    // Thread -> post link: message_threads.post_id already exists, so we only
+    // needed a second lookup against posts_privileged (the author-scoped view)
+    // to read needs_author_edit for those posts.
+    const postIds = Array.from(
+      new Set(rows.map((t) => t.post_id).filter((id): id is string => Boolean(id))),
+    );
+    if (postIds.length) {
+      const { data: posts } = await supabase
+        .from("posts_privileged")
+        .select("id,needs_author_edit")
+        .in("id", postIds);
+      setNeedsEditPostIds(
+        new Set((posts ?? []).filter((p: any) => p.needs_author_edit).map((p: any) => p.id as string)),
+      );
+    } else {
+      setNeedsEditPostIds(new Set());
+    }
+
     setBusy(false);
   }, [user]);
 
@@ -98,6 +118,14 @@ export default function Inbox() {
     if (t.kind === "direct" && t.request_status === "declined") return false;
     return tab === "requests" ? isRequest(t) : !isRequest(t);
   });
+  const needsEdit = (t: Thread) => Boolean(t.post_id && needsEditPostIds.has(t.post_id));
+
+  // "Needs editing" threads sit above everything else; the server already
+  // returned the rest in last_message_at order, and this stable sort keeps it.
+  const ordered = [...visible].sort(
+    (a, b) => Number(needsEdit(b)) - Number(needsEdit(a)),
+  );
+
   const requestCount = threads.filter((t) => isRequest(t) && !hiddenForMe(t)).length;
 
   const displayFor = (t: Thread) => {
@@ -179,7 +207,7 @@ export default function Inbox() {
           </div>
         ) : (
           <ul className="divide-y border rounded-lg overflow-hidden">
-            {visible.map((t) => {
+            {ordered.map((t) => {
               const d = displayFor(t);
               const unread = d.unread && !readIds.has(t.id);
               return (
@@ -206,6 +234,11 @@ export default function Inbox() {
                         >
                           {d.title}
                         </span>
+                        {needsEdit(t) && (
+                          <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-secondary-foreground">
+                            Needs Editing Before Approval
+                          </span>
+                        )}
                         {d.fromTeam && (
                           <span className="shrink-0 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
                             DeetSheet
