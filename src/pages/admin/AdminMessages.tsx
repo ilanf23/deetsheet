@@ -548,6 +548,32 @@ export default function AdminMessages() {
         </div>
       )}
 
+      {/* Read-conversation dialog — same renderer the member sees */}
+      <Dialog open={Boolean(viewThread)} onOpenChange={(o) => !o && setViewThread(null)}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-left leading-snug">
+              {viewThread?.post_title
+                ? `"${viewThread.post_title}"`
+                : viewThread?.subject ?? "Conversation"}
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground text-left">
+              With {viewThread?.user_name ?? viewThread?.user_username ?? "member"}
+            </p>
+          </DialogHeader>
+          {viewThread && (
+            <ThreadConversation
+              threadId={viewThread.id}
+              adminView
+              senderRole="admin"
+              markRead={false}
+              memberLabel={viewThread.user_name ?? viewThread.user_username ?? null}
+              onNotFound={() => setViewThread(null)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Compose dialog */}
       <Dialog open={composeOpen} onOpenChange={setComposeOpen}>
         <DialogContent className="max-w-2xl">
