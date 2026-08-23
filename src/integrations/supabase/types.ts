@@ -117,13 +117,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "comments_parent_comment_id_fkey"
-            columns: ["parent_comment_id"]
-            isOneToOne: false
-            referencedRelation: "comments_privileged"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "comments_post_id_fkey"
             columns: ["post_id"]
             isOneToOne: false
@@ -131,24 +124,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "comments_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts_privileged"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "comments_public_author_id_profiles_fkey"
             columns: ["public_author_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "comments_public_author_id_profiles_fkey"
-            columns: ["public_author_id"]
-            isOneToOne: false
-            referencedRelation: "profiles_private"
             referencedColumns: ["id"]
           },
         ]
@@ -369,13 +348,6 @@ export type Database = {
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "favorites_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts_privileged"
-            referencedColumns: ["id"]
-          },
         ]
       }
       locations: {
@@ -507,13 +479,6 @@ export type Database = {
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "message_threads_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts_privileged"
-            referencedColumns: ["id"]
-          },
         ]
       }
       messages: {
@@ -626,13 +591,6 @@ export type Database = {
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "post_follows_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts_privileged"
-            referencedColumns: ["id"]
-          },
         ]
       }
       posts: {
@@ -723,13 +681,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "posts_author_id_profiles_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "profiles_private"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "posts_location_id_fkey"
             columns: ["location_id"]
             isOneToOne: false
@@ -741,13 +692,6 @@ export type Database = {
             columns: ["public_author_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "posts_public_author_id_profiles_fkey"
-            columns: ["public_author_id"]
-            isOneToOne: false
-            referencedRelation: "profiles_private"
             referencedColumns: ["id"]
           },
           {
@@ -965,13 +909,6 @@ export type Database = {
             referencedRelation: "posts"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "ratings_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts_privileged"
-            referencedColumns: ["id"]
-          },
         ]
       }
       ratings_archive_fredbrewer_20260610: {
@@ -1026,13 +963,6 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reports_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts_privileged"
             referencedColumns: ["id"]
           },
         ]
@@ -1395,72 +1325,7 @@ export type Database = {
           post_id: string | null
           public_author_id: string | null
         }
-        Insert: {
-          author_id?: string | null
-          content?: string | null
-          created_at?: string | null
-          id?: string | null
-          is_anonymous?: boolean | null
-          like_count?: number | null
-          parent_comment_id?: string | null
-          post_id?: string | null
-          public_author_id?: string | null
-        }
-        Update: {
-          author_id?: string | null
-          content?: string | null
-          created_at?: string | null
-          id?: string | null
-          is_anonymous?: boolean | null
-          like_count?: number | null
-          parent_comment_id?: string | null
-          post_id?: string | null
-          public_author_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "comments_parent_comment_id_fkey"
-            columns: ["parent_comment_id"]
-            isOneToOne: false
-            referencedRelation: "comments"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "comments_parent_comment_id_fkey"
-            columns: ["parent_comment_id"]
-            isOneToOne: false
-            referencedRelation: "comments_privileged"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "comments_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "comments_post_id_fkey"
-            columns: ["post_id"]
-            isOneToOne: false
-            referencedRelation: "posts_privileged"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "comments_public_author_id_profiles_fkey"
-            columns: ["public_author_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "comments_public_author_id_profiles_fkey"
-            columns: ["public_author_id"]
-            isOneToOne: false
-            referencedRelation: "profiles_private"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       posts_privileged: {
         Row: {
@@ -1489,102 +1354,7 @@ export type Database = {
           topic_id: string | null
           updated_at: string | null
         }
-        Insert: {
-          approved_at?: string | null
-          author_id?: string | null
-          average_rating?: number | null
-          comment_count?: number | null
-          content?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          deleted_by?: string | null
-          deleted_reason?: string | null
-          follower_count?: number | null
-          id?: string | null
-          image_url?: string | null
-          is_anonymous?: boolean | null
-          is_national?: boolean | null
-          location_id?: string | null
-          needs_author_edit?: boolean | null
-          public_author_id?: string | null
-          rating_count?: number | null
-          score?: number | null
-          status?: string | null
-          story?: string | null
-          title?: string | null
-          topic_id?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          approved_at?: string | null
-          author_id?: string | null
-          average_rating?: number | null
-          comment_count?: number | null
-          content?: string | null
-          created_at?: string | null
-          deleted_at?: string | null
-          deleted_by?: string | null
-          deleted_reason?: string | null
-          follower_count?: number | null
-          id?: string | null
-          image_url?: string | null
-          is_anonymous?: boolean | null
-          is_national?: boolean | null
-          location_id?: string | null
-          needs_author_edit?: boolean | null
-          public_author_id?: string | null
-          rating_count?: number | null
-          score?: number | null
-          status?: string | null
-          story?: string | null
-          title?: string | null
-          topic_id?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "posts_author_id_profiles_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "posts_author_id_profiles_fkey"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "profiles_private"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "posts_location_id_fkey"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "posts_public_author_id_profiles_fkey"
-            columns: ["public_author_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "posts_public_author_id_profiles_fkey"
-            columns: ["public_author_id"]
-            isOneToOne: false
-            referencedRelation: "profiles_private"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "posts_topic_id_fkey"
-            columns: ["topic_id"]
-            isOneToOne: false
-            referencedRelation: "topics"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       profiles_private: {
         Row: {
@@ -1623,87 +1393,7 @@ export type Database = {
           state: string | null
           username: string | null
         }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          birth_day?: string | null
-          birth_month?: string | null
-          birth_year?: string | null
-          city?: string | null
-          city_born?: string | null
-          college?: string | null
-          country?: string | null
-          created_at?: string | null
-          degree?: string | null
-          education?: string | null
-          email_frequency?: string | null
-          email_on_comment?: boolean | null
-          email_on_follow?: boolean | null
-          email_on_message?: boolean | null
-          email_on_post_edit?: boolean | null
-          email_top_posts?: boolean | null
-          entity_type?: string | null
-          favorite_movie?: string | null
-          follower_count?: number | null
-          following_count?: number | null
-          hide_age?: boolean | null
-          high_school?: string | null
-          id?: string | null
-          job?: string | null
-          location_id?: string | null
-          major?: string | null
-          name?: string | null
-          orientation?: string | null
-          reading?: string | null
-          sex?: string | null
-          state?: string | null
-          username?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          birth_day?: string | null
-          birth_month?: string | null
-          birth_year?: string | null
-          city?: string | null
-          city_born?: string | null
-          college?: string | null
-          country?: string | null
-          created_at?: string | null
-          degree?: string | null
-          education?: string | null
-          email_frequency?: string | null
-          email_on_comment?: boolean | null
-          email_on_follow?: boolean | null
-          email_on_message?: boolean | null
-          email_on_post_edit?: boolean | null
-          email_top_posts?: boolean | null
-          entity_type?: string | null
-          favorite_movie?: string | null
-          follower_count?: number | null
-          following_count?: number | null
-          hide_age?: boolean | null
-          high_school?: string | null
-          id?: string | null
-          job?: string | null
-          location_id?: string | null
-          major?: string | null
-          name?: string | null
-          orientation?: string | null
-          reading?: string | null
-          sex?: string | null
-          state?: string | null
-          username?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_location_id_fkey"
-            columns: ["location_id"]
-            isOneToOne: false
-            referencedRelation: "locations"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {
@@ -1745,6 +1435,106 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      privileged_comments: {
+        Args: never
+        Returns: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          is_anonymous: boolean
+          like_count: number
+          parent_comment_id: string | null
+          post_id: string
+          public_author_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "comments"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      privileged_posts: {
+        Args: never
+        Returns: {
+          approved_at: string | null
+          author_id: string
+          average_rating: number
+          comment_count: number
+          content: string
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          deleted_reason: string | null
+          follower_count: number
+          id: string
+          image_url: string | null
+          is_anonymous: boolean
+          is_national: boolean
+          location_id: string | null
+          needs_author_edit: boolean
+          public_author_id: string | null
+          rating_count: number
+          score: number
+          status: string
+          story: string | null
+          title: string
+          topic_id: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "posts"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      privileged_profiles: {
+        Args: never
+        Returns: {
+          avatar_url: string | null
+          bio: string | null
+          birth_day: string | null
+          birth_month: string | null
+          birth_year: string | null
+          city: string | null
+          city_born: string | null
+          college: string | null
+          country: string | null
+          created_at: string
+          degree: string | null
+          education: string | null
+          email_frequency: string | null
+          email_on_comment: boolean | null
+          email_on_follow: boolean | null
+          email_on_message: boolean | null
+          email_on_post_edit: boolean | null
+          email_top_posts: boolean | null
+          entity_type: string | null
+          favorite_movie: string | null
+          follower_count: number
+          following_count: number
+          hide_age: boolean
+          high_school: string | null
+          id: string
+          job: string | null
+          location_id: string | null
+          major: string | null
+          name: string | null
+          orientation: string | null
+          reading: string | null
+          sex: string | null
+          state: string | null
+          username: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
