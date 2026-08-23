@@ -378,7 +378,7 @@ export default function ThreadConversation({
                       This message was deleted
                     </div>
                   ) : (
-                    <div className="group relative">
+                    <div className="group relative max-w-full min-w-0">
                       {/* CSS triangle tail, drawn on the sender's side and
                           aligned to the bubble's top edge. */}
                       {runStart && (
