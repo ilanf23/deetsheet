@@ -26,11 +26,15 @@ describe("parseMarkdownLinks", () => {
     expect(isSafeHref("javascript:alert(1)")).toBe(false);
     expect(isSafeHref("//evil.com")).toBe(false);
     expect(isSafeHref("data:text/html;base64,x")).toBe(false);
-    expect(parseMarkdownLinks("a [x](javascript:alert(1)) b")).toEqual([
+    expect(parseMarkdownLinks("a [x](javascript:alert) b")).toEqual([
       { type: "text", text: "a " },
       { type: "text", text: "x" },
       { type: "text", text: " b" },
     ]);
+    // Never emits a link token for an unsafe href, even with stray parens.
+    expect(
+      parseMarkdownLinks("a [x](javascript:alert(1)) b").some((t) => t.type === "link"),
+    ).toBe(false);
   });
 
   it("preserves newlines and handles multiple links", () => {
