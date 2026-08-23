@@ -5,6 +5,7 @@ import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
 import ThreadDialog from "@/components/inbox/ThreadDialog";
 import NewMessageDialog from "@/components/inbox/NewMessageDialog";
+import ThreadActionsMenu from "@/components/inbox/ThreadActionsMenu";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -182,11 +183,21 @@ export default function Inbox() {
               const d = displayFor(t);
               const unread = d.unread && !readIds.has(t.id);
               return (
-                <li key={t.id}>
-                  <button
-                    type="button"
+                <li
+                  key={t.id}
+                  className="flex items-center gap-2 pr-3 transition-colors hover:bg-muted/40"
+                >
+                  <div
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setOpenThreadId(t.id)}
-                    className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left transition-colors hover:bg-muted/40"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setOpenThreadId(t.id);
+                      }
+                    }}
+                    className="flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-4 px-4 py-4 text-left"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
@@ -212,7 +223,28 @@ export default function Inbox() {
                         aria-label="unread"
                       />
                     )}
-                  </button>
+                  </div>
+                  {/* Kept outside the row's click target so opening the menu
+                      never opens the conversation. */}
+                  <div
+                    className="shrink-0"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  >
+                    <ThreadActionsMenu
+                      threadId={t.id}
+                      otherUserId={
+                        t.kind === "direct"
+                          ? t.user_id === user.id
+                            ? t.other_user_id
+                            : t.user_id
+                          : null
+                      }
+                      isDirect={t.kind === "direct"}
+                      onBlocked={loadThreads}
+                      onDeleted={loadThreads}
+                    />
+                  </div>
                 </li>
               );
             })}
