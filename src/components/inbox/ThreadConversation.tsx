@@ -193,6 +193,25 @@ export default function ThreadConversation({
     return m.sender_role === "admin" ? "DeetSheet team" : "You";
   };
 
+  // Only the original sender may delete — plus admins, from the admin console.
+  // RLS enforces the same rule server-side; this just hides the affordance.
+  const canDelete = (m: Message) => !m.deleted_at && (adminView || m.sender_id === user.id);
+
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    const { error } = await deleteMessage(pendingDelete.id, user.id);
+    setDeleting(false);
+    if (error) {
+      toast({ title: "Couldn't delete", description: error, variant: "destructive" });
+      return;
+    }
+    setPendingDelete(null);
+    toast({ title: "Message deleted", description: "It no longer appears for either person." });
+    await load();
+    onChanged?.();
+  };
+
   const sendReply = async () => {
     if (!reply.trim() || !thread) return;
     setSending(true);
@@ -209,8 +228,10 @@ export default function ThreadConversation({
       return;
     }
     setReply("");
-    load();
+    await load();
+    onChanged?.();
   };
+
 
   const isPendingRequest =
     thread?.kind === "direct" && thread?.request_status === "pending";
