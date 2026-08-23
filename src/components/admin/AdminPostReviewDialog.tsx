@@ -138,7 +138,7 @@ export default function AdminPostReviewDialog({
 
       const { data: authorPosts } = await supabase
         .from("posts_privileged")
-        .select("id, title, status, created_at, topic_id, topics(name)")
+        .select("id, title, status, created_at, topic_id, topic_name")
         .eq("author_id", postRow.author_id)
         .order("created_at", { ascending: false });
       if (cancelled) return;

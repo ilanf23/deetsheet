@@ -40,7 +40,7 @@ const UserPostsList = ({ userId }: { userId: string }) => {
     let query = isOwnProfile
       ? supabase
           .from("posts_privileged")
-          .select("id, title, content, score, comment_count, created_at, approved_at, status, is_anonymous, needs_author_edit, topics(name, slug)")
+          .select("id, title, content, score, comment_count, created_at, approved_at, status, is_anonymous, needs_author_edit, topic_name, topic_slug")
           .eq("author_id", userId)
       : supabase
           .from("posts")

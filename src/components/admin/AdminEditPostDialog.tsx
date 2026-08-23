@@ -247,7 +247,7 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
                 .maybeSingle(),
               supabase
                 .from("posts_privileged")
-                .select("id, title, content, story, status, created_at, topic_id, topics(name)")
+                .select("id, title, content, story, status, created_at, topic_id, topic_name")
                 .eq("author_id", p.author_id)
                 .order("created_at", { ascending: false }),
               supabase
