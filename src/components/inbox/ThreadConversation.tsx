@@ -363,7 +363,7 @@ export default function ThreadConversation({
               >
                 {avatar}
                 <div
-                  className={`flex min-w-0 max-w-[78%] flex-col sm:max-w-[70%] ${
+                  className={`flex min-w-0 max-w-[80%] shrink flex-col sm:max-w-[70%] ${
                     mine ? "items-end" : "items-start"
                   }`}
                 >
