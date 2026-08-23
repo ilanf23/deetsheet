@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { buildPostSlug } from "@/lib/postSlug";
 import { isOtherReason, useReviewReasons, type ReviewReason } from "@/lib/reviewReasons";
 import { useTopics } from "@/hooks/useSupabaseTopics";
+import { PENDING_CLOSING } from "@/lib/reviewCopy";
 
 
 
@@ -63,7 +64,7 @@ function defaultCopy(
     body:
       `Hi,\n\nThanks for submitting your ${label} ${quoted}. Before we can approve it, we'd like you to make a few changes.\n\n` +
       `Suggestion: ${reasonDetail || "[select a suggestion above or write your own]"}\n\n` +
-      `Once you've updated your ${label}, it will go back into review. Reply here if you have questions.\n\n— The DeetSheet team`,
+      `${PENDING_CLOSING}\n\nReply here if you have questions.\n\n— The DeetSheet team`,
   };
 }
 
@@ -355,6 +356,10 @@ export default function ReviewActionDialog({
           emailTemplate = "post-pending";
           templateData = {
             ...base,
+            // Only forward a genuinely custom note. The auto-generated default
+            // already restates the reason + suggestions, which the email
+            // renders as its own REASON / SUGGESTIONS boxes.
+            adminNote: messageTouched ? body : undefined,
             reasons: reasonText ? [reasonText] : [],
             suggestions: suggestionList,
             ctaUrl: editUrl,
