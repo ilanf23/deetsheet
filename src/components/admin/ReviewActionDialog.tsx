@@ -138,25 +138,29 @@ export default function ReviewActionDialog({
   const [messageTouched, setMessageTouched] = useState(false);
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
 
-  /** Insert a markdown link at the caret (or append when unfocused). */
+  /**
+   * Insert a markdown link at the caret when the body textarea is focused;
+   * otherwise place it before the sign-off line so it never fuses onto it.
+   */
   const insertLink = (label: string, path: string) => {
-    const snippet = `[${label}](${path})`;
     const el = bodyRef.current;
     setMessageTouched(true);
-    if (!el) {
-      setBody((prev) => (prev ? `${prev}${prev.endsWith(" ") ? "" : " "}${snippet}` : snippet));
-      return;
-    }
-    const start = el.selectionStart ?? el.value.length;
-    const end = el.selectionEnd ?? start;
-    const next = `${el.value.slice(0, start)}${snippet}${el.value.slice(end)}`;
-    setBody(next);
+    const focused = el !== null && typeof document !== "undefined" && document.activeElement === el;
+    const source = el?.value ?? body;
+    const { text, caret } = insertMarkdownLink(
+      source,
+      label,
+      path,
+      focused ? el!.selectionStart ?? null : null,
+      focused ? el!.selectionEnd ?? null : null,
+    );
+    setBody(text);
     requestAnimationFrame(() => {
-      el.focus();
-      const caret = start + snippet.length;
-      el.setSelectionRange(caret, caret);
+      el?.focus();
+      el?.setSelectionRange(caret, caret);
     });
   };
+
 
   const { data: topics } = useTopics();
   const selectedTopic = topics?.find((t) => t.id === editTopicId) ?? null;
