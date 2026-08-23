@@ -486,6 +486,8 @@ export type Database = {
           body_html: string | null
           body_text: string | null
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           email_message_id: string | null
           email_sent: boolean
           id: string
@@ -498,6 +500,8 @@ export type Database = {
           body_html?: string | null
           body_text?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           email_message_id?: string | null
           email_sent?: boolean
           id?: string
@@ -510,6 +514,8 @@ export type Database = {
           body_html?: string | null
           body_text?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           email_message_id?: string | null
           email_sent?: boolean
           id?: string
