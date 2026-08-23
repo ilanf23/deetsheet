@@ -95,6 +95,7 @@ export default function ThreadConversation({
   adminView = false,
   memberLabel,
   onChanged,
+  ownSide = "viewer",
 }: ThreadConversationProps) {
   const { user } = useAuth();
   const { toast } = useToast();
