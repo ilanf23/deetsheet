@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { LINK_SHORTCUTS } from "@/lib/linkShortcuts";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
@@ -94,6 +95,27 @@ export default function AdminMessages() {
   } | null>(null);
   const [subject, setSubject] = useState("");
   const [messageBody, setMessageBody] = useState("");
+  const bodyRef = useRef<HTMLTextAreaElement | null>(null);
+
+  /** Insert a markdown link at the caret (or append when unfocused). */
+  const insertLink = (label: string, path: string) => {
+    const snippet = `[${label}](${path})`;
+    const el = bodyRef.current;
+    if (!el) {
+      setMessageBody((prev) =>
+        prev ? `${prev}${prev.endsWith(" ") ? "" : " "}${snippet}` : snippet,
+      );
+      return;
+    }
+    const start = el.selectionStart ?? el.value.length;
+    const end = el.selectionEnd ?? start;
+    setMessageBody(`${el.value.slice(0, start)}${snippet}${el.value.slice(end)}`);
+    requestAnimationFrame(() => {
+      el.focus();
+      const caret = start + snippet.length;
+      el.setSelectionRange(caret, caret);
+    });
+  };
   const [alsoEmail, setAlsoEmail] = useState(true);
 
   const [sending, setSending] = useState(false);
@@ -535,13 +557,34 @@ export default function AdminMessages() {
               <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs">Message</Label>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Label className="text-xs">Message</Label>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] text-muted-foreground">Insert link:</span>
+                  {LINK_SHORTCUTS.map((l) => (
+                    <Button
+                      key={l.path}
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-6 px-2 text-[11px]"
+                      onClick={() => insertLink(l.label, l.path)}
+                    >
+                      {l.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
               <Textarea
+                ref={bodyRef}
                 rows={9}
                 value={messageBody}
                 onChange={(e) => setMessageBody(e.target.value)}
                 placeholder="Write your message…"
               />
+              <p className="text-[11px] text-muted-foreground">
+                Tip: you can write links by hand as [Rules](/rules).
+              </p>
             </div>
             <div className="flex items-center gap-2">
               <Checkbox
