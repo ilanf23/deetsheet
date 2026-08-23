@@ -11,16 +11,19 @@ import {
   Shell,
   SuggestionsBox,
 } from './_shell.tsx'
+import { PENDING_CLOSING, PENDING_DEADLINE, REVIEWER_NOTE_LABEL } from './copy.ts'
 
 interface Props {
   topic?: string
   title?: string
   reasons?: string[]
   suggestions?: string[]
+  /** Optional custom note the reviewer typed (only sent when customised). */
+  adminNote?: string
   ctaUrl?: string
 }
 
-const Email = ({ topic, title, reasons, suggestions, ctaUrl }: Props) => (
+const Email = ({ topic, title, reasons, suggestions, adminNote, ctaUrl }: Props) => (
   <Shell
     eyebrow="POST REVIEW"
     preview="Your post is pending — here's how to get it approved."
@@ -40,15 +43,12 @@ const Email = ({ topic, title, reasons, suggestions, ctaUrl }: Props) => (
         <SuggestionsBox items={suggestions} />
       </>
     )}
-    <P>
-      If you would like to change your post to the suggestions above, you may do
-      so.
-    </P>
-    <DeadlineStrip>
-      You will have 30 days to adjust your post, or it will be automatically
-      deleted.
-    </DeadlineStrip>
+    {adminNote && adminNote.trim() && (
+      <ReasonBox label={REVIEWER_NOTE_LABEL} items={adminNote.trim().split('\n').filter((l) => l.trim())} />
+    )}
+    <P>{PENDING_CLOSING}</P>
     <Cta href={ctaUrl || `${SITE_URL}/profile`} label="Edit your post" />
+    <DeadlineStrip>{PENDING_DEADLINE}</DeadlineStrip>
   </Shell>
 )
 
