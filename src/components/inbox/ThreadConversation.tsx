@@ -93,6 +93,7 @@ export default function ThreadConversation({
   const { toast } = useToast();
   const [thread, setThread] = useState<Thread | null>(null);
   const [otherProfile, setOtherProfile] = useState<ProfileLite | null>(null);
+  const [senderProfiles, setSenderProfiles] = useState<Record<string, ProfileLite>>({});
   const [messages, setMessages] = useState<Message[]>([]);
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
