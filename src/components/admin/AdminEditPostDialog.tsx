@@ -344,7 +344,7 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
                 story: r.story ?? null,
                 status: r.status ?? "approved",
                 createdAt: r.created_at,
-                topicName: topicNameOf(r.topics),
+                topicName: r.topic_name ?? null,
               })),
             });
           }
