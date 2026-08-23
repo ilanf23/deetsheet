@@ -136,7 +136,7 @@ export default function ThreadConversation({
       if (otherId) {
         const { data: p } = await supabase
           .from("profiles")
-          .select("id,name,username")
+          .select("id,name,username,avatar_url")
           .eq("id", otherId)
           .maybeSingle();
         if (p) {
