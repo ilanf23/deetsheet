@@ -5,8 +5,20 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { format, parseISO } from "date-fns";
+import { Trash2 } from "lucide-react";
 import MarkdownLinkText from "@/components/MarkdownLinkText";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import { deleteMessage, DELETE_MESSAGE_WARNING } from "@/lib/messaging";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 
 type Message = {
@@ -17,7 +29,10 @@ type Message = {
   body_text: string | null;
   slip: any;
   created_at: string;
+  deleted_at: string | null;
+  deleted_by: string | null;
 };
+
 
 type Thread = {
   id: string;
