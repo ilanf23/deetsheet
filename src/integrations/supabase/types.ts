@@ -652,6 +652,7 @@ export type Database = {
           is_anonymous: boolean
           is_national: boolean
           location_id: string | null
+          needs_author_edit: boolean
           public_author_id: string | null
           rating_count: number
           score: number
@@ -677,6 +678,7 @@ export type Database = {
           is_anonymous?: boolean
           is_national?: boolean
           location_id?: string | null
+          needs_author_edit?: boolean
           public_author_id?: string | null
           rating_count?: number
           score?: number
@@ -702,6 +704,7 @@ export type Database = {
           is_anonymous?: boolean
           is_national?: boolean
           location_id?: string | null
+          needs_author_edit?: boolean
           public_author_id?: string | null
           rating_count?: number
           score?: number
@@ -1476,6 +1479,7 @@ export type Database = {
           is_anonymous: boolean | null
           is_national: boolean | null
           location_id: string | null
+          needs_author_edit: boolean | null
           public_author_id: string | null
           rating_count: number | null
           score: number | null
@@ -1501,6 +1505,7 @@ export type Database = {
           is_anonymous?: boolean | null
           is_national?: boolean | null
           location_id?: string | null
+          needs_author_edit?: boolean | null
           public_author_id?: string | null
           rating_count?: number | null
           score?: number | null
@@ -1526,6 +1531,7 @@ export type Database = {
           is_anonymous?: boolean | null
           is_national?: boolean | null
           location_id?: string | null
+          needs_author_edit?: boolean | null
           public_author_id?: string | null
           rating_count?: number | null
           score?: number | null
@@ -1727,6 +1733,10 @@ export type Database = {
         Returns: boolean
       }
       is_blocked_pair: { Args: { _a: string; _b: string }; Returns: boolean }
+      mark_post_needs_author_edit: {
+        Args: { _post_id: string }
+        Returns: undefined
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
