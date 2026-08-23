@@ -75,6 +75,12 @@ interface ThreadConversationProps {
   memberLabel?: string | null;
   /** Called after a reply is sent or a message is deleted, so lists can refresh. */
   onChanged?: () => void;
+  /**
+   * Which side of the conversation counts as "own" (right-aligned, green).
+   * "viewer" — the signed-in user's own messages (member inbox).
+   * "team" — every admin-authored message, regardless of which admin sent it.
+   */
+  ownSide?: "viewer" | "team";
 }
 
 export default function ThreadConversation({
@@ -89,6 +95,7 @@ export default function ThreadConversation({
   adminView = false,
   memberLabel,
   onChanged,
+  ownSide = "viewer",
 }: ThreadConversationProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -292,17 +299,24 @@ export default function ThreadConversation({
     <div className="space-y-6">
       <div className="space-y-1">
         {messages.map((m, i) => {
-          const mine = m.sender_id === user.id;
+          // "Own" side: the team perspective treats every admin-authored
+          // message as ours; the member inbox stays viewer-based.
+          const mine =
+            ownSide === "team" ? m.sender_role === "admin" : m.sender_id === user.id;
+          // Runs group by conversational party, so two different admins in the
+          // team view still read as one DeetSheet run.
+          const partyOf = (x: Message) =>
+            ownSide === "team" && x.sender_role === "admin" ? "team" : x.sender_id;
+          const party = partyOf(m);
           const prev = messages[i - 1];
           const next = messages[i + 1];
           const prevDate = prev ? parseISO(prev.created_at) : null;
           const date = parseISO(m.created_at);
           const showDateSeparator = !prev || !isSameDay(prevDate as Date, date);
-          const runStart =
-            showDateSeparator || !prev || prev.sender_id !== m.sender_id;
+          const runStart = showDateSeparator || !prev || partyOf(prev) !== party;
           const runEnd =
             !next ||
-            next.sender_id !== m.sender_id ||
+            partyOf(next) !== party ||
             !isSameDay(parseISO(next.created_at), date);
 
           const profile = senderProfiles[m.sender_id];
@@ -310,20 +324,25 @@ export default function ThreadConversation({
           const label = senderLabel(m);
 
           const avatar = runEnd ? (
-            <Avatar className="h-7 w-7 shrink-0">
-              {isAdminSender ? (
-                <AvatarImage src="/logo.png" alt="DeetSheet" className="object-contain" />
-              ) : (
+            isAdminSender ? (
+              <span
+                aria-label="DeetSheet team"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground"
+              >
+                D
+              </span>
+            ) : (
+              <Avatar className="h-7 w-7 shrink-0">
                 <AvatarImage
                   src={profile?.avatar_url ?? undefined}
                   alt={label}
                   className="object-cover"
                 />
-              )}
-              <AvatarFallback className="bg-primary/10 text-[10px] font-semibold text-primary">
-                {(label || "?").trim().charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
+                <AvatarFallback className="bg-primary/10 text-[10px] font-semibold text-primary">
+                  {(label || "?").trim().charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            )
           ) : (
             <span className="h-7 w-7 shrink-0" aria-hidden="true" />
           );
@@ -344,7 +363,7 @@ export default function ThreadConversation({
               >
                 {avatar}
                 <div
-                  className={`flex min-w-0 max-w-[78%] flex-col sm:max-w-[70%] ${
+                  className={`flex min-w-0 max-w-[80%] shrink flex-col sm:max-w-[70%] ${
                     mine ? "items-end" : "items-start"
                   }`}
                 >
@@ -359,7 +378,7 @@ export default function ThreadConversation({
                       This message was deleted
                     </div>
                   ) : (
-                    <div className="group relative">
+                    <div className="group relative max-w-full min-w-0">
                       {/* CSS triangle tail, drawn on the sender's side and
                           aligned to the bubble's top edge. */}
                       {runStart && (
@@ -373,7 +392,7 @@ export default function ThreadConversation({
                         />
                       )}
                       <div
-                        className={`relative rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+                        className={`relative max-w-full overflow-hidden break-words rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                           mine
                             ? "bg-primary text-primary-foreground"
                             : "bg-muted text-foreground"

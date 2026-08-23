@@ -647,6 +647,7 @@ export default function AdminMessages() {
                   key={routeThreadId}
                   threadId={routeThreadId}
                   adminView
+                  ownSide="team"
                   senderRole="admin"
                   markRead={false}
                   memberLabel={selected?.user_name ?? selected?.user_username ?? null}
