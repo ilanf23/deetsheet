@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { PENDING_DEADLINE_SHORT } from "@/lib/reviewCopy";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -140,7 +141,7 @@ export default function ManageTemplatesDialog({ open, onOpenChange }: Props) {
                     subject: "",
                     reason_default: "",
                     suggestions_default: "",
-                    deadline_default: "30 days to adjust, or the post is automatically deleted",
+                    deadline_default: PENDING_DEADLINE_SHORT,
                   })
                 }
               >
