@@ -272,17 +272,18 @@ const ProfileView = () => {
 
     {
       const BASE_POST_COLUMNS =
-        "id, title, content, created_at, approved_at, comment_count, score, topic_id, status, image_url, story, topics(name)";
+        "id, title, content, created_at, approved_at, comment_count, score, topic_id, status, image_url, story";
       // `needs_author_edit` is only readable through the author-scoped view;
-      // the public `posts` read must not ask for it.
+      // the public `posts` read must not ask for it. The view exposes the topic
+      // name as a plain column (`topic_name`) instead of an embedded relation.
       let postsQuery = isOwnProfile
         ? supabase
             .from("posts_privileged")
-            .select(`${BASE_POST_COLUMNS}, needs_author_edit`)
+            .select(`${BASE_POST_COLUMNS}, topic_name, needs_author_edit`)
             .eq("author_id", targetUserId)
         : supabase
             .from("posts")
-            .select(BASE_POST_COLUMNS)
+            .select(`${BASE_POST_COLUMNS}, topics(name)`)
             .eq("public_author_id", targetUserId)
         .neq("status", "deleted")
         .order("created_at", { ascending: false });
