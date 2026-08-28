@@ -102,7 +102,7 @@ export default function ReviewActionDialog({
   const [body, setBody] = useState("");
   const [sendEmail, setSendEmail] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [reasonKey, setReasonKey] = useState<string>("");
+  const [reasonKeys, setReasonKeys] = useState<string[]>([]);
   const [customReason, setCustomReason] = useState("");
   // Approve flow: mark the post as "approved with a slight adjustment" so the
   // author receives the original-vs-final version of the branded email.
@@ -171,12 +171,17 @@ export default function ReviewActionDialog({
   const reasonList: ReviewReason[] =
     action === "reject" ? reasons?.reject ?? [] : action === "edit" ? reasons?.edit ?? [] : [];
   const showReasonPicker = action === "reject" || action === "edit";
-  const pickedReason = reasonList.find((r) => r.id === reasonKey) ?? null;
-  const isOther = !!pickedReason && isOtherReason(pickedReason.label);
+  const pickedReasons = reasonList.filter((r) => reasonKeys.includes(r.id));
+  const isOther = pickedReasons.some((r) => isOtherReason(r.label));
+  /** Every selected reason as author-facing text, plus any custom "other" copy. */
+  const reasonTexts: string[] = [
+    ...pickedReasons
+      .filter((r) => !isOtherReason(r.label))
+      .map((r) => (r.detail || r.label).trim()),
+    ...(isOther && customReason.trim() ? [customReason.trim()] : []),
+  ].filter(Boolean);
   /** Human-readable reason, stored alongside the soft delete on rejection. */
-  const reasonTextForAction = (
-    isOther ? customReason : pickedReason?.detail || pickedReason?.label || ""
-  ).trim();
+  const reasonTextForAction = reasonTexts.join("\n");
 
   /** Title as it currently reads in the left column — keeps the message in sync. */
   const liveTitle = (itemKind === "post" ? editContent.trim() : "") || postDetail?.title || itemTitle;
@@ -189,7 +194,7 @@ export default function ReviewActionDialog({
 
   useEffect(() => {
     if (!open) return;
-    setReasonKey("");
+    setReasonKeys([]);
     setCustomReason("");
     setSuggestions("");
 
@@ -283,7 +288,7 @@ export default function ReviewActionDialog({
   const lastGeneratedRef = useRef<{ subject: string; body: string } | null>(null);
   useEffect(() => {
     if (!open || messageTouched) return;
-    const detail = isOther ? customReason : pickedReason?.detail ?? "";
+    const detail = reasonTexts.join("\n");
     const c = defaultCopy(action, itemKind, quotedTitle || itemTitle, detail, postId);
     const last = lastGeneratedRef.current;
     // Only overwrite fields that still hold copy we generated (or are empty).
@@ -294,7 +299,7 @@ export default function ReviewActionDialog({
     setSubject(c.subject);
     setBody(c.body);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reasonKey, customReason, open, quotedTitle, messageTouched, postId]);
+  }, [reasonKeys.join("|"), customReason, open, quotedTitle, messageTouched, postId]);
 
 
 
@@ -303,14 +308,14 @@ export default function ReviewActionDialog({
       toast({ title: "Subject and message are required", variant: "destructive" });
       return;
     }
-    if (showReasonPicker && !reasonKey) {
+    if (showReasonPicker && reasonKeys.length === 0) {
       toast({
         title: action === "reject" ? "Please choose a reason for rejection" : "Please choose what you changed",
         variant: "destructive",
       });
       return;
     }
-    if (showReasonPicker && reasonKey === "other" && !customReason.trim()) {
+    if (showReasonPicker && isOther && !customReason.trim()) {
       toast({
         title: action === "reject" ? "Please write a rejection reason" : "Please write a short edit summary",
         variant: "destructive",
@@ -328,10 +333,7 @@ export default function ReviewActionDialog({
         .join("");
 
       // Resolve which branded template the author should receive.
-      const picked = pickedReason;
-      const reasonText = (
-        picked ? (isOther ? customReason : picked.detail || picked.label) : customReason
-      ).trim();
+      const reasonItems = reasonTexts;
 
 
       const suggestionList = suggestions
@@ -356,7 +358,7 @@ export default function ReviewActionDialog({
         headline: subject,
         bodyText: emailBody,
         quotedTitle: [topicName, postTitle].filter(Boolean).join(": "),
-        reasons: reasonText ? [reasonText] : undefined,
+        reasons: reasonItems.length ? reasonItems : undefined,
         suggestions: suggestionList.length ? suggestionList : undefined,
         ctaLabel: "View your post",
         ctaUrl: postUrl,
@@ -370,7 +372,7 @@ export default function ReviewActionDialog({
         };
         if (action === "approve" && photoDenied) {
           emailTemplate = "post-photo-denied";
-          templateData = { ...base, reasons: reasonText ? [reasonText] : [], ctaUrl: profileUrl };
+          templateData = { ...base, reasons: reasonItems, ctaUrl: profileUrl };
         } else if (action === "approve" && adjusted) {
           emailTemplate = "post-approved-adjusted";
           templateData = {
@@ -378,7 +380,7 @@ export default function ReviewActionDialog({
             // Original = the post as submitted; Final = the admin's edited copy.
             originalText: originalText || postDetail?.content || "",
             finalText: (finalTextTouched ? finalText : editContent) || editContent,
-            reasons: reasonText ? [reasonText] : suggestionList,
+            reasons: reasonItems.length ? reasonItems : suggestionList,
             ctaUrl: postUrl,
           };
 
@@ -393,7 +395,7 @@ export default function ReviewActionDialog({
             // already restates the reason + suggestions, which the email
             // renders as its own REASON / SUGGESTIONS boxes.
             adminNote: messageTouched ? emailBody : undefined,
-            reasons: reasonText ? [reasonText] : [],
+            reasons: reasonItems,
             suggestions: suggestionList,
             ctaUrl: editUrl,
           };
@@ -401,7 +403,7 @@ export default function ReviewActionDialog({
           emailTemplate = "post-denied";
           templateData = {
             ...base,
-            reasons: reasonText ? [reasonText] : [],
+            reasons: reasonItems,
             ctaUrl: profileUrl,
           };
         }
