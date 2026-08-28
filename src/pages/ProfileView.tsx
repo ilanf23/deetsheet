@@ -614,7 +614,9 @@ const ProfileView = () => {
         ? "Search your comments…"
         : "Search your posts…";
 
-  const TABS = [
+  // A tab shows a number ONLY when that number is real and loaded. `null`
+  // means "no badge" — never render a placeholder 0.
+  const TABS: { value: string; label: string; count: number | null; dot?: boolean }[] = [
     { value: "posts", label: "Posts", count: postCount },
     { value: "topics", label: "Topics", count: topicCount },
     { value: "comments", label: "Comments", count: commentCount },
@@ -630,7 +632,8 @@ const ProfileView = () => {
           },
         ]
       : []),
-    { value: "favorites", label: "Favorites", count: 0 },
+    // Favorites isn't built yet ("Coming soon" panel) — no count at all.
+    { value: "favorites", label: "Favorites", count: null },
     { value: "following", label: "Following", count: followingTotal },
     { value: "followers", label: "Followers", count: followerTotal },
   ];
