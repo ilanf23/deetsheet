@@ -599,6 +599,53 @@ export type Database = {
           },
         ]
       }
+      post_revisions: {
+        Row: {
+          content: string | null
+          created_at: string
+          edited_at: string
+          edited_by: string | null
+          id: string
+          image_url: string | null
+          is_anonymous: boolean | null
+          post_id: string
+          story: string | null
+          title: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          edited_at?: string
+          edited_by?: string | null
+          id?: string
+          image_url?: string | null
+          is_anonymous?: boolean | null
+          post_id: string
+          story?: string | null
+          title?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          edited_at?: string
+          edited_by?: string | null
+          id?: string
+          image_url?: string | null
+          is_anonymous?: boolean | null
+          post_id?: string
+          story?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_revisions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       posts: {
         Row: {
           approved_at: string | null
