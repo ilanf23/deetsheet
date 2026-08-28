@@ -57,7 +57,7 @@ import { useProfileFollowCounts } from "@/hooks/useUserFollow";
 import { useFollowing, useFollowers } from "@/hooks/useFollowLists";
 import { buildPostSlug } from "@/lib/postSlug";
 import { formatTitle } from "@/lib/formatTitle";
-import { useUnreadMessagesCount } from "@/hooks/useUnreadMessages";
+import { useThreadCounts } from "@/hooks/useUnreadMessages";
 import ProfileMessagesPanel from "@/components/profile/ProfileMessagesPanel";
 
 const CREDENTIAL_ICON_MAP: Record<string, React.ReactNode> = {
@@ -245,7 +245,9 @@ const ProfileView = () => {
   const { data: followersData } = useFollowers(targetUserId, { enabled: followersRequested });
   const followingTotal = followingData?.total ?? followCounts?.followingCount ?? 0;
   const followerTotal = followersData?.length ?? followCounts?.followerCount ?? 0;
-  const { data: unreadMessages } = useUnreadMessagesCount();
+  const { data: threadCounts } = useThreadCounts();
+  const unreadMessages = threadCounts?.unread ?? 0;
+  const messageTotal = threadCounts?.total ?? 0;
 
   // Mark heavy tab queries as requested the first time the tab is activated.
   // Also clear the search filter so a query doesn't leak across tabs.
@@ -609,8 +611,10 @@ const ProfileView = () => {
           {
             value: "messages",
             label: "Messages",
-            count: unreadMessages ?? 0,
-            dot: (unreadMessages ?? 0) > 0,
+            // Total conversations, shown always (even at zero) like Posts and
+            // Comments. The unread dot renders beside it, not instead of it.
+            count: messageTotal,
+            dot: unreadMessages > 0,
           },
         ]
       : []),
@@ -933,16 +937,15 @@ const ProfileView = () => {
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-2.5 text-sm font-medium"
                   >
                     {tab.label}
-                    {"dot" in tab && (tab as { dot?: boolean }).dot ? (
+                    <span className="ml-1.5 text-xs text-muted-foreground">
+                      {tab.count}
+                    </span>
+                    {"dot" in tab && (tab as { dot?: boolean }).dot && (
                       <span
                         aria-label="Unread messages"
                         title="You have unread messages"
                         className="ml-1.5 inline-block h-2 w-2 rounded-full bg-secondary"
                       />
-                    ) : (
-                      <span className="ml-1.5 text-xs text-muted-foreground">
-                        {tab.count}
-                      </span>
                     )}
                   </TabsTrigger>
                 ))}

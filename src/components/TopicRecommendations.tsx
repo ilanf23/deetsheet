@@ -13,8 +13,18 @@ const TopicRecommendations = ({ currentTopic }: TopicRecommendationsProps) => {
   const recommended = useMemo(() => {
     const all = dbTopics ?? [];
     const others = all.filter((t) => t.name !== currentTopic.name);
-    const same = others.filter((t) => t.categoryName === currentTopic.categoryName);
-    const rest = others.filter((t) => t.categoryName !== currentTopic.categoryName);
+    // Busiest topics first within each group; alphabetical tie-break keeps the
+    // order stable instead of falling back to arbitrary fetch order.
+    // `postCount` is the denormalized `topics.post_count` already returned by
+    // useTopics — no extra query, no N+1.
+    const byPosts = (a: typeof others[number], b: typeof others[number]) =>
+      b.postCount - a.postCount || a.name.localeCompare(b.name);
+    const same = others
+      .filter((t) => t.categoryName === currentTopic.categoryName)
+      .sort(byPosts);
+    const rest = others
+      .filter((t) => t.categoryName !== currentTopic.categoryName)
+      .sort(byPosts);
     return [...same, ...rest].slice(0, 12);
   }, [dbTopics, currentTopic.name, currentTopic.categoryName]);
 

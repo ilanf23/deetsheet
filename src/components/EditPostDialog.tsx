@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useQueryClient } from "@tanstack/react-query";
+import { invalidatePostCaches } from "@/lib/postCacheInvalidation";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -148,11 +149,7 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
         description: "Your post is offline until it's re-approved.",
       });
 
-      queryClient.invalidateQueries({ queryKey: ["posts-by-topic", topicId] });
-      queryClient.invalidateQueries({ queryKey: ["posts-by-topic"] });
-      queryClient.invalidateQueries({ queryKey: ["recent-posts"] });
-      queryClient.invalidateQueries({ queryKey: ["recent-posts-by-topic", topicId] });
-      queryClient.invalidateQueries({ queryKey: ["recent-posts-by-topic"] });
+      invalidatePostCaches(queryClient, postId);
       onSaved?.();
       onOpenChange(false);
     } catch (e) {

@@ -25,6 +25,8 @@ import { useProfileFollowCounts } from "@/hooks/useUserFollow";
 import { useFollowing, useFollowers } from "@/hooks/useFollowLists";
 import { logAdminAction } from "@/lib/auditLog";
 import type { Tables } from "@/integrations/supabase/types";
+import { useQueryClient } from "@tanstack/react-query";
+import { invalidatePostCaches } from "@/lib/postCacheInvalidation";
 
 type Post = Tables<"posts">;
 type TopicLite = Pick<Tables<"topics">, "id" | "name">;
@@ -152,6 +154,7 @@ function getPostPreviewText(post: Pick<AuthorPost, "title" | "content" | "story"
 export default function AdminEditPostDialog({ postId, open, onOpenChange, onSaved, deferCommit, onDeferredCommit }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
@@ -529,6 +532,7 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
       });
 
       toast({ title: "Post updated" });
+      invalidatePostCaches(queryClient, post.id);
       onSaved?.();
       onOpenChange(false);
     } catch (e) {
