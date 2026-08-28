@@ -214,7 +214,9 @@ const ProfileView = () => {
 
   // Topics list — fetched lazily the first time the Topics tab is opened.
   const [userTopics, setUserTopics] = useState<UserTopic[]>([]);
-  const [topicCount, setTopicCount] = useState(0);
+  // `null` until the count query resolves — the tab renders no number rather
+  // than a placeholder 0 that contradicts the list behind it.
+  const [topicCount, setTopicCount] = useState<number | null>(null);
   const [topicsRequested, setTopicsRequested] = useState(false);
 
   // Comments list — fetched lazily the first time the Comments tab is opened.
@@ -330,6 +332,16 @@ const ProfileView = () => {
           .eq("public_author_id", targetUserId))
       .then(({ count }) => {
         if (count !== null) setCommentCount(count);
+      });
+
+    // Topics badge loads eagerly with a head-only exact count (no rows
+    // transferred) so the tab never shows a stale 0 before it's opened. The
+    // list itself stays lazy.
+    void supabase
+      .from("topics")
+      .select("id", { count: "exact", head: true })
+      .then(({ count }) => {
+        if (count !== null) setTopicCount(count);
       });
   }, [targetUserId, postsRefreshKey, isOwnProfile]);
 
@@ -602,7 +614,9 @@ const ProfileView = () => {
         ? "Search your comments…"
         : "Search your posts…";
 
-  const TABS = [
+  // A tab shows a number ONLY when that number is real and loaded. `null`
+  // means "no badge" — never render a placeholder 0.
+  const TABS: { value: string; label: string; count: number | null; dot?: boolean }[] = [
     { value: "posts", label: "Posts", count: postCount },
     { value: "topics", label: "Topics", count: topicCount },
     { value: "comments", label: "Comments", count: commentCount },
@@ -618,7 +632,8 @@ const ProfileView = () => {
           },
         ]
       : []),
-    { value: "favorites", label: "Favorites", count: 0 },
+    // Favorites isn't built yet ("Coming soon" panel) — no count at all.
+    { value: "favorites", label: "Favorites", count: null },
     { value: "following", label: "Following", count: followingTotal },
     { value: "followers", label: "Followers", count: followerTotal },
   ];
@@ -937,10 +952,12 @@ const ProfileView = () => {
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-2.5 text-sm font-medium"
                   >
                     {tab.label}
-                    <span className="ml-1.5 text-xs text-muted-foreground">
-                      {tab.count}
-                    </span>
-                    {"dot" in tab && (tab as { dot?: boolean }).dot && (
+                    {typeof tab.count === "number" && (
+                      <span className="ml-1.5 text-xs text-muted-foreground">
+                        {tab.count}
+                      </span>
+                    )}
+                    {tab.dot && (
                       <span
                         aria-label="Unread messages"
                         title="You have unread messages"
