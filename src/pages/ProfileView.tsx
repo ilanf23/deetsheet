@@ -937,16 +937,15 @@ const ProfileView = () => {
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-2.5 text-sm font-medium"
                   >
                     {tab.label}
-                    {"dot" in tab && (tab as { dot?: boolean }).dot ? (
+                    <span className="ml-1.5 text-xs text-muted-foreground">
+                      {tab.count}
+                    </span>
+                    {"dot" in tab && (tab as { dot?: boolean }).dot && (
                       <span
                         aria-label="Unread messages"
                         title="You have unread messages"
                         className="ml-1.5 inline-block h-2 w-2 rounded-full bg-secondary"
                       />
-                    ) : (
-                      <span className="ml-1.5 text-xs text-muted-foreground">
-                        {tab.count}
-                      </span>
                     )}
                   </TabsTrigger>
                 ))}
