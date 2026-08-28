@@ -71,6 +71,12 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
       setStory(data.story ?? "");
       setImageUrl(data.image_url ?? null);
       setIsAnonymous(!!(data as { is_anonymous?: boolean }).is_anonymous);
+      initialRef.current = {
+        title: (data.title ?? "").trim(),
+        story: (data.story ?? "").trim(),
+        imageUrl: data.image_url ?? null,
+      };
+
       setNewImage(null);
       setNewImagePreview(null);
       setRemoveImage(false);
