@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.capture_post_revision() FROM PUBLIC, anon, authenticated;
