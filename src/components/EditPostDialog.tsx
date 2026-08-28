@@ -194,8 +194,10 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
         </DialogHeader>
 
         <div className="rounded-md border border-secondary/40 bg-secondary/10 px-3 py-2 text-sm text-foreground">
-          Saving changes will temporarily remove your post from DeetSheet until it's re-approved.
+          Changing your post text, story, or adding a new photo sends it back for re-approval and
+          temporarily removes it from DeetSheet. Changing anonymity or removing a photo does not.
         </div>
+
 
         {loading ? (
           <div className="py-12 flex justify-center">
