@@ -57,7 +57,7 @@ import { useProfileFollowCounts } from "@/hooks/useUserFollow";
 import { useFollowing, useFollowers } from "@/hooks/useFollowLists";
 import { buildPostSlug } from "@/lib/postSlug";
 import { formatTitle } from "@/lib/formatTitle";
-import { useUnreadMessagesCount } from "@/hooks/useUnreadMessages";
+import { useThreadCounts } from "@/hooks/useUnreadMessages";
 import ProfileMessagesPanel from "@/components/profile/ProfileMessagesPanel";
 
 const CREDENTIAL_ICON_MAP: Record<string, React.ReactNode> = {
@@ -245,7 +245,9 @@ const ProfileView = () => {
   const { data: followersData } = useFollowers(targetUserId, { enabled: followersRequested });
   const followingTotal = followingData?.total ?? followCounts?.followingCount ?? 0;
   const followerTotal = followersData?.length ?? followCounts?.followerCount ?? 0;
-  const { data: unreadMessages } = useUnreadMessagesCount();
+  const { data: threadCounts } = useThreadCounts();
+  const unreadMessages = threadCounts?.unread ?? 0;
+  const messageTotal = threadCounts?.total ?? 0;
 
   // Mark heavy tab queries as requested the first time the tab is activated.
   // Also clear the search filter so a query doesn't leak across tabs.
@@ -609,8 +611,10 @@ const ProfileView = () => {
           {
             value: "messages",
             label: "Messages",
-            count: unreadMessages ?? 0,
-            dot: (unreadMessages ?? 0) > 0,
+            // Total conversations, shown always (even at zero) like Posts and
+            // Comments. The unread dot renders beside it, not instead of it.
+            count: messageTotal,
+            dot: unreadMessages > 0,
           },
         ]
       : []),
