@@ -20,20 +20,23 @@ export function useThreadCounts() {
     refetchOnWindowFocus: true,
     refetchInterval: 60_000,
     queryFn: async (): Promise<ThreadCounts> => {
-      if (!user) return { unread: 0, requests: 0 };
+      const empty = { unread: 0, requests: 0, total: 0 };
+      if (!user) return empty;
       const { data, error } = await supabase
         .from("message_threads")
         .select(SELECT)
         .or(`user_id.eq.${user.id},other_user_id.eq.${user.id}`);
-      if (error) return { unread: 0, requests: 0 };
+      if (error) return empty;
 
       let unread = 0;
       let requests = 0;
+      let total = 0;
       (data ?? []).forEach((t: any) => {
         // Threads removed from this member's inbox don't count toward badges.
         const hidden = t.user_id === user.id ? t.hidden_for_user_at : t.hidden_for_other_at;
         if (hidden) return;
         if (t.kind !== "direct") {
+          total += 1;
           if (
             t.last_sender === "admin" &&
             (!t.last_read_at || new Date(t.last_read_at) < new Date(t.last_message_at))
@@ -44,14 +47,17 @@ export function useThreadCounts() {
         }
         if (t.request_status === "declined") return;
         if (t.request_status === "pending") {
+          // Pending requests are NOT conversations yet — they stay out of the
+          // total and are surfaced separately as `requests`.
           if (t.initiated_by !== user.id) requests += 1;
           return;
         }
+        total += 1;
         const isPrimary = t.user_id === user.id;
         const myRead = isPrimary ? t.last_read_at : t.other_last_read_at;
         if (!myRead || new Date(myRead) < new Date(t.last_message_at)) unread += 1;
       });
-      return { unread, requests };
+      return { unread, requests, total };
     },
   });
 }
