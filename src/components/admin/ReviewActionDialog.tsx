@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronDown } from "lucide-react";
-import PostRevisionDiff from "@/components/admin/PostRevisionDiff";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { buildPostSlug } from "@/lib/postSlug";
@@ -572,15 +572,10 @@ export default function ReviewActionDialog({
                     className="text-sm"
                   />
                 </div>
-                <PostRevisionDiff
-                  postId={postId}
-                  currentText={editContent}
-                  currentStory={editStory}
-                />
                 <div>
                   <Label className="text-xs">Comment / story</Label>
                   <Textarea
-                    rows={5}
+                    rows={8}
                     value={editStory}
                     onChange={(e) => setEditStory(e.target.value)}
                     placeholder="No comment provided."
