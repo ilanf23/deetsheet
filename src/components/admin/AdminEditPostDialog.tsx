@@ -532,6 +532,7 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
       });
 
       toast({ title: "Post updated" });
+      invalidatePostCaches(queryClient, post.id);
       onSaved?.();
       onOpenChange(false);
     } catch (e) {
