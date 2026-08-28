@@ -25,6 +25,8 @@ import { useProfileFollowCounts } from "@/hooks/useUserFollow";
 import { useFollowing, useFollowers } from "@/hooks/useFollowLists";
 import { logAdminAction } from "@/lib/auditLog";
 import type { Tables } from "@/integrations/supabase/types";
+import { useQueryClient } from "@tanstack/react-query";
+import { invalidatePostCaches } from "@/lib/postCacheInvalidation";
 
 type Post = Tables<"posts">;
 type TopicLite = Pick<Tables<"topics">, "id" | "name">;

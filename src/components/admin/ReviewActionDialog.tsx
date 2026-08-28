@@ -13,6 +13,8 @@ import { isOtherReason, useReviewReasons, type ReviewReason } from "@/lib/review
 import { useTopics } from "@/hooks/useSupabaseTopics";
 import { absolutizeMarkdownLinks, pendingClosingWithEditLink } from "@/lib/reviewCopy";
 import { LINK_SHORTCUTS, insertMarkdownLink } from "@/lib/linkShortcuts";
+import { useQueryClient } from "@tanstack/react-query";
+import { invalidatePostCaches } from "@/lib/postCacheInvalidation";
 
 
 
