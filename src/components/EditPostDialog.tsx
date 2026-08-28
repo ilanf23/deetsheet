@@ -141,14 +141,20 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
         image_url: nextImageUrl,
         is_anonymous: isAnonymous,
       };
-      // Any user edit sends the post back through review. An approved post
-      // goes offline until it is re-approved — this prevents a clean post from
-      // being edited into something inappropriate after approval.
-      updates.status = "pending";
 
-      // Only touch `story` if the user typed one — keeps the update working
+      // Re-review is triggered ONLY by reviewable content: the post sentence,
+      // the story, or a NEW image the moderators have never seen. Flipping
+      // anonymity or removing an image can't smuggle unreviewed content in, so
+      // an approved post stays approved and stays live for those.
+      const textChanged = trimmedTitle !== initialRef.current.title;
+      const storyChanged = trimmedStory !== initialRef.current.story;
+      const newImageUploaded = !!newImage;
+      const needsReview = textChanged || storyChanged || newImageUploaded;
+      if (needsReview) updates.status = "pending";
+
+      // Only touch `story` if it actually changed — keeps the update working
       // when the posts.story migration hasn't been applied to the live DB.
-      if (trimmedStory) updates.story = trimmedStory;
+      if (storyChanged) updates.story = trimmedStory || null;
 
       const { error: updErr } = await supabase
         .from("posts")
@@ -158,8 +164,11 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
 
       toast({
         title: "Post updated",
-        description: "Your post is offline until it's re-approved.",
+        description: needsReview
+          ? "Your post is offline until it's re-approved."
+          : "Your changes are live — no re-review needed.",
       });
+
 
       invalidatePostCaches(queryClient, postId);
       onSaved?.();
