@@ -214,7 +214,9 @@ const ProfileView = () => {
 
   // Topics list — fetched lazily the first time the Topics tab is opened.
   const [userTopics, setUserTopics] = useState<UserTopic[]>([]);
-  const [topicCount, setTopicCount] = useState(0);
+  // `null` until the count query resolves — the tab renders no number rather
+  // than a placeholder 0 that contradicts the list behind it.
+  const [topicCount, setTopicCount] = useState<number | null>(null);
   const [topicsRequested, setTopicsRequested] = useState(false);
 
   // Comments list — fetched lazily the first time the Comments tab is opened.
@@ -330,6 +332,16 @@ const ProfileView = () => {
           .eq("public_author_id", targetUserId))
       .then(({ count }) => {
         if (count !== null) setCommentCount(count);
+      });
+
+    // Topics badge loads eagerly with a head-only exact count (no rows
+    // transferred) so the tab never shows a stale 0 before it's opened. The
+    // list itself stays lazy.
+    void supabase
+      .from("topics")
+      .select("id", { count: "exact", head: true })
+      .then(({ count }) => {
+        if (count !== null) setTopicCount(count);
       });
   }, [targetUserId, postsRefreshKey, isOwnProfile]);
 
