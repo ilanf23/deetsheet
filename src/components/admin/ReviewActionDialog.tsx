@@ -6,6 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ChevronDown } from "lucide-react";
+import PostRevisionDiff from "@/components/admin/PostRevisionDiff";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { buildPostSlug } from "@/lib/postSlug";
@@ -45,6 +48,15 @@ function defaultCopy(
 ) {
   const label = itemKind === "topic" ? "topic" : "post";
   const quoted = `"${quotedTitle}"`;
+  // Reasons arrive newline-separated — render them as their own bullet lines
+  // rather than jamming them into one sentence.
+  const reasonLines = reasonDetail
+    .split("\n")
+    .map((r) => r.trim())
+    .filter(Boolean);
+  const reasonBlock = reasonLines.length
+    ? reasonLines.map((r) => `- ${r}`).join("\n")
+    : "";
   if (action === "approve") {
     return {
       subject: `Your ${label} was approved`,
@@ -58,7 +70,7 @@ function defaultCopy(
       subject: `Your DeetSheet ${label} has been denied`,
       body:
         `Thank you for posting on DeetSheet, but your recent ${label} has been denied: ${quotedTitle}.\n\n` +
-        `It was denied for the following reason: ${reasonDetail || "[select a reason above or write your own]"}\n\n` +
+        `It was denied for the following reason${reasonLines.length > 1 ? "s" : ""}:\n${reasonBlock || "- [select a reason above or write your own]"}\n\n` +
         `DeetSheet does not tolerate vulgar or hateful language. We built this platform to help others and not bring them down. Your post has been deleted.\n\n` +
         `You may post again, but this is a warning that your account is now on probation and will be blocked if you post again and don't follow the Rules and Guidelines of DeetSheet: ${RULES_URL}\n\n— The DeetSheet team`,
     };
@@ -67,7 +79,7 @@ function defaultCopy(
     subject: `Suggestions to help your ${label} get approved`,
     body:
       `Hi,\n\nThanks for submitting your ${label} ${quoted}. Before we can approve it, we'd like you to make a few changes.\n\n` +
-      `Suggestion: ${reasonDetail || "[select a suggestion above or write your own]"}\n\n` +
+      `Suggestion${reasonLines.length > 1 ? "s" : ""}:\n${reasonBlock || "- [select a suggestion above or write your own]"}\n\n` +
       `${pendingClosingWithEditLink(editPostId)}\n\nReply here if you have questions.\n\n— The DeetSheet team`,
   };
 }
@@ -560,10 +572,15 @@ export default function ReviewActionDialog({
                     className="text-sm"
                   />
                 </div>
+                <PostRevisionDiff
+                  postId={postId}
+                  currentText={editContent}
+                  currentStory={editStory}
+                />
                 <div>
                   <Label className="text-xs">Comment / story</Label>
                   <Textarea
-                    rows={8}
+                    rows={5}
                     value={editStory}
                     onChange={(e) => setEditStory(e.target.value)}
                     placeholder="No comment provided."
@@ -699,25 +716,52 @@ export default function ReviewActionDialog({
             <div className="space-y-2">
 
               <Label className="text-xs">
-                {action === "reject" ? "Reason for rejection" : "Suggestion for the author"}
+                {action === "reject" ? "Reasons for rejection" : "Suggestions for the author"}
                 <span className="text-destructive"> *</span>
               </Label>
-              <Select value={reasonKey} onValueChange={setReasonKey}>
-                <SelectTrigger>
-                  <SelectValue
-                    placeholder={
-                      action === "reject" ? "Select a reason…" : "Select a suggestion…"
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {reasonList.map((r) => (
-                    <SelectItem key={r.id} value={r.id}>
-                      {r.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full justify-between font-normal"
+                  >
+                    <span className="truncate text-left">
+                      {pickedReasons.length
+                        ? pickedReasons.map((r) => r.label).join(", ")
+                        : action === "reject"
+                          ? "Select one or more reasons…"
+                          : "Select one or more suggestions…"}
+                    </span>
+                    <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-60" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="start"
+                  className="w-[--radix-popover-trigger-width] max-h-72 overflow-y-auto p-1"
+                >
+                  {reasonList.map((r) => {
+                    const checked = reasonKeys.includes(r.id);
+                    return (
+                      <label
+                        key={r.id}
+                        className="flex cursor-pointer items-start gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-muted"
+                      >
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(v) =>
+                            setReasonKeys((prev) =>
+                              v ? [...prev, r.id] : prev.filter((id) => id !== r.id),
+                            )
+                          }
+                          className="mt-0.5"
+                        />
+                        <span>{r.label}</span>
+                      </label>
+                    );
+                  })}
+                </PopoverContent>
+              </Popover>
               {isOther && (
 
                 <Textarea
