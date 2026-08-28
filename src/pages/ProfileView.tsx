@@ -952,10 +952,12 @@ const ProfileView = () => {
                     className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-2.5 text-sm font-medium"
                   >
                     {tab.label}
-                    <span className="ml-1.5 text-xs text-muted-foreground">
-                      {tab.count}
-                    </span>
-                    {"dot" in tab && (tab as { dot?: boolean }).dot && (
+                    {typeof tab.count === "number" && (
+                      <span className="ml-1.5 text-xs text-muted-foreground">
+                        {tab.count}
+                      </span>
+                    )}
+                    {tab.dot && (
                       <span
                         aria-label="Unread messages"
                         title="You have unread messages"
