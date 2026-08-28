@@ -97,6 +97,7 @@ export default function ReviewActionDialog({
   onConfirmed,
 }: Props) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [sendEmail, setSendEmail] = useState(true);
@@ -486,6 +487,12 @@ export default function ReviewActionDialog({
 
       // Now perform the actual action.
       await onConfirmed({ reason: reasonTextForAction });
+
+      // Approve / reject / suggest all mutate the post row (status, text, or
+      // the needs-edit flag). Drop the cached post surfaces so an open home
+      // page can't keep serving pre-review data for its 60s staleTime.
+      invalidatePostCaches(queryClient, postId ?? undefined);
+
 
 
       toast({

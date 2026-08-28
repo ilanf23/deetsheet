@@ -154,6 +154,7 @@ function getPostPreviewText(post: Pick<AuthorPost, "title" | "content" | "story"
 export default function AdminEditPostDialog({ postId, open, onOpenChange, onSaved, deferCommit, onDeferredCommit }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
