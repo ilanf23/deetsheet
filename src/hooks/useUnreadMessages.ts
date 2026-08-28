@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-export type ThreadCounts = { unread: number; requests: number };
+export type ThreadCounts = { unread: number; requests: number; total: number };
 
 const SELECT =
   "id,kind,user_id,other_user_id,last_message_at,last_read_at,other_last_read_at,hidden_for_user_at,hidden_for_other_at,last_sender,request_status,initiated_by";
