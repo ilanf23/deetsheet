@@ -799,8 +799,8 @@ export default function ReviewActionDialog({
             <Input
               value={subject}
               onChange={(e) => {
-                setMessageTouched(true);
-                setSubject(e.target.value);
+                setSubjectTouched(true);
+                setSubjectDraft(e.target.value);
               }}
             />
 
@@ -830,7 +830,7 @@ export default function ReviewActionDialog({
               value={body}
               onChange={(e) => {
                 setMessageTouched(true);
-                setBody(e.target.value);
+                setBodyDraft(e.target.value);
               }}
 
               className="text-sm"
