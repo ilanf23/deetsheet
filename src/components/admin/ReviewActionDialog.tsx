@@ -149,6 +149,8 @@ export default function ReviewActionDialog({
   const fileInputRef = useRef<HTMLInputElement>(null);
   /** Once the admin edits the message themselves we stop regenerating it. */
   const [messageTouched, setMessageTouched] = useState(false);
+  /** Same for the subject line. */
+  const [subjectTouched, setSubjectTouched] = useState(false);
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
 
   /**
