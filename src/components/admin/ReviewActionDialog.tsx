@@ -119,7 +119,6 @@ export default function ReviewActionDialog({
   // Approve flow: mark the post as "approved with a slight adjustment" so the
   // author receives the original-vs-final version of the branded email.
   const [adjusted, setAdjusted] = useState(false);
-  const [originalText, setOriginalText] = useState("");
   const [photoDenied, setPhotoDenied] = useState(false);
   /** One suggestion per line — rendered in the email's green suggestions box. */
   const [suggestions, setSuggestions] = useState("");
@@ -211,7 +210,6 @@ export default function ReviewActionDialog({
     setSendEmail(true);
     setAdjusted(false);
     setPhotoDenied(false);
-    setOriginalText("");
     setMessageTouched(false);
     setNewImage(null);
     setNewImagePreview(null);
@@ -395,7 +393,7 @@ export default function ReviewActionDialog({
           templateData = {
             ...base,
             // Original = the post as submitted; Final = the admin's edited copy.
-            originalText: originalText || postDetail?.content || "",
+            originalText: postDetail?.content || "",
             finalText: persistedPostText,
             reasons: reasonItems.length ? reasonItems : suggestionList,
             ctaUrl: postUrl,
@@ -662,12 +660,14 @@ export default function ReviewActionDialog({
               </div>
               {adjusted && (
                 <div className="space-y-2">
-                  <Label className="text-xs">Original text</Label>
+                  <Label className="text-xs">Original text (as submitted)</Label>
                   <Textarea
                     rows={2}
-                    value={originalText || postDetail?.content || ""}
-                    onChange={(e) => setOriginalText(e.target.value)}
-                    className="text-sm"
+                    value={postDetail?.content || ""}
+                    readOnly
+                    aria-readonly="true"
+                    tabIndex={-1}
+                    className="text-sm bg-muted text-muted-foreground cursor-default focus-visible:ring-0 focus-visible:ring-offset-0 resize-none"
                   />
                   <Label className="text-xs" htmlFor="approve-final-preview">
                     Final text (preview)
