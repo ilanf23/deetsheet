@@ -119,7 +119,6 @@ export default function ReviewActionDialog({
   // Approve flow: mark the post as "approved with a slight adjustment" so the
   // author receives the original-vs-final version of the branded email.
   const [adjusted, setAdjusted] = useState(false);
-  const [originalText, setOriginalText] = useState("");
   const [photoDenied, setPhotoDenied] = useState(false);
   /** One suggestion per line — rendered in the email's green suggestions box. */
   const [suggestions, setSuggestions] = useState("");
