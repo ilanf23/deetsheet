@@ -169,7 +169,7 @@ export default function ReviewActionDialog({
       focused ? el!.selectionStart ?? null : null,
       focused ? el!.selectionEnd ?? null : null,
     );
-    setBody(text);
+    setBodyDraft(text);
     requestAnimationFrame(() => {
       el?.focus();
       el?.setSelectionRange(caret, caret);
