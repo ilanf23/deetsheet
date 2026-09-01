@@ -210,7 +210,6 @@ export default function ReviewActionDialog({
     setSendEmail(true);
     setAdjusted(false);
     setPhotoDenied(false);
-    setOriginalText("");
     setMessageTouched(false);
     setNewImage(null);
     setNewImagePreview(null);
@@ -394,7 +393,7 @@ export default function ReviewActionDialog({
           templateData = {
             ...base,
             // Original = the post as submitted; Final = the admin's edited copy.
-            originalText: originalText || postDetail?.content || "",
+            originalText: postDetail?.content || "",
             finalText: persistedPostText,
             reasons: reasonItems.length ? reasonItems : suggestionList,
             ctaUrl: postUrl,
