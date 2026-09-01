@@ -110,8 +110,9 @@ export default function ReviewActionDialog({
 }: Props) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [subject, setSubject] = useState("");
-  const [body, setBody] = useState("");
+  /** Admin-typed overrides. While untouched, the copy is DERIVED (see below). */
+  const [subjectDraft, setSubjectDraft] = useState("");
+  const [bodyDraft, setBodyDraft] = useState("");
   const [sendEmail, setSendEmail] = useState(true);
   const [busy, setBusy] = useState(false);
   const [reasonKeys, setReasonKeys] = useState<string[]>([]);
@@ -148,6 +149,8 @@ export default function ReviewActionDialog({
   const fileInputRef = useRef<HTMLInputElement>(null);
   /** Once the admin edits the message themselves we stop regenerating it. */
   const [messageTouched, setMessageTouched] = useState(false);
+  /** Same for the subject line. */
+  const [subjectTouched, setSubjectTouched] = useState(false);
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
 
   /**
@@ -166,7 +169,7 @@ export default function ReviewActionDialog({
       focused ? el!.selectionStart ?? null : null,
       focused ? el!.selectionEnd ?? null : null,
     );
-    setBody(text);
+    setBodyDraft(text);
     requestAnimationFrame(() => {
       el?.focus();
       el?.setSelectionRange(caret, caret);
@@ -211,15 +214,13 @@ export default function ReviewActionDialog({
     setAdjusted(false);
     setPhotoDenied(false);
     setMessageTouched(false);
+    setSubjectTouched(false);
+    setSubjectDraft("");
+    setBodyDraft("");
     setNewImage(null);
     setNewImagePreview(null);
     setRemoveImage(false);
     setEditTopicId("");
-    const c = defaultCopy(action, itemKind, itemTitle, "", postId);
-
-    lastGeneratedRef.current = { subject: c.subject, body: c.body };
-    setSubject(c.subject);
-    setBody(c.body);
   }, [open, action, itemKind, itemTitle, postId]);
 
 
@@ -297,24 +298,18 @@ export default function ReviewActionDialog({
 
 
 
-  // Re-render the default message whenever the admin picks a reason — unless
-  // the admin already customised (or could have typed into) the message. A
-  // background refetch must never be able to overwrite typed copy.
-  const lastGeneratedRef = useRef<{ subject: string; body: string } | null>(null);
-  useEffect(() => {
-    if (!open || messageTouched) return;
-    const detail = reasonTexts.join("\n");
-    const c = defaultCopy(action, itemKind, quotedTitle || itemTitle, detail, postId);
-    const last = lastGeneratedRef.current;
-    // Only overwrite fields that still hold copy we generated (or are empty).
-    const subjectIsOurs = !subject.trim() || subject === last?.subject;
-    const bodyIsOurs = !body.trim() || body === last?.body;
-    if (!subjectIsOurs || !bodyIsOurs) return;
-    lastGeneratedRef.current = { subject: c.subject, body: c.body };
-    setSubject(c.subject);
-    setBody(c.body);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reasonKeys.join("|"), customReason, open, quotedTitle, messageTouched, postId]);
+  // The auto-generated copy is DERIVED, not stored in state, so it always
+  // tracks the current post text, topic and reasons. State only holds what the
+  // admin actually typed — a programmatic update can never mark it "touched".
+  const generated = defaultCopy(
+    action,
+    itemKind,
+    quotedTitle || itemTitle,
+    reasonTexts.join("\n"),
+    postId,
+  );
+  const subject = subjectTouched ? subjectDraft : generated.subject;
+  const body = messageTouched ? bodyDraft : generated.body;
 
 
 
@@ -804,8 +799,8 @@ export default function ReviewActionDialog({
             <Input
               value={subject}
               onChange={(e) => {
-                setMessageTouched(true);
-                setSubject(e.target.value);
+                setSubjectTouched(true);
+                setSubjectDraft(e.target.value);
               }}
             />
 
@@ -835,7 +830,7 @@ export default function ReviewActionDialog({
               value={body}
               onChange={(e) => {
                 setMessageTouched(true);
-                setBody(e.target.value);
+                setBodyDraft(e.target.value);
               }}
 
               className="text-sm"
