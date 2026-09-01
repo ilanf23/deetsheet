@@ -298,24 +298,18 @@ export default function ReviewActionDialog({
 
 
 
-  // Re-render the default message whenever the admin picks a reason — unless
-  // the admin already customised (or could have typed into) the message. A
-  // background refetch must never be able to overwrite typed copy.
-  const lastGeneratedRef = useRef<{ subject: string; body: string } | null>(null);
-  useEffect(() => {
-    if (!open || messageTouched) return;
-    const detail = reasonTexts.join("\n");
-    const c = defaultCopy(action, itemKind, quotedTitle || itemTitle, detail, postId);
-    const last = lastGeneratedRef.current;
-    // Only overwrite fields that still hold copy we generated (or are empty).
-    const subjectIsOurs = !subject.trim() || subject === last?.subject;
-    const bodyIsOurs = !body.trim() || body === last?.body;
-    if (!subjectIsOurs || !bodyIsOurs) return;
-    lastGeneratedRef.current = { subject: c.subject, body: c.body };
-    setSubject(c.subject);
-    setBody(c.body);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reasonKeys.join("|"), customReason, open, quotedTitle, messageTouched, postId]);
+  // The auto-generated copy is DERIVED, not stored in state, so it always
+  // tracks the current post text, topic and reasons. State only holds what the
+  // admin actually typed — a programmatic update can never mark it "touched".
+  const generated = defaultCopy(
+    action,
+    itemKind,
+    quotedTitle || itemTitle,
+    reasonTexts.join("\n"),
+    postId,
+  );
+  const subject = subjectTouched ? subjectDraft : generated.subject;
+  const body = messageTouched ? bodyDraft : generated.body;
 
 
 
