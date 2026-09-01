@@ -662,12 +662,14 @@ export default function ReviewActionDialog({
               </div>
               {adjusted && (
                 <div className="space-y-2">
-                  <Label className="text-xs">Original text</Label>
+                  <Label className="text-xs">Original text (as submitted)</Label>
                   <Textarea
                     rows={2}
-                    value={originalText || postDetail?.content || ""}
-                    onChange={(e) => setOriginalText(e.target.value)}
-                    className="text-sm"
+                    value={postDetail?.content || ""}
+                    readOnly
+                    aria-readonly="true"
+                    tabIndex={-1}
+                    className="text-sm bg-muted text-muted-foreground cursor-default focus-visible:ring-0 focus-visible:ring-offset-0 resize-none"
                   />
                   <Label className="text-xs" htmlFor="approve-final-preview">
                     Final text (preview)
