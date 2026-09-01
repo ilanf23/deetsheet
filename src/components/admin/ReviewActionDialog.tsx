@@ -214,15 +214,13 @@ export default function ReviewActionDialog({
     setAdjusted(false);
     setPhotoDenied(false);
     setMessageTouched(false);
+    setSubjectTouched(false);
+    setSubjectDraft("");
+    setBodyDraft("");
     setNewImage(null);
     setNewImagePreview(null);
     setRemoveImage(false);
     setEditTopicId("");
-    const c = defaultCopy(action, itemKind, itemTitle, "", postId);
-
-    lastGeneratedRef.current = { subject: c.subject, body: c.body };
-    setSubject(c.subject);
-    setBody(c.body);
   }, [open, action, itemKind, itemTitle, postId]);
 
 
