@@ -472,18 +472,17 @@ export default function ReviewActionDialog({
         if (droppedImage && nextImageUrl !== droppedImage) {
           await supabase.from("topic_images").delete().eq("url", droppedImage);
         }
-        const { error: updErr } = await supabase
-          .from("posts")
-          .update({
-            title: persistedPostText,
-            content: persistedPostText,
-            story: editStory.trim() ? editStory : null,
-            image_url: nextImageUrl,
-            ...(editTopicId && editTopicId !== (postDetail?.topic_id ?? "")
-              ? { topic_id: editTopicId }
-              : {}),
-          })
-          .eq("id", postId);
+        // Written through an admin-only security-definer RPC. It flags the
+        // write as an admin review action so notify_admins_of_post_edit does
+        // not raise a false "a member edited their post" alert.
+        const { error: updErr } = await supabase.rpc("admin_update_post_review_edit", {
+          _post_id: postId,
+          _text: persistedPostText,
+          _story: editStory.trim() ? editStory : null,
+          _image_url: nextImageUrl,
+          _topic_id:
+            editTopicId && editTopicId !== (postDetail?.topic_id ?? "") ? editTopicId : null,
+        });
         if (updErr) throw updErr;
       }
 
