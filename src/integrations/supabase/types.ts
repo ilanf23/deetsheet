@@ -1452,6 +1452,16 @@ export type Database = {
       }
     }
     Functions: {
+      admin_update_post_review_edit: {
+        Args: {
+          _image_url: string
+          _post_id: string
+          _story: string
+          _text: string
+          _topic_id: string
+        }
+        Returns: undefined
+      }
       build_post_link: { Args: { _post_id: string }; Returns: string }
       count_changed_words: {
         Args: { _new: string; _old: string }
