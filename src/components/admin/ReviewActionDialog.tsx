@@ -120,7 +120,6 @@ export default function ReviewActionDialog({
   // author receives the original-vs-final version of the branded email.
   const [adjusted, setAdjusted] = useState(false);
   const [originalText, setOriginalText] = useState("");
-  const [finalText, setFinalText] = useState("");
   const [photoDenied, setPhotoDenied] = useState(false);
   /** One suggestion per line — rendered in the email's green suggestions box. */
   const [suggestions, setSuggestions] = useState("");
@@ -148,7 +147,6 @@ export default function ReviewActionDialog({
   /** Topic the post will be filed under — admins can move it while reviewing. */
   const [editTopicId, setEditTopicId] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [finalTextTouched, setFinalTextTouched] = useState(false);
   /** Once the admin edits the message themselves we stop regenerating it. */
   const [messageTouched, setMessageTouched] = useState(false);
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
@@ -214,8 +212,6 @@ export default function ReviewActionDialog({
     setAdjusted(false);
     setPhotoDenied(false);
     setOriginalText("");
-    setFinalText("");
-    setFinalTextTouched(false);
     setMessageTouched(false);
     setNewImage(null);
     setNewImagePreview(null);
@@ -288,7 +284,7 @@ export default function ReviewActionDialog({
    * this exact value for both persistence and the author email.
    */
   const persistedPostText =
-    ((action === "approve" && adjusted && finalTextTouched ? finalText : editContent).trim() ||
+    (editContent.trim() ||
       postDetail?.title ||
       itemTitle);
 
@@ -673,17 +669,21 @@ export default function ReviewActionDialog({
                     onChange={(e) => setOriginalText(e.target.value)}
                     className="text-sm"
                   />
-                  <Label className="text-xs">Final text</Label>
+                  <Label className="text-xs" htmlFor="approve-final-preview">
+                    Final text (preview)
+                  </Label>
                   <Textarea
+                    id="approve-final-preview"
                     rows={2}
-                    value={finalTextTouched ? finalText : editContent}
-                    onChange={(e) => {
-                      setFinalTextTouched(true);
-                      setFinalText(e.target.value);
-                    }}
-                    placeholder="The approved wording the author will see…"
-                    className="text-sm"
+                    value={persistedPostText}
+                    readOnly
+                    aria-readonly="true"
+                    tabIndex={-1}
+                    className="text-sm bg-muted text-muted-foreground cursor-default focus-visible:ring-0 focus-visible:ring-offset-0 resize-none"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Read-only preview — it updates automatically as you edit the Post field above.
+                  </p>
 
                   <Label className="text-xs">Why it was adjusted (one per line)</Label>
                   <Textarea
