@@ -283,10 +283,19 @@ export default function ReviewActionDialog({
     ? null
     : newImagePreview ?? (removeImage ? null : postDetail?.image_url ?? null);
 
-  /** Whether the admin actually changed the post in the left column. */
+  /**
+   * The canonical post text for this action. Approve-with-adjustment must use
+   * this exact value for both persistence and the author email.
+   */
+  const persistedPostText =
+    ((action === "approve" && adjusted && finalTextTouched ? finalText : editContent).trim() ||
+      postDetail?.title ||
+      itemTitle);
+
+  /** Whether the admin actually changed the post in either editable text field. */
   const postEdited =
     !!postDetail &&
-    (editContent !== (postDetail.title ?? "") ||
+    (persistedPostText !== (postDetail.title ?? "") ||
       editStory !== (postDetail.story ?? "") ||
       editTopicId !== (postDetail.topic_id ?? "") ||
       !!newImage ||
@@ -353,7 +362,7 @@ export default function ReviewActionDialog({
         .map((s) => s.trim())
         .filter(Boolean);
       const topicName = liveTopicName ?? undefined;
-      const postTitle = (itemKind === "post" ? editContent.trim() : "") || postDetail?.title || itemTitle;
+      const postTitle = itemKind === "post" ? persistedPostText : itemTitle;
       const profileUrl = "https://deetsheet.com/profile";
       // Pending / rejected posts deep-link straight into the edit dialog.
       const editUrl = postId ? `${profileUrl}?edit=${postId}` : profileUrl;
@@ -391,7 +400,7 @@ export default function ReviewActionDialog({
             ...base,
             // Original = the post as submitted; Final = the admin's edited copy.
             originalText: originalText || postDetail?.content || "",
-            finalText: (finalTextTouched ? finalText : editContent) || editContent,
+            finalText: persistedPostText,
             reasons: reasonItems.length ? reasonItems : suggestionList,
             ctaUrl: postUrl,
           };
@@ -477,8 +486,8 @@ export default function ReviewActionDialog({
         const { error: updErr } = await supabase
           .from("posts")
           .update({
-            title: editContent.trim() || postDetail?.title,
-            content: editContent.trim() || postDetail?.title,
+            title: persistedPostText,
+            content: persistedPostText,
             story: editStory.trim() ? editStory : null,
             image_url: nextImageUrl,
             ...(editTopicId && editTopicId !== (postDetail?.topic_id ?? "")
