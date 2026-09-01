@@ -110,8 +110,9 @@ export default function ReviewActionDialog({
 }: Props) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [subject, setSubject] = useState("");
-  const [body, setBody] = useState("");
+  /** Admin-typed overrides. While untouched, the copy is DERIVED (see below). */
+  const [subjectDraft, setSubjectDraft] = useState("");
+  const [bodyDraft, setBodyDraft] = useState("");
   const [sendEmail, setSendEmail] = useState(true);
   const [busy, setBusy] = useState(false);
   const [reasonKeys, setReasonKeys] = useState<string[]>([]);
