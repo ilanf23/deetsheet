@@ -65,14 +65,14 @@ type SortKey =
   | "content_desc";
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "newest", label: "Created — Newest" },
-  { value: "oldest", label: "Created — Oldest" },
-  { value: "post_asc", label: "Post — A to Z" },
-  { value: "post_desc", label: "Post — Z to A" },
-  { value: "author_asc", label: "Author — A to Z" },
-  { value: "author_desc", label: "Author — Z to A" },
-  { value: "content_asc", label: "Content — A to Z" },
-  { value: "content_desc", label: "Content — Z to A" },
+  { value: "newest", label: "Created - Newest" },
+  { value: "oldest", label: "Created - Oldest" },
+  { value: "post_asc", label: "Post - A to Z" },
+  { value: "post_desc", label: "Post - Z to A" },
+  { value: "author_asc", label: "Author - A to Z" },
+  { value: "author_desc", label: "Author - Z to A" },
+  { value: "content_asc", label: "Content - A to Z" },
+  { value: "content_desc", label: "Content - Z to A" },
 ];
 
 const COMMENT_LOAD_LIMIT = 500;

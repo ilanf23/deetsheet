@@ -518,7 +518,7 @@ export default function AdminTopicImages() {
                           )}
                         </div>
                         <div className="text-[11px] text-muted-foreground truncate">
-                          {t.category_name ?? "—"} · {t.image_count} image
+                          {t.category_name ?? "-"} · {t.image_count} image
                           {t.image_count === 1 ? "" : "s"}
                         </div>
                       </div>
@@ -562,7 +562,7 @@ export default function AdminTopicImages() {
                       )}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {selectedTopic.category_name ?? "—"}
+                      {selectedTopic.category_name ?? "-"}
                     </div>
                   </div>
                 </div>
@@ -638,7 +638,7 @@ export default function AdminTopicImages() {
                               <span className="text-secondary font-semibold tabular-nums">
                                 {img.rating_count > 0
                                   ? Number(img.average_rating).toFixed(1)
-                                  : "—"}
+                                  : "-"}
                               </span>
                             </span>
                             <span className="text-muted-foreground">

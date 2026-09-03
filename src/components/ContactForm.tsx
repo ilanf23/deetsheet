@@ -64,7 +64,7 @@ const ContactForm = () => {
       toast({ title: "Could not send message", description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: "Message sent", description: "Thanks — we'll get back to you soon." });
+    toast({ title: "Message sent", description: "Thanks, we'll get back to you soon." });
     setForm({ name: "", email: user?.email ?? "", category: "", subject: "", message: "" });
   };
 

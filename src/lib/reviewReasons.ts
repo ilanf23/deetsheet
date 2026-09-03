@@ -19,7 +19,7 @@ export const DEFAULT_EDIT_REASONS: Omit<ReviewReason, "id">[] = [
     kind: "edit",
     label: "Avoid exact numbers",
     detail:
-      "Avoid exact numbers (Ex: People call me 10 times a day — should be — people call me too many times a day.).",
+      "Avoid exact numbers (Ex: People call me 10 times a day, should be, people call me too many times a day.).",
     sort_order: 30,
   },
   {
@@ -51,6 +51,13 @@ export const DEFAULT_REJECT_REASONS: Omit<ReviewReason, "id">[] = [
   },
   { kind: "reject", label: "Obscene or Vulgar", detail: "Obscene or Vulgar.", sort_order: 40 },
   { kind: "reject", label: "Malicious or Hateful", detail: "Malicious or Hateful.", sort_order: 50 },
+  { kind: "reject", label: "Unproven information", detail: "Unproven information.", sort_order: 52 },
+  {
+    kind: "reject",
+    label: "Too similar to another post",
+    detail: "Too similar to another post.",
+    sort_order: 54,
+  },
   { kind: "reject", label: "Other (write your own)", detail: "", sort_order: 60 },
 ];
 

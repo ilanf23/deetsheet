@@ -166,7 +166,7 @@ const EditPostDialog = ({ postId, open, onOpenChange, onSaved }: EditPostDialogP
         title: "Post updated",
         description: needsReview
           ? "Your post is offline until it's re-approved."
-          : "Your changes are live — no re-review needed.",
+          : "Your changes are live, no re-review needed.",
       });
 
 

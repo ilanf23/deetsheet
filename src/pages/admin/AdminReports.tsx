@@ -19,12 +19,12 @@ type SortKey =
   | "post_desc";
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "newest", label: "Latest report — Newest" },
-  { value: "oldest", label: "Latest report — Oldest" },
-  { value: "count_desc", label: "Report count — Most first" },
-  { value: "count_asc", label: "Report count — Fewest first" },
-  { value: "post_asc", label: "Post title — A to Z" },
-  { value: "post_desc", label: "Post title — Z to A" },
+  { value: "newest", label: "Latest report - Newest" },
+  { value: "oldest", label: "Latest report - Oldest" },
+  { value: "count_desc", label: "Report count - Most first" },
+  { value: "count_asc", label: "Report count - Fewest first" },
+  { value: "post_asc", label: "Post title - A to Z" },
+  { value: "post_desc", label: "Post title - Z to A" },
 ];
 
 type ReportGroup = {
@@ -279,7 +279,7 @@ export default function AdminReports() {
             color: "hsl(var(--admin-fg-muted))",
           }}
         >
-          No open reports right now. The queue is empty — nice work.
+          No open reports right now. The queue is empty, nice work.
         </div>
       ) : (
         <div className="space-y-4">

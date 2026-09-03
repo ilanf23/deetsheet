@@ -8,7 +8,7 @@ import { Cta, GREEN, H1, P, SITE_URL, Shell, TipsBox } from './_shell.tsx'
 const Email = () => (
   <Shell
     eyebrow="WELCOME"
-    preview="Welcome to DeetSheet — learn and share advice on a wide variety of topics."
+    preview="Welcome to DeetSheet, learn and share advice on a wide variety of topics."
     statusLabel="Status:"
     statusValue="Your account is ready"
     footerReason="You're receiving this email because you created a DeetSheet account."

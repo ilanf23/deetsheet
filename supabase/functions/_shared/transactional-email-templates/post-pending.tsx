@@ -27,8 +27,8 @@ interface Props {
 const Email = ({ topic, title, reasons, suggestions, adminNote, ctaUrl }: Props) => (
   <Shell
     eyebrow="POST REVIEW"
-    preview="Your post is pending — here's how to get it approved."
-    statusValue="Pending — not yet approved"
+    preview="Your post is pending, here's how to get it approved."
+    statusValue="Pending, not yet approved"
     footerReason="You're receiving this email because you submitted a post on DeetSheet."
   >
     <H1>Your post is almost there.</H1>

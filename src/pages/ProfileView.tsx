@@ -551,7 +551,7 @@ const ProfileView = () => {
   // Build credentials from profile data dynamically
   const credentials: { icon: string; text: string }[] = [];
   if (postCount > 0) {
-    credentials.push({ icon: "pencil", text: `Writer — ${postCount} post${postCount !== 1 ? "s" : ""}` });
+    credentials.push({ icon: "pencil", text: `Writer, ${postCount} post${postCount !== 1 ? "s" : ""}` });
   }
   if (profile?.college) {
     const collegeText = profile?.degree
@@ -566,7 +566,7 @@ const ProfileView = () => {
     credentials.push({ icon: "briefcase", text: profile.job as string });
   }
   if (profile?.entity_type && (profile.entity_type as string).toLowerCase() !== "person") {
-    credentials.push({ icon: "award", text: `Organization — ${profile.entity_type as string}` });
+    credentials.push({ icon: "award", text: `Organization, ${profile.entity_type as string}` });
   }
 
   // Client-side filter over already-loaded lists. Both userPosts and userTopics

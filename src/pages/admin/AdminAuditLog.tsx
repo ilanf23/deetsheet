@@ -14,12 +14,12 @@ type SortKey =
   | "action_desc";
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "newest", label: "Timestamp — Newest" },
-  { value: "oldest", label: "Timestamp — Oldest" },
-  { value: "user_asc", label: "User — A to Z" },
-  { value: "user_desc", label: "User — Z to A" },
-  { value: "action_asc", label: "Action — A to Z" },
-  { value: "action_desc", label: "Action — Z to A" },
+  { value: "newest", label: "Timestamp - Newest" },
+  { value: "oldest", label: "Timestamp - Oldest" },
+  { value: "user_asc", label: "User - A to Z" },
+  { value: "user_desc", label: "User - Z to A" },
+  { value: "action_asc", label: "Action - A to Z" },
+  { value: "action_desc", label: "Action - Z to A" },
 ];
 
 type Profile = Tables<"profiles">;

@@ -120,7 +120,7 @@ const RatingChip = ({
               Rank
             </span>
             <span className="text-secondary text-base font-bold tabular-nums">
-              {rank > 0 ? rank.toFixed(1) : "—"}
+              {rank > 0 ? rank.toFixed(1) : "-"}
             </span>
           </div>
           <div className="flex flex-col items-center justify-center bg-background/95 px-2 py-1 border-l border-border/40 min-w-[44px]">
@@ -128,7 +128,7 @@ const RatingChip = ({
               You
             </span>
             <span className="text-secondary text-base font-bold tabular-nums">
-              {you ?? "—"}
+              {you ?? "-"}
             </span>
           </div>
         </button>
@@ -191,7 +191,7 @@ const RatingChip = ({
             })}
           </div>
           <span className="text-secondary font-semibold tabular-nums text-sm w-8 text-right">
-            {(previewValue ?? you) !== null ? (previewValue ?? you!) : "—"}
+            {(previewValue ?? you) !== null ? (previewValue ?? you!) : "-"}
           </span>
           {you !== null && (
             <button
@@ -310,7 +310,7 @@ const RankImagesDialog = ({
           {!isLoading && images.length === 0 && (
             <div className="text-white/70 text-sm py-8 text-center">
               {user
-                ? "No images yet — they'll appear shortly."
+                ? "No images yet, they'll appear shortly."
                 : "Sign in to load and rank candidate images for this topic."}
             </div>
           )}

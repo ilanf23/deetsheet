@@ -179,9 +179,9 @@ export default function AdminDashboard() {
   const [openReports, setOpenReports] = useState(0);
   const [reportBreakdown, setReportBreakdown] = useState("");
   const [newUsers24h, setNewUsers24h] = useState(0);
-  const [usersDelta, setUsersDelta] = useState("—");
+  const [usersDelta, setUsersDelta] = useState("-");
   const [posts24h, setPosts24h] = useState(0);
-  const [postsDelta, setPostsDelta] = useState("—");
+  const [postsDelta, setPostsDelta] = useState("-");
 
   // Time-series source data
   const [signupTs, setSignupTs] = useState<string[]>([]);
@@ -402,7 +402,7 @@ export default function AdminDashboard() {
         <StatCard
           label="Pending Approvals"
           value={pendingApprovals}
-          hint={pendingApprovals === 0 ? "No pending posts" : "—"}
+          hint={pendingApprovals === 0 ? "No pending posts" : "-"}
           icon={Clock}
         />
         <StatCard

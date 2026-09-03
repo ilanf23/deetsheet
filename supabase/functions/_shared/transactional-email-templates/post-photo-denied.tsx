@@ -14,10 +14,10 @@ const Email = ({ topic, title, reasons, ctaUrl }: Props) => (
   <Shell
     eyebrow="PHOTO REVIEW"
     preview="Your post was approved, but the photo was denied."
-    statusValue="Post approved — photo denied"
+    statusValue="Post approved, photo denied"
     footerReason="You're receiving this email because you submitted a post on DeetSheet."
   >
-    <H1>Your post is live — the photo isn&apos;t.</H1>
+    <H1>Your post is live, the photo isn&apos;t.</H1>
     <P>
       Thank you for posting on DeetSheet. Your recent post has been approved:
     </P>
@@ -37,7 +37,7 @@ const Email = ({ topic, title, reasons, ctaUrl }: Props) => (
 
 export const template = {
   component: Email,
-  subject: 'Your DeetSheet post was approved — photo denied',
+  subject: 'Your DeetSheet post was approved, photo denied',
   displayName: 'Post photo denied',
   previewData: {
     topic: 'Cities: Chicago',

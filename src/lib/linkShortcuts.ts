@@ -40,7 +40,7 @@ export function insertMarkdownLink(
   if (caretStart !== null) return splice(caretStart, caretEnd ?? caretStart);
 
   // Unfocused: drop it just before the trailing sign-off line, if there is one.
-  const signOff = /\n[^\S\n]*—[^\n]*\s*$/.exec(text);
+  const signOff = /\n[^\S\n]*[-—][^\n]*\s*$/.exec(text);
   if (signOff) {
     const at = signOff.index;
     const before = text.slice(0, at).replace(/\s+$/, "");

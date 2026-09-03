@@ -220,7 +220,7 @@ const UserRatingIndicator = ({ postId, onRatingChanged, size = "sm" }: UserRatin
           <span className="text-secondary font-semibold tabular-nums text-sm w-8 text-right">
             {(previewValue ?? userRating) !== null
               ? (previewValue ?? userRating!)
-              : "—"}
+              : "-"}
           </span>
           {userRating !== null && (
             <button

@@ -161,7 +161,7 @@ const CreatePostDialog = ({
         <ul className="mt-2 text-sm text-muted-foreground list-disc pl-5 space-y-1">
           <li>Posts should contain useful advice, tips, or insights</li>
           <li>Be respectful and constructive in your contributions</li>
-          <li>Avoid duplicate posts — check existing ones first</li>
+          <li>Avoid duplicate posts, check existing ones first</li>
         </ul>
       </div>
 
@@ -225,7 +225,7 @@ const CreatePostDialog = ({
               })}
             </ul>
             <p className="mt-2 text-xs text-muted-foreground">
-              Tap one to review it — or keep typing if yours is different.
+              Tap one to review it, or keep typing if yours is different.
             </p>
           </div>
         )}

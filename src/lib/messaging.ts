@@ -119,5 +119,5 @@ export async function deleteMessage(messageId: string, userId: string) {
 
 export const DELETE_MESSAGE_WARNING =
   "This removes the message from DeetSheet for both people and replaces it with " +
-  "“This message was deleted”. It cannot recall an email that was already sent — " +
+  "“This message was deleted”. It cannot recall an email that was already sent, " +
   "if this message went out by email, that copy still exists in their mailbox.";

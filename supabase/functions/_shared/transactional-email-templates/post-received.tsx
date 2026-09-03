@@ -13,8 +13,8 @@ interface Props {
 const Email = ({ topic, title, imageUrl, isAnonymous, ctaUrl }: Props) => (
   <Shell
     eyebrow="POST RECEIVED"
-    preview="We received your post — it's queued for review."
-    statusValue="Received — in the review queue"
+    preview="We received your post, it's queued for review."
+    statusValue="Received, in the review queue"
     footerReason="You're receiving this email because you submitted a post on DeetSheet."
   >
     <H1>We got your post.</H1>
