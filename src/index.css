@@ -124,7 +124,13 @@
     --surface-rate-block-border: 146 50% 22%;
     --surface-rank-pill: 220 14% 18%;
     --surface-rank-pill-text: 220 10% 60%;
+
+    --diff-removed-fg: 0 80% 80%;
+    --diff-removed-bg: 0 50% 18%;
+    --diff-added-fg: 146 60% 82%;
+    --diff-added-bg: 146 45% 18%;
   }
+
 }
 
 @layer base {
