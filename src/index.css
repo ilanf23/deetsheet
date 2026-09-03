@@ -80,6 +80,13 @@
     --surface-rate-block-border: 146 38% 88%;
     --surface-rank-pill: 220 14% 96%;
     --surface-rank-pill-text: 220 10% 46%;
+
+    /* Track-changes diff (admin review dialogs) */
+    --diff-removed-fg: 0 65% 38%;
+    --diff-removed-bg: 0 75% 96%;
+    --diff-added-fg: 146 60% 22%;
+    --diff-added-bg: 146 50% 90%;
+
   }
 
   .dark {
