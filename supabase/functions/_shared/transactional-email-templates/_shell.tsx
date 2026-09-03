@@ -72,7 +72,11 @@ export const Shell = ({
   children,
 }: ShellProps) => (
   <Html lang="en" dir="ltr">
-    <Head />
+    <Head>
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <meta name="x-apple-disable-message-reformatting" />
+      <meta name="format-detection" content="telephone=no" />
+    </Head>
     <Preview>{preview}</Preview>
     <Body style={main}>
       <Container style={outer}>
@@ -84,8 +88,9 @@ export const Shell = ({
             height={38}
             style={{
               display: 'block',
-              height: '38px',
+              height: 'auto',
               width: '230px',
+              maxWidth: '100%',
               margin: 0,
               border: 0,
             }}
@@ -274,6 +279,7 @@ const main = {
 const outer = {
   width: '100%',
   maxWidth: '640px',
+  boxSizing: 'border-box' as const,
   margin: '0 auto',
   backgroundColor: '#f3f2ed',
   borderRadius: '12px',
@@ -285,18 +291,38 @@ const header = {
   backgroundColor: '#ffffff',
   // Left padding matches the content card (32px) so the trimmed wordmark's
   // left edge lines up with the body copy; even breathing room top/bottom.
-  padding: '32px 32px 32px',
+  padding: '24px',
   textAlign: 'left' as const,
+  maxWidth: '100%',
+  boxSizing: 'border-box' as const,
 }
 
 
-const statusBand = { backgroundColor: GREEN_DARK, padding: '13px 32px' }
+const statusBand = {
+  backgroundColor: GREEN_DARK,
+  padding: '13px 24px',
+  maxWidth: '100%',
+  boxSizing: 'border-box' as const,
+}
 
-const statusText = { color: '#ffffff', fontSize: '15px', margin: 0 }
+const statusText = {
+  color: '#ffffff',
+  fontSize: '15px',
+  margin: 0,
+  wordBreak: 'break-word' as const,
+  overflowWrap: 'break-word' as const,
+}
 
-const card = { backgroundColor: '#ffffff', padding: '32px' }
+const card = {
+  backgroundColor: '#ffffff',
+  padding: '24px',
+  maxWidth: '100%',
+  boxSizing: 'border-box' as const,
+}
 
 const h1 = {
+  wordBreak: 'break-word' as const,
+  overflowWrap: 'break-word' as const,
   color: TEXT,
   fontFamily: SERIF,
   fontSize: '26px',
@@ -310,9 +336,13 @@ export const paragraph = {
   fontSize: '16px',
   lineHeight: 1.55,
   margin: '0 0 16px',
+  wordBreak: 'break-word' as const,
+  overflowWrap: 'break-word' as const,
 }
 
 const quoteBox = {
+  maxWidth: '100%',
+  boxSizing: 'border-box' as const,
   borderLeft: `4px solid ${GREEN}`,
   padding: '4px 0 4px 16px',
   margin: '20px 0',
@@ -324,9 +354,13 @@ const quoteText = {
   fontSize: '20px',
   fontWeight: 700,
   margin: 0,
+  wordBreak: 'break-word' as const,
+  overflowWrap: 'break-word' as const,
 }
 
 const reasonBox = {
+  maxWidth: '100%',
+  boxSizing: 'border-box' as const,
   backgroundColor: ORANGE_BG,
   border: `1px solid ${ORANGE_BORDER}`,
   borderRadius: '8px',
@@ -343,6 +377,8 @@ const reasonLabel = {
 }
 
 const suggestionsBox = {
+  maxWidth: '100%',
+  boxSizing: 'border-box' as const,
   backgroundColor: GREEN_PALE,
   border: `1px solid ${GREEN_BORDER}`,
   borderRadius: '8px',
@@ -363,9 +399,13 @@ const infoText = {
   fontSize: '15px',
   lineHeight: 1.45,
   margin: '2px 0',
+  wordBreak: 'break-word' as const,
+  overflowWrap: 'break-word' as const,
 }
 
 const deadlineBox = {
+  maxWidth: '100%',
+  boxSizing: 'border-box' as const,
   border: '1.5px dashed #d1d5db',
   borderRadius: '8px',
   padding: '14px 20px',
@@ -373,13 +413,22 @@ const deadlineBox = {
   textAlign: 'center' as const,
 }
 
-const deadlineText = { color: '#4b5563', fontSize: '14px', margin: 0 }
+const deadlineText = {
+  color: '#4b5563',
+  fontSize: '14px',
+  margin: 0,
+  wordBreak: 'break-word' as const,
+  overflowWrap: 'break-word' as const,
+}
 
 const ctaButton = {
+  maxWidth: '100%',
+  boxSizing: 'border-box' as const,
+  wordBreak: 'break-word' as const,
   backgroundColor: GREEN,
   color: '#ffffff',
   textDecoration: 'none',
-  padding: '15px 38px',
+  padding: '15px 28px',
   borderRadius: '6px',
   fontSize: '16px',
   fontWeight: 600,
@@ -387,6 +436,8 @@ const ctaButton = {
 }
 
 const postCard = {
+  maxWidth: '100%',
+  boxSizing: 'border-box' as const,
   border: `1px solid ${BORDER}`,
   borderRadius: '10px',
   padding: '18px',
@@ -460,6 +511,8 @@ export const TipsBox = ({
 )
 
 const tipsBox = {
+  maxWidth: '100%',
+  boxSizing: 'border-box' as const,
   backgroundColor: '#f3f4f6',
   borderRadius: '10px',
   padding: '20px 22px',
