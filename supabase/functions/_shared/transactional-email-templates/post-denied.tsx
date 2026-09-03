@@ -13,7 +13,7 @@ const Email = ({ topic, title, reasons }: Props) => (
   <Shell
     eyebrow="POST REVIEW"
     preview="Your DeetSheet post has been denied."
-    statusValue="Denied — account on probation"
+    statusValue="Denied, account on probation"
     footerReason="You're receiving this email because you submitted a post on DeetSheet."
   >
     <H1>Your post has been denied.</H1>

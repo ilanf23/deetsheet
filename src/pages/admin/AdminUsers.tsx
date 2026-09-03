@@ -39,12 +39,12 @@ type SortKey =
   | "username_desc";
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "newest", label: "Date joined — Newest" },
-  { value: "oldest", label: "Date joined — Oldest" },
-  { value: "name_asc", label: "Name — A to Z" },
-  { value: "name_desc", label: "Name — Z to A" },
-  { value: "username_asc", label: "Username — A to Z" },
-  { value: "username_desc", label: "Username — Z to A" },
+  { value: "newest", label: "Date joined - Newest" },
+  { value: "oldest", label: "Date joined - Oldest" },
+  { value: "name_asc", label: "Name - A to Z" },
+  { value: "name_desc", label: "Name - Z to A" },
+  { value: "username_asc", label: "Username - A to Z" },
+  { value: "username_desc", label: "Username - Z to A" },
 ];
 
 const PAGE_SIZE = 25;
@@ -321,8 +321,8 @@ export default function AdminUsers() {
           pageRows.map((u) => {
             const role = (roles.get(u.id) ?? "user") as "admin" | "moderator" | "user";
             const status: "active" | "suspended" | "banned" = "active";
-            const displayName = u.name ?? u.username ?? "—";
-            const email = u._email ?? "—";
+            const displayName = u.name ?? u.username ?? "-";
+            const email = u._email ?? "-";
             return (
               <div
                 key={u.id}
@@ -423,7 +423,7 @@ export default function AdminUsers() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {comingSoonFeature === "edit" ? "Edit user — coming soon" : "Add user — coming soon"}
+              {comingSoonFeature === "edit" ? "Edit user, coming soon" : "Add user, coming soon"}
             </DialogTitle>
             <DialogDescription>
               {comingSoonFeature === "edit"

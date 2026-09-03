@@ -149,7 +149,7 @@ const PostActionMenu = ({ postId, topicName, onPostUpdated }: PostActionMenuProp
     if (error) {
       toast.error("Could not submit report");
     } else {
-      toast.success("Report submitted — thank you");
+      toast.success("Report submitted, thank you");
     }
     setReportChecks({});
     setOpen(false);

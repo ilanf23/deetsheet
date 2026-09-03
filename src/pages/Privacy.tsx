@@ -21,9 +21,9 @@ const Privacy = () => {
               We collect information you provide when creating an account, including your name and email address. We also collect:
             </p>
             <ul className="list-disc list-inside space-y-1 ml-2">
-              <li><strong>Profile data</strong> — display name, avatar, and bio you choose to add</li>
-              <li><strong>Usage data</strong> — posts, ratings, comments, and interactions with content</li>
-              <li><strong>Device information</strong> — browser type, operating system, IP address, and general location</li>
+              <li><strong>Profile data</strong>: display name, avatar, and bio you choose to add</li>
+              <li><strong>Usage data</strong>: posts, ratings, comments, and interactions with content</li>
+              <li><strong>Device information</strong>: browser type, operating system, IP address, and general location</li>
             </ul>
           </section>
 

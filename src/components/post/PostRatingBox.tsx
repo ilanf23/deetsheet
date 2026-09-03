@@ -12,7 +12,7 @@ const PostRatingBox = ({ postId, averageRating, ratingCount, onRatingChanged }: 
     <div className="flex-1 flex flex-col items-center justify-center">
       <span className="text-sm font-medium text-muted-foreground">Rank</span>
       <span className="text-secondary font-bold tabular-nums text-4xl leading-none mt-1">
-        {ratingCount > 0 ? averageRating : "—"}
+        {ratingCount > 0 ? averageRating : "-"}
       </span>
     </div>
     <div className="w-px self-stretch bg-border" aria-hidden />

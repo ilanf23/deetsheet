@@ -90,7 +90,7 @@ function renderSlipHtml(subject: string, slip: Slip | undefined, bodyHtml: strin
 
   return `<!doctype html><html><body style="margin:0;padding:0;background:#f0f2f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
     <div style="max-width:600px;margin:0 auto;padding:24px;">
-      <div style="background:#0e2a4a;color:#fff;padding:12px 16px;border-radius:8px 8px 0 0;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;">Review Slip — DeetSheet</div>
+      <div style="background:#0e2a4a;color:#fff;padding:12px 16px;border-radius:8px 8px 0 0;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;">Review Slip - DeetSheet</div>
       <div style="background:#e9edf5;border:1px solid #d4dae5;border-top:none;border-radius:0 0 8px 8px;padding:16px;">
         <h2 style="margin:0 0 12px;font-size:18px;color:#0e2a4a;">${escapeHtml(subject)}</h2>
         <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #e6e8ee;border-radius:6px;overflow:hidden;">${rowsHtml}</table>

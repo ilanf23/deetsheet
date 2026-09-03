@@ -33,12 +33,12 @@ type SortKey =
   | "author_desc";
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "newest", label: "Submitted — Newest" },
-  { value: "oldest", label: "Submitted — Oldest" },
-  { value: "title_asc", label: "Title — A to Z" },
-  { value: "title_desc", label: "Title — Z to A" },
-  { value: "author_asc", label: "Author — A to Z" },
-  { value: "author_desc", label: "Author — Z to A" },
+  { value: "newest", label: "Submitted - Newest" },
+  { value: "oldest", label: "Submitted - Oldest" },
+  { value: "title_asc", label: "Title - A to Z" },
+  { value: "title_desc", label: "Title - Z to A" },
+  { value: "author_asc", label: "Author - A to Z" },
+  { value: "author_desc", label: "Author - Z to A" },
 ];
 
 const PAGE_SIZE = 12;
@@ -484,19 +484,19 @@ export default function AdminPosts() {
                 >
                   <span className="truncate font-medium text-slate-900">{p.title}</span>
                   <span className="truncate text-slate-600">
-                    {(p.topic_id && topicNames.get(p.topic_id)) || "—"}
+                    {(p.topic_id && topicNames.get(p.topic_id)) || "-"}
                   </span>
                   <span className="truncate text-slate-600">
                     {author?.name ?? author?.username ?? "Unknown"}
                   </span>
                   <span className="text-slate-600">
-                    {p.deleted_at ? `${formatDistanceToNow(parseISO(p.deleted_at))} ago` : "—"}
+                    {p.deleted_at ? `${formatDistanceToNow(parseISO(p.deleted_at))} ago` : "-"}
                   </span>
                   <span className="truncate text-slate-600">
-                    {remover?.name ?? remover?.username ?? "—"}
+                    {remover?.name ?? remover?.username ?? "-"}
                   </span>
                   <span className="truncate text-slate-600" title={p.deleted_reason ?? ""}>
-                    {p.deleted_reason || "—"}
+                    {p.deleted_reason || "-"}
                   </span>
                   <span className="flex items-center justify-end">
                     <button

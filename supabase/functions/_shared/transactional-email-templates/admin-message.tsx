@@ -95,7 +95,7 @@ export const template = {
   displayName: 'Admin message',
   previewData: {
     eyebrow: 'POST REVIEW',
-    statusValue: 'Pending — not yet approved',
+    statusValue: 'Pending, not yet approved',
     headline: 'Your post is almost there.',
     intro:
       'Thank you for posting on DeetSheet. Your recent post has not been approved yet:',

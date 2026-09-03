@@ -16,7 +16,7 @@ const Email = ({ message }: Props) => (
         <Text style={text}>
           {message || "If you're reading this, DeetSheet's email sender is working correctly. 🎉"}
         </Text>
-        <Text style={muted}>— DeetSheet</Text>
+        <Text style={muted}>- DeetSheet</Text>
       </Container>
     </Body>
   </Html>

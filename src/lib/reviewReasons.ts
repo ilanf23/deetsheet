@@ -19,7 +19,7 @@ export const DEFAULT_EDIT_REASONS: Omit<ReviewReason, "id">[] = [
     kind: "edit",
     label: "Avoid exact numbers",
     detail:
-      "Avoid exact numbers (Ex: People call me 10 times a day — should be — people call me too many times a day.).",
+      "Avoid exact numbers (Ex: People call me 10 times a day, should be, people call me too many times a day.).",
     sort_order: 30,
   },
   {

@@ -182,7 +182,7 @@ const PostCard = ({ post }: PostCardProps) => {
         >
           <span className="flex flex-col items-center">
             <span className="text-secondary font-semibold leading-none">
-              {post.ratingCount > 0 ? post.ratingScore : "—"}
+              {post.ratingCount > 0 ? post.ratingScore : "-"}
             </span>
           </span>
           <span className="mx-2 text-muted-foreground/60" aria-hidden>

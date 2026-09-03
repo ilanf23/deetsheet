@@ -31,7 +31,7 @@ const Email = ({ topic, title, originalText, finalText, reasons, ctaUrl }: Props
     statusValue="Approved with a slight adjustment"
     footerReason="You're receiving this email because you submitted a post on DeetSheet."
   >
-    <H1>Approved — with a small change.</H1>
+    <H1>Approved, with a small change.</H1>
     <P>
       Thank you for posting on DeetSheet. Congratulations! The following post has
       been approved with a slight adjustment.

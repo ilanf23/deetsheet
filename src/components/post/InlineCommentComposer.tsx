@@ -43,7 +43,7 @@ const InlineCommentComposer = ({
   const active = focused || trimmed.length > 0 || isReply;
   const nextUrl = encodeURIComponent(`${location.pathname}${location.search}#discussion`);
   const placeholder = isReply
-    ? `Replying to @${parentUsername ?? "user"} —`
+    ? `Replying to @${parentUsername ?? "user"}`
     : "Share a comment.";
 
   const userMeta = (user?.user_metadata ?? {}) as {

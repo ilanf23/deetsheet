@@ -42,14 +42,14 @@ type SortKey =
   | "oldest";
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "name_asc", label: "Name — A to Z" },
-  { value: "name_desc", label: "Name — Z to A" },
-  { value: "subject_asc", label: "Subject — A to Z" },
-  { value: "subject_desc", label: "Subject — Z to A" },
-  { value: "posts_desc", label: "Posts — Most first" },
-  { value: "posts_asc", label: "Posts — Fewest first" },
-  { value: "newest", label: "Created — Newest" },
-  { value: "oldest", label: "Created — Oldest" },
+  { value: "name_asc", label: "Name - A to Z" },
+  { value: "name_desc", label: "Name - Z to A" },
+  { value: "subject_asc", label: "Subject - A to Z" },
+  { value: "subject_desc", label: "Subject - Z to A" },
+  { value: "posts_desc", label: "Posts - Most first" },
+  { value: "posts_asc", label: "Posts - Fewest first" },
+  { value: "newest", label: "Created - Newest" },
+  { value: "oldest", label: "Created - Oldest" },
 ];
 
 function generateSlug(name: string) {

@@ -128,7 +128,7 @@ export default function AdminReviewReasons() {
             <p className="text-sm text-muted-foreground">Loading…</p>
           ) : list.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No reasons yet — the review dialog falls back to the default list.
+              No reasons yet, the review dialog falls back to the default list.
             </p>
           ) : (
             <ul className="space-y-3">

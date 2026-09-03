@@ -150,7 +150,7 @@ export default function AdminLayout() {
             className="text-[13px] truncate"
             style={{ color: "hsl(var(--admin-fg-muted))" }}
           >
-            {user?.email ?? "—"}
+            {user?.email ?? "-"}
           </p>
           <button
             onClick={signOut}

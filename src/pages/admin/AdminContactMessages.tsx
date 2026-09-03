@@ -15,10 +15,10 @@ type SortKey =
   | "read_first";
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "newest", label: "Date — Newest" },
-  { value: "oldest", label: "Date — Oldest" },
-  { value: "name_asc", label: "Name — A to Z" },
-  { value: "name_desc", label: "Name — Z to A" },
+  { value: "newest", label: "Date - Newest" },
+  { value: "oldest", label: "Date - Oldest" },
+  { value: "name_asc", label: "Name - A to Z" },
+  { value: "name_desc", label: "Name - Z to A" },
   { value: "unread_first", label: "Unread first" },
   { value: "read_first", label: "Read first" },
 ];

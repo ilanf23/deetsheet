@@ -12,7 +12,7 @@ const Email = ({ topic, title, ctaUrl }: Props) => (
   <Shell
     eyebrow="POST REVIEW"
     preview="Your DeetSheet post has been approved."
-    statusValue="Approved — your post is live"
+    statusValue="Approved, your post is live"
     footerReason="You're receiving this email because you submitted a post on DeetSheet."
   >
     <H1>Your post has been approved.</H1>

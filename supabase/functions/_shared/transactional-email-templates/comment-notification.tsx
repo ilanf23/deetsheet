@@ -56,7 +56,7 @@ export const template = {
   previewData: {
     commenterName: 'Jordan',
     postTitle: 'Best neighborhoods for new grads in Austin',
-    commentText: 'This matches my experience exactly — I would add that parking is rough downtown.',
+    commentText: 'This matches my experience exactly, I would add that parking is rough downtown.',
     postUrl: 'https://deetsheet.com/topic/austin/post/best-neighborhoods-abc12345',
   },
 } satisfies TemplateEntry

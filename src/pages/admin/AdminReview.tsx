@@ -128,8 +128,8 @@ type SortKey = "newest" | "oldest" | "edited";
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: "edited", label: "Recently edited" },
-  { value: "newest", label: "Submitted — Newest" },
-  { value: "oldest", label: "Submitted — Oldest" },
+  { value: "newest", label: "Submitted - Newest" },
+  { value: "oldest", label: "Submitted - Oldest" },
 ];
 
 
@@ -428,7 +428,7 @@ export default function AdminReview() {
             color: "hsl(var(--admin-fg-muted))",
           }}
         >
-          Inbox zero — nothing waiting for review.
+          Inbox zero, nothing waiting for review.
         </div>
       ) : (
         <div className="space-y-3">

@@ -683,7 +683,7 @@ export default function AdminMessages() {
                   onChange={(e) => e.target.value && applyTemplate(e.target.value)}
                   defaultValue=""
                 >
-                  <option value="">— pick a form letter —</option>
+                  <option value="">- pick a form letter -</option>
                   {templates.map((t) => (
                     <option key={t.id} value={t.id}>
                       {t.title}

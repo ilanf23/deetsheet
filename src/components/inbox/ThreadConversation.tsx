@@ -473,7 +473,7 @@ export default function ThreadConversation({
         })}
         {messages.length === 0 && (
           <div className="rounded-lg border p-6 text-center text-sm text-muted-foreground">
-            No messages yet — say hi below.
+            No messages yet, say hi below.
           </div>
         )}
       </div>
@@ -505,7 +505,7 @@ export default function ThreadConversation({
         <div className="space-y-3">
           {isPendingRequest && (
             <p className="text-xs text-muted-foreground">
-              This is a message request — {otherName} needs to accept it before you can
+              This is a message request, {otherName} needs to accept it before you can
               keep chatting.
             </p>
           )}

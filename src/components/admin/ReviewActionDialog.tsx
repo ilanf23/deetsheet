@@ -61,8 +61,8 @@ function defaultCopy(
     return {
       subject: `Your ${label} was approved`,
       body:
-        `Good news — your ${label} ${quoted} has been approved and is now live on DeetSheet.\n\n` +
-        `Thanks for contributing!\n\n— The DeetSheet team`,
+        `Good news, your ${label} ${quoted} has been approved and is now live on DeetSheet.\n\n` +
+        `Thanks for contributing!\n\n- The DeetSheet team`,
     };
   }
   if (action === "reject") {
@@ -72,7 +72,7 @@ function defaultCopy(
         `Thank you for posting on DeetSheet, but your recent ${label} has been denied: ${quotedTitle}.\n\n` +
         `It was denied for the following reason${reasonLines.length > 1 ? "s" : ""}:\n${reasonBlock || "- [select a reason above or write your own]"}\n\n` +
         `DeetSheet does not tolerate vulgar or hateful language. We built this platform to help others and not bring them down. Your post has been deleted.\n\n` +
-        `You may post again, but this is a warning that your account is now on probation and will be blocked if you post again and don't follow the Rules and Guidelines of DeetSheet: ${RULES_URL}\n\n— The DeetSheet team`,
+        `You may post again, but this is a warning that your account is now on probation and will be blocked if you post again and don't follow the Rules and Guidelines of DeetSheet: ${RULES_URL}\n\n- The DeetSheet team`,
     };
   }
   return {
@@ -80,7 +80,7 @@ function defaultCopy(
     body:
       `Hi,\n\nThanks for submitting your ${label} ${quoted}. Before we can approve it, we'd like you to make a few changes.\n\n` +
       `Suggestion${reasonLines.length > 1 ? "s" : ""}:\n${reasonBlock || "- [select a suggestion above or write your own]"}\n\n` +
-      `${pendingClosingWithEditLink(editPostId)}\n\nReply here if you have questions.\n\n— The DeetSheet team`,
+      `${pendingClosingWithEditLink(editPostId)}\n\nReply here if you have questions.\n\n- The DeetSheet team`,
   };
 }
 
@@ -507,7 +507,7 @@ export default function ReviewActionDialog({
 
 
       toast({
-        title: `${TITLE_LABEL[action]} — message sent to ${authorLabel}`,
+        title: `${TITLE_LABEL[action]} - message sent to ${authorLabel}`,
         description: sendEmail ? "Delivered in-app and by email." : "Delivered in-app.",
       });
       onOpenChange(false);
@@ -527,7 +527,7 @@ export default function ReviewActionDialog({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {TITLE_LABEL[action]} — message to {authorLabel}
+            {TITLE_LABEL[action]} - message to {authorLabel}
           </DialogTitle>
         </DialogHeader>
         <div className="grid gap-6 md:grid-cols-2">
@@ -592,7 +592,7 @@ export default function ReviewActionDialog({
                     />
                   ) : (
                     <p className="text-xs text-muted-foreground italic">
-                      {photoDenied ? "Photo denied — it will be removed from the live post." : "No photo."}
+                      {photoDenied ? "Photo denied, it will be removed from the live post." : "No photo."}
                     </p>
                   )}
                   <input
@@ -676,7 +676,7 @@ export default function ReviewActionDialog({
                     className="text-sm bg-muted text-muted-foreground cursor-default focus-visible:ring-0 focus-visible:ring-offset-0 resize-none"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Read-only preview — it updates automatically as you edit the Post field above.
+                    Read-only preview, it updates automatically as you edit the Post field above.
                   </p>
 
                   <Label className="text-xs">Why it was adjusted (one per line)</Label>
@@ -835,7 +835,7 @@ export default function ReviewActionDialog({
               className="text-sm"
             />
             <p className="mt-1 text-[11px] text-muted-foreground">
-              Tip: you can write links by hand as [Rules](/rules) — the label becomes a link
+              Tip: you can write links by hand as [Rules](/rules), the label becomes a link
               in the email and in the member&apos;s inbox.
             </p>
           </div>
