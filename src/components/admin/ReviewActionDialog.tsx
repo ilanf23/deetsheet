@@ -18,6 +18,7 @@ import { absolutizeMarkdownLinks, pendingClosingWithEditLink } from "@/lib/revie
 import { LINK_SHORTCUTS, insertMarkdownLink } from "@/lib/linkShortcuts";
 import { useQueryClient } from "@tanstack/react-query";
 import { invalidatePostCaches } from "@/lib/postCacheInvalidation";
+import PostChangeDiff from "@/components/admin/PostChangeDiff";
 
 
 
