@@ -18,6 +18,7 @@ import { absolutizeMarkdownLinks, pendingClosingWithEditLink } from "@/lib/revie
 import { LINK_SHORTCUTS, insertMarkdownLink } from "@/lib/linkShortcuts";
 import { useQueryClient } from "@tanstack/react-query";
 import { invalidatePostCaches } from "@/lib/postCacheInvalidation";
+import PostChangeDiff from "@/components/admin/PostChangeDiff";
 
 
 
@@ -572,13 +573,21 @@ export default function ReviewActionDialog({
                 <div>
                   <Label className="text-xs">Comment / story</Label>
                   <Textarea
-                    rows={8}
+                    rows={5}
                     value={editStory}
                     onChange={(e) => setEditStory(e.target.value)}
                     placeholder="No comment provided."
                     className="text-sm"
                   />
                 </div>
+                {(action === "approve" || action === "edit") && (
+                  <PostChangeDiff
+                    postId={postId}
+                    currentText={persistedPostText}
+                    currentStory={editStory}
+                  />
+                )}
+
                 <div className="space-y-2">
                   <Label className="text-xs">Photo</Label>
                   {currentImage ? (
