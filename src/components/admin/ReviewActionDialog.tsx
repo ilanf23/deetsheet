@@ -235,7 +235,21 @@ export default function ReviewActionDialog({
     setNewImagePreview(null);
     setRemoveImage(false);
     setEditTopicId("");
+    setProbationWarning(true);
+    setProbationTouched(false);
   }, [open, action, itemKind, itemTitle, postId]);
+
+  /**
+   * The probation warning belongs on conduct violations only. It follows the
+   * reason selection until the admin sets it by hand.
+   */
+  const pickedLabels = pickedReasons.map((r) => r.label).join("|");
+  useEffect(() => {
+    if (action !== "reject" || probationTouched) return;
+    setProbationWarning(
+      pickedLabels.split("|").some((l) => l && PROBATION_REASON_PATTERN.test(l)),
+    );
+  }, [action, probationTouched, pickedLabels]);
 
 
 
