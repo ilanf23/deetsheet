@@ -466,10 +466,9 @@ export default function ReviewActionDialog({
             send_email: sendEmail,
             email_template: emailTemplate,
             template_data: templateData,
-            // Approve / reject deliver email + in-app notification only — they
-            // must not create an inbox thread. A "suggest changes" outcome is
-            // actionable, so it does get a thread the author can reply in.
-            create_thread: action === "edit",
+            // Review outcomes deliver the email plus an in-app notification
+            // only. None of them create an inbox thread.
+            create_thread: false,
           }),
         }
       );
