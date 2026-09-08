@@ -335,6 +335,7 @@ export default function ReviewActionDialog({
     quotedTitle || itemTitle,
     reasonTexts.join("\n"),
     postId,
+    probationWarning,
   );
   const subject = subjectTouched ? subjectDraft : generated.subject;
   const body = messageTouched ? bodyDraft : generated.body;
