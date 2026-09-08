@@ -314,6 +314,11 @@ const ProfileView = () => {
           status: (p.status as string) || "approved",
           needs_author_edit: Boolean(p.needs_author_edit),
         }));
+        // Sort by the date we actually display (approved_at falling back to
+        // created_at), newest first, so the list never looks out of order.
+        mapped.sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        );
         setUserPosts(mapped);
         setPostCount(mapped.length);
       });
