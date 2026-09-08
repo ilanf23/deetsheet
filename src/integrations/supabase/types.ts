@@ -667,6 +667,7 @@ export type Database = {
           public_author_id: string | null
           rating_count: number
           score: number
+          sort_at: string | null
           status: string
           story: string | null
           title: string
@@ -693,6 +694,7 @@ export type Database = {
           public_author_id?: string | null
           rating_count?: number
           score?: number
+          sort_at?: string | null
           status?: string
           story?: string | null
           title: string
@@ -719,6 +721,7 @@ export type Database = {
           public_author_id?: string | null
           rating_count?: number
           score?: number
+          sort_at?: string | null
           status?: string
           story?: string | null
           title?: string

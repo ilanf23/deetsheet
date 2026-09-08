@@ -68,8 +68,13 @@ const UserPostsList = ({ userId }: { userId: string }) => {
             ? { name: p.topic_name, slug: p.topic_slug ?? "" }
             : null,
       }));
+      // Sort by the date we actually display (approved_at, falling back to
+      // created_at), newest first.
+      const shownDate = (p: UserPost) =>
+        new Date(p.approved_at || p.created_at).getTime();
+      mapped.sort((a, b) => shownDate(b) - shownDate(a));
       // Posts the reviewer asked the author to revise float to the very top.
-      // Stable sort keeps the existing created_at ordering inside each group.
+      // Stable sort keeps the date ordering inside each group.
       mapped.sort(
         (a, b) => Number(Boolean(b.needs_author_edit)) - Number(Boolean(a.needs_author_edit))
       );

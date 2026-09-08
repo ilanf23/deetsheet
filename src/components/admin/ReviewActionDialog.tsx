@@ -40,16 +40,21 @@ interface Props {
 
 const RULES_URL = "https://deetsheet.com/rules";
 
+/** Reason labels that genuinely are conduct/Rules violations. */
+export const PROBATION_REASON_PATTERN =
+  /obscene|vulgar|malicious|hateful|dangerous|political|self-promot/i;
+
 function defaultCopy(
   action: ReviewAction,
   itemKind: "topic" | "post",
   quotedTitle: string,
   reasonDetail: string,
   editPostId?: string | null,
+  probationWarning = true,
 ) {
   const label = itemKind === "topic" ? "topic" : "post";
   const quoted = `"${quotedTitle}"`;
-  // Reasons arrive newline-separated — render them as their own bullet lines
+  // Reasons arrive newline-separated, render them as their own bullet lines
   // rather than jamming them into one sentence.
   const reasonLines = reasonDetail
     .split("\n")
@@ -67,13 +72,17 @@ function defaultCopy(
     };
   }
   if (action === "reject") {
+    const opening =
+      `Thank you for posting on DeetSheet, but your recent ${label} has been denied: ${quotedTitle}.\n\n` +
+      `It was denied for the following reason${reasonLines.length > 1 ? "s" : ""}:\n${reasonBlock || "- [select a reason above or write your own]"}\n\n`;
     return {
       subject: `Your DeetSheet ${label} has been denied`,
-      body:
-        `Thank you for posting on DeetSheet, but your recent ${label} has been denied: ${quotedTitle}.\n\n` +
-        `It was denied for the following reason${reasonLines.length > 1 ? "s" : ""}:\n${reasonBlock || "- [select a reason above or write your own]"}\n\n` +
-        `DeetSheet does not tolerate vulgar or hateful language. We built this platform to help others and not bring them down. Your post has been deleted.\n\n` +
-        `You may post again, but this is a warning that your account is now on probation and will be blocked if you post again and don't follow the Rules and Guidelines of DeetSheet: ${RULES_URL}\n\n- The DeetSheet team`,
+      body: probationWarning
+        ? opening +
+          `DeetSheet does not tolerate vulgar or hateful language. We built this platform to help others and not bring them down. Your post has been deleted.\n\n` +
+          `You may post again, but this is a warning that your account is now on probation and will be blocked if you post again and don't follow the Rules and Guidelines of DeetSheet: ${RULES_URL}\n\n- The DeetSheet team`
+        : opening +
+          `This is not a Rules violation and it does not affect your account. You are welcome to revise the ${label} and submit it again, or post something new. Rules and Guidelines: ${RULES_URL}\n\n- The DeetSheet team`,
     };
   }
   return {
@@ -81,7 +90,7 @@ function defaultCopy(
     body:
       `Hi,\n\nThanks for submitting your ${label} ${quoted}. Before we can approve it, we'd like you to make a few changes.\n\n` +
       `Suggestion${reasonLines.length > 1 ? "s" : ""}:\n${reasonBlock || "- [select a suggestion above or write your own]"}\n\n` +
-      `${pendingClosingWithEditLink(editPostId)}\n\nReply here if you have questions.\n\n- The DeetSheet team`,
+      `${pendingClosingWithEditLink(editPostId)}\n\n- The DeetSheet team`,
   };
 }
 
@@ -122,8 +131,12 @@ export default function ReviewActionDialog({
   // author receives the original-vs-final version of the branded email.
   const [adjusted, setAdjusted] = useState(false);
   const [photoDenied, setPhotoDenied] = useState(false);
-  /** One suggestion per line — rendered in the email's green suggestions box. */
+  /** One suggestion per line, rendered in the email's green suggestions box. */
   const [suggestions, setSuggestions] = useState("");
+  /** Reject flow: whether the author is told their account is on probation. */
+  const [probationWarning, setProbationWarning] = useState(true);
+  /** Once the admin sets it by hand we stop auto-defaulting from the reasons. */
+  const [probationTouched, setProbationTouched] = useState(false);
 
 
   
@@ -222,7 +235,21 @@ export default function ReviewActionDialog({
     setNewImagePreview(null);
     setRemoveImage(false);
     setEditTopicId("");
+    setProbationWarning(true);
+    setProbationTouched(false);
   }, [open, action, itemKind, itemTitle, postId]);
+
+  /**
+   * The probation warning belongs on conduct violations only. It follows the
+   * reason selection until the admin sets it by hand.
+   */
+  const pickedLabels = pickedReasons.map((r) => r.label).join("|");
+  useEffect(() => {
+    if (action !== "reject" || probationTouched) return;
+    setProbationWarning(
+      pickedLabels.split("|").some((l) => l && PROBATION_REASON_PATTERN.test(l)),
+    );
+  }, [action, probationTouched, pickedLabels]);
 
 
 
@@ -308,6 +335,7 @@ export default function ReviewActionDialog({
     quotedTitle || itemTitle,
     reasonTexts.join("\n"),
     postId,
+    probationWarning,
   );
   const subject = subjectTouched ? subjectDraft : generated.subject;
   const body = messageTouched ? bodyDraft : generated.body;
@@ -415,6 +443,7 @@ export default function ReviewActionDialog({
           templateData = {
             ...base,
             reasons: reasonItems,
+            probationWarning,
             ctaUrl: profileUrl,
           };
         }
@@ -437,10 +466,9 @@ export default function ReviewActionDialog({
             send_email: sendEmail,
             email_template: emailTemplate,
             template_data: templateData,
-            // Approve / reject deliver email + in-app notification only — they
-            // must not create an inbox thread. A "suggest changes" outcome is
-            // actionable, so it does get a thread the author can reply in.
-            create_thread: action === "edit",
+            // Review outcomes deliver the email plus an in-app notification
+            // only. None of them create an inbox thread.
+            create_thread: false,
           }),
         }
       );
@@ -581,10 +609,12 @@ export default function ReviewActionDialog({
                   />
                 </div>
                 {(action === "approve" || action === "edit") && (
+                  // Compare against the SAVED post, never the admin's live
+                  // textareas, so the diff is strictly what the member changed.
                   <PostChangeDiff
                     postId={postId}
-                    currentText={persistedPostText}
-                    currentStory={editStory}
+                    currentText={postDetail?.title ?? ""}
+                    currentStory={postDetail?.story ?? ""}
                   />
                 )}
 
@@ -782,6 +812,28 @@ export default function ReviewActionDialog({
                   onChange={(e) => setCustomReason(e.target.value)}
                   className="text-sm"
                 />
+              )}
+              {action === "reject" && (
+                <div className="flex items-start gap-2 rounded-md border p-2">
+                  <Checkbox
+                    id="reject-probation-warning"
+                    checked={probationWarning}
+                    onCheckedChange={(v) => {
+                      setProbationTouched(true);
+                      setProbationWarning(!!v);
+                    }}
+                    className="mt-0.5"
+                  />
+                  <div className="space-y-0.5">
+                    <Label htmlFor="reject-probation-warning" className="text-sm font-normal">
+                      Include probation warning (Rules violation)
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      On for conduct violations. Off for posts that just don't fit, like
+                      unproven or duplicate content.
+                    </p>
+                  </div>
+                </div>
               )}
               <p className="text-xs text-muted-foreground">
                 {action === "edit"

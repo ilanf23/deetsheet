@@ -206,7 +206,7 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
         supabase.from("topics").select("id, name").order("name"),
       ]);
       if (cancelled) return;
-      const p = postRes.data as Post | null;
+      const p = postRes.data as unknown as Post | null;
       setPost(p);
       setTopics((topicsRes.data ?? []) as TopicLite[]);
 

@@ -289,8 +289,8 @@ const outer = {
 
 const header = {
   backgroundColor: '#ffffff',
-  // Left padding matches the content card (32px) so the trimmed wordmark's
-  // left edge lines up with the body copy; even breathing room top/bottom.
+  // Left padding matches the content card (24px) so the trimmed wordmark's
+  // left edge lines up with the body copy, with even breathing room top/bottom.
   padding: '24px',
   textAlign: 'left' as const,
   maxWidth: '100%',
