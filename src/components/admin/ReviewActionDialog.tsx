@@ -443,6 +443,7 @@ export default function ReviewActionDialog({
           templateData = {
             ...base,
             reasons: reasonItems,
+            probationWarning,
             ctaUrl: profileUrl,
           };
         }
