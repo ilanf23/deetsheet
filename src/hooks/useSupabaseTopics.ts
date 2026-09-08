@@ -243,8 +243,10 @@ export const useRecentPosts = (limit = 8) => {
             "profiles!posts_public_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
         .eq("status", "approved")
-        .not("approved_at", "is", null)
-        .order("approved_at", { ascending: false })
+        // `sort_at` is COALESCE(approved_at, created_at), so legacy rows with
+        // no approval timestamp still sort into the right place.
+        .order("sort_at", { ascending: false })
+        .order("id", { ascending: false })
         .limit(Math.max(limit * 10, 100));
 
       if (error) throw error;
@@ -342,8 +344,8 @@ export const useRecentPostsByTopic = (topicId: string | undefined, limit = 5) =>
         )
         .eq("topic_id", topicId)
         .eq("status", "approved")
-        .not("approved_at", "is", null)
-        .order("approved_at", { ascending: false })
+        .order("sort_at", { ascending: false })
+        .order("id", { ascending: false })
         .limit(limit);
 
       if (error) throw error;
