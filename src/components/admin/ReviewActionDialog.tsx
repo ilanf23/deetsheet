@@ -131,8 +131,12 @@ export default function ReviewActionDialog({
   // author receives the original-vs-final version of the branded email.
   const [adjusted, setAdjusted] = useState(false);
   const [photoDenied, setPhotoDenied] = useState(false);
-  /** One suggestion per line — rendered in the email's green suggestions box. */
+  /** One suggestion per line, rendered in the email's green suggestions box. */
   const [suggestions, setSuggestions] = useState("");
+  /** Reject flow: whether the author is told their account is on probation. */
+  const [probationWarning, setProbationWarning] = useState(true);
+  /** Once the admin sets it by hand we stop auto-defaulting from the reasons. */
+  const [probationTouched, setProbationTouched] = useState(false);
 
 
   
