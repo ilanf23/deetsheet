@@ -107,8 +107,8 @@ export default function AdminPostReviewDialog({
         setLoading(false);
         return;
       }
-      setPost(postRow as Post);
-      resetEditState(postRow as Post);
+      setPost(postRow as unknown as Post);
+      resetEditState(postRow as unknown as Post);
 
 
       const [topicRes, authorRes, postLocRes] = await Promise.all([
