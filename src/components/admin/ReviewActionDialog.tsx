@@ -813,6 +813,28 @@ export default function ReviewActionDialog({
                   className="text-sm"
                 />
               )}
+              {action === "reject" && (
+                <div className="flex items-start gap-2 rounded-md border p-2">
+                  <Checkbox
+                    id="reject-probation-warning"
+                    checked={probationWarning}
+                    onCheckedChange={(v) => {
+                      setProbationTouched(true);
+                      setProbationWarning(!!v);
+                    }}
+                    className="mt-0.5"
+                  />
+                  <div className="space-y-0.5">
+                    <Label htmlFor="reject-probation-warning" className="text-sm font-normal">
+                      Include probation warning (Rules violation)
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                      On for conduct violations. Off for posts that just don't fit, like
+                      unproven or duplicate content.
+                    </p>
+                  </div>
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">
                 {action === "edit"
                   ? "Picking a suggestion updates the message below. You can still edit it before sending."
