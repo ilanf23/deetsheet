@@ -609,10 +609,12 @@ export default function ReviewActionDialog({
                   />
                 </div>
                 {(action === "approve" || action === "edit") && (
+                  // Compare against the SAVED post, never the admin's live
+                  // textareas, so the diff is strictly what the member changed.
                   <PostChangeDiff
                     postId={postId}
-                    currentText={persistedPostText}
-                    currentStory={editStory}
+                    currentText={postDetail?.title ?? ""}
+                    currentStory={postDetail?.story ?? ""}
                   />
                 )}
 
