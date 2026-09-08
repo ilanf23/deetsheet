@@ -40,16 +40,21 @@ interface Props {
 
 const RULES_URL = "https://deetsheet.com/rules";
 
+/** Reason labels that genuinely are conduct/Rules violations. */
+export const PROBATION_REASON_PATTERN =
+  /obscene|vulgar|malicious|hateful|dangerous|political|self-promot/i;
+
 function defaultCopy(
   action: ReviewAction,
   itemKind: "topic" | "post",
   quotedTitle: string,
   reasonDetail: string,
   editPostId?: string | null,
+  probationWarning = true,
 ) {
   const label = itemKind === "topic" ? "topic" : "post";
   const quoted = `"${quotedTitle}"`;
-  // Reasons arrive newline-separated — render them as their own bullet lines
+  // Reasons arrive newline-separated, render them as their own bullet lines
   // rather than jamming them into one sentence.
   const reasonLines = reasonDetail
     .split("\n")
@@ -67,13 +72,17 @@ function defaultCopy(
     };
   }
   if (action === "reject") {
+    const opening =
+      `Thank you for posting on DeetSheet, but your recent ${label} has been denied: ${quotedTitle}.\n\n` +
+      `It was denied for the following reason${reasonLines.length > 1 ? "s" : ""}:\n${reasonBlock || "- [select a reason above or write your own]"}\n\n`;
     return {
       subject: `Your DeetSheet ${label} has been denied`,
-      body:
-        `Thank you for posting on DeetSheet, but your recent ${label} has been denied: ${quotedTitle}.\n\n` +
-        `It was denied for the following reason${reasonLines.length > 1 ? "s" : ""}:\n${reasonBlock || "- [select a reason above or write your own]"}\n\n` +
-        `DeetSheet does not tolerate vulgar or hateful language. We built this platform to help others and not bring them down. Your post has been deleted.\n\n` +
-        `You may post again, but this is a warning that your account is now on probation and will be blocked if you post again and don't follow the Rules and Guidelines of DeetSheet: ${RULES_URL}\n\n- The DeetSheet team`,
+      body: probationWarning
+        ? opening +
+          `DeetSheet does not tolerate vulgar or hateful language. We built this platform to help others and not bring them down. Your post has been deleted.\n\n` +
+          `You may post again, but this is a warning that your account is now on probation and will be blocked if you post again and don't follow the Rules and Guidelines of DeetSheet: ${RULES_URL}\n\n- The DeetSheet team`
+        : opening +
+          `This is not a Rules violation and it does not affect your account. You are welcome to revise the ${label} and submit it again, or post something new. Rules and Guidelines: ${RULES_URL}\n\n- The DeetSheet team`,
     };
   }
   return {
@@ -81,7 +90,7 @@ function defaultCopy(
     body:
       `Hi,\n\nThanks for submitting your ${label} ${quoted}. Before we can approve it, we'd like you to make a few changes.\n\n` +
       `Suggestion${reasonLines.length > 1 ? "s" : ""}:\n${reasonBlock || "- [select a suggestion above or write your own]"}\n\n` +
-      `${pendingClosingWithEditLink(editPostId)}\n\nReply here if you have questions.\n\n- The DeetSheet team`,
+      `${pendingClosingWithEditLink(editPostId)}\n\n- The DeetSheet team`,
   };
 }
 
