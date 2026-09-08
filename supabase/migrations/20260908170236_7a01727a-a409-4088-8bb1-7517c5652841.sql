@@ -1,0 +1,1 @@
+GRANT SELECT (sort_at) ON public.posts TO anon, authenticated;
