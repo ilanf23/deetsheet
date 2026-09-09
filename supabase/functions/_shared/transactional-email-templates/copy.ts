@@ -10,7 +10,7 @@
 
 /** Closing paragraph of the "suggest changes" / pending email + admin default body. */
 export const PENDING_CLOSING =
-  'If you would like to change your post using the suggestions above, you may do so by clicking the green box below or go to your DeetSheet inbox to edit your pending post. Once you\'ve updated your post, it will go back into review.'
+  'If you would like to change your post using the suggestions above, click the green box below or go to your profile to edit your pending post. Once you\'ve updated your post, it will go back into review.'
 
 /** 30-day auto-delete warning shown in the DeadlineStrip. */
 export const PENDING_DEADLINE =
