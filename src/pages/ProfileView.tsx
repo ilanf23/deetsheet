@@ -92,6 +92,15 @@ interface UserTopic {
   created_at: string;
 }
 
+interface UserRanking {
+  id: string;
+  value: number;
+  created_at: string;
+  post_id: string;
+  postTitle: string;
+  topicName: string;
+}
+
 interface UserComment {
   id: string;
   content: string;
@@ -162,12 +171,12 @@ const EDUCATION_LABELS: Record<string, string> = {
 // Profile columns this page actually reads. Selecting only what we render
 // shaves a meaningful chunk of bytes off each profile fetch.
 const PROFILE_COLUMNS =
-  "id, name, username, avatar_url, bio, sex, orientation, birth_year, birth_month, birth_day, hide_age, city, state, country, education, high_school, college, degree, major, job, entity_type, favorite_movie, reading, city_born, created_at";
+  "id, name, username, avatar_url, bio, sex, orientation, birth_year, birth_month, birth_day, hide_age, city, state, country, education, high_school, college, degree, major, job, entity_type, favorite_movie, reading, city_born, created_at, show_ratings";
 
 // Birthday, sex and orientation are readable only by the member themselves
 // (and admins), so public profile reads request the safe subset.
 const PUBLIC_PROFILE_COLUMNS =
-  "id, name, username, avatar_url, bio, hide_age, city, state, country, education, high_school, college, degree, major, job, entity_type, favorite_movie, reading, city_born, created_at";
+  "id, name, username, avatar_url, bio, hide_age, city, state, country, education, high_school, college, degree, major, job, entity_type, favorite_movie, reading, city_born, created_at, show_ratings";
 
 function formatProfileValue(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -224,6 +233,11 @@ const ProfileView = () => {
   const [userComments, setUserComments] = useState<UserComment[]>([]);
   const [commentsRequested, setCommentsRequested] = useState(false);
 
+  // Rankings (posts this member has rated) — lazy, like Comments. Hidden
+  // entirely when the member turned the setting off on someone else's view.
+  const [userRankings, setUserRankings] = useState<UserRanking[]>([]);
+  const [rankingsRequested, setRankingsRequested] = useState(false);
+
   const [createTopicOpen, setCreateTopicOpen] = useState(false);
   const [editPostId, setEditPostId] = useState<string | null>(null);
   const [postsRefreshKey, setPostsRefreshKey] = useState(0);
@@ -258,6 +272,7 @@ const ProfileView = () => {
     if (activeTab === "followers") setFollowersRequested(true);
     if (activeTab === "topics") setTopicsRequested(true);
     if (activeTab === "comments") setCommentsRequested(true);
+    if (activeTab === "rankings") setRankingsRequested(true);
     setQuery("");
   }, [activeTab]);
 
@@ -453,6 +468,65 @@ const ProfileView = () => {
     };
   }, [commentsRequested, targetUserId, isOwnProfile]);
 
+  // Rankings fetch: the member's ratings, resolved to the post they rated.
+  useEffect(() => {
+    if (!rankingsRequested || !targetUserId) return;
+    let cancelled = false;
+    void (async () => {
+      const { data } = await supabase
+        .from("ratings")
+        .select("id, value, created_at, post_id")
+        .eq("user_id", targetUserId)
+        .order("created_at", { ascending: false });
+      if (cancelled || !data) return;
+
+      const rows = data as Array<{
+        id: string;
+        value: number | string;
+        created_at: string;
+        post_id: string;
+      }>;
+
+      const postIds = Array.from(new Set(rows.map((r) => r.post_id).filter(Boolean)));
+      const postById = new Map<string, { title: string; topicName: string }>();
+      if (postIds.length > 0) {
+        const { data: posts } = await supabase
+          .from("posts")
+          .select("id, title, topics(name)")
+          .in("id", postIds);
+        if (cancelled) return;
+        ((posts ?? []) as Array<Record<string, unknown>>).forEach((p) => {
+          const topics = p.topics as Record<string, unknown> | Record<string, unknown>[] | null;
+          const topicName = Array.isArray(topics)
+            ? (topics[0]?.name as string)
+            : (topics?.name as string);
+          postById.set(p.id as string, {
+            title: (p.title as string) || "Untitled post",
+            topicName: topicName || "General",
+          });
+        });
+      }
+
+      // Ratings on posts we can't read (removed or pending) are dropped rather
+      // than rendered as a dead "Unknown post" row.
+      setUserRankings(
+        rows
+          .filter((r) => postById.has(r.post_id))
+          .map((r) => ({
+            id: r.id,
+            value: Number(r.value),
+            created_at: r.created_at,
+            post_id: r.post_id,
+            postTitle: postById.get(r.post_id)!.title,
+            topicName: postById.get(r.post_id)!.topicName,
+          })),
+      );
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [rankingsRequested, targetUserId]);
+
   const handleDeleteComment = async (commentId: string) => {
     if (!window.confirm("Delete this comment? This can't be undone.")) return;
     const { error } = await supabase.from("comments").delete().eq("id", commentId);
@@ -477,6 +551,9 @@ const ProfileView = () => {
     "User";
   const email = isOwnProfile ? (user?.email || "") : "";
   const hideAge = Boolean((profile as any)?.hide_age);
+  // Members can hide their rankings from other visitors; they always see their own.
+  const rankingsPublic = (profile as any)?.show_ratings ?? true;
+  const showRankingsTab = isOwnProfile || Boolean(rankingsPublic);
   const age = hideAge ? null : calculateAge(
     profile?.birth_year as string | null,
     profile?.birth_month as string | null,
@@ -609,15 +686,29 @@ const ProfileView = () => {
     );
   }, [userComments, trimmedQuery]);
 
-  // Posts, Topics, and Comments tabs support the search filter.
+  const filteredRankings = useMemo(() => {
+    if (!trimmedQuery) return userRankings;
+    return userRankings.filter(
+      (r) =>
+        r.postTitle.toLowerCase().includes(trimmedQuery) ||
+        r.topicName.toLowerCase().includes(trimmedQuery)
+    );
+  }, [userRankings, trimmedQuery]);
+
+  // Posts, Topics, Comments and Rankings tabs support the search filter.
   const searchable =
-    activeTab === "posts" || activeTab === "topics" || activeTab === "comments";
+    activeTab === "posts" ||
+    activeTab === "topics" ||
+    activeTab === "comments" ||
+    activeTab === "rankings";
   const searchPlaceholder =
     activeTab === "topics"
       ? "Search topics…"
       : activeTab === "comments"
         ? "Search your comments…"
-        : "Search your posts…";
+        : activeTab === "rankings"
+          ? "Search ranked posts…"
+          : "Search your posts…";
 
   // A tab shows a number ONLY when that number is real and loaded. `null`
   // means "no badge" — never render a placeholder 0.
@@ -625,6 +716,10 @@ const ProfileView = () => {
     { value: "posts", label: "Posts", count: postCount },
     { value: "topics", label: "Topics", count: topicCount },
     { value: "comments", label: "Comments", count: commentCount },
+    // Rankings is hidden from other visitors when the member opted out.
+    ...(showRankingsTab
+      ? [{ value: "rankings", label: "Rankings", count: userRankings.length || null }]
+      : []),
     ...(isOwnProfile
       ? [
           {
@@ -1281,6 +1376,57 @@ const ProfileView = () => {
                   </div>
                 )}
               </TabsContent>
+
+              {showRankingsTab && (
+                <TabsContent value="rankings" className="mt-4">
+                  {filteredRankings.length === 0 ? (
+                    <Card className="bg-card">
+                      <CardContent className="py-12 text-center text-muted-foreground">
+                        <p className="text-sm">
+                          {trimmedQuery
+                            ? `No ranked posts match "${query.trim()}."`
+                            : !user
+                              ? "Sign in to see the posts this member has ranked."
+                              : isOwnProfile
+                                ? "You haven't ranked any posts yet."
+                                : "No ranked posts yet."}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="space-y-2">
+                      {filteredRankings.map((ranking) => {
+                        const href = `/topic/${encodeURIComponent(ranking.topicName)}/post/${buildPostSlug(ranking.postTitle, ranking.post_id) || ranking.post_id}`;
+                        return (
+                          <Card key={ranking.id} className="bg-card hover:shadow-md transition-shadow">
+                            <CardContent className="p-4 flex items-start gap-3">
+                              <span
+                                className="shrink-0 text-base font-semibold text-secondary tabular-nums"
+                                aria-label={`Ranked ${ranking.value} out of 10`}
+                              >
+                                {ranking.value}
+                              </span>
+                              <div className="min-w-0">
+                                <a
+                                  href={href}
+                                  className="text-sm font-medium text-primary hover:underline break-words"
+                                >
+                                  {formatTitle(ranking.postTitle)}
+                                </a>
+                                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-1">
+                                  <span>{ranking.topicName}</span>
+                                  <span aria-hidden>·</span>
+                                  <span>{getTimeAgo(ranking.created_at)}</span>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  )}
+                </TabsContent>
+              )}
 
               {isOwnProfile && (
                 <TabsContent value="messages" className="mt-4">
