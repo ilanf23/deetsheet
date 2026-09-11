@@ -1,5 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
+import { sendAppEmail } from '../_shared/transactional-email-templates/send-app-email.ts'
+
 
 /**
  * Sends the branded "comment-notification" email to a post author when someone
@@ -109,15 +111,9 @@ Deno.serve(async (req) => {
     .trim()
     .slice(0, 600)
 
-  const res = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${serviceKey}`,
-    },
-    body: JSON.stringify({
-      templateName: 'comment-notification',
-      recipientEmail,
+  let result: unknown
+  try {
+    result = await sendAppEmail('comment-notification', recipientEmail, {
       idempotencyKey: `comment-notification-${comment.id}`,
       templateData: {
         commenterName,
@@ -125,17 +121,15 @@ Deno.serve(async (req) => {
         commentText: plainComment,
         postUrl,
       },
-    }),
-  })
-
-  const result = await res.json().catch(() => ({}))
-  if (!res.ok) {
-    console.error('comment notification send failed', result)
+    })
+  } catch (e) {
+    console.error('comment notification send failed', e)
     return new Response(JSON.stringify({ error: 'Failed to send' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
+
 
   return new Response(JSON.stringify({ success: true, result }), {
     status: 200,
