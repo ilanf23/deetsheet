@@ -96,6 +96,10 @@ export default function AdminMessages() {
   const [sort, setSort] = useState<SortKey>("recent");
   const [search, setSearch] = useState("");
   const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [pendingDeleteThread, setPendingDeleteThread] = useState<Thread | null>(null);
+  const [deletingThread, setDeletingThread] = useState(false);
+  const queryClient = useQueryClient();
+
 
   // Compose state
   const [composeOpen, setComposeOpen] = useState(false);
