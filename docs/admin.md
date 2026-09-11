@@ -467,23 +467,20 @@ Detailed tests should be authored after the business requirements are filled in.
 - [ ] Fred signs off as client.
 - [ ] Ilan signs off as builder.
 
-## Contact form vs support@deetsheet.com
+## Contact routing (unified)
 
-Two separate inboxes exist today:
+All support contact now flows through one place: the `/contact` form writes a
+row into `contact_messages`, and admins read/reply from **Admin > Contact
+Messages**. "Reply" is a `mailto:` link that opens the admin's own mail client.
 
-- **Contact form** (`/contact`) writes a row into the `contact_messages` table.
-  Nothing is emailed. Admins read and reply from **Admin > Contact Messages**;
-  "Reply" is a `mailto:` link that opens the admin's own mail client, so the
-  reply thread lives in that mailbox, not in the app.
-- **support@deetsheet.com** is a plain mailto link published on the Contact,
-  Privacy and Terms pages. It is an external mailbox hosted at the domain's mail
-  provider. The app never reads or writes it, and messages sent there do NOT
-  appear in Admin > Contact Messages.
+The public `support@deetsheet.com` mailto links were removed from the Contact,
+Privacy and Terms pages so members cannot start a thread the admin list never
+sees. The mailbox may still exist at the mail provider, but it is no longer
+advertised on the site. Inbound email is not ingested into the app.
+
+The Contact page category cards preselect the matching category in the form
+instead of opening a mail client.
 
 Unread state: `contact_messages.is_read` drives the orange dot on each row and
 the count badge on the Contact Messages nav item (`useAdminUnreadContactCount`).
 Marking a message read/unread or deleting it refreshes the badge.
-
-To truly unify the two, forward support@deetsheet.com into the app (an inbound
-email webhook that inserts into `contact_messages`), or drop the support@ link
-from the site and route everyone through the contact form. Not implemented.
