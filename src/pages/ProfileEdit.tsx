@@ -130,6 +130,8 @@ const ProfileEdit = () => {
   const [emailFrequency, setEmailFrequency] = useState("weekly");
   const [username, setUsername] = useState<string>("");
   const [hideAge, setHideAge] = useState(false);
+  // Members can hide the "Rankings" tab (posts they've rated) from their profile.
+  const [showRatings, setShowRatings] = useState(true);
 
   const [prefs, setPrefs] = useState<Record<string, boolean>>({
     emailOnMessage: true,
