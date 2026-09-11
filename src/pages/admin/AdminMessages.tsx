@@ -22,7 +22,18 @@ import { Checkbox } from "@/components/ui/checkbox";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
 import ThreadConversation from "@/components/inbox/ThreadConversation";
 import ManageTemplatesDialog from "@/components/admin/ManageTemplatesDialog";
-import { ArrowLeft, ChevronDown, MessagesSquare, PenSquare, Search } from "lucide-react";
+import { ArrowLeft, ChevronDown, MessagesSquare, PenSquare, Search, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 
 type Thread = {
   id: string;
