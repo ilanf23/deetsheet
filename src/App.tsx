@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { LocationProvider } from "@/contexts/LocationContext";
 import { AdminModeProvider } from "@/hooks/useAdminMode";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import ScrollRestoration from "@/components/ScrollRestoration";
 import { usePageViews } from "@/hooks/usePageViews";
 import Index from "./pages/Index";
 import SignUp from "./pages/SignUp";
@@ -90,6 +91,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AnalyticsTracker />
+          <ScrollRestoration />
           <AuthProvider>
             <LocationProvider>
             <AdminModeProvider>

@@ -1,1 +1,0 @@
-- [ ] Start the email-sending update (migrate to Lovable-managed email)

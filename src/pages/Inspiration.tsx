@@ -38,7 +38,7 @@ const Inspiration = () => {
       <DeetHeader />
       <main className="flex-1 container mx-auto px-4 py-12 max-w-3xl">
         <h1 className="text-3xl font-bold font-heading text-foreground mb-3">{intro.title}</h1>
-        <p className="text-sm text-muted-foreground leading-relaxed mb-10">{intro.content}</p>
+        <p className="text-sm text-foreground leading-relaxed mb-10">{intro.content}</p>
 
         {sections.map(({ slug, list }) => {
           const section = get(slug);
@@ -51,7 +51,7 @@ const Inspiration = () => {
                   {lines(section.content).map((line, i) => (
                     <li
                       key={i}
-                      className="rounded-lg border bg-card px-4 py-3 text-sm text-muted-foreground leading-relaxed"
+                      className="rounded-lg border bg-card px-4 py-3 text-sm text-foreground leading-relaxed"
                     >
                       {line}
                     </li>
@@ -59,7 +59,7 @@ const Inspiration = () => {
                 </ul>
               ) : (
                 lines(section.content).map((line, i) => (
-                  <p key={i} className="text-sm text-muted-foreground leading-relaxed mb-3">
+                  <p key={i} className="text-sm text-foreground leading-relaxed mb-3">
                     {line}
                   </p>
                 ))
