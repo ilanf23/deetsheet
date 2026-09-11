@@ -68,18 +68,26 @@ export function useUnreadMessagesCount() {
   return { ...query, data: query.data?.unread ?? 0 };
 }
 
-/** Admin-side count of support threads awaiting a reply from the team. */
+/**
+ * Admin-side count of support threads awaiting a reply from the team.
+ * A thread only counts while the member spoke last AND no admin has opened it
+ * since that message, so the badge clears once the team reads or answers.
+ */
 export function useAdminUnreadThreadsCount() {
   return useQuery({
     queryKey: ["admin-unread-threads"],
     refetchInterval: 30_000,
     queryFn: async (): Promise<number> => {
-      const { count } = await supabase
+      const { data } = await supabase
         .from("message_threads")
-        .select("id", { count: "exact", head: true })
+        .select("id,last_message_at,admin_read_at")
         .neq("kind", "direct")
         .eq("last_sender", "user");
-      return count ?? 0;
+      return (data ?? []).filter(
+        (t: any) =>
+          !t.admin_read_at || new Date(t.admin_read_at) < new Date(t.last_message_at),
+      ).length;
     },
   });
 }
+
