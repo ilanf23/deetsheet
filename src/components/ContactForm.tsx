@@ -41,10 +41,17 @@ const ContactForm = ({ presetCategory }: ContactFormProps = {}) => {
   const [form, setForm] = useState({
     name: "",
     email: user?.email ?? "",
-    category: "",
+    category: presetCategory ?? "",
     subject: "",
     message: "",
   });
+
+  useEffect(() => {
+    if (presetCategory) {
+      setForm((prev) => ({ ...prev, category: presetCategory }));
+    }
+  }, [presetCategory]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
