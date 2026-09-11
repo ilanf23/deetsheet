@@ -89,24 +89,14 @@ export const useCreatePost = () => {
       // Branded "we received your post" email. Never block the post itself.
       if (user.email) {
         try {
-          await supabase.functions.invoke("send-transactional-email", {
-            body: {
-              templateName: "post-received",
-              recipientEmail: user.email,
-              idempotencyKey: `post-received-${data.id}`,
-              templateData: {
-                topic: input.topicName,
-                title: input.title,
-                imageUrl: imageUrl ?? undefined,
-                isAnonymous: !!input.isAnonymous,
-                ctaUrl: "https://deetsheet.com/profile",
-              },
-            },
+          await supabase.functions.invoke("send-post-received", {
+            body: { postId: data.id },
           });
         } catch (e) {
           console.error("post-received email failed", e);
         }
       }
+
 
       return data;
     },
