@@ -30,7 +30,11 @@ const categories = [
   "Press",
 ];
 
-const ContactForm = () => {
+interface ContactFormProps {
+  presetCategory?: string;
+}
+
+const ContactForm = ({ presetCategory }: ContactFormProps = {}) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
