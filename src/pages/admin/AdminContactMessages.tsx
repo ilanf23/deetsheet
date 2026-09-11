@@ -37,9 +37,15 @@ interface ContactMessage {
 
 export default function AdminContactMessages() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState<SortKey>("newest");
+
+  /** Keeps the sidebar "Contact Messages" badge in step with this list. */
+  const refreshBadge = () =>
+    queryClient.invalidateQueries({ queryKey: ["admin-unread-contact"] });
+
 
   const sortedMessages = useMemo(() => {
     const cmpStr = (a: string, b: string) =>
