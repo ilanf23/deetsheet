@@ -47,6 +47,8 @@ export default function AdminLayout() {
   const { user, signOut } = useAuth();
   
   const { data: messagesCount = 0 } = useAdminUnreadThreadsCount();
+  const { data: contactCount = 0 } = useAdminUnreadContactCount();
+
 
   // react-query instead of a raw setInterval + setState: structural sharing
   // means an unchanged count does not re-render this subtree every 30s.
