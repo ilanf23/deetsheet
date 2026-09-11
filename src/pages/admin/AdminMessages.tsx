@@ -569,7 +569,7 @@ export default function AdminMessages() {
               filtered.map((t) => {
                 const label = t.user_name ?? t.user_username ?? "Unknown";
                 const active = t.id === routeThreadId;
-                const unread = t.last_sender === "user";
+                const unread = isUnanswered(t);
                 return (
                   <div
                     key={t.id}
