@@ -23,7 +23,7 @@ import {
  *  - required footer (nav links, "you're receiving this…", manage prefs, copyright)
  *
  * The one-click Unsubscribe link is appended automatically by the email
- * pipeline (handle-email-unsubscribe token), so templates must not add one.
+ * pipeline, so templates must not add one.
  */
 
 import { parseMarkdownLinks } from './markdownLinks.ts'

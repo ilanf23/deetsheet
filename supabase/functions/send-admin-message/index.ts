@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { sendAppEmail } from "../_shared/transactional-email-templates/send-app-email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -217,57 +218,43 @@ Deno.serve(async (req) => {
     const { data: userInfo } = await admin.auth.admin.getUserById(payload.user_id);
     const recipientEmail = userInfo?.user?.email ?? null;
 
-    // Send email. ALL admin emails go through send-transactional-email so that
-    // suppression and the recipient's email preferences are always enforced.
-    // Direct messages with no explicit template fall back to the branded
-    // "admin-message" template built from the review slip.
+    // Send email. ALL admin emails go through the shared app-email helper so
+    // that suppression and the recipient's email preferences are always
+    // enforced. Direct messages with no explicit template fall back to the
+    // branded "admin-message" template built from the review slip.
     let emailSent = false;
     let emailMessageId: string | null = null;
     if (payload.send_email !== false && recipientEmail) {
       try {
         const templateName = payload.email_template || "admin-message";
-        const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-transactional-email`;
-        const emailBody = payload.email_template
-          ? {
-              templateName,
-              recipientEmail,
-              idempotencyKey: `${templateName}-${payload.post_id ?? payload.user_id}-${Date.now()}`,
-              templateData: payload.template_data ?? {},
-            }
+        const templateData = payload.email_template
+          ? (payload.template_data ?? {})
           : {
-              templateName,
-              recipientEmail,
-              idempotencyKey: `admin-message-${payload.user_id}-${Date.now()}`,
-              templateData: {
-                eyebrow: "MESSAGE FROM DEETSHEET",
-                statusValue: isSlip ? payload.slip?.status : undefined,
-                headline: payload.subject,
-                quotedTitle: isSlip ? payload.slip?.post : undefined,
-                reason: isSlip ? payload.slip?.reason : undefined,
-                suggestions:
-                  isSlip && payload.slip?.suggestions ? [payload.slip.suggestions] : undefined,
-                bodyText: htmlToText(payload.body_html ?? ""),
-                callout: isSlip ? payload.slip?.deadline_text : undefined,
+              eyebrow: "MESSAGE FROM DEETSHEET",
+              statusValue: isSlip ? payload.slip?.status : undefined,
+              headline: payload.subject,
+              quotedTitle: isSlip ? payload.slip?.post : undefined,
+              reason: isSlip ? payload.slip?.reason : undefined,
+              suggestions:
+                isSlip && payload.slip?.suggestions ? [payload.slip.suggestions] : undefined,
+              bodyText: htmlToText(payload.body_html ?? ""),
+              callout: isSlip ? payload.slip?.deadline_text : undefined,
 
-                ...(payload.template_data ?? {}),
-              },
+              ...(payload.template_data ?? {}),
             };
+        const idempotencyKey = payload.email_template
+          ? `${templateName}-${payload.post_id ?? payload.user_id}-${Date.now()}`
+          : `admin-message-${payload.user_id}-${Date.now()}`;
 
-        const emailRes = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
-          },
-          body: JSON.stringify(emailBody),
+        const emailResult = await sendAppEmail(templateName, recipientEmail, {
+          idempotencyKey,
+          templateData,
         });
-        const emailData = await emailRes.json();
-        if (emailRes.ok && emailData?.success !== false) {
-
+        if (emailResult.sent) {
           emailSent = true;
-          emailMessageId = emailData?.data?.id ?? null;
+          emailMessageId = emailResult.messageId;
         } else {
-          console.error("email send failed:", emailData);
+          console.error("email not sent:", emailResult.reason);
         }
       } catch (e) {
         console.error("email send exception:", e);

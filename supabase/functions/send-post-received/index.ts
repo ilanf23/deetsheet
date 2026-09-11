@@ -2,13 +2,10 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { sendAppEmail } from '../_shared/transactional-email-templates/send-app-email.ts'
 
-
 /**
- * Sends the branded "welcome" email exactly once per account.
- *
- * Called by the client on the first authenticated session (works for both
- * email/password and Google sign-ups). Idempotency is enforced server-side by
- * checking email_send_log for an existing `welcome` row for this address.
+ * Sends the branded "we received your post" email to the post's author.
+ * Everything is re-derived server-side from the post id, so the caller can only
+ * trigger the email for their own post.
  */
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -37,63 +34,61 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
-
   const user = userRes.user
-  const email = user.email!.toLowerCase()
+
+  let postId: string | undefined
+  try {
+    const body = await req.json()
+    postId = body?.postId ?? body?.post_id
+  } catch {
+    // handled below
+  }
+  if (!postId || typeof postId !== 'string') {
+    return new Response(JSON.stringify({ error: 'postId is required' }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
 
   const admin = createClient(supabaseUrl, serviceKey)
 
-  const { data: existing, error: logErr } = await admin
-    .from('email_send_log')
-    .select('id')
-    .eq('template_name', 'welcome')
-    .eq('recipient_email', email)
-    .limit(1)
-
-  if (logErr) {
-    console.error('welcome dedupe check failed', logErr)
-    return new Response(JSON.stringify({ error: 'Failed to check send history' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  }
-
-  if (existing && existing.length > 0) {
-    return new Response(JSON.stringify({ success: true, skipped: 'already_sent' }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  }
-
-  const { data: profile } = await admin
-    .from('profiles')
-    .select('username, full_name')
-    .eq('id', user.id)
+  const { data: post } = await admin
+    .from('posts')
+    .select('id, title, author_id, image_url, is_anonymous, topic_id')
+    .eq('id', postId)
     .maybeSingle()
 
-  const meta = (user.user_metadata ?? {}) as Record<string, unknown>
-  const rawName =
-    (profile?.full_name as string | null) ||
-    (profile?.username as string | null) ||
-    (meta.full_name as string | undefined) ||
-    (meta.name as string | undefined) ||
-    (meta.username as string | undefined) ||
-    ''
-  const firstName = rawName.trim().split(/\s+/)[0] || undefined
-
-  try {
-    await sendAppEmail('welcome', email, {
-      idempotencyKey: `welcome-${user.id}`,
-      templateData: { firstName },
-    })
-  } catch (e) {
-    console.error('welcome send failed', e)
-    return new Response(JSON.stringify({ error: 'Failed to send welcome email' }), {
-      status: 500,
+  if (!post || post.author_id !== user.id) {
+    return new Response(JSON.stringify({ error: 'Post not found' }), {
+      status: 404,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 
+  const { data: topic } = await admin
+    .from('topics')
+    .select('name')
+    .eq('id', post.topic_id)
+    .maybeSingle()
+
+  try {
+    await sendAppEmail('post-received', user.email!, {
+      idempotencyKey: `post-received-${post.id}`,
+      templateData: {
+        topic: topic?.name ?? undefined,
+        title: post.title,
+        imageUrl: post.image_url ?? undefined,
+        isAnonymous: !!post.is_anonymous,
+        ctaUrl: 'https://deetsheet.com/profile',
+      },
+    })
+  } catch (e) {
+    console.error('post-received email failed', e)
+    return new Response(JSON.stringify({ error: 'Failed to send' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
 
   return new Response(JSON.stringify({ success: true }), {
     status: 200,
