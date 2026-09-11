@@ -632,17 +632,31 @@ export default function AdminMessages() {
                             aria-label="awaiting reply"
                           />
                         )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openComposeForThread(t);
-                          }}
-                          className="ml-auto inline-flex items-center gap-1 text-[12px] font-semibold"
-                          style={{ color: "hsl(var(--admin-primary))" }}
-                        >
-                          Compose <ChevronDown className="h-3 w-3" />
-                        </button>
+                        <div className="ml-auto flex items-center gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openComposeForThread(t);
+                            }}
+                            className="inline-flex items-center gap-1 text-[12px] font-semibold"
+                            style={{ color: "hsl(var(--admin-primary))" }}
+                          >
+                            Compose <ChevronDown className="h-3 w-3" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPendingDeleteThread(t);
+                            }}
+                            aria-label="Delete conversation"
+                            title="Delete conversation"
+                            className="rounded p-1 text-muted-foreground transition-colors hover:text-destructive"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
+
                     </div>
                   </div>
                 );
