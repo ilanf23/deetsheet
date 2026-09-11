@@ -119,7 +119,9 @@ export default function AdminContactMessages() {
             }
             return prev;
           });
+          refreshBadge();
         },
+
       )
       .subscribe();
 
