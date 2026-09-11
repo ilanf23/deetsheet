@@ -379,7 +379,7 @@ export default function AdminMessages() {
 
   const filtered = useMemo(() => {
     let rows = threads;
-    if (tab === "needs_contact") rows = rows.filter((r) => r.status === "needs_contact" || r.last_sender === "user");
+    if (tab === "needs_contact") rows = rows.filter((r) => r.status === "needs_contact" || isUnanswered(r));
     if (search.trim()) {
       const q = search.toLowerCase();
       rows = rows.filter(
@@ -398,13 +398,57 @@ export default function AdminMessages() {
     return sorted;
   }, [threads, tab, sort, search]);
 
-  const needsContactCount = threads.filter((t) => t.status === "needs_contact" || t.last_sender === "user").length;
+  const needsContactCount = threads.filter((t) => t.status === "needs_contact" || isUnanswered(t)).length;
 
   const selected = threads.find((t) => t.id === routeThreadId) ?? null;
   const selectedLabel = selected?.user_name ?? selected?.user_username ?? "member";
 
+  /** Stamp the thread as read by the team, so the dot and sidebar badge clear. */
+  const markThreadRead = useCallback(
+    async (id: string) => {
+      const now = new Date().toISOString();
+      setThreads((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, admin_read_at: now } : t)),
+      );
+      await supabase.from("message_threads").update({ admin_read_at: now }).eq("id", id);
+      queryClient.invalidateQueries({ queryKey: ["admin-unread-threads"] });
+    },
+    [queryClient],
+  );
+
+  useEffect(() => {
+    if (!routeThreadId) return;
+    markThreadRead(routeThreadId);
+  }, [routeThreadId, markThreadRead]);
+
+  const deleteThread = async () => {
+    if (!pendingDeleteThread) return;
+    setDeletingThread(true);
+    const id = pendingDeleteThread.id;
+    const { error: msgErr } = await supabase.from("messages").delete().eq("thread_id", id);
+    const { error } = msgErr
+      ? { error: msgErr }
+      : await supabase.from("message_threads").delete().eq("id", id);
+    setDeletingThread(false);
+    if (error) {
+      toast({
+        title: "Couldn't delete",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+    setPendingDeleteThread(null);
+    setThreads((prev) => prev.filter((t) => t.id !== id));
+    if (routeThreadId === id) navigate("/admin/messages");
+    queryClient.invalidateQueries({ queryKey: ["admin-unread-threads"] });
+    toast({ title: "Conversation deleted" });
+    fetchAll({ quiet: true });
+  };
+
   const selectThread = (id: string) => navigate(`/admin/messages/${id}`);
   const clearThread = () => navigate("/admin/messages");
+
 
   return (
     <div className="space-y-5">
