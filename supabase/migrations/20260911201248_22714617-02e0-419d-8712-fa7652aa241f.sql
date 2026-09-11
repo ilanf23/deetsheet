@@ -1,0 +1,1 @@
+ALTER TABLE public.message_threads ADD COLUMN IF NOT EXISTS admin_read_at timestamp with time zone;

@@ -415,6 +415,7 @@ export type Database = {
       }
       message_threads: {
         Row: {
+          admin_read_at: string | null
           created_at: string
           hidden_for_other_at: string | null
           hidden_for_user_at: string | null
@@ -434,6 +435,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          admin_read_at?: string | null
           created_at?: string
           hidden_for_other_at?: string | null
           hidden_for_user_at?: string | null
@@ -453,6 +455,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          admin_read_at?: string | null
           created_at?: string
           hidden_for_other_at?: string | null
           hidden_for_user_at?: string | null
