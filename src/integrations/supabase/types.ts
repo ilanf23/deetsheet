@@ -1454,6 +1454,7 @@ export type Database = {
           orientation: string | null
           reading: string | null
           sex: string | null
+          show_ratings: boolean | null
           state: string | null
           username: string | null
         }
