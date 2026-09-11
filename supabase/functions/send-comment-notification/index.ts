@@ -9,8 +9,8 @@ import { sendAppEmail } from '../_shared/transactional-email-templates/send-app-
  *
  * Everything is re-derived server-side from the comment id, so the caller can
  * only trigger a notification for a comment that actually exists. The send goes
- * through send-transactional-email, which enforces suppression and the
- * recipient's `comment_notifications` preference.
+ * through Lovable's managed email delivery, which enforces suppression, and the
+ * recipient's `comment_notifications` preference is applied before sending.
  */
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
