@@ -387,6 +387,8 @@ export default function AdminMessages() {
       });
       setComposeOpen(false);
       fetchAll({ quiet: true });
+      queryClient.invalidateQueries({ queryKey: ["admin-unread-threads"] });
+
     } catch (e: any) {
       toast({ title: "Send failed", description: e?.message ?? "Unknown error", variant: "destructive" });
     } finally {
