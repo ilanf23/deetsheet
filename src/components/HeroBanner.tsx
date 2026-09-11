@@ -80,13 +80,14 @@ const HeroBanner = () => {
             i === current ? "opacity-100" : "opacity-0 pointer-events-none"
           }`}
         >
-          <h1 className="text-white font-extrabold text-xl sm:text-2xl md:text-3xl lg:text-4xl leading-tight mb-4 whitespace-nowrap [text-shadow:0_2px_6px_rgba(0,0,0,0.65)]">
+          <h1 className="text-white font-extrabold text-base sm:text-xl md:text-2xl lg:text-4xl leading-tight mb-2 sm:mb-4 max-w-5xl text-balance [text-shadow:0_2px_6px_rgba(0,0,0,0.65)]">
             {slide.headline}
           </h1>
-          <div className="text-[#FFE9A8] text-xs sm:text-sm md:text-base whitespace-nowrap [text-shadow:0_1px_4px_rgba(0,0,0,0.75)]">
+          <div className="text-[#FFE9A8] text-[11px] sm:text-sm md:text-base max-w-3xl [text-shadow:0_1px_4px_rgba(0,0,0,0.75)]">
             <p className="italic hover:underline">&ldquo;{slide.quote}&rdquo;</p>
             <p className="mt-1 font-semibold">{slide.attribution.includes(",") ? `- ${slide.attribution}` : slide.attribution}</p>
           </div>
+
         </div>
       ))}
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-2">
