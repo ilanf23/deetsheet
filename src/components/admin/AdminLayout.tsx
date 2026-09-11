@@ -126,7 +126,10 @@ export default function AdminLayout() {
                         ? pendingCount
                         : item.badgeKey === "messages"
                           ? messagesCount
-                          : 0;
+                          : item.badgeKey === "contact"
+                            ? contactCount
+                            : 0;
+
                     if (!count) return null;
                     return (
                       <span
