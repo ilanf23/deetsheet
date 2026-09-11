@@ -1,5 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
+import { sendAppEmail } from '../_shared/transactional-email-templates/send-app-email.ts'
+
 
 /**
  * Sends the branded "welcome" email exactly once per account.
@@ -79,28 +81,19 @@ Deno.serve(async (req) => {
     ''
   const firstName = rawName.trim().split(/\s+/)[0] || undefined
 
-  const res = await fetch(`${supabaseUrl}/functions/v1/send-transactional-email`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${serviceKey}`,
-    },
-    body: JSON.stringify({
-      templateName: 'welcome',
-      recipientEmail: email,
+  try {
+    await sendAppEmail('welcome', email, {
       idempotencyKey: `welcome-${user.id}`,
       templateData: { firstName },
-    }),
-  })
-  const data = await res.json().catch(() => ({}))
-
-  if (!res.ok) {
-    console.error('welcome send failed', data)
+    })
+  } catch (e) {
+    console.error('welcome send failed', e)
     return new Response(JSON.stringify({ error: 'Failed to send welcome email' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
+
 
   return new Response(JSON.stringify({ success: true }), {
     status: 200,
