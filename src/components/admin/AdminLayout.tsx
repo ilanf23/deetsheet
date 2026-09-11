@@ -20,7 +20,11 @@ import {
   LogOut,
   Settings,
 } from "lucide-react";
-import { useAdminUnreadThreadsCount } from "@/hooks/useUnreadMessages";
+import {
+  useAdminUnreadThreadsCount,
+  useAdminUnreadContactCount,
+} from "@/hooks/useUnreadMessages";
+
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutGrid, end: true },
