@@ -60,7 +60,7 @@ const HeroBanner = () => {
   };
 
   return (
-    <div className="relative w-full h-[170px] md:h-[200px] overflow-hidden">
+    <div className="relative w-full h-[190px] sm:h-[180px] md:h-[200px] overflow-hidden">
       {slides.map((slide, i) => (
         <img
           key={slide.image}
