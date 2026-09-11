@@ -900,6 +900,35 @@ export default function AdminMessages() {
         </DialogContent>
       </Dialog>
 
+      <AlertDialog
+        open={Boolean(pendingDeleteThread)}
+        onOpenChange={(o) => !o && setPendingDeleteThread(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this conversation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Every message in this conversation is removed for the team and the member.
+              This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingThread}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deletingThread}
+              onClick={(e) => {
+                e.preventDefault();
+                deleteThread();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingThread ? "Deleting…" : "Delete conversation"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+
 
       <ManageTemplatesDialog
         open={templatesOpen}
