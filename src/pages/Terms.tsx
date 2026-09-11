@@ -88,14 +88,10 @@ const Terms = () => {
           <section>
             <h2 className="text-lg font-semibold text-foreground mb-2">11. Contact</h2>
             <p>
-              If you have questions about these Terms of Service, please visit our{" "}
+              If you have questions about these Terms of Service, please send us a message on our{" "}
               <Link to="/contact" className="text-primary hover:underline">
                 Contact page
-              </Link>{" "}
-              or email us at{" "}
-              <a href="mailto:support@deetsheet.com" className="text-primary hover:underline">
-                support@deetsheet.com
-              </a>.
+              </Link>.
             </p>
           </section>
         </div>

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
 import ContactForm from "@/components/ContactForm";
@@ -7,29 +8,29 @@ const contactCategories = [
   {
     title: "General Inquiries",
     description: "Questions about DeetSheet, how it works, or general feedback.",
-    email: "support@deetsheet.com",
   },
   {
     title: "Report a Problem",
     description: "Found a bug or something not working as expected? Let us know.",
-    email: "support@deetsheet.com",
-    subject: "Bug Report",
   },
   {
     title: "Business & Partnerships",
     description: "Interested in partnering with DeetSheet or exploring business opportunities?",
-    email: "support@deetsheet.com",
-    subject: "Partnership Inquiry",
   },
   {
     title: "Press",
     description: "Media inquiries, interview requests, or press-related questions.",
-    email: "support@deetsheet.com",
-    subject: "Press Inquiry",
   },
 ];
 
 const Contact = () => {
+  const [presetCategory, setPresetCategory] = useState<string | undefined>();
+
+  const chooseCategory = (title: string) => {
+    setPresetCategory(title);
+    document.getElementById("contact-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <DeetHeader />
@@ -38,32 +39,15 @@ const Contact = () => {
           Contact Us
         </h1>
         <p className="text-muted-foreground mb-8">
-          We'd love to hear from you. Reach out to us using any of the options below.
+          We'd love to hear from you. Send us a message below and it goes straight to our team. We aim to respond within 24 to 48 hours.
         </p>
 
-        <Card className="mb-8">
+        <Card className="mb-8" id="contact-form">
           <CardHeader>
             <CardTitle className="text-lg">Send Us a Message</CardTitle>
           </CardHeader>
           <CardContent>
-            <ContactForm />
-          </CardContent>
-        </Card>
-
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-lg">Email Us Directly</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-2">
-              Prefer email? We aim to respond within 24–48 hours.
-            </p>
-            <a
-              href="mailto:support@deetsheet.com"
-              className="text-sm font-medium text-primary hover:underline"
-            >
-              support@deetsheet.com
-            </a>
+            <ContactForm presetCategory={presetCategory} />
           </CardContent>
         </Card>
 
@@ -80,12 +64,13 @@ const Contact = () => {
                 <p className="text-sm text-muted-foreground mb-3">
                   {cat.description}
                 </p>
-                <a
-                  href={`mailto:${cat.email}${cat.subject ? `?subject=${encodeURIComponent(cat.subject)}` : ""}`}
+                <button
+                  type="button"
+                  onClick={() => chooseCategory(cat.title)}
                   className="text-sm font-medium text-primary hover:underline"
                 >
-                  Send Email
-                </a>
+                  Send a Message
+                </button>
               </CardContent>
             </Card>
           ))}

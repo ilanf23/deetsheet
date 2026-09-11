@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,17 +30,28 @@ const categories = [
   "Press",
 ];
 
-const ContactForm = () => {
+interface ContactFormProps {
+  presetCategory?: string;
+}
+
+const ContactForm = ({ presetCategory }: ContactFormProps = {}) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     name: "",
     email: user?.email ?? "",
-    category: "",
+    category: presetCategory ?? "",
     subject: "",
     message: "",
   });
+
+  useEffect(() => {
+    if (presetCategory) {
+      setForm((prev) => ({ ...prev, category: presetCategory }));
+    }
+  }, [presetCategory]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

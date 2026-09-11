@@ -86,14 +86,10 @@ const Privacy = () => {
           <section>
             <h2 className="text-lg font-semibold text-foreground mb-2">10. Contact Us</h2>
             <p>
-              If you have questions about this Privacy Policy, please visit our{" "}
+              If you have questions about this Privacy Policy, please send us a message on our{" "}
               <Link to="/contact" className="text-primary hover:underline">
                 Contact page
-              </Link>{" "}
-              or email us at{" "}
-              <a href="mailto:support@deetsheet.com" className="text-primary hover:underline">
-                support@deetsheet.com
-              </a>.
+              </Link>.
             </p>
           </section>
         </div>
