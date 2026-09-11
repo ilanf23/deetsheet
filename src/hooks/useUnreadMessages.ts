@@ -91,3 +91,19 @@ export function useAdminUnreadThreadsCount() {
   });
 }
 
+/** Admin-side count of contact-form messages nobody has marked as read yet. */
+export function useAdminUnreadContactCount() {
+  return useQuery({
+    queryKey: ["admin-unread-contact"],
+    refetchInterval: 30_000,
+    queryFn: async (): Promise<number> => {
+      const { count } = await supabase
+        .from("contact_messages")
+        .select("id", { count: "exact", head: true })
+        .eq("is_read", false);
+      return count ?? 0;
+    },
+  });
+}
+
+

@@ -20,7 +20,11 @@ import {
   LogOut,
   Settings,
 } from "lucide-react";
-import { useAdminUnreadThreadsCount } from "@/hooks/useUnreadMessages";
+import {
+  useAdminUnreadThreadsCount,
+  useAdminUnreadContactCount,
+} from "@/hooks/useUnreadMessages";
+
 
 const navItems = [
   { to: "/admin", label: "Dashboard", icon: LayoutGrid, end: true },
@@ -32,7 +36,7 @@ const navItems = [
   { to: "/admin/topic-images", label: "Topic Images", icon: ImageIcon },
   { to: "/admin/reports", label: "Reports", icon: Flag },
   { to: "/admin/messages", label: "Messaging", icon: MessageSquare, badgeKey: "messages" as const },
-  { to: "/admin/contact-messages", label: "Contact Messages", icon: Mail },
+  { to: "/admin/contact-messages", label: "Contact Messages", icon: Mail, badgeKey: "contact" as const },
   { to: "/admin/site-pages", label: "Site Pages", icon: FileEdit },
   { to: "/admin/review-reasons", label: "Review Reasons", icon: ListChecks },
   { to: "/admin/settings", label: "Settings", icon: Settings },
@@ -43,6 +47,8 @@ export default function AdminLayout() {
   const { user, signOut } = useAuth();
   
   const { data: messagesCount = 0 } = useAdminUnreadThreadsCount();
+  const { data: contactCount = 0 } = useAdminUnreadContactCount();
+
 
   // react-query instead of a raw setInterval + setState: structural sharing
   // means an unchanged count does not re-render this subtree every 30s.
@@ -120,7 +126,10 @@ export default function AdminLayout() {
                         ? pendingCount
                         : item.badgeKey === "messages"
                           ? messagesCount
-                          : 0;
+                          : item.badgeKey === "contact"
+                            ? contactCount
+                            : 0;
+
                     if (!count) return null;
                     return (
                       <span

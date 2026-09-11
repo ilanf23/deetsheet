@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,9 +39,15 @@ interface ContactMessage {
 
 export default function AdminContactMessages() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState<SortKey>("newest");
+
+  /** Keeps the sidebar "Contact Messages" badge in step with this list. */
+  const refreshBadge = () =>
+    queryClient.invalidateQueries({ queryKey: ["admin-unread-contact"] });
+
 
   const sortedMessages = useMemo(() => {
     const cmpStr = (a: string, b: string) =>
@@ -111,7 +119,9 @@ export default function AdminContactMessages() {
             }
             return prev;
           });
+          refreshBadge();
         },
+
       )
       .subscribe();
 
@@ -127,13 +137,16 @@ export default function AdminContactMessages() {
       .update({ is_read: !msg.is_read })
       .eq("id", msg.id);
     if (error) toast({ title: "Update failed", description: error.message, variant: "destructive" });
+    else refreshBadge();
   };
 
   const remove = async (id: string) => {
     if (!confirm("Delete this message?")) return;
     const { error } = await supabase.from("contact_messages").delete().eq("id", id);
     if (error) toast({ title: "Delete failed", description: error.message, variant: "destructive" });
+    else refreshBadge();
   };
+
 
   const unreadCount = messages.filter((m) => !m.is_read).length;
 
@@ -171,6 +184,12 @@ export default function AdminContactMessages() {
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
+                  {!msg.is_read && (
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full bg-secondary"
+                      aria-label="Unread message"
+                    />
+                  )}
                   <span className="font-semibold text-foreground">{msg.name}</span>
                   <a href={`mailto:${msg.email}`} className="text-sm text-primary hover:underline">
                     {msg.email}
@@ -178,6 +197,7 @@ export default function AdminContactMessages() {
                   {msg.category && <Badge variant="secondary">{msg.category}</Badge>}
                   {!msg.is_read && <Badge>New</Badge>}
                 </div>
+
                 {msg.subject && (
                   <p className="text-sm font-medium text-foreground mb-1">{msg.subject}</p>
                 )}
