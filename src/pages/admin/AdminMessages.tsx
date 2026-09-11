@@ -717,14 +717,24 @@ export default function AdminMessages() {
                   </div>
                 </div>
                 {selected && (
-                  <button
-                    onClick={() => openComposeForThread(selected)}
-                    className="ml-auto inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-[13px] font-semibold"
-                    style={{ color: "hsl(var(--admin-primary))" }}
-                  >
-                    Compose <ChevronDown className="h-3.5 w-3.5" />
-                  </button>
+                  <div className="ml-auto flex items-center gap-1">
+                    <button
+                      onClick={() => openComposeForThread(selected)}
+                      className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-[13px] font-semibold"
+                      style={{ color: "hsl(var(--admin-primary))" }}
+                    >
+                      Compose <ChevronDown className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setPendingDeleteThread(selected)}
+                      className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[13px] font-semibold text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete
+                    </button>
+                  </div>
                 )}
+
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
                 <ThreadConversation
