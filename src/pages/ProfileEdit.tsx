@@ -808,6 +808,17 @@ const ProfileEdit = () => {
                         <Switch checked={hideAge} onCheckedChange={setHideAge} />
                       </div>
 
+                      <div className="flex items-center justify-between rounded-md border p-3">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm">Show the posts I've ranked on my profile</Label>
+                          <p className="text-xs text-muted-foreground">
+                            Turn this off to keep your rankings private. You can always see them yourself.
+                          </p>
+                        </div>
+                        <Switch checked={showRatings} onCheckedChange={setShowRatings} />
+                      </div>
+
+
 
 
                       <FormField
