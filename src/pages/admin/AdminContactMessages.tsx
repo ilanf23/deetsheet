@@ -171,6 +171,12 @@ export default function AdminContactMessages() {
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2 mb-1">
+                  {!msg.is_read && (
+                    <span
+                      className="h-2 w-2 shrink-0 rounded-full bg-secondary"
+                      aria-label="Unread message"
+                    />
+                  )}
                   <span className="font-semibold text-foreground">{msg.name}</span>
                   <a href={`mailto:${msg.email}`} className="text-sm text-primary hover:underline">
                     {msg.email}
@@ -178,6 +184,7 @@ export default function AdminContactMessages() {
                   {msg.category && <Badge variant="secondary">{msg.category}</Badge>}
                   {!msg.is_read && <Badge>New</Badge>}
                 </div>
+
                 {msg.subject && (
                   <p className="text-sm font-medium text-foreground mb-1">{msg.subject}</p>
                 )}
