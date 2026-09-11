@@ -148,7 +148,7 @@ export default function AdminMessages() {
     if (!opts?.quiet) setLoading(true);
     const { data: threadRows } = await supabase
       .from("message_threads")
-      .select("id,user_id,post_id,subject,status,last_message_at,last_sender")
+      .select("id,user_id,post_id,subject,status,last_message_at,last_sender,admin_read_at")
       .order("last_message_at", { ascending: false })
       .limit(200);
     const rows = (threadRows ?? []) as Thread[];
