@@ -135,13 +135,16 @@ export default function AdminContactMessages() {
       .update({ is_read: !msg.is_read })
       .eq("id", msg.id);
     if (error) toast({ title: "Update failed", description: error.message, variant: "destructive" });
+    else refreshBadge();
   };
 
   const remove = async (id: string) => {
     if (!confirm("Delete this message?")) return;
     const { error } = await supabase.from("contact_messages").delete().eq("id", id);
     if (error) toast({ title: "Delete failed", description: error.message, variant: "destructive" });
+    else refreshBadge();
   };
+
 
   const unreadCount = messages.filter((m) => !m.is_read).length;
 
