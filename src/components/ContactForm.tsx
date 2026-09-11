@@ -28,6 +28,7 @@ const categories = [
   "Report a Problem",
   "Business & Partnerships",
   "Press",
+  "Investor Inquiries",
 ];
 
 interface ContactFormProps {

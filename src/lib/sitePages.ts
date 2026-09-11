@@ -39,7 +39,14 @@ export const SITE_PAGE_SECTIONS: SitePageSection[] = [
     label: "Investor: Get in touch",
     defaultTitle: "Get in Touch",
     defaultContent:
-      "Request our investor deck or schedule an intro call.\n\ninvest@deetsheet.com",
+      "Request our investor deck or schedule an intro call. Send us a message using the form below and it goes straight to our team.",
+  },
+  {
+    slug: "investor_disclosures",
+    label: "Investor: Disclosures",
+    defaultTitle: "Disclosures",
+    defaultContent:
+      "Nothing on this page is an offer to sell or a solicitation of an offer to buy securities. Any such offer would be made only through definitive offering documents. Investing involves risk, including the possible loss of your entire investment.",
   },
   {
     slug: "inspiration_intro",
