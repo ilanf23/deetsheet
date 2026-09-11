@@ -130,6 +130,8 @@ const ProfileEdit = () => {
   const [emailFrequency, setEmailFrequency] = useState("weekly");
   const [username, setUsername] = useState<string>("");
   const [hideAge, setHideAge] = useState(false);
+  // Members can hide the "Rankings" tab (posts they've rated) from their profile.
+  const [showRatings, setShowRatings] = useState(true);
 
   const [prefs, setPrefs] = useState<Record<string, boolean>>({
     emailOnMessage: true,
@@ -179,7 +181,7 @@ const ProfileEdit = () => {
       const { data } = await supabase
         .from("profiles_private")
         .select(
-          "username, name, entity_type, sex, orientation, birth_month, birth_day, birth_year, hide_age, city, state, country, bio, education, high_school, college, degree, major, job, favorite_movie, reading, city_born, avatar_url, email_frequency, email_on_message, email_on_comment, email_on_follow, email_on_post_edit, email_top_posts",
+          "username, name, entity_type, sex, orientation, birth_month, birth_day, birth_year, hide_age, show_ratings, city, state, country, bio, education, high_school, college, degree, major, job, favorite_movie, reading, city_born, avatar_url, email_frequency, email_on_message, email_on_comment, email_on_follow, email_on_post_edit, email_top_posts",
         )
         .eq("id", user.id)
         .single();
@@ -210,6 +212,7 @@ const ProfileEdit = () => {
         setAvatarUrl(data.avatar_url || null);
         setEmailFrequency(data.email_frequency || "weekly");
         setHideAge(Boolean((data as any).hide_age));
+        setShowRatings((data as any).show_ratings ?? true);
         setPrefs({
           emailOnMessage: data.email_on_message ?? true,
           emailOnComment: data.email_on_comment ?? true,
@@ -311,6 +314,7 @@ const ProfileEdit = () => {
         birth_day: values.birthDay,
         birth_year: values.birthYear,
         hide_age: hideAge,
+        show_ratings: showRatings,
         city: values.city,
         state: values.state,
         country: values.country,
@@ -803,6 +807,17 @@ const ProfileEdit = () => {
                         </div>
                         <Switch checked={hideAge} onCheckedChange={setHideAge} />
                       </div>
+
+                      <div className="flex items-center justify-between rounded-md border p-3">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm">Show the posts I've ranked on my profile</Label>
+                          <p className="text-xs text-muted-foreground">
+                            Turn this off to keep your rankings private. You can always see them yourself.
+                          </p>
+                        </div>
+                        <Switch checked={showRatings} onCheckedChange={setShowRatings} />
+                      </div>
+
 
 
 
