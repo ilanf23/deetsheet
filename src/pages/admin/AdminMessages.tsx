@@ -748,7 +748,11 @@ export default function AdminMessages() {
                   markRead={false}
                   memberLabel={selected?.user_name ?? selected?.user_username ?? null}
                   onNotFound={clearThread}
-                  onChanged={() => fetchAll({ quiet: true })}
+                  onChanged={() => {
+                    fetchAll({ quiet: true });
+                    queryClient.invalidateQueries({ queryKey: ["admin-unread-threads"] });
+                  }}
+
                 />
               </div>
             </>
