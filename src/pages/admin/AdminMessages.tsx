@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { parseISO, format } from "date-fns";
@@ -20,7 +22,18 @@ import { Checkbox } from "@/components/ui/checkbox";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
 import ThreadConversation from "@/components/inbox/ThreadConversation";
 import ManageTemplatesDialog from "@/components/admin/ManageTemplatesDialog";
-import { ArrowLeft, ChevronDown, MessagesSquare, PenSquare, Search } from "lucide-react";
+import { ArrowLeft, ChevronDown, MessagesSquare, PenSquare, Search, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
 
 type Thread = {
   id: string;
@@ -30,6 +43,8 @@ type Thread = {
   status: "open" | "needs_contact" | "resolved";
   last_message_at: string;
   last_sender: "admin" | "user";
+  /** When an admin last opened this conversation. Drives the unread dot. */
+  admin_read_at: string | null;
   user_name?: string;
   user_username?: string;
   user_email?: string;
@@ -38,6 +53,13 @@ type Thread = {
   /** Last non-deleted message text, used for the list preview. */
   snippet?: string | null;
 };
+
+/** A conversation needs the team's attention while the member spoke last and
+ *  no admin has opened it since. */
+const isUnanswered = (t: Thread) =>
+  t.last_sender === "user" &&
+  (!t.admin_read_at || new Date(t.admin_read_at) < new Date(t.last_message_at));
+
 
 type FilterTab = "needs_contact" | "all";
 type SortKey = "recent" | "oldest";
@@ -87,6 +109,10 @@ export default function AdminMessages() {
   const [sort, setSort] = useState<SortKey>("recent");
   const [search, setSearch] = useState("");
   const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [pendingDeleteThread, setPendingDeleteThread] = useState<Thread | null>(null);
+  const [deletingThread, setDeletingThread] = useState(false);
+  const queryClient = useQueryClient();
+
 
   // Compose state
   const [composeOpen, setComposeOpen] = useState(false);
@@ -139,7 +165,7 @@ export default function AdminMessages() {
     if (!opts?.quiet) setLoading(true);
     const { data: threadRows } = await supabase
       .from("message_threads")
-      .select("id,user_id,post_id,subject,status,last_message_at,last_sender")
+      .select("id,user_id,post_id,subject,status,last_message_at,last_sender,admin_read_at")
       .order("last_message_at", { ascending: false })
       .limit(200);
     const rows = (threadRows ?? []) as Thread[];
@@ -361,6 +387,8 @@ export default function AdminMessages() {
       });
       setComposeOpen(false);
       fetchAll({ quiet: true });
+      queryClient.invalidateQueries({ queryKey: ["admin-unread-threads"] });
+
     } catch (e: any) {
       toast({ title: "Send failed", description: e?.message ?? "Unknown error", variant: "destructive" });
     } finally {
@@ -370,7 +398,7 @@ export default function AdminMessages() {
 
   const filtered = useMemo(() => {
     let rows = threads;
-    if (tab === "needs_contact") rows = rows.filter((r) => r.status === "needs_contact" || r.last_sender === "user");
+    if (tab === "needs_contact") rows = rows.filter((r) => r.status === "needs_contact" || isUnanswered(r));
     if (search.trim()) {
       const q = search.toLowerCase();
       rows = rows.filter(
@@ -389,13 +417,57 @@ export default function AdminMessages() {
     return sorted;
   }, [threads, tab, sort, search]);
 
-  const needsContactCount = threads.filter((t) => t.status === "needs_contact" || t.last_sender === "user").length;
+  const needsContactCount = threads.filter((t) => t.status === "needs_contact" || isUnanswered(t)).length;
 
   const selected = threads.find((t) => t.id === routeThreadId) ?? null;
   const selectedLabel = selected?.user_name ?? selected?.user_username ?? "member";
 
+  /** Stamp the thread as read by the team, so the dot and sidebar badge clear. */
+  const markThreadRead = useCallback(
+    async (id: string) => {
+      const now = new Date().toISOString();
+      setThreads((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, admin_read_at: now } : t)),
+      );
+      await supabase.from("message_threads").update({ admin_read_at: now }).eq("id", id);
+      queryClient.invalidateQueries({ queryKey: ["admin-unread-threads"] });
+    },
+    [queryClient],
+  );
+
+  useEffect(() => {
+    if (!routeThreadId) return;
+    markThreadRead(routeThreadId);
+  }, [routeThreadId, markThreadRead]);
+
+  const deleteThread = async () => {
+    if (!pendingDeleteThread) return;
+    setDeletingThread(true);
+    const id = pendingDeleteThread.id;
+    const { error: msgErr } = await supabase.from("messages").delete().eq("thread_id", id);
+    const { error } = msgErr
+      ? { error: msgErr }
+      : await supabase.from("message_threads").delete().eq("id", id);
+    setDeletingThread(false);
+    if (error) {
+      toast({
+        title: "Couldn't delete",
+        description: error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+    setPendingDeleteThread(null);
+    setThreads((prev) => prev.filter((t) => t.id !== id));
+    if (routeThreadId === id) navigate("/admin/messages");
+    queryClient.invalidateQueries({ queryKey: ["admin-unread-threads"] });
+    toast({ title: "Conversation deleted" });
+    fetchAll({ quiet: true });
+  };
+
   const selectThread = (id: string) => navigate(`/admin/messages/${id}`);
   const clearThread = () => navigate("/admin/messages");
+
 
   return (
     <div className="space-y-5">
@@ -510,7 +582,7 @@ export default function AdminMessages() {
               filtered.map((t) => {
                 const label = t.user_name ?? t.user_username ?? "Unknown";
                 const active = t.id === routeThreadId;
-                const unread = t.last_sender === "user";
+                const unread = isUnanswered(t);
                 return (
                   <div
                     key={t.id}
@@ -573,17 +645,31 @@ export default function AdminMessages() {
                             aria-label="awaiting reply"
                           />
                         )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openComposeForThread(t);
-                          }}
-                          className="ml-auto inline-flex items-center gap-1 text-[12px] font-semibold"
-                          style={{ color: "hsl(var(--admin-primary))" }}
-                        >
-                          Compose <ChevronDown className="h-3 w-3" />
-                        </button>
+                        <div className="ml-auto flex items-center gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openComposeForThread(t);
+                            }}
+                            className="inline-flex items-center gap-1 text-[12px] font-semibold"
+                            style={{ color: "hsl(var(--admin-primary))" }}
+                          >
+                            Compose <ChevronDown className="h-3 w-3" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPendingDeleteThread(t);
+                            }}
+                            aria-label="Delete conversation"
+                            title="Delete conversation"
+                            className="rounded p-1 text-muted-foreground transition-colors hover:text-destructive"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
+
                     </div>
                   </div>
                 );
@@ -633,14 +719,24 @@ export default function AdminMessages() {
                   </div>
                 </div>
                 {selected && (
-                  <button
-                    onClick={() => openComposeForThread(selected)}
-                    className="ml-auto inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-[13px] font-semibold"
-                    style={{ color: "hsl(var(--admin-primary))" }}
-                  >
-                    Compose <ChevronDown className="h-3.5 w-3.5" />
-                  </button>
+                  <div className="ml-auto flex items-center gap-1">
+                    <button
+                      onClick={() => openComposeForThread(selected)}
+                      className="inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-[13px] font-semibold"
+                      style={{ color: "hsl(var(--admin-primary))" }}
+                    >
+                      Compose <ChevronDown className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => setPendingDeleteThread(selected)}
+                      className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[13px] font-semibold text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete
+                    </button>
+                  </div>
                 )}
+
               </div>
               <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
                 <ThreadConversation
@@ -652,7 +748,11 @@ export default function AdminMessages() {
                   markRead={false}
                   memberLabel={selected?.user_name ?? selected?.user_username ?? null}
                   onNotFound={clearThread}
-                  onChanged={() => fetchAll({ quiet: true })}
+                  onChanged={() => {
+                    fetchAll({ quiet: true });
+                    queryClient.invalidateQueries({ queryKey: ["admin-unread-threads"] });
+                  }}
+
                 />
               </div>
             </>
@@ -805,6 +905,35 @@ export default function AdminMessages() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={Boolean(pendingDeleteThread)}
+        onOpenChange={(o) => !o && setPendingDeleteThread(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this conversation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Every message in this conversation is removed for the team and the member.
+              This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingThread}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={deletingThread}
+              onClick={(e) => {
+                e.preventDefault();
+                deleteThread();
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingThread ? "Deleting…" : "Delete conversation"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
 
 
       <ManageTemplatesDialog
