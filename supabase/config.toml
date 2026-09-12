@@ -7,7 +7,6 @@ project_id = "oejiewwdmuhnnygnzkvw"
     verify_jwt = false
   [functions.preview-transactional-email]
     verify_jwt = false
-  [functions.send-email]
-    verify_jwt = false
+  [functions.send-post-received]
   [functions.send-post-received]
     verify_jwt = true
