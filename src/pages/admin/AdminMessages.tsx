@@ -457,10 +457,14 @@ export default function AdminMessages() {
     [queryClient],
   );
 
+  // Re-runs whenever the open conversation gains a newer message, so a reply
+  // that lands while the team is reading never turns the thread orange again.
   useEffect(() => {
     if (!routeThreadId) return;
+    if (selected && !isUnanswered(selected)) return;
     markThreadRead(routeThreadId);
-  }, [routeThreadId, markThreadRead]);
+  }, [routeThreadId, selected, markThreadRead]);
+
 
   const deleteThread = async () => {
     if (!pendingDeleteThread) return;
