@@ -11,7 +11,10 @@ import { useLocation, useNavigationType } from "react-router-dom";
  * entry and re-apply it over a short window while the page grows tall enough.
  */
 const STORAGE_PREFIX = "scrollpos:";
-const RESTORE_WINDOW_MS = 2000;
+/** Give up entirely after this long, however the lists are behaving. */
+const RESTORE_HARD_CAP_MS = 10000;
+/** A list that hasn't grown for this long is treated as fully loaded. */
+const GROWTH_STALL_MS = 1500;
 
 /**
  * Pages whose columns scroll independently (home, topic, post on lg+) never
