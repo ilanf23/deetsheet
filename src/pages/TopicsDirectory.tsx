@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { categories, categoryRows } from "@/data/seedData";
 import { useTopics, type TopicRow } from "@/hooks/useSupabaseTopics";
 
@@ -101,7 +102,21 @@ const TopicsDirectory = () => {
           </div>
 
           {isLoading && (
-            <p className="text-sm text-muted-foreground mb-6">Loading topics…</p>
+            <div
+              className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-x-8 gap-y-8"
+              aria-label="Loading topics"
+            >
+              {Array.from({ length: 14 }).map((_, i) => (
+                <div key={i}>
+                  <Skeleton className="h-4 w-24 mb-3" />
+                  <div className="space-y-2">
+                    {Array.from({ length: 5 }).map((_, j) => (
+                      <Skeleton key={j} className="h-3.5" style={{ width: `${50 + ((i + j) % 4) * 12}%` }} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
 
           {/* Category grid grouped by rows */}

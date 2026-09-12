@@ -34,6 +34,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import Combobox from "@/components/Combobox";
 import {
   Form,
   FormField,
@@ -840,20 +841,16 @@ const ProfileEdit = () => {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel>State</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select state..." />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                {US_STATES.map((s) => (
-                                  <SelectItem key={s} value={s}>
-                                    {s}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <FormControl>
+                              <Combobox
+                                value={field.value}
+                                onValueChange={field.onChange}
+                                options={US_STATES.map((s) => ({ value: s, label: s }))}
+                                placeholder="Select state..."
+                                searchPlaceholder="Search states…"
+                                emptyText="No state found."
+                              />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}

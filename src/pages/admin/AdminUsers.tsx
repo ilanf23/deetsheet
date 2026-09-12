@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Search, ChevronDown, Plus } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
+import { AdminPageSkeleton } from "@/components/PageSkeletons";
 import {
   Dialog,
   DialogContent,
@@ -199,12 +200,7 @@ export default function AdminUsers() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div
-          className="h-7 w-7 rounded-full animate-spin border-2"
-          style={{ borderColor: "hsl(var(--admin-primary))", borderTopColor: "transparent" }}
-        />
-      </div>
+      <AdminPageSkeleton />
     );
   }
 
@@ -254,7 +250,7 @@ export default function AdminUsers() {
           />
         </div>
 
-        <FilterSelect
+        <AdminSortSelect
           label="Role"
           value={roleFilter}
           onChange={(v) => {
@@ -268,7 +264,7 @@ export default function AdminUsers() {
             { value: "user", label: "User" },
           ]}
         />
-        <FilterSelect
+        <AdminSortSelect
           label="Status"
           value={statusFilter}
           onChange={(v) => {
@@ -469,44 +465,3 @@ export default function AdminUsers() {
   );
 }
 
-function FilterSelect({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: { value: string; label: string }[];
-}) {
-  return (
-    <label className="flex flex-col gap-1.5 min-w-[180px]">
-      <span className="text-[13px]" style={{ color: "hsl(var(--admin-fg))" }}>
-        {label}
-      </span>
-      <span className="relative">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full appearance-none pl-3.5 pr-10 py-2.5 rounded-lg text-[14px] focus:outline-none"
-          style={{
-            backgroundColor: "hsl(var(--admin-surface))",
-            border: "1px solid hsl(var(--admin-border))",
-            color: "hsl(var(--admin-fg))",
-          }}
-        >
-          {options.map((o) => (
-            <option key={o.value} value={o.value}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none"
-          style={{ color: "hsl(var(--admin-fg-muted))" }}
-        />
-      </span>
-    </label>
-  );
-}

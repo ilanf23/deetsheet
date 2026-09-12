@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -291,7 +292,19 @@ export default function ThreadConversation({
   };
 
   if (loading) {
-    return <div className="py-8 text-center text-sm text-muted-foreground">Loading…</div>;
+    return (
+      <div className="space-y-4 py-2" aria-label="Loading conversation">
+        {[0, 1, 2, 3].map((i) => {
+          const mine = i % 2 === 1;
+          return (
+            <div key={i} className={`flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}>
+              {!mine && <Skeleton className="h-7 w-7 shrink-0 rounded-full" />}
+              <Skeleton className={`h-10 rounded-2xl ${mine ? "w-2/5" : "w-1/2"}`} />
+            </div>
+          );
+        })}
+      </div>
+    );
   }
 
 

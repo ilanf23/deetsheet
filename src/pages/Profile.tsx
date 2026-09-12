@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
+import { ProfilePageSkeleton } from "@/components/PageSkeletons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -153,8 +154,8 @@ const Profile = () => {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <DeetHeader />
-        <main className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <main className="flex-1 flex flex-col">
+          <ProfilePageSkeleton />
         </main>
         <DeetFooter />
       </div>

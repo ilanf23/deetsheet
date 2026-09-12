@@ -1,5 +1,6 @@
-import PostCard from "@/components/PostCard";
 import { Post } from "@/data/seedData";
+import PostCard from "@/components/PostCard";
+import { PostCardSkeleton } from "@/components/PageSkeletons";
 import { useRecentPostsByTopic } from "@/hooks/useSupabaseTopics";
 
 interface TopicRecentlyAddedProps {
@@ -19,7 +20,10 @@ const TopicRecentlyAdded = ({ topicId, topicName }: TopicRecentlyAddedProps) => 
       </div>
       <div>
         {isLoading && (
-          <p className="text-[11px] text-muted-foreground px-1 py-2">Loading…</p>
+          <>
+            <PostCardSkeleton />
+            <PostCardSkeleton withImage={false} />
+          </>
         )}
         {!isLoading && (!posts || posts.length === 0) && (
           <p className="text-[11px] text-muted-foreground px-1 py-2">

@@ -9,6 +9,8 @@ import { LocationProvider } from "@/contexts/LocationContext";
 import { AdminModeProvider } from "@/hooks/useAdminMode";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import ScrollRestoration from "@/components/ScrollRestoration";
+import DeetHeader from "@/components/DeetHeader";
+import { AdminPageSkeleton, ProfilePageSkeleton, ThreadListSkeleton } from "@/components/PageSkeletons";
 import { usePageViews } from "@/hooks/usePageViews";
 import Index from "./pages/Index";
 import SignUp from "./pages/SignUp";
@@ -38,8 +40,11 @@ const ProfileEdit = lazy(() => import("./pages/ProfileEdit"));
 
 function ProfileChunkFallback() {
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+    <div className="min-h-screen flex flex-col bg-background">
+      <DeetHeader />
+      <main className="flex-1 flex flex-col">
+        <ProfilePageSkeleton />
+      </main>
     </div>
   );
 }
@@ -68,10 +73,23 @@ const AdminMessages = lazy(() => import("./pages/admin/AdminMessages"));
 const Inbox = lazy(() => import("./pages/Inbox"));
 const InboxThread = lazy(() => import("./pages/InboxThread"));
 
+function InboxChunkFallback() {
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      <DeetHeader />
+      <main className="flex-1 max-w-3xl w-full mx-auto px-4 py-10">
+        <div className="rounded-lg border overflow-hidden">
+          <ThreadListSkeleton />
+        </div>
+      </main>
+    </div>
+  );
+}
+
 function AdminChunkFallback() {
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+    <div className="min-h-screen p-8">
+      <AdminPageSkeleton />
     </div>
   );
 }
@@ -141,7 +159,7 @@ const App = () => (
             <Route
               path="/inbox"
               element={
-                <Suspense fallback={<ProfileChunkFallback />}>
+                <Suspense fallback={<InboxChunkFallback />}>
                   <Inbox />
                 </Suspense>
               }
@@ -149,7 +167,7 @@ const App = () => (
             <Route
               path="/inbox/:threadId"
               element={
-                <Suspense fallback={<ProfileChunkFallback />}>
+                <Suspense fallback={<InboxChunkFallback />}>
                   <InboxThread />
                 </Suspense>
               }

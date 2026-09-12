@@ -1,8 +1,9 @@
 import { type RefObject } from "react";
-import PostCard from "@/components/PostCard";
 import type { Post } from "@/data/seedData";
-import { useRecentPosts } from "@/hooks/useSupabaseTopics";
+import PostCard from "@/components/PostCard";
 import { useInfiniteList } from "@/hooks/useInfiniteList";
+import { useRecentPosts } from "@/hooks/useSupabaseTopics";
+import { PostCardSkeleton } from "@/components/PageSkeletons";
 
 interface RecentlyAddedSidebarProps {
   scrollRootRef?: RefObject<Element | null>;
@@ -28,7 +29,11 @@ const RecentlyAddedSidebar = ({ scrollRootRef }: RecentlyAddedSidebarProps) => {
       </div>
       <div>
         {isLoading && (
-          <p className="text-[11px] text-muted-foreground px-1 py-2">Loading…</p>
+          <>
+            <PostCardSkeleton />
+            <PostCardSkeleton withImage={false} />
+            <PostCardSkeleton />
+          </>
         )}
         {!isLoading && list.length === 0 && (
           <p className="text-[11px] text-muted-foreground px-1 py-2">
@@ -38,11 +43,8 @@ const RecentlyAddedSidebar = ({ scrollRootRef }: RecentlyAddedSidebarProps) => {
         {!isLoading &&
           visible.map((post) => <PostCard key={post.id} post={post} />)}
         {hasMore && (
-          <div
-            ref={sentinelRef}
-            className="h-10 flex items-center justify-center text-[11px] text-muted-foreground"
-          >
-            Loading more…
+          <div ref={sentinelRef}>
+            <PostCardSkeleton withImage={false} />
           </div>
         )}
       </div>

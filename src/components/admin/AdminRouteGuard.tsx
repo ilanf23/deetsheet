@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import { Navigate, Outlet } from "react-router-dom";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
-import { useToast } from "@/hooks/use-toast";
+import { AdminPageSkeleton } from "@/components/PageSkeletons";
+
 
 // Auth gate for admin child routes. Lives *inside* the layout outlet so the
 // sidebar/header keep painting while we verify the admin role — only the main
@@ -42,12 +44,7 @@ export default function AdminRouteGuard() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div
-          className="h-7 w-7 rounded-full animate-spin border-2"
-          style={{ borderColor: "hsl(var(--admin-primary))", borderTopColor: "transparent" }}
-        />
-      </div>
+      <AdminPageSkeleton />
     );
   }
 

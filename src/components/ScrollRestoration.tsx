@@ -13,6 +13,17 @@ import { useLocation, useNavigationType } from "react-router-dom";
 const STORAGE_PREFIX = "scrollpos:";
 const RESTORE_WINDOW_MS = 2000;
 
+/**
+ * Pages whose columns scroll independently (home, topic, post on lg+) never
+ * scroll the window, so we track every element tagged with
+ * `data-scroll-restore="<name>"` alongside `window.scrollY`. Each column is
+ * saved under its own sub-key of the history entry.
+ */
+const COLUMN_ATTR = "data-scroll-restore";
+const columnKey = (entryKey: string, name: string) => `${entryKey}#${name}`;
+const restorableColumns = () =>
+  Array.from(document.querySelectorAll<HTMLElement>(`[${COLUMN_ATTR}]`));
+
 function readSaved(key: string): number | null {
   try {
     const raw = sessionStorage.getItem(STORAGE_PREFIX + key);
@@ -35,24 +46,37 @@ const ScrollRestoration = () => {
   const navigationType = useNavigationType();
   const currentKey = location.key || "default";
   const keyRef = useRef(currentKey);
+  // While we are programmatically restoring, the scroll events we cause must
+  // not be written back as the "current" position — otherwise a partially
+  // grown list clobbers the real target before content finishes loading.
+  const restoringRef = useRef(false);
 
   // Keep the offset for the entry we are currently on up to date.
   useEffect(() => {
     keyRef.current = currentKey;
     let frame = 0;
+    const saveAll = () => {
+      writeSaved(keyRef.current, window.scrollY);
+      for (const col of restorableColumns()) {
+        const name = col.getAttribute(COLUMN_ATTR);
+        if (name) writeSaved(columnKey(keyRef.current, name), col.scrollTop);
+      }
+    };
     const onScroll = () => {
-      if (frame) return;
+      if (restoringRef.current || frame) return;
       frame = window.requestAnimationFrame(() => {
         frame = 0;
-        writeSaved(keyRef.current, window.scrollY);
+        saveAll();
       });
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
+    // Capture phase so scroll events from inner columns (which don't bubble)
+    // are seen here as well as window scrolls.
+    document.addEventListener("scroll", onScroll, { passive: true, capture: true });
     return () => {
       // Save one final time as we leave this history entry.
-      writeSaved(keyRef.current, window.scrollY);
+      saveAll();
       if (frame) window.cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", onScroll);
+      document.removeEventListener("scroll", onScroll, { capture: true });
     };
   }, [currentKey]);
 
@@ -67,28 +91,58 @@ const ScrollRestoration = () => {
       return;
     }
 
-    const target = readSaved(currentKey);
-    if (target === null || target <= 0) {
-      window.scrollTo(0, 0);
-      return;
-    }
+    const target = readSaved(currentKey) ?? 0;
+    if (target <= 0) window.scrollTo(0, 0);
 
-    // Content loads after the route mounts, so keep nudging until the document
-    // is tall enough to hold the saved offset (or we run out of patience).
+    // Targets are read once per column and cached: reading storage on every
+    // tick would pick up whatever an intermediate scroll event had saved.
+    const colTargets = new Map<string, number | null>();
+    const targetFor = (name: string) => {
+      if (!colTargets.has(name)) colTargets.set(name, readSaved(columnKey(currentKey, name)));
+      return colTargets.get(name) ?? null;
+    };
+    restoringRef.current = true;
+
+    // Content loads after the route mounts (and infinite lists grow as we
+    // scroll them), so keep nudging until every target is tall enough to hold
+    // its saved offset — or we run out of patience.
     const start = performance.now();
     let frame = 0;
     const tick = () => {
-      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-      window.scrollTo(0, Math.min(target, Math.max(maxScroll, 0)));
-      const reached = Math.abs(window.scrollY - target) < 2;
-      if (!reached && performance.now() - start < RESTORE_WINDOW_MS) {
+      let allReached = true;
+
+      if (target > 0) {
+        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        window.scrollTo(0, Math.min(target, Math.max(maxScroll, 0)));
+        if (Math.abs(window.scrollY - target) >= 2) allReached = false;
+      }
+
+      for (const col of restorableColumns()) {
+        const name = col.getAttribute(COLUMN_ATTR);
+        if (!name) continue;
+        const colTarget = targetFor(name);
+        if (colTarget === null || colTarget <= 0) continue;
+        const max = col.scrollHeight - col.clientHeight;
+        col.scrollTop = Math.min(colTarget, Math.max(max, 0));
+        if (Math.abs(col.scrollTop - colTarget) >= 2) allReached = false;
+      }
+
+      if (!allReached && performance.now() - start < RESTORE_WINDOW_MS) {
         frame = window.requestAnimationFrame(tick);
+      } else {
+        // Let the trailing scroll events from our last nudge settle before
+        // user scrolls start being recorded again.
+        window.setTimeout(() => {
+          restoringRef.current = false;
+        }, 100);
       }
     };
     frame = window.requestAnimationFrame(tick);
-    return () => window.cancelAnimationFrame(frame);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      restoringRef.current = false;
+    };
     // Restoration runs once per history entry.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentKey, navigationType]);
 
   return null;

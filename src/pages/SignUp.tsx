@@ -9,13 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import Combobox from "@/components/Combobox";
 import { toast } from "@/components/ui/sonner";
 import { US_STATES } from "@/lib/usStates";
 import { readStoredLocation, clearStoredLocation } from "@/lib/locationStorage";
@@ -198,18 +192,14 @@ const SignUp = () => {
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
                     />
-                    <Select value={state} onValueChange={setState}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="State" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {US_STATES.map((s) => (
-                          <SelectItem key={s.code} value={s.code}>
-                            {s.code}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Combobox
+                      value={state}
+                      onValueChange={setState}
+                      options={US_STATES.map((s) => ({ value: s.code, label: s.code, description: s.name }))}
+                      placeholder="State"
+                      searchPlaceholder="Search states…"
+                      emptyText="No state found."
+                    />
                   </div>
                 )}
                 {skipLocation && (

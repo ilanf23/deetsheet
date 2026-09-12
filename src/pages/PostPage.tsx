@@ -8,6 +8,7 @@ import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
 import TopicRecentlyAdded from "@/components/TopicRecentlyAdded";
 import TopicRecommendations from "@/components/TopicRecommendations";
+import { TopicPageSkeleton } from "@/components/PageSkeletons";
 import { Skeleton } from "@/components/ui/skeleton";
 import PostHeader from "@/components/post/PostHeader";
 import AuthorByline from "@/components/post/AuthorByline";
@@ -115,8 +116,8 @@ const PostPage = () => {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <DeetHeader />
-        <main className="flex-1 container mx-auto px-4 py-20 text-center">
-          <p className="text-muted-foreground">Loading…</p>
+        <main className="flex-1">
+          <TopicPageSkeleton />
         </main>
         <DeetFooter />
       </div>
@@ -182,12 +183,12 @@ const PostPage = () => {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-5 lg:h-full">
             {/* Left rail - Recently Added */}
-            <aside className={`${mobileTab === "recent" ? "block" : "hidden"} lg:block pt-4 lg:h-full lg:overflow-y-auto lg:pr-2`}>
+            <aside className={`${mobileTab === "recent" ? "block" : "hidden"} lg:block pt-4 lg:h-full lg:overflow-y-auto lg:pr-2 lg:pb-6`} data-scroll-restore="post-recent">
               <TopicRecentlyAdded topicId={topic.id} topicName={topic.name} />
             </aside>
 
             {/* Middle + Right share a single scroll container */}
-            <div className="lg:h-full lg:overflow-y-auto lg:pr-2">
+            <div className="lg:h-full lg:overflow-y-auto lg:pr-2 lg:pb-6" data-scroll-restore="post-main">
               <div className="grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-5">
                 {/* Middle column - the read */}
                 <article className={`${mobileTab === "post" ? "block" : "hidden"} lg:block min-w-0 pt-4 space-y-[var(--space-rhythm-block)]`}>
