@@ -43,7 +43,7 @@ const RecentlyAddedSidebar = ({ scrollRootRef }: RecentlyAddedSidebarProps) => {
         {!isLoading &&
           visible.map((post) => <PostCard key={post.id} post={post} />)}
         {hasMore && (
-          <div ref={sentinelRef}>
+          <div ref={sentinelRef} data-infinite-sentinel>
             <PostCardSkeleton withImage={false} />
           </div>
         )}

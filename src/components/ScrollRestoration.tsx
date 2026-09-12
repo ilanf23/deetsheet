@@ -12,9 +12,11 @@ import { useLocation, useNavigationType } from "react-router-dom";
  */
 const STORAGE_PREFIX = "scrollpos:";
 /** Give up entirely after this long, however the lists are behaving. */
-const RESTORE_HARD_CAP_MS = 10000;
+const RESTORE_HARD_CAP_MS = 15000;
 /** A list that hasn't grown for this long is treated as fully loaded. */
-const GROWTH_STALL_MS = 1500;
+const GROWTH_STALL_MS = 4000;
+/** Marks the sentinel div rendered by useInfiniteList while more items exist. */
+const SENTINEL_ATTR = "data-infinite-sentinel";
 
 /**
  * Pages whose columns scroll independently (home, topic, post on lg+) never
@@ -125,6 +127,15 @@ const ScrollRestoration = () => {
       }
       return now - seen.at >= GROWTH_STALL_MS;
     };
+    // A visible sentinel means a fetch/append is pending, so the list is not
+    // stalled even if its scrollHeight hasn't changed yet.
+    const sentinelVisible = (col: HTMLElement) => {
+      const sentinel = col.querySelector<HTMLElement>(`[${SENTINEL_ATTR}]`);
+      if (!sentinel) return false;
+      const colRect = col.getBoundingClientRect();
+      const sRect = sentinel.getBoundingClientRect();
+      return sRect.top < colRect.bottom && sRect.bottom > colRect.top;
+    };
 
     let frame = 0;
     const tick = () => {
@@ -135,7 +146,13 @@ const ScrollRestoration = () => {
         const height = document.documentElement.scrollHeight;
         const maxScroll = height - window.innerHeight;
         window.scrollTo(0, Math.min(target, Math.max(maxScroll, 0)));
-        if (Math.abs(window.scrollY - target) >= 2 && !stalled("window", height, now)) {
+        // No scrollable content yet means the page is still mounting — that
+        // is not a stall, keep waiting for it.
+        const windowEmpty = height <= window.innerHeight + 1;
+        if (
+          Math.abs(window.scrollY - target) >= 2 &&
+          (windowEmpty || !stalled("window", height, now))
+        ) {
           keepGoing = true;
         }
       }
@@ -147,9 +164,14 @@ const ScrollRestoration = () => {
         if (colTarget === null || colTarget <= 0) continue;
         const max = col.scrollHeight - col.clientHeight;
         col.scrollTop = Math.min(colTarget, Math.max(max, 0));
+        // An empty column is still mounting its first batch: not a stall.
+        // Likewise, a sentinel on screen means the next batch is in flight.
+        const colEmpty = col.scrollHeight <= col.clientHeight + 1;
         if (
           Math.abs(col.scrollTop - colTarget) >= 2 &&
-          !stalled(name, col.scrollHeight, now)
+          (colEmpty ||
+            sentinelVisible(col) ||
+            !stalled(name, col.scrollHeight, now))
         ) {
           keepGoing = true;
         }
