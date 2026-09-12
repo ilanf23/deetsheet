@@ -178,7 +178,7 @@ const ColumnLayout = ({ onAtBottomChange }: ColumnLayoutProps) => {
               <PopularTopicSection key={topic.id} topic={topic} />
             ))}
             {hasMore && (
-              <div ref={sentinelRef}>
+              <div ref={sentinelRef} data-infinite-sentinel>
                 <PopularTopicSkeleton />
               </div>
             )}
