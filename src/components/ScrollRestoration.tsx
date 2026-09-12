@@ -164,9 +164,14 @@ const ScrollRestoration = () => {
         if (colTarget === null || colTarget <= 0) continue;
         const max = col.scrollHeight - col.clientHeight;
         col.scrollTop = Math.min(colTarget, Math.max(max, 0));
+        // An empty column is still mounting its first batch: not a stall.
+        // Likewise, a sentinel on screen means the next batch is in flight.
+        const colEmpty = col.scrollHeight <= col.clientHeight + 1;
         if (
           Math.abs(col.scrollTop - colTarget) >= 2 &&
-          !stalled(name, col.scrollHeight, now)
+          (colEmpty ||
+            sentinelVisible(col) ||
+            !stalled(name, col.scrollHeight, now))
         ) {
           keepGoing = true;
         }
