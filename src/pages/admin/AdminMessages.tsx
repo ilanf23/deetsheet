@@ -765,10 +765,14 @@ export default function AdminMessages() {
                   markRead={false}
                   memberLabel={selected?.user_name ?? selected?.user_username ?? null}
                   onNotFound={clearThread}
-                  onChanged={() => {
+                  onChanged={async () => {
+                    // The team is looking at this conversation right now, so a
+                    // new message in it must not flip the dot back to orange.
+                    await markThreadRead(routeThreadId);
                     fetchAll({ quiet: true });
                     queryClient.invalidateQueries({ queryKey: ["admin-unread-threads"] });
                   }}
+
 
                 />
               </div>
