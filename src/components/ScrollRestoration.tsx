@@ -146,7 +146,13 @@ const ScrollRestoration = () => {
         const height = document.documentElement.scrollHeight;
         const maxScroll = height - window.innerHeight;
         window.scrollTo(0, Math.min(target, Math.max(maxScroll, 0)));
-        if (Math.abs(window.scrollY - target) >= 2 && !stalled("window", height, now)) {
+        // No scrollable content yet means the page is still mounting — that
+        // is not a stall, keep waiting for it.
+        const windowEmpty = height <= window.innerHeight + 1;
+        if (
+          Math.abs(window.scrollY - target) >= 2 &&
+          (windowEmpty || !stalled("window", height, now))
+        ) {
           keepGoing = true;
         }
       }
