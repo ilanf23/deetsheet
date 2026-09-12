@@ -25,3 +25,6 @@ dist-ssr
 
 # ralphex progress logs
 .ralphex/progress/
+
+# Local task notes
+tasks/
