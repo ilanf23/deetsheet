@@ -8,5 +8,4 @@ project_id = "oejiewwdmuhnnygnzkvw"
   [functions.preview-transactional-email]
     verify_jwt = false
   [functions.send-post-received]
-  [functions.send-post-received]
     verify_jwt = true
