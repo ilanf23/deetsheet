@@ -180,7 +180,9 @@ export default function AdminMessages() {
     if (!opts?.quiet) setLoading(true);
     const { data: threadRows } = await supabase
       .from("message_threads")
-      .select("id,user_id,post_id,subject,status,last_message_at,last_sender,admin_read_at")
+      .select(
+        "id,user_id,post_id,subject,status,last_message_at,last_sender,admin_read_at,kind,hidden_for_other_at",
+      )
       .order("last_message_at", { ascending: false })
       .limit(200);
     const rows = (threadRows ?? []) as Thread[];
@@ -413,7 +415,7 @@ export default function AdminMessages() {
 
   const filtered = useMemo(() => {
     let rows = threads;
-    if (tab === "needs_contact") rows = rows.filter((r) => r.status === "needs_contact" || isUnanswered(r));
+    if (tab === "needs_contact") rows = rows.filter((r) => isUnanswered(r));
     if (search.trim()) {
       const q = search.toLowerCase();
       rows = rows.filter(
@@ -432,7 +434,12 @@ export default function AdminMessages() {
     return sorted;
   }, [threads, tab, sort, search]);
 
-  const needsContactCount = threads.filter((t) => t.status === "needs_contact" || isUnanswered(t)).length;
+  // Recomputed from `threads`, so marking a thread read (which optimistically
+  // stamps admin_read_at) drops it out of the tab and count immediately.
+  const needsContactCount = useMemo(
+    () => threads.filter((t) => isUnanswered(t)).length,
+    [threads],
+  );
 
   const selected = threads.find((t) => t.id === routeThreadId) ?? null;
   const selectedLabel = selected?.user_name ?? selected?.user_username ?? "member";
