@@ -127,6 +127,15 @@ const ScrollRestoration = () => {
       }
       return now - seen.at >= GROWTH_STALL_MS;
     };
+    // A visible sentinel means a fetch/append is pending, so the list is not
+    // stalled even if its scrollHeight hasn't changed yet.
+    const sentinelVisible = (col: HTMLElement) => {
+      const sentinel = col.querySelector<HTMLElement>(`[${SENTINEL_ATTR}]`);
+      if (!sentinel) return false;
+      const colRect = col.getBoundingClientRect();
+      const sRect = sentinel.getBoundingClientRect();
+      return sRect.top < colRect.bottom && sRect.bottom > colRect.top;
+    };
 
     let frame = 0;
     const tick = () => {
