@@ -28,16 +28,37 @@ export function useInfiniteList<T>(
     if (!node) return;
     if (visibleCount >= items.length) return;
 
+    const root = rootRef?.current ?? null;
+    let loaded = false;
+    const load = () => {
+      if (loaded) return;
+      loaded = true;
+      setVisibleCount((c) => Math.min(c + step, items.length));
+    };
+    const check = () => {
+      const r = node.getBoundingClientRect();
+      const rb = root
+        ? root.getBoundingClientRect()
+        : { top: 0, bottom: window.innerHeight };
+      if (r.bottom >= rb.top && r.top <= rb.bottom) load();
+    };
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setVisibleCount((c) => Math.min(c + step, items.length));
-        }
+        if (entries.some((e) => e.isIntersecting)) load();
       },
-      { root: rootRef?.current ?? null, rootMargin }
+      { root, rootMargin }
     );
     observer.observe(node);
-    return () => observer.disconnect();
+    const target: EventTarget = root ?? window;
+    target.addEventListener("scroll", check, { passive: true });
+    window.addEventListener("resize", check);
+    const raf = requestAnimationFrame(check);
+    return () => {
+      observer.disconnect();
+      target.removeEventListener("scroll", check);
+      window.removeEventListener("resize", check);
+      cancelAnimationFrame(raf);
+    };
   }, [visibleCount, items.length, step, rootMargin, rootRef]);
 
   return {
