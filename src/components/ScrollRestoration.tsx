@@ -137,7 +137,8 @@ const ScrollRestoration = () => {
       return sRect.top < colRect.bottom && sRect.bottom > colRect.top;
     };
 
-    let frame = 0;
+    let intervalId: number | null = null;
+    const lastDispatches = new Map<string, number>();
     const tick = () => {
       const now = performance.now();
       let keepGoing = false;
@@ -162,13 +163,22 @@ const ScrollRestoration = () => {
         if (!name) continue;
         const colTarget = targetFor(name);
         if (colTarget === null || colTarget <= 0) continue;
+        const prevColScrollTop = col.scrollTop;
         const max = col.scrollHeight - col.clientHeight;
         col.scrollTop = Math.min(colTarget, Math.max(max, 0));
+        const short = Math.abs(col.scrollTop - colTarget) >= 2;
+        if (short && col.scrollTop === prevColScrollTop) {
+          const last = lastDispatches.get(name) ?? 0;
+          if (now - last > 300) {
+            col.dispatchEvent(new Event("scroll"));
+            lastDispatches.set(name, now);
+          }
+        }
         // An empty column is still mounting its first batch: not a stall.
         // Likewise, a sentinel on screen means the next batch is in flight.
         const colEmpty = col.scrollHeight <= col.clientHeight + 1;
         if (
-          Math.abs(col.scrollTop - colTarget) >= 2 &&
+          short &&
           (colEmpty ||
             sentinelVisible(col) ||
             !stalled(name, col.scrollHeight, now))
@@ -178,20 +188,23 @@ const ScrollRestoration = () => {
       }
 
       if (keepGoing && now - start < RESTORE_HARD_CAP_MS) {
-        frame = window.requestAnimationFrame(tick);
-      } else {
-        document.documentElement.style.scrollBehavior = prevBehavior;
-        // Let the trailing scroll events from our last nudge settle before
-        // user scrolls start being recorded again. Until this flips, nothing is
-        // written back, so a clamped position can never replace the target.
-        window.setTimeout(() => {
-          restoringRef.current = false;
-        }, 100);
+        return;
       }
+      if (intervalId !== null) {
+        window.clearInterval(intervalId);
+        intervalId = null;
+      }
+      document.documentElement.style.scrollBehavior = prevBehavior;
+      // Let the trailing scroll events from our last nudge settle before
+      // user scrolls start being recorded again. Until this flips, nothing is
+      // written back, so a clamped position can never replace the target.
+      window.setTimeout(() => {
+        restoringRef.current = false;
+      }, 100);
     };
-    frame = window.requestAnimationFrame(tick);
+    intervalId = window.setInterval(tick, 50);
     return () => {
-      window.cancelAnimationFrame(frame);
+      if (intervalId !== null) window.clearInterval(intervalId);
       document.documentElement.style.scrollBehavior = prevBehavior;
       restoringRef.current = false;
     };
