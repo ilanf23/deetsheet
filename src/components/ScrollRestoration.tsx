@@ -105,19 +105,39 @@ const ScrollRestoration = () => {
       return colTargets.get(name) ?? null;
     };
     restoringRef.current = true;
+    // Instant, never animated: a restore should look like the page was already
+    // there, not like it scrolled itself.
+    const prevBehavior = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = "auto";
 
-    // Content loads after the route mounts (and infinite lists grow as we
-    // scroll them), so keep nudging until every target is tall enough to hold
-    // its saved offset — or we run out of patience.
+    // Content loads after the route mounts, and the home page's middle column is
+    // an infinite list that only appends when its sentinel is on screen. So we
+    // pin each scroller at the bottom (`Math.min(target, max)`) until either the
+    // saved offset is reached or the list stops growing altogether.
     const start = performance.now();
+    // Per-scroller growth watch: last seen scrollHeight and when it last grew.
+    const growth = new Map<string, { height: number; at: number }>();
+    const stalled = (id: string, height: number, now: number) => {
+      const seen = growth.get(id);
+      if (!seen || height > seen.height) {
+        growth.set(id, { height, at: now });
+        return false;
+      }
+      return now - seen.at >= GROWTH_STALL_MS;
+    };
+
     let frame = 0;
     const tick = () => {
-      let allReached = true;
+      const now = performance.now();
+      let keepGoing = false;
 
       if (target > 0) {
-        const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+        const height = document.documentElement.scrollHeight;
+        const maxScroll = height - window.innerHeight;
         window.scrollTo(0, Math.min(target, Math.max(maxScroll, 0)));
-        if (Math.abs(window.scrollY - target) >= 2) allReached = false;
+        if (Math.abs(window.scrollY - target) >= 2 && !stalled("window", height, now)) {
+          keepGoing = true;
+        }
       }
 
       for (const col of restorableColumns()) {
@@ -127,14 +147,21 @@ const ScrollRestoration = () => {
         if (colTarget === null || colTarget <= 0) continue;
         const max = col.scrollHeight - col.clientHeight;
         col.scrollTop = Math.min(colTarget, Math.max(max, 0));
-        if (Math.abs(col.scrollTop - colTarget) >= 2) allReached = false;
+        if (
+          Math.abs(col.scrollTop - colTarget) >= 2 &&
+          !stalled(name, col.scrollHeight, now)
+        ) {
+          keepGoing = true;
+        }
       }
 
-      if (!allReached && performance.now() - start < RESTORE_WINDOW_MS) {
+      if (keepGoing && now - start < RESTORE_HARD_CAP_MS) {
         frame = window.requestAnimationFrame(tick);
       } else {
+        document.documentElement.style.scrollBehavior = prevBehavior;
         // Let the trailing scroll events from our last nudge settle before
-        // user scrolls start being recorded again.
+        // user scrolls start being recorded again. Until this flips, nothing is
+        // written back, so a clamped position can never replace the target.
         window.setTimeout(() => {
           restoringRef.current = false;
         }, 100);
@@ -143,8 +170,10 @@ const ScrollRestoration = () => {
     frame = window.requestAnimationFrame(tick);
     return () => {
       window.cancelAnimationFrame(frame);
+      document.documentElement.style.scrollBehavior = prevBehavior;
       restoringRef.current = false;
     };
+
     // Restoration runs once per history entry.
   }, [currentKey, navigationType]);
 
