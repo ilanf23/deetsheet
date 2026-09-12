@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Row {
   slug: string;
@@ -85,7 +86,22 @@ export default function AdminSitePages() {
         </p>
       </div>
 
-      {loading && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {loading &&
+        [0, 1].map((i) => (
+          <div key={i} className="rounded-lg border p-5 space-y-3 bg-card" aria-label="Loading page">
+            <Skeleton className="h-6 w-40" />
+            <div className="space-y-1.5">
+              <Skeleton className="h-4 w-10" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+            <div className="space-y-1.5">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-52 w-full" />
+              <Skeleton className="h-3 w-56" />
+            </div>
+            <Skeleton className="h-9 w-24" />
+          </div>
+        ))}
 
       {!loading &&
         SITE_PAGE_SECTIONS.map((section) => {

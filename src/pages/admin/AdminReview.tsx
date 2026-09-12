@@ -5,6 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
+import { AdminPageSkeleton } from "@/components/PageSkeletons";
+import { Skeleton } from "@/components/ui/skeleton";
 import AdminEditPostDialog from "@/components/admin/AdminEditPostDialog";
 import ReviewActionDialog, { type ReviewAction } from "@/components/admin/ReviewActionDialog";
 import { logAdminAction } from "@/lib/auditLog";
@@ -65,7 +67,14 @@ function AuthorPriorPosts({ authorId, excludePostId }: { authorId: string; exclu
       {open && (
         <div className="mt-2 pl-5">
           {loading ? (
-            <div className="text-[12px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>Loading…</div>
+            <ul className="space-y-1.5" aria-label="Loading prior posts">
+              {[0, 1, 2].map((i) => (
+                <li key={i} className="flex items-center gap-2">
+                  <Skeleton className="h-3.5" style={{ width: `${40 - i * 8}%` }} />
+                  <Skeleton className="h-3 w-24" />
+                </li>
+              ))}
+            </ul>
           ) : posts.length === 0 ? (
             <div className="text-[12px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>No other posts by this user.</div>
           ) : (
@@ -362,12 +371,7 @@ export default function AdminReview() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div
-          className="h-7 w-7 rounded-full animate-spin border-2"
-          style={{ borderColor: "hsl(var(--admin-primary))", borderTopColor: "transparent" }}
-        />
-      </div>
+      <AdminPageSkeleton />
     );
   }
 

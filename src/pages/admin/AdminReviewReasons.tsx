@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import {
@@ -125,7 +126,30 @@ export default function AdminReviewReasons() {
           </div>
 
           {loading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <ul className="space-y-3" aria-label="Loading reasons">
+              {[0, 1, 2].map((i) => (
+                <li key={i} className="rounded-md border p-3 space-y-2 bg-card">
+                  <div className="flex gap-2">
+                    <div className="flex-1 space-y-1">
+                      <Skeleton className="h-3 w-40" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="flex flex-col justify-end gap-1">
+                      <Skeleton className="h-10 w-10" />
+                      <Skeleton className="h-10 w-10" />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <Skeleton className="h-3 w-56" />
+                    <Skeleton className="h-16 w-full" />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Skeleton className="h-9 w-10" />
+                    <Skeleton className="h-9 w-16" />
+                  </div>
+                </li>
+              ))}
+            </ul>
           ) : list.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               No reasons yet, the review dialog falls back to the default list.

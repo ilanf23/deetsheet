@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -483,9 +484,17 @@ export default function AdminTopicImages() {
           </div>
           <div className="flex-1 overflow-y-auto">
             {loadingTopics && (
-              <div className="px-4 py-6 text-sm text-muted-foreground">
-                Loading topics…
-              </div>
+              <ul aria-label="Loading topics">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <li key={i} className="px-3 py-2 flex items-center gap-3 border-b last:border-b-0">
+                    <Skeleton className="h-10 w-10 shrink-0 rounded" />
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <Skeleton className="h-4" style={{ width: `${45 + (i % 3) * 15}%` }} />
+                      <Skeleton className="h-3 w-20" />
+                    </div>
+                  </li>
+                ))}
+              </ul>
             )}
             {!loadingTopics && filteredTopics.length === 0 && (
               <div className="px-4 py-6 text-sm text-muted-foreground">

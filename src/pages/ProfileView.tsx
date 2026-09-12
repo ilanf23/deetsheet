@@ -59,6 +59,8 @@ import { buildPostSlug } from "@/lib/postSlug";
 import { formatTitle } from "@/lib/formatTitle";
 import { useThreadCounts } from "@/hooks/useUnreadMessages";
 import ProfileMessagesPanel from "@/components/profile/ProfileMessagesPanel";
+import { ProfileHeaderSkeleton, ProfileListCardSkeleton } from "@/components/PageSkeletons";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const CREDENTIAL_ICON_MAP: Record<string, React.ReactNode> = {
   pencil: <Pencil className="h-4 w-4" />,
@@ -218,6 +220,7 @@ const ProfileView = () => {
 
   // Posts & counts from DB
   const [userPosts, setUserPosts] = useState<UserPost[]>([]);
+  const [postsLoaded, setPostsLoaded] = useState(false);
   const [postCount, setPostCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
 
@@ -227,16 +230,19 @@ const ProfileView = () => {
   // than a placeholder 0 that contradicts the list behind it.
   const [topicCount, setTopicCount] = useState<number | null>(null);
   const [topicsRequested, setTopicsRequested] = useState(false);
+  const [topicsLoaded, setTopicsLoaded] = useState(false);
 
   // Comments list — fetched lazily the first time the Comments tab is opened.
   // The count badge is driven by the cheap exact-count query below.
   const [userComments, setUserComments] = useState<UserComment[]>([]);
   const [commentsRequested, setCommentsRequested] = useState(false);
+  const [commentsLoaded, setCommentsLoaded] = useState(false);
 
   // Rankings (posts this member has rated) — lazy, like Comments. Hidden
   // entirely when the member turned the setting off on someone else's view.
   const [userRankings, setUserRankings] = useState<UserRanking[]>([]);
   const [rankingsRequested, setRankingsRequested] = useState(false);
+  const [rankingsLoaded, setRankingsLoaded] = useState(false);
 
   const [createTopicOpen, setCreateTopicOpen] = useState(false);
   const [editPostId, setEditPostId] = useState<string | null>(null);
@@ -257,8 +263,8 @@ const ProfileView = () => {
   const [followingRequested, setFollowingRequested] = useState(false);
   const [followersRequested, setFollowersRequested] = useState(false);
   const { data: followCounts } = useProfileFollowCounts(targetUserId);
-  const { data: followingData } = useFollowing(targetUserId, { enabled: followingRequested });
-  const { data: followersData } = useFollowers(targetUserId, { enabled: followersRequested });
+  const { data: followingData, isLoading: followingLoading } = useFollowing(targetUserId, { enabled: followingRequested });
+  const { data: followersData, isLoading: followersLoading } = useFollowers(targetUserId, { enabled: followersRequested });
   const followingTotal = followingData?.total ?? followCounts?.followingCount ?? 0;
   const followerTotal = followersData?.length ?? followCounts?.followerCount ?? 0;
   const { data: threadCounts } = useThreadCounts();
@@ -312,6 +318,7 @@ const ProfileView = () => {
       }
 
       void postsQuery.then(({ data }) => {
+        setPostsLoaded(true);
         if (!data) return;
         const mapped: UserPost[] = data.map((p: Record<string, unknown>) => ({
           id: p.id as string,
@@ -397,6 +404,7 @@ const ProfileView = () => {
       .select("id, name, slug, description, created_at")
       .order("created_at", { ascending: false })
       .then(({ data }) => {
+        setTopicsLoaded(true);
         if (!data) return;
         setUserTopics(data as UserTopic[]);
         setTopicCount(data.length);
@@ -420,7 +428,11 @@ const ProfileView = () => {
             .select("id, content, created_at, like_count, post_id")
             .eq("public_author_id", targetUserId))
         .order("created_at", { ascending: false });
-      if (cancelled || !data) return;
+      if (cancelled) return;
+      if (!data) {
+        setCommentsLoaded(true);
+        return;
+      }
 
       const rows = data as Array<{
         id: string;
@@ -450,6 +462,7 @@ const ProfileView = () => {
         });
       }
 
+      setCommentsLoaded(true);
       setUserComments(
         rows.map((c) => ({
           id: c.id,
@@ -478,7 +491,11 @@ const ProfileView = () => {
         .select("id, value, created_at, post_id")
         .eq("user_id", targetUserId)
         .order("created_at", { ascending: false });
-      if (cancelled || !data) return;
+      if (cancelled) return;
+      if (!data) {
+        setRankingsLoaded(true);
+        return;
+      }
 
       const rows = data as Array<{
         id: string;
@@ -509,6 +526,7 @@ const ProfileView = () => {
 
       // Ratings on posts we can't read (removed or pending) are dropped rather
       // than rendered as a dead "Unknown post" row.
+      setRankingsLoaded(true);
       setUserRankings(
         rows
           .filter((r) => postById.has(r.post_id))
@@ -779,6 +797,9 @@ const ProfileView = () => {
                     </button>
                   )}
                 </div>
+                {!profileLoaded ? (
+                  <ProfileHeaderSkeleton />
+                ) : (
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h1 className="text-2xl font-bold truncate">{username}</h1>
@@ -823,6 +844,7 @@ const ProfileView = () => {
                     </button>
                   </div>
                 </div>
+                )}
               </div>
 
               {/* Quick facts strip — single line of who/where */}
@@ -861,7 +883,13 @@ const ProfileView = () => {
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                   About
                 </h2>
-                {profile?.bio ? (
+                {!profileLoaded ? (
+                  <div className="space-y-2" aria-hidden>
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-11/12" />
+                    <Skeleton className="h-4 w-3/5" />
+                  </div>
+                ) : profile?.bio ? (
                   <p className="text-sm leading-relaxed">{profile.bio as string}</p>
                 ) : profileLoaded && !hasAboutContent ? (
                   <p className="text-sm text-muted-foreground italic">
@@ -1010,6 +1038,16 @@ const ProfileView = () => {
                   <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-3">
                     Credentials & Highlights
                   </h3>
+                  {!profileLoaded ? (
+                    <div className="space-y-3" aria-hidden>
+                      {[0, 1, 2].map((i) => (
+                        <div key={i} className="flex items-center gap-2.5">
+                          <Skeleton className="h-4 w-4 shrink-0 rounded-full" />
+                          <Skeleton className="h-4" style={{ width: `${70 - i * 15}%` }} />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
                   <div className="space-y-3">
                     {credentials.map((cred, i) => (
                       <div key={i} className="flex items-center gap-2.5 text-sm">
@@ -1035,6 +1073,7 @@ const ProfileView = () => {
                       </p>
                     )}
                   </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -1091,7 +1130,9 @@ const ProfileView = () => {
               )}
 
               <TabsContent value="posts" className="mt-4">
-                {filteredPosts.length === 0 ? (
+                {!postsLoaded ? (
+                  <ProfileListCardSkeleton />
+                ) : filteredPosts.length === 0 ? (
                   <Card className="bg-card">
                     <CardContent className="py-12 text-center text-muted-foreground">
                       <p className="text-sm">
@@ -1272,7 +1313,9 @@ const ProfileView = () => {
                     />
                   </div>
                 )}
-                {filteredTopics.length === 0 ? (
+                {!topicsLoaded ? (
+                  <ProfileListCardSkeleton />
+                ) : filteredTopics.length === 0 ? (
                   <Card className="bg-card">
                     <CardContent className="py-12 text-center text-muted-foreground">
                       <p className="text-sm">
@@ -1316,7 +1359,9 @@ const ProfileView = () => {
               </TabsContent>
 
               <TabsContent value="comments" className="mt-4">
-                {filteredComments.length === 0 ? (
+                {!commentsLoaded ? (
+                  <ProfileListCardSkeleton />
+                ) : filteredComments.length === 0 ? (
                   <Card className="bg-card">
                     <CardContent className="py-12 text-center text-muted-foreground">
                       <p className="text-sm">
@@ -1379,7 +1424,9 @@ const ProfileView = () => {
 
               {showRankingsTab && (
                 <TabsContent value="rankings" className="mt-4">
-                  {filteredRankings.length === 0 ? (
+                  {!rankingsLoaded ? (
+                    <ProfileListCardSkeleton />
+                  ) : filteredRankings.length === 0 ? (
                     <Card className="bg-card">
                       <CardContent className="py-12 text-center text-muted-foreground">
                         <p className="text-sm">
@@ -1444,7 +1491,9 @@ const ProfileView = () => {
               </TabsContent>
 
               <TabsContent value="following" className="mt-4">
-                {followingTotal === 0 ? (
+                {followingLoading ? (
+                  <ProfileListCardSkeleton count={2} />
+                ) : followingTotal === 0 ? (
                   <Card className="bg-card">
                     <CardContent className="py-12 text-center text-muted-foreground">
                       <p className="text-sm">
@@ -1581,7 +1630,9 @@ const ProfileView = () => {
               </TabsContent>
 
               <TabsContent value="followers" className="mt-4">
-                {followerTotal === 0 ? (
+                {followersLoading ? (
+                  <ProfileListCardSkeleton count={2} />
+                ) : followerTotal === 0 ? (
                   <Card className="bg-card">
                     <CardContent className="py-12 text-center text-muted-foreground">
                       <p className="text-sm">

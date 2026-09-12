@@ -5,6 +5,7 @@ import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
 import ThreadDialog from "@/components/inbox/ThreadDialog";
 import NewMessageDialog from "@/components/inbox/NewMessageDialog";
+import { ThreadListSkeleton } from "@/components/PageSkeletons";
 import ThreadActionsMenu from "@/components/inbox/ThreadActionsMenu";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -198,7 +199,9 @@ export default function Inbox() {
         </div>
 
         {busy ? (
-          <div className="text-muted-foreground text-sm">Loading…</div>
+          <div className="rounded-lg border overflow-hidden">
+            <ThreadListSkeleton count={4} />
+          </div>
         ) : visible.length === 0 ? (
           <div className="rounded-lg border p-8 text-center text-sm text-muted-foreground">
             {tab === "requests"

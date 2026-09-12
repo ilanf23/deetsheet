@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Star, MessageSquare, Loader2, Pencil, Clock } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
 import { formatTitle } from "@/lib/formatTitle";
 import { useAuth } from "@/contexts/AuthContext";
 import EditPostDialog from "@/components/EditPostDialog";
+import { Card, CardContent } from "@/components/ui/card";
+import { useCallback, useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Star, MessageSquare, Pencil, Clock } from "lucide-react";
+import { ProfileListCardSkeleton } from "@/components/PageSkeletons";
 
 interface UserPost {
   id: string;
@@ -90,9 +91,7 @@ const UserPostsList = ({ userId }: { userId: string }) => {
 
   if (loading) {
     return (
-      <div className="flex justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
+      <ProfileListCardSkeleton />
     );
   }
 

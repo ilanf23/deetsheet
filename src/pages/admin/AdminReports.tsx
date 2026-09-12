@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { Tables } from "@/integrations/supabase/types";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
+import { AdminPageSkeleton } from "@/components/PageSkeletons";
 import MessageReportsPanel from "@/components/admin/MessageReportsPanel";
 
 type Report = Tables<"reports">;
@@ -194,12 +195,7 @@ export default function AdminReports() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div
-          className="h-7 w-7 rounded-full animate-spin border-2"
-          style={{ borderColor: "hsl(var(--admin-primary))", borderTopColor: "transparent" }}
-        />
-      </div>
+      <AdminPageSkeleton />
     );
   }
 

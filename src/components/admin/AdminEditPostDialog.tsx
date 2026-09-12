@@ -1,16 +1,3 @@
-import { useEffect, useRef, useState } from "react";
-import { ChevronDown, Hash, ImagePlus, MessageSquare, User as UserIcon, X } from "lucide-react";
-import { formatDistanceToNow, parseISO } from "date-fns";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -18,15 +5,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { useProfileFollowCounts } from "@/hooks/useUserFollow";
-import { useFollowing, useFollowers } from "@/hooks/useFollowLists";
+import Combobox from "@/components/Combobox";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { logAdminAction } from "@/lib/auditLog";
-import type { Tables } from "@/integrations/supabase/types";
+import { useAuth } from "@/contexts/AuthContext";
+import { Textarea } from "@/components/ui/textarea";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent } from "@/components/ui/card";
+import { formatDistanceToNow, parseISO } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
+import { useProfileFollowCounts } from "@/hooks/useUserFollow";
 import { invalidatePostCaches } from "@/lib/postCacheInvalidation";
+import { useFollowing, useFollowers } from "@/hooks/useFollowLists";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChevronDown, Hash, ImagePlus, MessageSquare, User as UserIcon, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 type Post = Tables<"posts">;
 type TopicLite = Pick<Tables<"topics">, "id" | "name">;
@@ -613,14 +613,14 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>Topic</Label>
-                <Select value={topicId} onValueChange={setTopicId}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {topics.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  value={topicId}
+                  onValueChange={setTopicId}
+                  options={topics.map((t) => ({ value: t.id, label: t.name }))}
+                  placeholder="Select a topic…"
+                  searchPlaceholder="Search topics…"
+                  emptyText="No topics match."
+                />
               </div>
 
               <div className="space-y-1.5">

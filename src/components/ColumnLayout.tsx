@@ -2,11 +2,26 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import PopularTopicSection from "@/components/PopularTopicSection";
 import SubjectsSidebar from "@/components/SubjectsSidebar";
 import RecentlyAddedSidebar from "@/components/RecentlyAddedSidebar";
+import { PopularTopicSkeleton } from "@/components/PageSkeletons";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { Topic } from "@/data/seedData";
 import { useTopics } from "@/hooks/useSupabaseTopics";
 import { useInfiniteList } from "@/hooks/useInfiniteList";
 
 type MobileTab = "popular" | "recent" | "subjects";
+type PopularPeriod = "year" | "all" | "month";
+
+const POPULAR_PERIODS: { value: PopularPeriod; label: string }[] = [
+  { value: "year", label: "This Year" },
+  { value: "all", label: "All Time" },
+  { value: "month", label: "This Month" },
+];
 
 // Curated priority order shown first on the homepage Most Popular column.
 // Remaining topics auto-fill below, sorted by post count (desc) so the
@@ -26,7 +41,7 @@ interface ColumnLayoutProps {
 const ColumnLayout = ({ onAtBottomChange }: ColumnLayoutProps) => {
   // Pull live topics from the DB so the priority list isn't silently
   // truncated by missing seed-data entries.
-  const { data: dbTopics } = useTopics();
+  const { data: dbTopics, isLoading: topicsLoading } = useTopics();
 
   const popularTopics = useMemo<Topic[]>(() => {
     const all = dbTopics ?? [];
@@ -97,6 +112,7 @@ const ColumnLayout = ({ onAtBottomChange }: ColumnLayoutProps) => {
   }, [onAtBottomChange, visible.length]);
 
   const [mobileTab, setMobileTab] = useState<MobileTab>("recent");
+  const [period, setPeriod] = useState<PopularPeriod>("year");
 
   const tabs: { id: MobileTab; label: string }[] = [
     { id: "recent", label: "Recently Added" },
@@ -128,6 +144,7 @@ const ColumnLayout = ({ onAtBottomChange }: ColumnLayoutProps) => {
         {/* Left — Recently Added */}
         <div
           ref={leftRef}
+          data-scroll-restore="home-recent"
           className={`${mobileTab === "recent" ? "block" : "hidden"} lg:block lg:h-full lg:overflow-y-auto lg:pr-2 lg:pb-24`}
         >
           <RecentlyAddedSidebar scrollRootRef={leftRef} />
@@ -136,23 +153,33 @@ const ColumnLayout = ({ onAtBottomChange }: ColumnLayoutProps) => {
         {/* Middle — Most Popular */}
         <div
           ref={middleRef}
-          className={`${mobileTab === "popular" ? "block" : "hidden"} lg:block min-w-0 pt-4 lg:h-full lg:overflow-y-auto lg:pr-2`}
+          data-scroll-restore="home-popular"
+          className={`${mobileTab === "popular" ? "block" : "hidden"} lg:block min-w-0 pt-4 lg:h-full lg:overflow-y-auto lg:pr-2 lg:pb-24`}
         >
           <div className="flex items-center justify-between h-8 mb-4 px-1 pb-2 border-b border-border">
             <h2 className="text-[11px] font-semibold uppercase tracking-wider text-foreground">Most Popular</h2>
-            <select className="text-xs border border-foreground/40 rounded px-2 py-1 bg-background text-muted-foreground">
-              <option>This Year</option>
-              <option>All Time</option>
-              <option>This Month</option>
-            </select>
+            <Select value={period} onValueChange={(v) => setPeriod(v as PopularPeriod)}>
+              <SelectTrigger className="h-7 w-auto gap-1.5 rounded border-foreground/40 px-2 py-1 text-xs text-muted-foreground focus:ring-1 focus:ring-offset-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {POPULAR_PERIODS.map((p) => (
+                  <SelectItem key={p.value} value={p.value} className="text-xs">
+                    {p.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-4">
+            {topicsLoading &&
+              Array.from({ length: 3 }).map((_, i) => <PopularTopicSkeleton key={i} />)}
             {visible.map((topic) => (
               <PopularTopicSection key={topic.id} topic={topic} />
             ))}
             {hasMore && (
-              <div ref={sentinelRef} className="h-10 flex items-center justify-center text-xs text-muted-foreground">
-                Loading more topics…
+              <div ref={sentinelRef}>
+                <PopularTopicSkeleton />
               </div>
             )}
           </div>
@@ -161,7 +188,8 @@ const ColumnLayout = ({ onAtBottomChange }: ColumnLayoutProps) => {
         {/* Right — Subjects */}
         <div
           ref={rightRef}
-          className={`${mobileTab === "subjects" ? "block" : "hidden"} lg:block lg:h-full lg:overflow-y-auto lg:pr-2`}
+          data-scroll-restore="home-subjects"
+          className={`${mobileTab === "subjects" ? "block" : "hidden"} lg:block lg:h-full lg:overflow-y-auto lg:pr-2 lg:pb-24`}
         >
           <SubjectsSidebar />
         </div>

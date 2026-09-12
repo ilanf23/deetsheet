@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
+import { AdminPageSkeleton } from "@/components/PageSkeletons";
 import AdminEditPostDialog from "@/components/admin/AdminEditPostDialog";
 import AdminPostReviewDialog from "@/components/admin/AdminPostReviewDialog";
 import {
@@ -290,12 +291,7 @@ export default function AdminPosts() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div
-          className="h-7 w-7 rounded-full animate-spin border-2"
-          style={{ borderColor: "hsl(var(--admin-primary))", borderTopColor: "transparent" }}
-        />
-      </div>
+      <AdminPageSkeleton />
     );
   }
 

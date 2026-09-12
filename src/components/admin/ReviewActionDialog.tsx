@@ -1,27 +1,23 @@
-import { useEffect, useRef, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ChevronDown } from "lucide-react";
-
-import { supabase } from "@/integrations/supabase/client";
+import Combobox from "@/components/Combobox";
 import { useToast } from "@/hooks/use-toast";
 import { buildPostSlug } from "@/lib/postSlug";
-import { isOtherReason, useReviewReasons, type ReviewReason } from "@/lib/reviewReasons";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
+import { useEffect, useRef, useState } from "react";
 import { useTopics } from "@/hooks/useSupabaseTopics";
-import { absolutizeMarkdownLinks, pendingClosingWithEditLink } from "@/lib/reviewCopy";
-import { LINK_SHORTCUTS, insertMarkdownLink } from "@/lib/linkShortcuts";
 import { useQueryClient } from "@tanstack/react-query";
-import { invalidatePostCaches } from "@/lib/postCacheInvalidation";
+import { supabase } from "@/integrations/supabase/client";
 import PostChangeDiff from "@/components/admin/PostChangeDiff";
-
-
-
+import { invalidatePostCaches } from "@/lib/postCacheInvalidation";
+import { LINK_SHORTCUTS, insertMarkdownLink } from "@/lib/linkShortcuts";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { absolutizeMarkdownLinks, pendingClosingWithEditLink } from "@/lib/reviewCopy";
+import { isOtherReason, useReviewReasons, type ReviewReason } from "@/lib/reviewReasons";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 export type ReviewAction = "approve" | "reject" | "edit";
 
@@ -576,18 +572,18 @@ export default function ReviewActionDialog({
               <>
                 <div>
                   <Label className="text-xs">Category / topic</Label>
-                  <Select value={editTopicId} onValueChange={setEditTopicId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a topic…" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-72">
-                      {(topics ?? []).map((t) => (
-                        <SelectItem key={t.id} value={t.id}>
-                          {t.name} · {t.categoryName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Combobox
+                    value={editTopicId}
+                    onValueChange={setEditTopicId}
+                    options={(topics ?? []).map((t) => ({
+                      value: t.id,
+                      label: t.name,
+                      description: t.categoryName,
+                    }))}
+                    placeholder="Select a topic…"
+                    searchPlaceholder="Search topics…"
+                    emptyText="No topics match."
+                  />
                 </div>
                 <div>
                   <Label className="text-xs">Post</Label>

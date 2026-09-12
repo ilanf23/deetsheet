@@ -14,10 +14,18 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { ThreadListSkeleton } from "@/components/PageSkeletons";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { LINK_SHORTCUTS, insertMarkdownLink } from "@/lib/linkShortcuts";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
 import ThreadConversation from "@/components/inbox/ThreadConversation";
@@ -565,12 +573,7 @@ export default function AdminMessages() {
 
           <div className="min-h-0 flex-1 overflow-y-auto">
             {loading ? (
-              <div className="flex items-center justify-center py-20">
-                <div
-                  className="h-7 w-7 rounded-full animate-spin border-2"
-                  style={{ borderColor: "hsl(var(--admin-primary))", borderTopColor: "transparent" }}
-                />
-              </div>
+              <ThreadListSkeleton count={6} />
             ) : filtered.length === 0 ? (
               <div
                 className="px-6 py-16 text-center text-[14px]"
@@ -778,18 +781,18 @@ export default function AdminMessages() {
             {templates.length > 0 && (
               <div className="flex items-center gap-3">
                 <Label className="text-xs shrink-0">Template</Label>
-                <select
-                  className="border rounded-md px-2 py-1.5 text-sm"
-                  onChange={(e) => e.target.value && applyTemplate(e.target.value)}
-                  defaultValue=""
-                >
-                  <option value="">- pick a form letter -</option>
-                  {templates.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.title}
-                    </option>
-                  ))}
-                </select>
+                <Select onValueChange={applyTemplate}>
+                  <SelectTrigger className="h-9 w-auto min-w-[220px] text-sm">
+                    <SelectValue placeholder="Pick a form letter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templates.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
             <div className="space-y-1.5">

@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Trash2, Mail, MailOpen } from "lucide-react";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
 
@@ -155,9 +156,13 @@ export default function AdminContactMessages() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold">Contact Messages</h1>
-          <p className="text-sm text-muted-foreground">
-            {loading ? "Loading…" : `${messages.length} total · ${unreadCount} unread`}
-          </p>
+          {loading ? (
+            <Skeleton className="mt-1 h-4 w-36" />
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              {messages.length} total · {unreadCount} unread
+            </p>
+          )}
         </div>
         <AdminSortSelect
           variant="plain"
@@ -174,6 +179,19 @@ export default function AdminContactMessages() {
       )}
 
       <div className="space-y-3">
+        {loading &&
+          [0, 1, 2].map((i) => (
+            <div key={i} className="rounded-xl border bg-white p-4 shadow-sm" aria-label="Loading message">
+              <div className="flex items-center gap-2 mb-2">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+              </div>
+              <Skeleton className="h-3 w-24 mb-3" />
+              <Skeleton className="h-4 w-full mb-1.5" />
+              <Skeleton className="h-4 w-4/5" />
+            </div>
+          ))}
         {sortedMessages.map((msg) => (
           <div
             key={msg.id}

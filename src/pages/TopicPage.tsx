@@ -8,6 +8,7 @@ import DeetFooter from "@/components/DeetFooter";
 import TopicPostListItem from "@/components/TopicPostListItem";
 import TopicRecommendations from "@/components/TopicRecommendations";
 import TopicRecentlyAdded from "@/components/TopicRecentlyAdded";
+import { TopicPageSkeleton } from "@/components/PageSkeletons";
 import AddPostBar from "@/components/AddPostBar";
 import FollowTopicButton from "@/components/FollowTopicButton";
 import RankImagesDialog from "@/components/topic/RankImagesDialog";
@@ -99,8 +100,8 @@ const TopicPage = () => {
     return (
       <div className="min-h-screen flex flex-col bg-background">
         <DeetHeader />
-        <main className="flex-1 container mx-auto px-4 py-20 text-center">
-          <p className="text-muted-foreground">Loading topicâ¦</p>
+        <main className="flex-1">
+          <TopicPageSkeleton />
         </main>
         <DeetFooter />
       </div>
@@ -144,11 +145,11 @@ const TopicPage = () => {
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-5 lg:gap-x-3 lg:h-full">
             {/* Left - Recently Added */}
-            <div className={`${mobileTab === "recent" ? "block" : "hidden"} lg:block pt-4 lg:h-full lg:overflow-y-auto lg:pr-2`}>
+            <div className={`${mobileTab === "recent" ? "block" : "hidden"} lg:block pt-4 lg:h-full lg:overflow-y-auto lg:pr-2 lg:pb-6`} data-scroll-restore="topic-recent">
               <TopicRecentlyAdded topicId={topic.id} topicName={topic.name} />
             </div>
             {/* Middle + Right share a single scroll container */}
-            <div className="lg:h-full lg:overflow-y-auto lg:pr-2">
+            <div className="lg:h-full lg:overflow-y-auto lg:pr-2 lg:pb-6" data-scroll-restore="topic-main">
               <div className="grid grid-cols-1 lg:grid-cols-[1fr_240px] gap-5">
                 <div className={`${mobileTab === "posts" ? "block" : "hidden"} lg:block min-w-0 pt-4`}>
               <div className="min-w-0 bg-card rounded-md border border-border p-4">
