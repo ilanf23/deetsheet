@@ -69,9 +69,35 @@ export function useUnreadMessagesCount() {
 }
 
 /**
+ * Shape shared by the admin inbox page and the sidebar badge. Both must agree
+ * on what "needs the team's attention" means, so the rule lives here.
+ */
+export type AdminThreadLike = {
+  kind?: string | null;
+  last_sender?: string | null;
+  last_message_at?: string | null;
+  admin_read_at?: string | null;
+  hidden_for_other_at?: string | null;
+};
+
+/**
+ * A support thread needs a reply from the team while the member spoke last and
+ * no admin has opened it since that message.
+ *
+ * Member-to-member chats (`kind = 'direct'`) never need an admin reply, and a
+ * thread the team removed from its inbox is out of scope too.
+ */
+export function adminNeedsContact(t: AdminThreadLike): boolean {
+  if (t.kind === "direct") return false;
+  if (t.hidden_for_other_at) return false;
+  if (t.last_sender !== "user") return false;
+  if (!t.last_message_at) return false;
+  return !t.admin_read_at || new Date(t.admin_read_at) < new Date(t.last_message_at);
+}
+
+/**
  * Admin-side count of support threads awaiting a reply from the team.
- * A thread only counts while the member spoke last AND no admin has opened it
- * since that message, so the badge clears once the team reads or answers.
+ * Uses the exact same predicate as the "Needs contact" tab.
  */
 export function useAdminUnreadThreadsCount() {
   return useQuery({
@@ -80,16 +106,14 @@ export function useAdminUnreadThreadsCount() {
     queryFn: async (): Promise<number> => {
       const { data } = await supabase
         .from("message_threads")
-        .select("id,last_message_at,admin_read_at")
+        .select("id,kind,last_sender,last_message_at,admin_read_at,hidden_for_other_at")
         .neq("kind", "direct")
         .eq("last_sender", "user");
-      return (data ?? []).filter(
-        (t: any) =>
-          !t.admin_read_at || new Date(t.admin_read_at) < new Date(t.last_message_at),
-      ).length;
+      return (data ?? []).filter((t: any) => adminNeedsContact(t)).length;
     },
   });
 }
+
 
 /** Admin-side count of contact-form messages nobody has marked as read yet. */
 export function useAdminUnreadContactCount() {
