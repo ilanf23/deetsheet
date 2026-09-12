@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { adminNeedsContact } from "@/hooks/useUnreadMessages";
+
 import { parseISO, format } from "date-fns";
 import {
   Dialog,
@@ -51,6 +53,10 @@ type Thread = {
   status: "open" | "needs_contact" | "resolved";
   last_message_at: string;
   last_sender: "admin" | "user";
+  /** Member-to-member chats ("direct") never need an admin reply. */
+  kind: string | null;
+  /** Set when the team removed this conversation from its own inbox. */
+  hidden_for_other_at: string | null;
   /** When an admin last opened this conversation. Drives the unread dot. */
   admin_read_at: string | null;
   user_name?: string;
@@ -62,11 +68,12 @@ type Thread = {
   snippet?: string | null;
 };
 
-/** A conversation needs the team's attention while the member spoke last and
- *  no admin has opened it since. */
-const isUnanswered = (t: Thread) =>
-  t.last_sender === "user" &&
-  (!t.admin_read_at || new Date(t.admin_read_at) < new Date(t.last_message_at));
+/**
+ * The single source of truth for "needs the team's attention" lives in
+ * useUnreadMessages so this page and the sidebar badge can never disagree.
+ */
+const isUnanswered = adminNeedsContact;
+
 
 
 type FilterTab = "needs_contact" | "all";
@@ -173,7 +180,9 @@ export default function AdminMessages() {
     if (!opts?.quiet) setLoading(true);
     const { data: threadRows } = await supabase
       .from("message_threads")
-      .select("id,user_id,post_id,subject,status,last_message_at,last_sender,admin_read_at")
+      .select(
+        "id,user_id,post_id,subject,status,last_message_at,last_sender,admin_read_at,kind,hidden_for_other_at",
+      )
       .order("last_message_at", { ascending: false })
       .limit(200);
     const rows = (threadRows ?? []) as Thread[];
@@ -406,7 +415,7 @@ export default function AdminMessages() {
 
   const filtered = useMemo(() => {
     let rows = threads;
-    if (tab === "needs_contact") rows = rows.filter((r) => r.status === "needs_contact" || isUnanswered(r));
+    if (tab === "needs_contact") rows = rows.filter((r) => isUnanswered(r));
     if (search.trim()) {
       const q = search.toLowerCase();
       rows = rows.filter(
@@ -425,7 +434,12 @@ export default function AdminMessages() {
     return sorted;
   }, [threads, tab, sort, search]);
 
-  const needsContactCount = threads.filter((t) => t.status === "needs_contact" || isUnanswered(t)).length;
+  // Recomputed from `threads`, so marking a thread read (which optimistically
+  // stamps admin_read_at) drops it out of the tab and count immediately.
+  const needsContactCount = useMemo(
+    () => threads.filter((t) => isUnanswered(t)).length,
+    [threads],
+  );
 
   const selected = threads.find((t) => t.id === routeThreadId) ?? null;
   const selectedLabel = selected?.user_name ?? selected?.user_username ?? "member";
@@ -443,10 +457,14 @@ export default function AdminMessages() {
     [queryClient],
   );
 
+  // Re-runs whenever the open conversation gains a newer message, so a reply
+  // that lands while the team is reading never turns the thread orange again.
   useEffect(() => {
     if (!routeThreadId) return;
+    if (selected && !isUnanswered(selected)) return;
     markThreadRead(routeThreadId);
-  }, [routeThreadId, markThreadRead]);
+  }, [routeThreadId, selected, markThreadRead]);
+
 
   const deleteThread = async () => {
     if (!pendingDeleteThread) return;
@@ -751,10 +769,14 @@ export default function AdminMessages() {
                   markRead={false}
                   memberLabel={selected?.user_name ?? selected?.user_username ?? null}
                   onNotFound={clearThread}
-                  onChanged={() => {
+                  onChanged={async () => {
+                    // The team is looking at this conversation right now, so a
+                    // new message in it must not flip the dot back to orange.
+                    await markThreadRead(routeThreadId);
                     fetchAll({ quiet: true });
                     queryClient.invalidateQueries({ queryKey: ["admin-unread-threads"] });
                   }}
+
 
                 />
               </div>

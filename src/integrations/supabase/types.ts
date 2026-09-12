@@ -1477,15 +1477,6 @@ export type Database = {
         Args: { _new: string; _old: string }
         Returns: number
       }
-      delete_email: {
-        Args: { message_id: number; queue_name: string }
-        Returns: boolean
-      }
-      email_queue_dispatch: { Args: never; Returns: undefined }
-      enqueue_email: {
-        Args: { payload: Json; queue_name: string }
-        Returns: number
-      }
       get_or_create_location: {
         Args: { _city: string; _country?: string; _state: string }
         Returns: string
@@ -1502,15 +1493,6 @@ export type Database = {
       mark_post_needs_author_edit: {
         Args: { _post_id: string }
         Returns: undefined
-      }
-      move_to_dlq: {
-        Args: {
-          dlq_name: string
-          message_id: number
-          payload: Json
-          source_queue: string
-        }
-        Returns: number
       }
       privileged_comments: {
         Args: never
@@ -1608,14 +1590,6 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
-      }
-      read_email_batch: {
-        Args: { batch_size: number; queue_name: string; vt: number }
-        Returns: {
-          message: Json
-          msg_id: number
-          read_ct: number
-        }[]
       }
       recalculate_profile_follow_counts: {
         Args: { _profile_id: string }
