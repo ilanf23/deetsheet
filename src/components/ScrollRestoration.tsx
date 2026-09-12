@@ -12,9 +12,11 @@ import { useLocation, useNavigationType } from "react-router-dom";
  */
 const STORAGE_PREFIX = "scrollpos:";
 /** Give up entirely after this long, however the lists are behaving. */
-const RESTORE_HARD_CAP_MS = 10000;
+const RESTORE_HARD_CAP_MS = 15000;
 /** A list that hasn't grown for this long is treated as fully loaded. */
-const GROWTH_STALL_MS = 1500;
+const GROWTH_STALL_MS = 4000;
+/** Marks the sentinel div rendered by useInfiniteList while more items exist. */
+const SENTINEL_ATTR = "data-infinite-sentinel";
 
 /**
  * Pages whose columns scroll independently (home, topic, post on lg+) never
