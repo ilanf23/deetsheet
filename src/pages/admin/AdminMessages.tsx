@@ -51,6 +51,10 @@ type Thread = {
   status: "open" | "needs_contact" | "resolved";
   last_message_at: string;
   last_sender: "admin" | "user";
+  /** Member-to-member chats ("direct") never need an admin reply. */
+  kind: string | null;
+  /** Set when the team removed this conversation from its own inbox. */
+  hidden_for_other_at: string | null;
   /** When an admin last opened this conversation. Drives the unread dot. */
   admin_read_at: string | null;
   user_name?: string;
@@ -62,11 +66,12 @@ type Thread = {
   snippet?: string | null;
 };
 
-/** A conversation needs the team's attention while the member spoke last and
- *  no admin has opened it since. */
-const isUnanswered = (t: Thread) =>
-  t.last_sender === "user" &&
-  (!t.admin_read_at || new Date(t.admin_read_at) < new Date(t.last_message_at));
+/**
+ * The single source of truth for "needs the team's attention" lives in
+ * useUnreadMessages so this page and the sidebar badge can never disagree.
+ */
+const isUnanswered = adminNeedsContact;
+
 
 
 type FilterTab = "needs_contact" | "all";
