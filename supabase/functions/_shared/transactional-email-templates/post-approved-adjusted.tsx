@@ -64,7 +64,7 @@ const Email = ({ topic, title, originalText, finalText, reasons, ctaUrl }: Props
     <P>
       If you do not like the new version, you can edit or delete the post in your user
       profile. You can also go to the{' '}
-      <Link href={`${SITE_URL}/faq`} style={subtleLink}>
+      <Link href={`${SITE_URL}/rules`} style={subtleLink}>
         Rules and Guidelines
       </Link>{' '}
       page to read all the guidelines for posting.

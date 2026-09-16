@@ -26,7 +26,7 @@ const Email = ({ topic, title, reasons, ctaUrl }: Props) => (
     {reasons && reasons.length > 0 && <ReasonBox items={reasons} />}
     <P>
       If you would like to change your picture, it will be subject to the{' '}
-      <Link href={`${SITE_URL}/faq`} style={subtleLink}>
+      <Link href={`${SITE_URL}/rules`} style={subtleLink}>
         Rules and Guidelines
       </Link>
       .
