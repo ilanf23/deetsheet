@@ -1,7 +1,9 @@
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useRef, useState } from "react";
+import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Placeholder from "@tiptap/extension-placeholder";
+import Image from "@tiptap/extension-image";
 import type { MarkType } from "@tiptap/pm/model";
 import {
   Bold,
@@ -10,7 +12,15 @@ import {
   Strikethrough,
   List,
   ListOrdered,
+  ImagePlus,
+  Loader2,
 } from "lucide-react";
+
+/** Uploads a picked/pasted image and resolves to its public URL (or null to skip insertion). */
+export type ImageUploadHandler = (file: File) => Promise<string | null>;
+
+const imageFiles = (list: FileList | undefined | null): File[] =>
+  Array.from(list ?? []).filter((f) => f.type.startsWith("image/"));
 
 interface RichTextEditorProps {
   initialContent?: string;
@@ -24,6 +34,11 @@ interface RichTextEditorProps {
   showToolbar?: boolean;
   /** Override the minimum content height. Default "60px" preserves existing call sites. */
   minHeight?: string;
+  /**
+   * When provided, an "Add photo" toolbar button appears and pasted/dropped image
+   * files are uploaded through it, then inserted as an <img> at the cursor.
+   */
+  onImageUpload?: ImageUploadHandler;
 }
 
 const RichTextEditor = ({
@@ -34,19 +49,61 @@ const RichTextEditor = ({
   bordered = true,
   showToolbar = true,
   minHeight = "60px",
+  onImageUpload,
 }: RichTextEditorProps) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  // Keep the latest handler reachable from ProseMirror's paste/drop callbacks,
+  // which are bound once when the editor is created.
+  const uploadRef = useRef(onImageUpload);
+  uploadRef.current = onImageUpload;
+  const editorInstanceRef = useRef<Editor | null>(null);
+
+  const insertImages = async (files: File[]) => {
+    const upload = uploadRef.current;
+    const ed = editorInstanceRef.current;
+    if (!upload || !ed) return;
+    setUploading(true);
+    try {
+      for (const file of files) {
+        const src = await upload(file);
+        if (src && !ed.isDestroyed) ed.chain().focus().setImage({ src, alt: file.name }).run();
+      }
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const editor = useEditor({
     extensions: [
       StarterKit,
       Underline,
+      // Registered unconditionally so existing image nodes survive a re-edit
+      // (TipTap drops HTML it has no node for). Insertion is only offered when
+      // `onImageUpload` is passed.
+      Image.configure({ inline: false, allowBase64: false }),
       Placeholder.configure({ placeholder }),
     ],
     content: initialContent,
     editorProps: {
       attributes: {
         class:
-          "prose prose-sm max-w-none focus:outline-none px-3 py-2 text-sm h-full",
+          "prose prose-sm max-w-none focus:outline-none px-3 py-2 text-sm h-full [&_img]:max-h-64 [&_img]:rounded-md [&_img.ProseMirror-selectednode]:ring-2 [&_img.ProseMirror-selectednode]:ring-primary",
         style: `min-height: ${minHeight};`,
+      },
+      handlePaste: (_view, event) => {
+        const files = imageFiles(event.clipboardData?.files);
+        if (!files.length || !uploadRef.current) return false;
+        event.preventDefault();
+        void insertImages(files);
+        return true;
+      },
+      handleDrop: (_view, event) => {
+        const files = imageFiles(event.dataTransfer?.files);
+        if (!files.length || !uploadRef.current) return false;
+        event.preventDefault();
+        void insertImages(files);
+        return true;
       },
     },
     onUpdate: ({ editor }) => {
@@ -56,6 +113,8 @@ const RichTextEditor = ({
       editorRef?.(editor);
     },
   });
+
+  editorInstanceRef.current = editor;
 
   if (!editor) return null;
 
@@ -114,6 +173,41 @@ const RichTextEditor = ({
           <Icon className="h-3.5 w-3.5" />
         </button>
       ))}
+      {onImageUpload && (
+        <>
+          <span className="mx-1 h-4 w-px bg-border" aria-hidden />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              const files = imageFiles(e.target.files);
+              e.target.value = "";
+              if (files.length) void insertImages(files);
+            }}
+          />
+          <button
+            type="button"
+            disabled={uploading}
+            aria-label="Add photo"
+            title="Add photo"
+            onMouseDown={(e) => {
+              e.preventDefault();
+              fileInputRef.current?.click();
+            }}
+            className="inline-flex items-center gap-1 p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-60"
+          >
+            {uploading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <ImagePlus className="h-3.5 w-3.5" />
+            )}
+            <span className="text-xs">{uploading ? "Uploading…" : "Photo"}</span>
+          </button>
+        </>
+      )}
     </div>
   ) : null;
 

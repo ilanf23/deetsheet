@@ -39,8 +39,10 @@ const InlineCommentComposer = ({
   const isAuthenticated = !!user;
   const isReply = !!parentCommentId;
   const trimmed = text.replace(/<[^>]*>/g, "").trim();
+  // A photo-only comment has no text but is still a valid comment.
+  const hasContent = trimmed.length > 0 || /<img\b/i.test(text);
   // Active = there is content OR the editor is focused OR this is a reply (always shows actions).
-  const active = focused || trimmed.length > 0 || isReply;
+  const active = focused || hasContent || isReply;
   const nextUrl = encodeURIComponent(`${location.pathname}${location.search}#discussion`);
   const placeholder = isReply
     ? `Replying to @${parentUsername ?? "user"}`
@@ -89,8 +91,34 @@ const InlineCommentComposer = ({
     );
   }
 
+  const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+  // Comment photos live in the existing public `post-images` bucket under the
+  // author's folder (its RLS only allows writes to `${auth.uid()}/…`).
+  const uploadImage = async (file: File): Promise<string | null> => {
+    if (!user) return null;
+    if (file.size > MAX_IMAGE_BYTES) {
+      toast({
+        title: "Image too large",
+        description: "Please choose an image under 5MB.",
+        variant: "destructive",
+      });
+      return null;
+    }
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+    const path = `${user.id}/comments/${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage
+      .from("post-images")
+      .upload(path, file, { contentType: file.type || undefined, cacheControl: "31536000" });
+    if (error) {
+      toast({ title: "Couldn't upload image", description: error.message, variant: "destructive" });
+      return null;
+    }
+    return supabase.storage.from("post-images").getPublicUrl(path).data.publicUrl;
+  };
+
   const handleSend = async () => {
-    if (!trimmed || submitting || !user) return;
+    if (!hasContent || submitting || !user) return;
     setSubmitting(true);
     const { data: inserted, error } = await supabase
       .from("comments")
@@ -162,10 +190,11 @@ const InlineCommentComposer = ({
         <RichTextEditor
           placeholder={placeholder}
           bordered={false}
-          showToolbar={focused || trimmed.length > 0}
+          showToolbar={focused || hasContent}
           minHeight="120px"
           onUpdate={(html) => setText(html)}
           editorRef={attachFocusListeners}
+          onImageUpload={uploadImage}
         />
         {active && (
           <div className="shrink-0 flex flex-wrap justify-between items-center gap-2 px-2 pb-2">
@@ -193,7 +222,7 @@ const InlineCommentComposer = ({
               <Button
                 type="button"
                 onClick={handleSend}
-                disabled={!trimmed || submitting}
+                disabled={!hasContent || submitting}
                 size="sm"
               >
                 {submitting ? "Sending…" : isReply ? "Reply" : "Send"}

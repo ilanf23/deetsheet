@@ -79,10 +79,12 @@ const CommentItem = ({
   const [collapsed, setCollapsed] = useState(false);
   const [expandedPastMax, setExpandedPastMax] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  // Photo comments are never line-clamped: the clamp would crop the image itself.
+  const hasImage = /<img\b/i.test(node.content);
 
   useEffect(() => {
     const el = contentRef.current;
-    if (!el || expanded || collapsed) return;
+    if (!el || expanded || collapsed || hasImage) return;
     const check = () => {
       setIsOverflowing(el.scrollHeight > el.clientHeight + 1);
     };
@@ -90,7 +92,7 @@ const CommentItem = ({
     const ro = new ResizeObserver(check);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [node.content, expanded, collapsed]);
+  }, [node.content, expanded, collapsed, hasImage]);
 
   const isTopLevel = depth === 0;
   const hasChildren = node.children.length > 0;
@@ -254,8 +256,8 @@ const CommentItem = ({
         <div hidden={collapsed}>
           <div
             ref={contentRef}
-            className={`text-[1.0125rem] text-card-foreground mt-2 leading-relaxed [&_p]:my-1 [&_a]:text-primary [&_a]:underline ${
-              expanded ? "" : "line-clamp-3"
+            className={`text-[1.0125rem] text-card-foreground mt-2 leading-relaxed [&_p]:my-1 [&_a]:text-primary [&_a]:underline [&_img]:my-2 [&_img]:max-h-96 [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain ${
+              expanded || hasImage ? "" : "line-clamp-3"
             }`}
             dangerouslySetInnerHTML={{ __html: node.content }}
           />

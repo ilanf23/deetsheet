@@ -13,7 +13,6 @@ import {
   Plus,
   X,
   Linkedin,
-  AlertCircle,
   Eye,
   Check,
 } from "lucide-react";
@@ -99,8 +98,12 @@ const SECTIONS = [
   { id: "education", label: "Education & Career" },
   { id: "about-me", label: "About Me" },
   { id: "credentials", label: "Credentials" },
-  { id: "account", label: "Account & Security" },
 ] as const;
+
+// Temporarily hidden: the Account & Security checklist is self-reported (users
+// could tick the boxes themselves) and confused new members. Flip this on once
+// the checks are wired to real auth state.
+const SHOW_ACCOUNT_SECURITY = false;
 
 type SectionId = (typeof SECTIONS)[number]["id"];
 
@@ -240,7 +243,7 @@ const ProfileEdit = () => {
         });
       }
     };
-    loadSecurity();
+    if (SHOW_ACCOUNT_SECURITY) loadSecurity();
   }, [user]);
 
   // Scroll-spy: highlight the sidebar nav item for the section currently in view.
@@ -279,33 +282,25 @@ const ProfileEdit = () => {
     const educationComplete = Boolean(education && job);
     const aboutComplete = Boolean(bio.trim());
     const credentialsComplete = credentials.length > 0 || expertiseTopics.length > 0;
-    const emailComplete = Object.values(prefs).some(Boolean);
-    const securityChecks = [
-      security.email_verified,
-      security.strong_password_set,
-      security.two_factor_enabled,
-      Boolean(security.recovery_email),
-    ];
-    const accountIssues = securityChecks.filter((c) => !c).length;
-    const accountComplete = accountIssues === 0;
     return {
       "personal-info": { complete: personalComplete, warning: !personalComplete ? 0 : 0 },
       education: { complete: educationComplete, warning: 0 },
       "about-me": { complete: aboutComplete, warning: 0 },
       credentials: { complete: credentialsComplete, warning: 0 },
-      account: { complete: accountComplete, warning: accountIssues },
     } as Record<SectionId, { complete: boolean; warning: number }>;
-  }, [formValues, education, job, bio, credentials, expertiseTopics, prefs, security]);
-
-  const profileIncomplete = !sectionState["personal-info"].complete;
+  }, [formValues, education, job, bio, credentials, expertiseTopics]);
 
   const onSubmit = async (values: ProfileFormValues) => {
     if (!user) return;
     setSaving(true);
+    // Plain UPDATE, not upsert: `authenticated` only has column-level SELECT on
+    // profiles (intimate fields are hidden), and Postgres requires SELECT on every
+    // column referenced as EXCLUDED.<col> in ON CONFLICT DO UPDATE — so upsert
+    // failed with "permission denied for table profiles". The row always exists
+    // (created by the handle_new_user trigger on signup).
     const { error } = await supabase
       .from("profiles")
-      .upsert({
-        id: user.id,
+      .update({
         avatar_url: avatarUrl,
         name: values.name,
         entity_type: values.entityType,
@@ -335,7 +330,8 @@ const ProfileEdit = () => {
         email_on_follow: prefs.emailOnFollow,
         email_on_post_edit: prefs.emailOnPostEdit,
         email_top_posts: prefs.emailTopPosts,
-      });
+      })
+      .eq("id", user.id);
     if (error) {
       setSaving(false);
       toast({ title: "Error saving profile", description: error.message, variant: "destructive" });
@@ -630,15 +626,6 @@ const ProfileEdit = () => {
 
             {/* ── Main content ── */}
             <div className="space-y-4 min-w-0">
-              {profileIncomplete && (
-                <div className="flex items-center gap-2.5 rounded-xl border border-secondary/30 bg-secondary/10 px-4 py-3 text-sm">
-                  <AlertCircle className="h-4 w-4 text-secondary shrink-0" />
-                  <span className="text-foreground/90">
-                    Complete your profile to unlock all features
-                  </span>
-                </div>
-              )}
-
                 <div className="space-y-8">
                   {/* ── Personal Information ── */}
                   <section id="personal-info" className="scroll-mt-24 bg-card rounded-2xl border p-6 md:p-8">
@@ -1134,7 +1121,8 @@ const ProfileEdit = () => {
                     )}
                   </section>
 
-                  {/* ── Account & Security ── */}
+                  {/* ── Account & Security (hidden, see SHOW_ACCOUNT_SECURITY) ── */}
+                  {SHOW_ACCOUNT_SECURITY && (
                   <section id="account" className="scroll-mt-24 bg-card rounded-2xl border p-6 md:p-8 space-y-4">
                     <h2 className="text-lg font-semibold">Account & Security</h2>
                     <p className="text-sm text-muted-foreground">
@@ -1196,6 +1184,7 @@ const ProfileEdit = () => {
                       Change Password
                     </button>
                   </section>
+                  )}
                 </div>
               </div>
             </form>
