@@ -830,6 +830,7 @@ export type Database = {
           city_born: string | null
           college: string | null
           country: string | null
+          credentials: Json
           created_at: string
           degree: string | null
           education: string | null
@@ -867,6 +868,7 @@ export type Database = {
           city_born?: string | null
           college?: string | null
           country?: string | null
+          credentials?: Json
           created_at?: string
           degree?: string | null
           education?: string | null
@@ -904,6 +906,7 @@ export type Database = {
           city_born?: string | null
           college?: string | null
           country?: string | null
+          credentials?: Json
           created_at?: string
           degree?: string | null
           education?: string | null
@@ -1431,6 +1434,7 @@ export type Database = {
           city_born: string | null
           college: string | null
           country: string | null
+          credentials: Json
           created_at: string | null
           degree: string | null
           education: string | null
@@ -1557,6 +1561,7 @@ export type Database = {
           city_born: string | null
           college: string | null
           country: string | null
+          credentials: Json
           created_at: string
           degree: string | null
           education: string | null

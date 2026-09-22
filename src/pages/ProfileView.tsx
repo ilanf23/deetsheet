@@ -61,6 +61,7 @@ import { useThreadCounts } from "@/hooks/useUnreadMessages";
 import ProfileMessagesPanel from "@/components/profile/ProfileMessagesPanel";
 import { ProfileHeaderSkeleton, ProfileListCardSkeleton } from "@/components/PageSkeletons";
 import { Skeleton } from "@/components/ui/skeleton";
+import { parseProfileCredentials } from "@/lib/profileCredentials";
 
 const CREDENTIAL_ICON_MAP: Record<string, React.ReactNode> = {
   pencil: <Pencil className="h-4 w-4" />,
@@ -173,12 +174,12 @@ const EDUCATION_LABELS: Record<string, string> = {
 // Profile columns this page actually reads. Selecting only what we render
 // shaves a meaningful chunk of bytes off each profile fetch.
 const PROFILE_COLUMNS =
-  "id, name, username, avatar_url, bio, sex, orientation, birth_year, birth_month, birth_day, hide_age, city, state, country, education, high_school, college, degree, major, job, entity_type, favorite_movie, reading, city_born, created_at, show_ratings";
+  "id, name, username, avatar_url, bio, sex, orientation, birth_year, birth_month, birth_day, hide_age, city, state, country, education, high_school, college, degree, major, job, entity_type, favorite_movie, reading, city_born, created_at, show_ratings, credentials";
 
 // Birthday, sex and orientation are readable only by the member themselves
 // (and admins), so public profile reads request the safe subset.
 const PUBLIC_PROFILE_COLUMNS =
-  "id, name, username, avatar_url, bio, hide_age, city, state, country, education, high_school, college, degree, major, job, entity_type, favorite_movie, reading, city_born, created_at, show_ratings";
+  "id, name, username, avatar_url, bio, hide_age, city, state, country, education, high_school, college, degree, major, job, entity_type, favorite_movie, reading, city_born, created_at, show_ratings, credentials";
 
 function formatProfileValue(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -648,25 +649,37 @@ const ProfileView = () => {
     .filter((group) => group.items.length > 0);
   const hasAboutContent = Boolean(profile?.bio) || detailGroups.length > 0;
 
-  // Build credentials from profile data dynamically
-  const credentials: { icon: string; text: string }[] = [];
+  // Saved credentials first, then highlights derived from education / career
+  // when that text isn't already in the saved list.
+  const credentials: { icon: string; text: string }[] = parseProfileCredentials(
+    profile?.credentials,
+  );
+  const seenCredentials = new Set(
+    credentials.map((credential) => credential.text.trim().toLowerCase()),
+  );
+  const pushDerivedCredential = (icon: string, text: string) => {
+    const key = text.trim().toLowerCase();
+    if (!key || seenCredentials.has(key)) return;
+    seenCredentials.add(key);
+    credentials.push({ icon, text });
+  };
   if (postCount > 0) {
-    credentials.push({ icon: "pencil", text: `Writer, ${postCount} post${postCount !== 1 ? "s" : ""}` });
+    pushDerivedCredential("pencil", `Writer, ${postCount} post${postCount !== 1 ? "s" : ""}`);
   }
   if (profile?.college) {
     const collegeText = profile?.degree
       ? `${profile.degree}${profile?.major ? ` in ${profile.major as string}` : ""}, ${profile.college as string}`
       : (profile.college as string);
-    credentials.push({ icon: "graduation", text: collegeText });
+    pushDerivedCredential("graduation", collegeText);
   }
   if (profile?.high_school) {
-    credentials.push({ icon: "graduation", text: profile.high_school as string });
+    pushDerivedCredential("graduation", profile.high_school as string);
   }
   if (profile?.job) {
-    credentials.push({ icon: "briefcase", text: profile.job as string });
+    pushDerivedCredential("briefcase", profile.job as string);
   }
   if (profile?.entity_type && (profile.entity_type as string).toLowerCase() !== "person") {
-    credentials.push({ icon: "award", text: `Organization, ${profile.entity_type as string}` });
+    pushDerivedCredential("award", `Organization, ${profile.entity_type as string}`);
   }
 
   // Client-side filter over already-loaded lists. Both userPosts and userTopics

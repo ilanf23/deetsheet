@@ -49,6 +49,7 @@ import { supabase } from "@/integrations/supabase/client";
 import LinkedInImportDialog from "@/components/LinkedInImportDialog";
 import AvatarCropDialog from "@/components/AvatarCropDialog";
 import type { LinkedInProfileData } from "@/types/linkedin";
+import { parseProfileCredentials } from "@/lib/profileCredentials";
 import { cn } from "@/lib/utils";
 
 const US_STATES = [
@@ -185,7 +186,7 @@ const ProfileEdit = () => {
       const { data } = await supabase
         .from("profiles_private")
         .select(
-          "username, name, entity_type, sex, orientation, birth_month, birth_day, birth_year, hide_age, show_ratings, city, state, country, bio, education, high_school, college, degree, major, job, favorite_movie, reading, city_born, avatar_url, email_frequency, email_on_message, email_on_comment, email_on_follow, email_on_post_edit, email_top_posts",
+          "username, name, entity_type, sex, orientation, birth_month, birth_day, birth_year, hide_age, show_ratings, city, state, country, bio, education, high_school, college, degree, major, job, favorite_movie, reading, city_born, avatar_url, email_frequency, email_on_message, email_on_comment, email_on_follow, email_on_post_edit, email_top_posts, credentials",
         )
         .eq("id", user.id)
         .single();
@@ -217,6 +218,13 @@ const ProfileEdit = () => {
         setEmailFrequency(data.email_frequency || "weekly");
         setHideAge(Boolean((data as any).hide_age));
         setShowRatings((data as any).show_ratings ?? true);
+        setCredentials(
+          parseProfileCredentials(data.credentials).map((credential) => ({
+            id: crypto.randomUUID(),
+            icon: credential.icon,
+            text: credential.text,
+          })),
+        );
         setPrefs({
           emailOnMessage: data.email_on_message ?? true,
           emailOnComment: data.email_on_comment ?? true,
@@ -298,10 +306,19 @@ const ProfileEdit = () => {
     // column referenced as EXCLUDED.<col> in ON CONFLICT DO UPDATE — so upsert
     // failed with "permission denied for table profiles". The row always exists
     // (created by the handle_new_user trigger on signup).
+    const credentialsToSave = parseProfileCredentials([
+      ...credentials.map(({ icon, text }) => ({ icon, text })),
+      ...(credentialInput.trim() ? [{ icon: "pencil", text: credentialInput }] : []),
+      ...(showCredentialInput && newCredentialText.trim()
+        ? [{ icon: newCredentialIcon, text: newCredentialText }]
+        : []),
+    ]);
+
     const { error } = await supabase
       .from("profiles")
       .update({
         avatar_url: avatarUrl,
+        credentials: credentialsToSave,
         name: values.name,
         entity_type: values.entityType,
         sex: values.sex,
