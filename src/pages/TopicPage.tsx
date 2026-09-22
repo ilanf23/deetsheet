@@ -226,7 +226,7 @@ const TopicPage = () => {
                     />
                   ))}
                 </div>
-                {!loading && !!user && topic && (
+                {!loading && topic && (
                   <div className="mt-6">
                     <AddPostBar
                       topicId={topic.id}

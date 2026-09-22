@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import CreatePostDialog from "./CreatePostDialog";
 import { useCreatePost } from "@/hooks/useCreatePost";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Post } from "@/data/seedData";
 
 interface AddPostBarProps {
@@ -15,10 +17,23 @@ interface AddPostBarProps {
   onPostAdded: () => void;
 }
 
+const addPostButtonClass =
+  "w-full flex items-center gap-3 px-4 py-3 border rounded-xl bg-background hover:shadow-md transition-all duration-200 cursor-pointer";
+
 const AddPostBar = ({ topicId, topicName, categoryName, subtitleOverride, existingPosts, onPostAdded }: AddPostBarProps) => {
   const [open, setOpen] = useState(false);
   const createPost = useCreatePost();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const promptToCreateProfile = () => {
+    toast({
+      title: "Create a profile to post",
+      description: "You need an account before you can add your own advice.",
+    });
+    navigate("/signup");
+  };
 
   const handleSubmit = async (detail: string, story: string, image: File | null, isAnonymous: boolean) => {
     if (createPost.isPending) return;
@@ -45,19 +60,30 @@ const AddPostBar = ({ topicId, topicName, categoryName, subtitleOverride, existi
     }
   };
 
+  const buttonBody = (
+    <>
+      <div className="flex items-center justify-center w-7 h-7 rounded-full bg-secondary text-secondary-foreground shrink-0">
+        <Plus className="w-4 h-4" />
+      </div>
+      <span className="text-sm font-semibold text-primary">
+        Add your own advice or perspective!
+      </span>
+    </>
+  );
+
+  if (!user) {
+    return (
+      <button type="button" onClick={promptToCreateProfile} className={addPostButtonClass}>
+        {buttonBody}
+      </button>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button
-          type="button"
-          className="w-full flex items-center gap-3 px-4 py-3 border rounded-xl bg-background hover:shadow-md transition-all duration-200 cursor-pointer"
-        >
-          <div className="flex items-center justify-center w-7 h-7 rounded-full bg-secondary text-secondary-foreground shrink-0">
-            <Plus className="w-4 h-4" />
-          </div>
-          <span className="text-sm font-semibold text-primary">
-            Add your own advice or perspective!
-          </span>
+        <button type="button" className={addPostButtonClass}>
+          {buttonBody}
         </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl lg:max-w-3xl max-h-[90vh] overflow-y-auto">
