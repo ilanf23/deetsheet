@@ -661,7 +661,7 @@ const ProfileEdit = () => {
                         control={form.control}
                         name="name"
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="md:col-start-1 md:row-start-1">
                             <FormLabel>Full Name</FormLabel>
                             <FormControl>
                               <Input {...field} placeholder="Your full name" />
@@ -674,7 +674,7 @@ const ProfileEdit = () => {
                         control={form.control}
                         name="entityType"
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="md:col-start-2 md:row-start-1">
                             <FormLabel>Account Type</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
@@ -696,7 +696,7 @@ const ProfileEdit = () => {
                         control={form.control}
                         name="sex"
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="md:col-start-1 md:row-start-2">
                             <FormLabel>Sex</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
@@ -723,7 +723,7 @@ const ProfileEdit = () => {
                         control={form.control}
                         name="orientation"
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="md:col-start-2 md:row-start-2">
                             <FormLabel>Sexual Orientation</FormLabel>
                             <Select onValueChange={field.onChange} value={field.value}>
                               <FormControl>
@@ -743,7 +743,7 @@ const ProfileEdit = () => {
                       />
 
 
-                      <div>
+                      <div className="md:col-start-1 md:row-start-3">
                         <Label className="text-sm">Date of Birth</Label>
                         <div className="mt-1.5 grid grid-cols-[1fr_64px_80px] gap-2">
                           <FormField
@@ -803,7 +803,7 @@ const ProfileEdit = () => {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between rounded-md border p-3">
+                      <div className="flex items-center justify-between rounded-md border p-3 md:col-start-1 md:row-start-4">
                         <div className="space-y-0.5">
                           <Label className="text-sm">Hide my age from other viewers</Label>
                           <p className="text-xs text-muted-foreground">
@@ -813,24 +813,11 @@ const ProfileEdit = () => {
                         <Switch checked={hideAge} onCheckedChange={setHideAge} />
                       </div>
 
-                      <div className="flex items-center justify-between rounded-md border p-3">
-                        <div className="space-y-0.5">
-                          <Label className="text-sm">Show the posts I've ranked on my profile</Label>
-                          <p className="text-xs text-muted-foreground">
-                            Turn this off to keep your rankings private. You can always see them yourself.
-                          </p>
-                        </div>
-                        <Switch checked={showRatings} onCheckedChange={setShowRatings} />
-                      </div>
-
-
-
-
                       <FormField
                         control={form.control}
                         name="city"
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="md:col-start-2 md:row-start-3">
                             <FormLabel>City</FormLabel>
                             <FormControl>
                               <Input {...field} placeholder="Your city" />
@@ -843,7 +830,7 @@ const ProfileEdit = () => {
                         control={form.control}
                         name="state"
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="md:col-start-2 md:row-start-4">
                             <FormLabel>State</FormLabel>
                             <FormControl>
                               <Combobox
@@ -864,7 +851,7 @@ const ProfileEdit = () => {
                         control={form.control}
                         name="country"
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="md:col-start-2 md:row-start-5">
                             <FormLabel>Country</FormLabel>
                             <FormControl>
                               <Input {...field} placeholder="Your country" />
@@ -873,7 +860,16 @@ const ProfileEdit = () => {
                           </FormItem>
                         )}
                       />
-                      <div>
+                      <div className="flex items-center justify-between rounded-md border p-3 md:col-start-2 md:row-start-6">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm">Show the posts I've ranked on my profile</Label>
+                          <p className="text-xs text-muted-foreground">
+                            Turn this off to keep your rankings private. You can always see them yourself.
+                          </p>
+                        </div>
+                        <Switch checked={showRatings} onCheckedChange={setShowRatings} />
+                      </div>
+                      <div className="md:col-start-1 md:row-start-5">
                         <Label className="text-sm">City of Birth</Label>
                         <Input
                           className="mt-1.5"
