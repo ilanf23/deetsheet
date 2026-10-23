@@ -117,7 +117,7 @@ const UserRatingIndicator = ({ postId, onRatingChanged, size = "sm" }: UserRatin
     e.preventDefault();
     if (!user) {
       toast({ title: "Sign in to rate", description: "You need an account to rate posts." });
-      navigate("/login");
+      navigate("/signup");
       return;
     }
     setOpen((v) => !v);

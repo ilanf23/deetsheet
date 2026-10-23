@@ -58,7 +58,7 @@ const DeetHeader = () => {
     <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 items-center justify-between gap-4 px-4 lg:px-10">
         <a href="/" className="flex items-center shrink-0 pl-3">
-          <img src="/logo.png" alt="DeetSheet" className="h-[26px] md:h-[55px] -mt-1 md:mt-0" />
+          <img src="/logo.png" alt="DeetSheet" className="h-[39px] md:h-[55px] -mt-1 md:mt-0" />
         </a>
 
         <div className="hidden md:flex flex-1 max-w-md mx-4 items-center gap-2">

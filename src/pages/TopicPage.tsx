@@ -54,7 +54,7 @@ const TopicPage = () => {
 
   const [rendered, setRendered] = useState<number>(size);
   const [rankOpen, setRankOpen] = useState(false);
-  const [mobileTab, setMobileTab] = useState<MobileTab>("recent");
+  const [mobileTab, setMobileTab] = useState<MobileTab>("posts");
 
   const mobileTabs: { id: MobileTab; label: string }[] = [
     { id: "recent", label: "Recently Added" },

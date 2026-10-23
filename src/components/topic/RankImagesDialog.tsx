@@ -246,7 +246,7 @@ const RankImagesDialog = ({
 
   const handleRequireAuth = () => {
     onOpenChange(false);
-    navigate("/login");
+    navigate("/signup");
   };
 
   const handleRate = (imageId: string, value: number) => {

@@ -111,7 +111,7 @@ const ColumnLayout = ({ onAtBottomChange }: ColumnLayoutProps) => {
     };
   }, [onAtBottomChange, visible.length]);
 
-  const [mobileTab, setMobileTab] = useState<MobileTab>("recent");
+  const [mobileTab, setMobileTab] = useState<MobileTab>("popular");
   const [period, setPeriod] = useState<PopularPeriod>("year");
 
   const tabs: { id: MobileTab; label: string }[] = [
