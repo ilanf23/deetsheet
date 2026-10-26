@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Topic, getPostsByTopic, getAverageRating } from "@/data/seedData";
 import UserRatingIndicator from "@/components/UserRatingIndicator";
-import { useTopicByName, usePostsByTopic } from "@/hooks/useSupabaseTopics";
+import { useTopicByName, usePostsByTopic, getTopicSubtitle } from "@/hooks/useSupabaseTopics";
 import { buildPostSlug } from "@/lib/postSlug";
 
 interface PopularTopicSectionProps {
@@ -16,6 +16,7 @@ const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
   // posts (with UUID ids + live average_rating). Falls back to seed data only
   // if the DB lookup hasn't resolved yet, so the layout never flashes empty.
   const { data: dbTopic } = useTopicByName(topic.name);
+  const subtitle = getTopicSubtitle(topic.name, topic.categoryName, dbTopic?.subtitleOverride);
   const { data: dbPosts } = usePostsByTopic(dbTopic?.id);
   const seedPosts = getPostsByTopic(topic.name).slice(0, 5);
 
@@ -36,15 +37,34 @@ const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
       className="border rounded-xl bg-card cursor-pointer hover:shadow-lg transition-all duration-200 px-5 py-4"
       onClick={() => navigate(`/topic/${encodeURIComponent(topic.name)}`)}
     >
-      {/* Header: title */}
+      {/* Header: title + subtitle (subtitle desktop/tablet only) */}
       <div className="mb-2 min-w-0">
         <h3 className="font-heading text-3xl font-normal text-primary leading-tight truncate">
           {topic.name}
         </h3>
+        {subtitle && (
+          <p className="hidden md:block text-sm text-muted-foreground">{subtitle}</p>
+        )}
       </div>
 
-      {/* Body: numbered list + ratings */}
+      {/* Body: image on the left (desktop/tablet only), numbered list + ratings on the right */}
       <div className="flex gap-5 items-stretch">
+        <div className="hidden md:flex w-32 sm:w-36 shrink-0 flex-col">
+          {/* Spacer matching the "Rating | You" header row so the image aligns with row 1 */}
+          <div className="text-[11px] leading-none invisible mb-2" aria-hidden>
+            Rating
+          </div>
+          <img
+            src={dbTopic?.imageUrl || topic.imageUrl || "/placeholder.svg"}
+            alt={topic.name}
+            onError={(e) => {
+              const img = e.currentTarget;
+              if (img.src.endsWith("/placeholder.svg")) return;
+              img.src = "/placeholder.svg";
+            }}
+            className="flex-1 w-full rounded object-cover bg-muted"
+          />
+        </div>
         <ol className="flex-1 min-w-0 space-y-2">
           <li className="flex items-center gap-3 text-[11px] text-muted-foreground">
             <span className="w-5 shrink-0" aria-hidden />
