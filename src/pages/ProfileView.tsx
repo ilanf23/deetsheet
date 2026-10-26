@@ -563,8 +563,8 @@ const ProfileView = () => {
   };
 
   const username =
-    (profile?.name as string) ||
     (profile?.username as string) ||
+    (profile?.name as string) ||
     (isOwnProfile ? user?.user_metadata?.username : null) ||
     (isOwnProfile ? user?.email?.split("@")[0] : null) ||
     "User";
@@ -1096,13 +1096,14 @@ const ProfileView = () => {
           {/* Tabs section */}
           <div className="mt-8 min-w-0 lg:col-span-2 lg:row-start-2">
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="bg-transparent border-b rounded-none w-full justify-start h-auto p-0 gap-0">
-                {TABS.map((tab) => (
-                  <TabsTrigger
-                    key={tab.value}
-                    value={tab.value}
-                    className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-2.5 text-sm font-medium"
-                  >
+              <div className="overflow-x-auto border-b">
+                <TabsList className="bg-transparent border-b-0 rounded-none w-full justify-start h-auto p-0 gap-0 flex-nowrap">
+                  {TABS.map((tab) => (
+                    <TabsTrigger
+                      key={tab.value}
+                      value={tab.value}
+                      className="shrink-0 whitespace-nowrap rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-2.5 text-sm font-medium"
+                    >
                     {tab.label}
                     {typeof tab.count === "number" && (
                       <span className="ml-1.5 text-xs text-muted-foreground">
@@ -1118,7 +1119,8 @@ const ProfileView = () => {
                     )}
                   </TabsTrigger>
                 ))}
-              </TabsList>
+                </TabsList>
+              </div>
 
               {searchable && (
                 <div className="relative mt-4 w-full sm:max-w-sm">
@@ -1198,20 +1200,20 @@ const ProfileView = () => {
 
                                   </a>
                                 )}
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1.5">
+                                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground mb-1.5">
                                   <a
                                     href={`/topic/${encodeURIComponent(post.topic_name)}`}
-                                    className="text-primary hover:underline"
+                                    className="truncate max-w-[12rem] text-primary hover:underline"
                                   >
                                     {post.topic_name}
                                   </a>
                                   <span aria-hidden>·</span>
-                                  <span>{getTimeAgo(post.created_at)}</span>
+                                  <span className="shrink-0 whitespace-nowrap">{getTimeAgo(post.created_at)}</span>
                                   <span aria-hidden>·</span>
                                   <button
                                     type="button"
                                     onClick={() => navigate(`${postHref}#comments`)}
-                                    className="inline-flex items-center gap-1 hover:text-foreground"
+                                    className="inline-flex items-center gap-1 shrink-0 hover:text-foreground"
                                   >
                                     <MessageSquare className="h-3 w-3" />
                                     <span className="tabular-nums">{post.comment_count}</span>
@@ -1237,18 +1239,6 @@ const ProfileView = () => {
                                   />
                                 </a>
                               )}
-                              {isOwnProfile &&
-                                (post.status === "pending" || post.status === "rejected") && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="shrink-0 h-8"
-                                    onClick={() => setEditPostId(post.id)}
-                                  >
-                                    <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                                    Edit
-                                  </Button>
-                                )}
                               {isOwnProfile && (
                                 <div className="flex items-center gap-0.5 shrink-0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                                   <Button

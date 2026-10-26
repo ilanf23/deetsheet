@@ -44,30 +44,30 @@ const TopicPostListItem = ({ post, rank, topicName, topicId, showRanking = true 
       tabIndex={0}
       onClick={goToPost}
       onKeyDown={handleKeyDown}
-      className="group flex items-baseline gap-3 px-3 py-3.5 -mx-3 rounded-md hover:bg-accent/60 transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="group flex items-start gap-3 px-3 py-3.5 -mx-3 rounded-md hover:bg-accent/60 transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       {showRanking && (
         <span
-          className={`${rank >= 100 ? "w-10" : "w-6"} shrink-0 text-left text-base md:text-lg text-muted-foreground tabular-nums`}
+          className={`${rank >= 100 ? "w-10" : "w-6"} shrink-0 text-left text-base md:text-lg text-muted-foreground tabular-nums pt-0.5`}
         >
           {rank}.
         </span>
       )}
-      <h3 className="flex-1 min-w-0 truncate text-base md:text-lg font-heading font-semibold text-primary group-hover:underline">
+      <h3 className="flex-1 min-w-0 line-clamp-2 break-words text-base md:text-lg font-heading font-semibold text-primary group-hover:underline">
         {displayTitle}
       </h3>
       {showRanking && (
         <>
-          <span className="shrink-0 w-10 ml-4 text-right text-base md:text-lg font-heading text-secondary font-semibold tabular-nums">
+          <span className="shrink-0 w-10 ml-4 text-right text-base md:text-lg font-heading text-secondary font-semibold tabular-nums pt-0.5">
             {seedAvg}
           </span>
-          <span className="shrink-0 w-10 -ml-2 text-left text-sm font-heading text-muted-foreground tabular-nums">
+          <span className="shrink-0 w-10 -ml-2 text-left text-sm font-heading text-muted-foreground tabular-nums pt-0.5">
             ({post.ratingCount})
           </span>
-          <span className="shrink-0 -ml-4 text-muted-foreground/60 text-base md:text-lg" aria-hidden>|</span>
+          <span className="shrink-0 -ml-4 text-muted-foreground/60 text-base md:text-lg pt-0.5" aria-hidden>|</span>
           {isDbPost ? (
             <span
-              className="shrink-0 w-6 flex justify-start"
+              className="shrink-0 w-6 flex justify-start pt-0.5"
               onClick={(e) => e.stopPropagation()}
               onKeyDown={(e) => e.stopPropagation()}
               onMouseDown={(e) => e.stopPropagation()}

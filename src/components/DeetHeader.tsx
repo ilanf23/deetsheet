@@ -209,23 +209,41 @@ const DeetHeader = () => {
           >
             {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </Button>
-          <button
-            onClick={() => navigate(user ? "/profile" : "/login")}
-            className="rounded-full hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            title={user ? "View your profile" : "Log in"}
-            aria-label={user ? "View your profile" : "Log in"}
-          >
-            {user && avatarUrl ? (
-              <Avatar className="h-7 w-7">
-                <AvatarImage src={avatarUrl} alt={username} />
-                <AvatarFallback className="text-xs bg-muted">
-                  <User className="h-3.5 w-3.5" />
-                </AvatarFallback>
-              </Avatar>
-            ) : (
-              <UserCircle2 className="h-6 w-6 text-muted-foreground" strokeWidth={1.75} />
-            )}
-          </button>
+          {user ? (
+            <button
+              onClick={() => navigate("/profile")}
+              className="rounded-full hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              title="View your profile"
+              aria-label="View your profile"
+            >
+              {avatarUrl ? (
+                <Avatar className="h-7 w-7">
+                  <AvatarImage src={avatarUrl} alt={username} />
+                  <AvatarFallback className="text-xs bg-muted">
+                    <User className="h-3.5 w-3.5" />
+                  </AvatarFallback>
+                </Avatar>
+              ) : (
+                <UserCircle2 className="h-6 w-6 text-muted-foreground" strokeWidth={1.75} />
+              )}
+            </button>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="rounded-full hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  title="Account"
+                  aria-label="Account"
+                >
+                  <UserCircle2 className="h-6 w-6 text-muted-foreground" strokeWidth={1.75} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-36">
+                <DropdownMenuItem onClick={() => navigate("/signup")}>Sign Up</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/login")}>Log In</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 
@@ -252,16 +270,30 @@ const DeetHeader = () => {
               </button>
             ))}
             {user ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  navigate("/inbox");
-                }}
-                className="rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-accent"
-              >
-                Inbox{unreadCount > 0 ? ` (${unreadLabel})` : ""}
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    navigate("/inbox");
+                  }}
+                  className="rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-accent"
+                >
+                  Inbox{unreadCount > 0 ? ` (${unreadLabel})` : ""}
+                </button>
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      navigate("/admin");
+                    }}
+                    className="rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-accent"
+                  >
+                    Admin Panel
+                  </button>
+                )}
+              </>
             ) : (
               <>
                 <button

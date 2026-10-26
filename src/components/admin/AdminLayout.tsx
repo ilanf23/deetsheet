@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Outlet, NavLink, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,6 +20,8 @@ import {
   ArrowLeft,
   LogOut,
   Settings,
+  Menu,
+  X,
 } from "lucide-react";
 import {
   useAdminUnreadThreadsCount,
@@ -45,7 +48,8 @@ const navItems = [
 
 export default function AdminLayout() {
   const { user, signOut } = useAuth();
-  
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const { data: messagesCount = 0 } = useAdminUnreadThreadsCount();
   const { data: contactCount = 0 } = useAdminUnreadContactCount();
 
@@ -68,28 +72,50 @@ export default function AdminLayout() {
 
   return (
     <div className="admin-shell min-h-screen flex">
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden
+        />
+      )}
       <aside
-        className="w-[268px] shrink-0 flex flex-col"
+        className={`fixed inset-y-0 left-0 z-50 w-[268px] shrink-0 flex flex-col overflow-y-auto transform transition-transform duration-200 lg:static lg:translate-x-0 ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
         style={{
           backgroundColor: "hsl(var(--admin-surface))",
           borderRight: "1px solid hsl(var(--admin-border))",
         }}
       >
-        <div className="px-6 pt-6 pb-5" style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1.5 text-[13px]"
-            style={{ color: "hsl(var(--admin-fg-muted))" }}
+        <div
+          className="flex items-start justify-between px-6 pt-6 pb-5"
+          style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}
+        >
+          <div>
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 text-[13px]"
+              style={{ color: "hsl(var(--admin-fg-muted))" }}
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back to site
+            </Link>
+            <h2
+              className="mt-3 text-[19px] font-bold tracking-tight"
+              style={{ color: "hsl(var(--admin-fg))" }}
+            >
+              Admin Portal
+            </h2>
+          </div>
+          <button
+            type="button"
+            className="lg:hidden p-1 -mr-1 -mt-1"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close menu"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back to site
-          </Link>
-          <h2
-            className="mt-3 text-[19px] font-bold tracking-tight"
-            style={{ color: "hsl(var(--admin-fg))" }}
-          >
-            Admin Portal
-          </h2>
+            <X className="h-5 w-5" style={{ color: "hsl(var(--admin-fg-muted))" }} />
+          </button>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-1">
@@ -98,6 +124,7 @@ export default function AdminLayout() {
               key={item.to}
               to={item.to}
               end={item.end}
+              onClick={() => setSidebarOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-md text-[14px] transition-colors`
               }
@@ -174,15 +201,23 @@ export default function AdminLayout() {
 
       <div className="flex-1 flex flex-col min-w-0">
         <header
-          className="flex items-center gap-2 px-8 py-5"
+          className="flex items-center gap-2 px-4 md:px-8 py-4 md:py-5"
           style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}
         >
+          <button
+            type="button"
+            className="lg:hidden p-1 -ml-1"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5" style={{ color: "hsl(var(--admin-fg))" }} />
+          </button>
           <LayoutGrid className="h-5 w-5" style={{ color: "hsl(var(--admin-fg))" }} />
           <span className="text-[15px] font-semibold" style={{ color: "hsl(var(--admin-fg))" }}>
             DeetSheet Admin
           </span>
         </header>
-        <main className="flex-1 px-10 py-8 overflow-x-hidden min-w-0">
+        <main className="flex-1 px-4 md:px-10 py-5 md:py-8 overflow-x-hidden min-w-0">
           <Outlet />
         </main>
       </div>

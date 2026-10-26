@@ -76,8 +76,8 @@ const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
             </span>
           </li>
           {topPosts.map((post, i) => (
-            <li key={post.id} className="flex items-center gap-3 text-[15px] min-w-0">
-              <span className="text-muted-foreground w-5 shrink-0 text-right">{i + 1}.</span>
+            <li key={post.id} className="flex items-start gap-3 text-[15px] min-w-0">
+              <span className="text-muted-foreground w-5 shrink-0 text-right pt-px">{i + 1}.</span>
               <button
                 type="button"
                 onClick={(e) => {
@@ -85,11 +85,11 @@ const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
                   const slug = buildPostSlug(post.content, post.id) || String(i + 1);
                   navigate(`/topic/${encodeURIComponent(topic.name)}/post/${slug}`);
                 }}
-                className="flex-1 min-w-0 text-left text-primary leading-snug truncate hover:underline"
+                className="flex-1 min-w-0 text-left text-primary leading-snug line-clamp-2 break-words hover:underline"
               >
                 {post.content}
               </button>
-              <span className="flex items-center text-secondary shrink-0 tabular-nums text-sm">
+              <span className="flex items-center text-secondary shrink-0 tabular-nums text-sm pt-px">
                 <span className="font-medium w-8 text-right">{post.avg}</span>
                 <span className="text-muted-foreground/60 w-4 text-center">|</span>
                 <span className="w-8 flex justify-start">

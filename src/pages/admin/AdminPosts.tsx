@@ -495,7 +495,7 @@ export default function AdminPosts() {
                     {(p.topic_id && topicNames.get(p.topic_id)) || "-"}
                   </span>
                   <span className="truncate text-slate-600">
-                    {author?.name ?? author?.username ?? "Unknown"}
+                    {author?.username ?? author?.name ?? "Unknown"}
                     <VisibilityBadge isAnonymous={!!p.is_anonymous} />
                   </span>
                   <span className="text-slate-600">
@@ -535,7 +535,7 @@ export default function AdminPosts() {
               >
                 <span className="truncate font-medium text-slate-900">{p.title}</span>
                 <span className="truncate text-slate-600">
-                  {author?.name ?? author?.username ?? "Unknown"}
+                  {author?.username ?? author?.name ?? "Unknown"}
                   <VisibilityBadge isAnonymous={!!p.is_anonymous} />
                 </span>
                 <span>

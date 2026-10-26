@@ -133,7 +133,7 @@ const TopicPage = () => {
                 key={t.id}
                 type="button"
                 onClick={() => setMobileTab(t.id)}
-                className={`flex-1 px-2 py-2 text-xs font-semibold rounded-md transition-colors ${
+                className={`flex-1 px-1.5 py-2 text-[11px] sm:text-xs font-semibold rounded-md whitespace-nowrap overflow-hidden text-ellipsis transition-colors ${
                   mobileTab === t.id
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground"
