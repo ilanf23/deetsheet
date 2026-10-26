@@ -80,7 +80,7 @@ type DbPostRaw = {
   image_url?: string | null;
   status?: string | null;
   is_anonymous?: boolean | null;
-  profiles?: { username: string | null; avatar_url: string | null } | null;
+  profiles?: { username: string | null; name: string | null; avatar_url: string | null } | null;
   topics?: { name: string; category_name: string | null; image_url: string | null; subtitle_override?: string | null } | null;
 };
 
@@ -108,7 +108,10 @@ const mapPost = (row: DbPostRaw): PostRow => {
     topicName: row.topics?.name ?? "",
     categoryName: row.topics?.category_name ?? "Life",
     authorId: row.public_author_id ?? null,
-    username: row.profiles?.username ?? "anonymous",
+    // A post that isn't anonymous should never visually collapse into the
+    // word "anonymous" just because the author hasn't set a username yet —
+    // fall back to their display name, then a neutral placeholder.
+    username: row.profiles?.username || row.profiles?.name || "DeetSheet Member",
     ratingScore: Number(row.average_rating ?? 0),
     ratingCount: row.rating_count ?? 0,
     commentCount: row.comment_count ?? 0,
@@ -209,7 +212,7 @@ export const usePostsByTopic = (topicId: string | undefined) => {
         .select(
           "id, title, content, story, topic_id, public_author_id, score, average_rating, rating_count, comment_count, created_at, approved_at, image_url, status, is_anonymous, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            "profiles!posts_public_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
+            "profiles!posts_public_author_id_profiles_fkey(username, name, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
         .eq("topic_id", topicId)
         .eq("status", "approved");
@@ -240,7 +243,7 @@ export const useRecentPosts = (limit = 8) => {
         .select(
           "id, title, topic_id, public_author_id, average_rating, rating_count, comment_count, created_at, approved_at, image_url, status, is_anonymous, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            "profiles!posts_public_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
+            "profiles!posts_public_author_id_profiles_fkey(username, name, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
         .eq("status", "approved")
         // `sort_at` is COALESCE(approved_at, created_at), so legacy rows with
@@ -340,7 +343,7 @@ export const useRecentPostsByTopic = (topicId: string | undefined, limit = 5) =>
         .select(
           "id, title, content, story, topic_id, public_author_id, score, average_rating, rating_count, comment_count, created_at, approved_at, image_url, status, is_anonymous, " +
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            "profiles!posts_public_author_id_profiles_fkey(username, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
+            "profiles!posts_public_author_id_profiles_fkey(username, name, avatar_url), topics!posts_topic_id_fkey(name, category_name, image_url)" as any
         )
         .eq("topic_id", topicId)
         .eq("status", "approved")

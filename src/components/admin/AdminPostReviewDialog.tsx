@@ -554,6 +554,9 @@ export default function AdminPostReviewDialog({
                     {postLocation.city}, {postLocation.state}
                   </Badge>
                 ) : null}
+                <Badge variant="outline">
+                  {post.is_anonymous ? "Anonymous" : "Public"}
+                </Badge>
               </div>
 
               <div className="text-xs text-muted-foreground">

@@ -83,6 +83,18 @@ function StatusPill({ status }: { status: PostTab }) {
   );
 }
 
+function VisibilityBadge({ isAnonymous }: { isAnonymous: boolean }) {
+  if (!isAnonymous) return null;
+  return (
+    <span
+      className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide align-middle"
+      style={{ backgroundColor: "hsl(var(--admin-info-soft))", color: "hsl(var(--admin-info))" }}
+    >
+      Anonymous
+    </span>
+  );
+}
+
 export default function AdminPosts() {
   const [tab, setTab] = useState<PostTab>("pending");
   const [posts, setPosts] = useState<Post[]>([]);
@@ -109,7 +121,7 @@ export default function AdminPosts() {
         supabase
           .from("posts_privileged")
           .select(
-            "id, title, author_id, created_at, status, topic_id, deleted_at, deleted_by, deleted_reason",
+            "id, title, author_id, created_at, status, topic_id, deleted_at, deleted_by, deleted_reason, is_anonymous",
           )
           .order("created_at", { ascending: false }),
         supabase.from("profiles").select("id, name, username, avatar_url"),
@@ -484,6 +496,7 @@ export default function AdminPosts() {
                   </span>
                   <span className="truncate text-slate-600">
                     {author?.name ?? author?.username ?? "Unknown"}
+                    <VisibilityBadge isAnonymous={!!p.is_anonymous} />
                   </span>
                   <span className="text-slate-600">
                     {p.deleted_at ? `${formatDistanceToNow(parseISO(p.deleted_at))} ago` : "-"}
@@ -523,6 +536,7 @@ export default function AdminPosts() {
                 <span className="truncate font-medium text-slate-900">{p.title}</span>
                 <span className="truncate text-slate-600">
                   {author?.name ?? author?.username ?? "Unknown"}
+                  <VisibilityBadge isAnonymous={!!p.is_anonymous} />
                 </span>
                 <span>
                   <StatusPill status={tab === "reported" ? "reported" : ((p.status === "approved" ? "published" : (p.status as PostTab)) ?? "published")} />

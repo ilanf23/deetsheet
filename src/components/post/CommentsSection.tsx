@@ -24,6 +24,7 @@ interface DbComment {
 interface DbProfile {
   id: string;
   username: string | null;
+  name: string | null;
   avatar_url: string | null;
 }
 
@@ -62,7 +63,7 @@ const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
   const authorIds = Array.from(new Set(rows.map((r) => r.author_id).filter((x): x is string => !!x)));
   const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
-    .select("id, username, avatar_url")
+    .select("id, username, name, avatar_url")
     .in("id", authorIds);
   if (profilesError) throw profilesError;
 
@@ -83,12 +84,14 @@ const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
       ? rows.find((r) => r.id === c.parent_comment_id)
       : null;
     const parentIsAnon = !!parentRow?.is_anonymous;
+    const author = c.author_id ? profileByAuthorId.get(c.author_id) : undefined;
+    const parentAuthor = parentAuthorId ? profileByAuthorId.get(parentAuthorId) : undefined;
     return {
       id: c.id,
-      username: isAnon
-        ? "anonymous"
-        : (c.author_id ? profileByAuthorId.get(c.author_id)?.username : null) || "anonymous",
-      avatarUrl: isAnon ? null : (c.author_id ? profileByAuthorId.get(c.author_id)?.avatar_url : null) ?? null,
+      // A non-anonymous comment should never collapse into the word
+      // "anonymous" just because the author hasn't set a username yet.
+      username: isAnon ? "anonymous" : author?.username || author?.name || "DeetSheet Member",
+      avatarUrl: isAnon ? null : author?.avatar_url ?? null,
       content: c.content,
       createdAt: new Date(c.created_at),
       likeCount: c.like_count ?? 0,
@@ -96,7 +99,7 @@ const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
       parentCommentId: c.parent_comment_id,
       parentUsername:
         parentAuthorId && !parentIsAnon
-          ? profileByAuthorId.get(parentAuthorId)?.username ?? null
+          ? parentAuthor?.username || parentAuthor?.name || "DeetSheet Member"
           : parentIsAnon
             ? "anonymous"
             : null,

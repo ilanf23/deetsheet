@@ -31,7 +31,7 @@ const NotificationBell = () => {
         <button
           title="Notifications"
           aria-label="Notifications"
-          className="relative mr-1 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          className="relative p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
         >
           <Bell className="h-4 w-4" />
           {unread > 0 && (

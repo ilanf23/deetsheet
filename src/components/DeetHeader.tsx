@@ -56,9 +56,9 @@ const DeetHeader = () => {
 
   return (
     <header className="sticky top-0 z-50 border-b bg-card/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 items-center justify-between gap-4 px-4 lg:px-10">
+      <div className="mx-auto flex h-16 items-center justify-between gap-2 md:gap-4 px-3 md:px-4 lg:px-10">
         <a href="/" className="flex items-center shrink-0 pl-3">
-          <img src="/logo.png" alt="DeetSheet" className="h-[39px] md:h-[55px] -mt-1 md:mt-0" />
+          <img src="/logo.png" alt="DeetSheet" className="h-[32px] md:h-[55px] -mt-1 md:mt-0" />
         </a>
 
         <div className="hidden md:flex flex-1 max-w-md mx-4 items-center gap-2">
@@ -192,21 +192,22 @@ const DeetHeader = () => {
           )}
         </nav>
 
-        <div className="flex md:hidden items-center gap-2">
+        <div className="flex md:hidden items-center gap-1">
           {user && <NotificationBell />}
-          <Button variant="ghost" size="icon" title={onTopics ? "Close Topics" : "Topics Directory"} onClick={toggleTopics}>
-            {onTopics ? <X className="h-[29px] w-[29px]" /> : <List className="h-[34px] w-[34px]" />}
+          <Button variant="ghost" size="icon" className="h-8 w-8" title={onTopics ? "Close Topics" : "Topics Directory"} onClick={toggleTopics}>
+            {onTopics ? <X className="h-[22px] w-[22px]" /> : <List className="h-[26px] w-[26px]" />}
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => setSearchOpen(!searchOpen)}>
-            <Search className="h-5 w-5" />
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSearchOpen(!searchOpen)}>
+            <Search className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
+            className="h-8 w-8"
             aria-label="Menu"
             onClick={() => setMobileMenuOpen((o) => !o)}
           >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </Button>
           <button
             onClick={() => navigate(user ? "/profile" : "/login")}
@@ -215,14 +216,14 @@ const DeetHeader = () => {
             aria-label={user ? "View your profile" : "Log in"}
           >
             {user && avatarUrl ? (
-              <Avatar className="h-8 w-8">
+              <Avatar className="h-7 w-7">
                 <AvatarImage src={avatarUrl} alt={username} />
                 <AvatarFallback className="text-xs bg-muted">
-                  <User className="h-4 w-4" />
+                  <User className="h-3.5 w-3.5" />
                 </AvatarFallback>
               </Avatar>
             ) : (
-              <UserCircle2 className="h-7 w-7 text-muted-foreground" strokeWidth={1.75} />
+              <UserCircle2 className="h-6 w-6 text-muted-foreground" strokeWidth={1.75} />
             )}
           </button>
         </div>

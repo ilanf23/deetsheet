@@ -32,11 +32,11 @@ export const PopularTopicSkeleton = () => (
     {/* Title + subtitle */}
     <div className="mb-2">
       <Skeleton className="mb-2 h-8 w-1/3" />
-      <Skeleton className="h-4 w-2/3" />
+      <Skeleton className="hidden lg:block h-4 w-2/3" />
     </div>
     <div className="flex gap-5 items-stretch">
-      {/* Image */}
-      <div className="w-32 sm:w-36 shrink-0 flex flex-col">
+      {/* Image (desktop-only, mirrors the hidden lg:flex image column) */}
+      <div className="hidden lg:flex w-32 sm:w-36 shrink-0 flex-col">
         <div className="h-[11px] mb-2" />
         <Skeleton className="flex-1 w-full min-h-[10rem] rounded" />
       </div>

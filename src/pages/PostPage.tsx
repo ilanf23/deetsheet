@@ -105,10 +105,10 @@ const PostPage = () => {
     el.scrollIntoView({ behavior: prefersReduced ? "auto" : "smooth", block: "start" });
   }, [post, postContentLoading, location.hash]);
 
-  const [mobileTab, setMobileTab] = useState<MobileTab>("recent");
+  const [mobileTab, setMobileTab] = useState<MobileTab>("post");
   const mobileTabs: { id: MobileTab; label: string }[] = [
     { id: "recent", label: "Recently Added" },
-    { id: "post", label: "Post" },
+    { id: "post", label: "Posts" },
     { id: "recommended", label: "Recommended" },
   ];
 

@@ -116,7 +116,7 @@ const UserRatingIndicator = ({ postId, onRatingChanged, size = "sm" }: UserRatin
     e.stopPropagation();
     e.preventDefault();
     if (!user) {
-      toast({ title: "Sign in to rate", description: "You need an account to rate posts." });
+      toast({ title: "Join to rate", description: "You need an account to rate posts." });
       navigate("/signup");
       return;
     }

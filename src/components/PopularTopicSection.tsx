@@ -37,19 +37,19 @@ const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
       className="border rounded-xl bg-card cursor-pointer hover:shadow-lg transition-all duration-200 px-5 py-4"
       onClick={() => navigate(`/topic/${encodeURIComponent(topic.name)}`)}
     >
-      {/* Header: title + subtitle (subtitle desktop/tablet only) */}
+      {/* Header: title + subtitle (subtitle is desktop-only, see rule 2) */}
       <div className="mb-2 min-w-0">
         <h3 className="font-heading text-3xl font-normal text-primary leading-tight truncate">
           {topic.name}
         </h3>
         {subtitle && (
-          <p className="hidden md:block text-sm text-muted-foreground">{subtitle}</p>
+          <p className="hidden lg:block text-sm text-muted-foreground">{subtitle}</p>
         )}
       </div>
 
-      {/* Body: image on the left (desktop/tablet only), numbered list + ratings on the right */}
+      {/* Body: image on the left (desktop-only), numbered list + ratings on the right */}
       <div className="flex gap-5 items-stretch">
-        <div className="hidden md:flex w-32 sm:w-36 shrink-0 flex-col">
+        <div className="hidden lg:flex w-32 sm:w-36 shrink-0 flex-col">
           {/* Spacer matching the "Rating | You" header row so the image aligns with row 1 */}
           <div className="text-[11px] leading-none invisible mb-2" aria-hidden>
             Rating
