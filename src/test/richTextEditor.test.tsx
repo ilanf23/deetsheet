@@ -68,3 +68,29 @@ describe("RichTextEditor image support", () => {
     await waitFor(() => expect(editor!.getHTML()).toContain('<img src="https://cdn.test/uploaded.png"'));
   });
 });
+
+describe("RichTextEditor list commands", () => {
+  it("toggles bullet then ordered list from the toolbar buttons", async () => {
+    let editor: Editor | null = null;
+    const { container } = render(
+      <RichTextEditor
+        editorRef={(e) => {
+          editor = e;
+        }}
+      />,
+    );
+    await waitFor(() => expect(editor).not.toBeNull());
+
+    // Toolbar order: bold, italic, underline, strike, bullet list, ordered list.
+    const buttons = Array.from(
+      container.querySelectorAll("div.border-b button"),
+    ) as HTMLButtonElement[];
+    expect(buttons.length).toBeGreaterThanOrEqual(6);
+
+    buttons[4].dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    await waitFor(() => expect(editor!.isActive("bulletList")).toBe(true));
+
+    buttons[5].dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+    await waitFor(() => expect(editor!.isActive("orderedList")).toBe(true));
+  });
+});

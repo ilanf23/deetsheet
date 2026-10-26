@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
@@ -830,8 +830,8 @@ export type Database = {
           city_born: string | null
           college: string | null
           country: string | null
-          credentials: Json
           created_at: string
+          credentials: Json
           degree: string | null
           education: string | null
           email_frequency: string | null
@@ -868,8 +868,8 @@ export type Database = {
           city_born?: string | null
           college?: string | null
           country?: string | null
-          credentials?: Json
           created_at?: string
+          credentials?: Json
           degree?: string | null
           education?: string | null
           email_frequency?: string | null
@@ -906,8 +906,8 @@ export type Database = {
           city_born?: string | null
           college?: string | null
           country?: string | null
-          credentials?: Json
           created_at?: string
+          credentials?: Json
           degree?: string | null
           education?: string | null
           email_frequency?: string | null
@@ -1434,8 +1434,8 @@ export type Database = {
           city_born: string | null
           college: string | null
           country: string | null
-          credentials: Json
           created_at: string | null
+          credentials: Json | null
           degree: string | null
           education: string | null
           email_frequency: string | null
@@ -1561,8 +1561,8 @@ export type Database = {
           city_born: string | null
           college: string | null
           country: string | null
-          credentials: Json
           created_at: string
+          credentials: Json
           degree: string | null
           education: string | null
           email_frequency: string | null
