@@ -16,6 +16,7 @@ import AdminSortSelect from "@/components/admin/AdminSortSelect";
 import RichTextEditor from "@/components/RichTextEditor";
 import { buildPostSlug } from "@/lib/postSlug";
 import { logAdminAction } from "@/lib/auditLog";
+import { getAuthorLabel } from "@/lib/authorLabel";
 
 interface Comment {
   id: string;
@@ -204,10 +205,7 @@ export default function AdminComments() {
         like_count: comment.like_count ?? 0,
         postTitle: postContextById.get(comment.post_id)?.title ?? "Unknown post",
         postTopicName: getPostTopicName(postContextById.get(comment.post_id)),
-        authorName:
-          profileById.get(comment.author_id)?.name ??
-          profileById.get(comment.author_id)?.username ??
-          "anonymous",
+        authorName: getAuthorLabel(profileById.get(comment.author_id)),
         authorAvatarUrl: profileById.get(comment.author_id)?.avatar_url ?? null,
         replyCount: directReplyCountByCommentId.get(comment.id) ?? 0,
       })),

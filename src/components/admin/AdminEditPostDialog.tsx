@@ -22,6 +22,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useProfileFollowCounts } from "@/hooks/useUserFollow";
 import { invalidatePostCaches } from "@/lib/postCacheInvalidation";
+import { getAuthorLabel } from "@/lib/authorLabel";
 import { useFollowing, useFollowers } from "@/hooks/useFollowLists";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -692,18 +693,13 @@ export default function AdminEditPostDialog({ postId, open, onOpenChange, onSave
                         <AvatarImage src={author.avatarUrl} alt={author.username ?? ""} />
                       ) : null}
                       <AvatarFallback className="rounded-md text-2xl">
-                        {(author.username ?? author.name ?? "?").slice(0, 1).toUpperCase()}
+                        {getAuthorLabel(author).slice(0, 1).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
 
                     <div className="min-w-0 flex-1">
                       <div className="text-xl font-bold text-foreground truncate">
-                        {author.username ?? author.name ?? "Unknown user"}
-                        {author.username && author.name && (
-                          <span className="ml-1.5 text-base font-normal text-muted-foreground">
-                            ({author.username})
-                          </span>
-                        )}
+                        {getAuthorLabel(author)}
                       </div>
 
                       {authorRows.length > 0 && (
