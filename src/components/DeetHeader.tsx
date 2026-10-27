@@ -228,21 +228,16 @@ const DeetHeader = () => {
               )}
             </button>
           ) : (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  className="rounded-full hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  title="Account"
-                  aria-label="Account"
-                >
-                  <UserCircle2 className="h-6 w-6 text-muted-foreground" strokeWidth={1.75} />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-36">
-                <DropdownMenuItem onClick={() => navigate("/signup")}>Sign Up</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/login")}>Log In</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-primary"
+              title="Join"
+              aria-label="Join"
+              onClick={() => navigate("/signup")}
+            >
+              <UserCircle2 className="h-6 w-6" strokeWidth={1.75} />
+            </Button>
           )}
         </div>
       </div>

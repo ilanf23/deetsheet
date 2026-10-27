@@ -6,6 +6,7 @@ import CommentItem, {
 } from "@/components/CommentItem";
 import { supabase } from "@/integrations/supabase/client";
 import { sortByHotScore } from "@/lib/commentRanking";
+import { getAuthorLabel } from "@/lib/authorLabel";
 
 interface CommentsSectionProps {
   postId: string;
@@ -24,7 +25,6 @@ interface DbComment {
 interface DbProfile {
   id: string;
   username: string | null;
-  name: string | null;
   avatar_url: string | null;
 }
 
@@ -63,7 +63,7 @@ const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
   const authorIds = Array.from(new Set(rows.map((r) => r.author_id).filter((x): x is string => !!x)));
   const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
-    .select("id, username, name, avatar_url")
+    .select("id, username, avatar_url")
     .in("id", authorIds);
   if (profilesError) throw profilesError;
 
@@ -90,7 +90,7 @@ const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
       id: c.id,
       // A non-anonymous comment should never collapse into the word
       // "anonymous" just because the author hasn't set a username yet.
-      username: isAnon ? "anonymous" : author?.username || author?.name || "DeetSheet Member",
+      username: isAnon ? "anonymous" : getAuthorLabel(author),
       avatarUrl: isAnon ? null : author?.avatar_url ?? null,
       content: c.content,
       createdAt: new Date(c.created_at),
@@ -99,7 +99,7 @@ const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
       parentCommentId: c.parent_comment_id,
       parentUsername:
         parentAuthorId && !parentIsAnon
-          ? parentAuthor?.username || parentAuthor?.name || "DeetSheet Member"
+          ? getAuthorLabel(parentAuthor)
           : parentIsAnon
             ? "anonymous"
             : null,

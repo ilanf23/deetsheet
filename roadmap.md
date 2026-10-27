@@ -1,0 +1,4 @@
+- [ ] Replace real-name fallbacks for post/comment authors with username-only labels.
+- [ ] Show usernames and Anonymous/Public badges in admin review and Posts.
+- [ ] Stack admin Posts and review layouts cleanly at 375px.
+- [ ] Send logged-out profile icon directly to /signup and verify the requested flows.

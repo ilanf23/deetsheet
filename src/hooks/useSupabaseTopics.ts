@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { buildPostImageUrl } from "@/lib/topicImageQueries";
+import { getAuthorLabel } from "@/lib/authorLabel";
 
 /**
  * Data hooks that replace the hardcoded seedData.ts imports on
@@ -108,10 +109,7 @@ const mapPost = (row: DbPostRaw): PostRow => {
     topicName: row.topics?.name ?? "",
     categoryName: row.topics?.category_name ?? "Life",
     authorId: row.public_author_id ?? null,
-    // A post that isn't anonymous should never visually collapse into the
-    // word "anonymous" just because the author hasn't set a username yet —
-    // fall back to their display name, then a neutral placeholder.
-    username: row.profiles?.username || row.profiles?.name || "DeetSheet Member",
+    username: getAuthorLabel(row.profiles),
     ratingScore: Number(row.average_rating ?? 0),
     ratingCount: row.rating_count ?? 0,
     commentCount: row.comment_count ?? 0,

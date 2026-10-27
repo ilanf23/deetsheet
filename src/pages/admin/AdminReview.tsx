@@ -11,6 +11,9 @@ import AdminEditPostDialog from "@/components/admin/AdminEditPostDialog";
 import ReviewActionDialog, { type ReviewAction } from "@/components/admin/ReviewActionDialog";
 import { logAdminAction } from "@/lib/auditLog";
 import { Hash, FileText, ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
+import { getAuthorLabel } from "@/lib/authorLabel";
+import PostVisibilityBadge from "@/components/admin/PostVisibilityBadge";
+import { Button } from "@/components/ui/button";
 
 type PriorPost = {
   id: string;
@@ -127,6 +130,7 @@ type PendingPost = {
   topic_name?: string;
   updated_at: string;
   author_id?: string;
+  isAnonymous: boolean;
   /** Re-submitted after the author edited an already-reviewed post. */
   isReReview: boolean;
 };
@@ -215,7 +219,7 @@ export default function AdminReview() {
         .eq("status", "pending"),
       supabase
         .from("posts_privileged")
-        .select("id, title, content, story, image_url, topic_id, author_id, created_at, updated_at, approved_at")
+        .select("id, title, content, story, image_url, topic_id, author_id, created_at, updated_at, approved_at, is_anonymous")
         .eq("status", "pending"),
     ]);
 
@@ -274,6 +278,7 @@ export default function AdminReview() {
           topic_id: p.topic_id,
           topic_name: parent?.name,
           author_id: p.author_id,
+          isAnonymous: !!p.is_anonymous,
           updated_at: p.updated_at ?? p.created_at,
           isReReview:
             !!p.approved_at ||
@@ -377,9 +382,9 @@ export default function AdminReview() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-wrap items-start justify-between gap-2">
         <h1
-          className="text-[40px] font-bold leading-none tracking-tight"
+          className="text-3xl sm:text-[40px] font-bold leading-none"
           style={{ color: "hsl(var(--admin-fg))" }}
         >
           Review queue
@@ -389,9 +394,9 @@ export default function AdminReview() {
         </span>
       </div>
 
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div
-          className="inline-flex items-center gap-1 p-1 rounded-full"
+          className="inline-flex flex-wrap self-start items-center gap-1 p-1 rounded-md"
           style={{ backgroundColor: "hsl(var(--admin-primary-soft))" }}
         >
           {(
@@ -438,20 +443,21 @@ export default function AdminReview() {
         <div className="space-y-3">
           {visible.map((item) => {
             const author = item.author;
-            const authorLabel = author?.name ?? author?.username ?? "Unknown";
+            const authorLabel = getAuthorLabel(author);
             return (
               <div
                 key={`${item.kind}-${item.id}`}
-                className="rounded-xl p-6"
+                className="rounded-lg p-4 sm:p-6"
                 style={{
                   backgroundColor: "hsl(var(--admin-surface))",
                   border: "1px solid hsl(var(--admin-border))",
                 }}
               >
-                <div className="flex gap-5">
-                <div className="flex-1 min-w-0 space-y-2.5">
+                <div className="flex flex-col lg:flex-row gap-5">
+                <div className="flex-1 min-w-0 space-y-2.5 break-words">
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[12px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>
                     <TypeBadge kind={item.kind} />
+                    {item.kind === "post" && <PostVisibilityBadge isAnonymous={item.isAnonymous} />}
                     {item.kind === "post" && item.isReReview && (
                       <span
                         className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[12px] font-medium"
@@ -519,7 +525,7 @@ export default function AdminReview() {
                   <img
                     src={item.image_url}
                     alt=""
-                    className="w-32 h-32 object-cover rounded-lg shrink-0"
+                    className="w-full h-48 sm:w-32 sm:h-32 object-cover rounded-lg shrink-0"
                     onError={(e) => {
                       const img = e.currentTarget as HTMLImageElement;
                       if (!img.src.endsWith("/placeholder.svg")) img.src = "/placeholder.svg";
@@ -527,8 +533,8 @@ export default function AdminReview() {
                   />
                 )}
 
-                <div className="flex w-44 flex-col gap-2.5 shrink-0 self-start">
-                  <button
+                <div className="flex w-full lg:w-44 flex-col gap-2.5 shrink-0 self-start">
+                  <Button
                     onClick={() => author?.id && setReviewDialog({ action: "approve", item })}
                     disabled={!author?.id}
                     className="w-full px-4 py-2 rounded-md text-[13px] font-semibold disabled:opacity-50"
@@ -538,8 +544,8 @@ export default function AdminReview() {
                     }}
                   >
                     Approve
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="outline"
                     onClick={() => author?.id && setReviewDialog({ action: "reject", item })}
                     disabled={!author?.id}
                     className="w-full px-4 py-2 rounded-md text-[13px] font-semibold disabled:opacity-50"
@@ -549,9 +555,9 @@ export default function AdminReview() {
                     }}
                   >
                     Reject
-                  </button>
+                  </Button>
                   {item.kind === "post" && (
-                    <button
+                    <Button variant="outline"
                       onClick={() => author?.id && setReviewDialog({ action: "edit", item })}
                       disabled={!author?.id}
                       className="w-full px-4 py-2 rounded-md text-[13px] font-semibold border disabled:opacity-50"
@@ -561,9 +567,9 @@ export default function AdminReview() {
                       }}
                     >
                       Suggest
-                    </button>
+                    </Button>
                   )}
-                  <button
+                  <Button variant="outline"
                     onClick={() =>
                       author?.id &&
                       openDirectMessage(author.id, item.kind === "post" ? item.id : null)
@@ -576,7 +582,7 @@ export default function AdminReview() {
                     }}
                   >
                     Message them directly
-                  </button>
+                  </Button>
                 </div>
                 </div>
                 {item.kind === "post" && author?.id && (
@@ -618,11 +624,7 @@ export default function AdminReview() {
             : ""
         }
         authorId={reviewDialog?.item.author?.id ?? ""}
-        authorLabel={
-          reviewDialog?.item.author?.name ??
-          reviewDialog?.item.author?.username ??
-          "the author"
-        }
+        authorLabel={getAuthorLabel(reviewDialog?.item.author)}
         postId={reviewDialog && reviewDialog.item.kind === "post" ? reviewDialog.item.id : null}
         onConfirmed={async (meta) => {
           if (!reviewDialog) return;
