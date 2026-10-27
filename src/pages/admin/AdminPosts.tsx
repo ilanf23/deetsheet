@@ -20,6 +20,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { logAdminAction } from "@/lib/auditLog";
+import { getAuthorLabel } from "@/lib/authorLabel";
+import PostVisibilityBadge from "@/components/admin/PostVisibilityBadge";
+import { Button } from "@/components/ui/button";
 
 type Post = Tables<"posts">;
 type Profile = Tables<"profiles">;
@@ -79,18 +82,6 @@ function StatusPill({ status }: { status: PostTab }) {
       style={{ backgroundColor: p.bg, color: p.fg }}
     >
       {p.label}
-    </span>
-  );
-}
-
-function VisibilityBadge({ isAnonymous }: { isAnonymous: boolean }) {
-  if (!isAnonymous) return null;
-  return (
-    <span
-      className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wide align-middle"
-      style={{ backgroundColor: "hsl(var(--admin-info-soft))", color: "hsl(var(--admin-info))" }}
-    >
-      Anonymous
     </span>
   );
 }
@@ -159,7 +150,7 @@ export default function AdminPosts() {
     if (q) {
       rows = rows.filter((p) => {
         const a = authors.get(p.author_id);
-        const authorStr = `${a?.name ?? ""} ${a?.username ?? ""}`.toLowerCase();
+        const authorStr = getAuthorLabel(a).toLowerCase();
         return (p.title ?? "").toLowerCase().includes(q) || authorStr.includes(q);
       });
     }
@@ -170,7 +161,7 @@ export default function AdminPosts() {
       new Date(a ?? 0).getTime() - new Date(b ?? 0).getTime();
     const authorLabel = (p: Post) => {
       const a = authors.get(p.author_id);
-      return (a?.name ?? a?.username ?? "").toLowerCase();
+      return getAuthorLabel(a).toLowerCase();
     };
 
     const sorted = [...rows];
@@ -322,7 +313,7 @@ export default function AdminPosts() {
       </div>
 
       <div
-        className="inline-flex items-center gap-1 p-1 rounded-full"
+        className="inline-flex max-w-full flex-wrap items-center gap-1 p-1 rounded-md"
         style={{ backgroundColor: "hsl(var(--admin-primary-soft))" }}
       >
         {(["pending", "published", "reported", "rejected", "deleted"] as PostTab[]).map((t) => {
@@ -350,7 +341,7 @@ export default function AdminPosts() {
       </div>
 
       <div className="flex flex-wrap items-end gap-4">
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 min-w-0">
           <label
             className="text-[11px] font-semibold uppercase tracking-wide"
             style={{ color: "hsl(var(--admin-fg-muted))" }}
@@ -397,7 +388,7 @@ export default function AdminPosts() {
           }}
           options={SORT_OPTIONS}
         />
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 w-full sm:w-auto min-w-0">
           <label
             className="text-[11px] font-semibold uppercase tracking-wide"
             style={{ color: "hsl(var(--admin-fg-muted))" }}
@@ -405,8 +396,8 @@ export default function AdminPosts() {
             Search
           </label>
           <div
-            className="flex items-center gap-2 rounded-md px-3 h-9 bg-white"
-            style={{ border: "1px solid hsl(var(--admin-border))", minWidth: 280 }}
+            className="flex items-center gap-2 rounded-md px-3 h-9 bg-card sm:min-w-[280px]"
+            style={{ border: "1px solid hsl(var(--admin-border))" }}
           >
             <Search className="h-4 w-4" style={{ color: "hsl(var(--admin-fg-muted))" }} />
             <input
@@ -417,7 +408,7 @@ export default function AdminPosts() {
                 setPage(1);
               }}
               placeholder="Search by title or author…"
-              className="flex-1 bg-transparent text-[13px] outline-none placeholder:text-slate-400"
+              className="flex-1 min-w-0 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground"
             />
             {search && (
               <button
@@ -439,16 +430,16 @@ export default function AdminPosts() {
       <div
         className="rounded-xl overflow-hidden shadow-sm"
         style={{
-          backgroundColor: "#ffffff",
+          backgroundColor: "hsl(var(--admin-surface))",
           border: "1px solid hsl(var(--admin-border))",
         }}
       >
         <div
-          className={`grid ${
+          className={`hidden xl:grid ${
             tab === "deleted"
-              ? "grid-cols-[2.4fr_1fr_1fr_1fr_1fr_1.4fr_0.8fr]"
-              : "grid-cols-[3fr_1fr_1fr_1fr_1fr]"
-          } bg-slate-50 px-6 py-3 text-[11px] font-semibold uppercase tracking-wide`}
+              ? "grid-cols-[minmax(0,2.4fr)_repeat(4,minmax(0,1fr))_minmax(0,1.4fr)_minmax(0,0.8fr)]"
+              : "grid-cols-[minmax(0,3fr)_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(230px,1.5fr)]"
+          } gap-3 bg-muted px-6 py-3 text-[11px] font-semibold uppercase`}
           style={{
             color: "rgb(100 116 139)",
             borderBottom: "1px solid hsl(var(--admin-border))",
@@ -487,33 +478,37 @@ export default function AdminPosts() {
               return (
                 <div
                   key={p.id}
-                  className="grid grid-cols-[2.4fr_1fr_1fr_1fr_1fr_1.4fr_0.8fr] items-center bg-white px-6 py-4 text-[14px]"
+                  className="grid grid-cols-1 xl:grid-cols-[minmax(0,2.4fr)_repeat(4,minmax(0,1fr))_minmax(0,1.4fr)_minmax(0,0.8fr)] gap-3 items-start bg-card px-4 sm:px-6 py-4 text-[14px]"
                   style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}
                 >
-                  <span className="truncate font-medium text-slate-900">{p.title}</span>
-                  <span className="truncate text-slate-600">
+                  <span className="min-w-0 break-words font-medium text-foreground">{p.title}</span>
+                  <span className="min-w-0 break-words text-muted-foreground">
+                    <span className="xl:hidden">Topic: </span>
                     {(p.topic_id && topicNames.get(p.topic_id)) || "-"}
                   </span>
-                  <span className="truncate text-slate-600">
-                    {author?.username ?? author?.name ?? "Unknown"}
-                    <VisibilityBadge isAnonymous={!!p.is_anonymous} />
+                  <span className="flex min-w-0 flex-wrap items-center gap-2 text-muted-foreground">
+                    <span className="break-words min-w-0">{getAuthorLabel(author)}</span>
+                    <PostVisibilityBadge isAnonymous={!!p.is_anonymous} />
                   </span>
-                  <span className="text-slate-600">
+                  <span className="text-muted-foreground">
+                    <span className="xl:hidden">Deleted: </span>
                     {p.deleted_at ? `${formatDistanceToNow(parseISO(p.deleted_at))} ago` : "-"}
                   </span>
-                  <span className="truncate text-slate-600">
-                    {remover?.name ?? remover?.username ?? "-"}
+                  <span className="min-w-0 break-words text-muted-foreground">
+                    <span className="xl:hidden">Deleted by: </span>
+                    {getAuthorLabel(remover)}
                   </span>
-                  <span className="truncate text-slate-600" title={p.deleted_reason ?? ""}>
+                  <span className="min-w-0 break-words text-muted-foreground" title={p.deleted_reason ?? ""}>
+                    <span className="xl:hidden">Reason: </span>
                     {p.deleted_reason || "-"}
                   </span>
-                  <span className="flex items-center justify-end">
-                    <button
+                  <span className="flex items-center xl:justify-end">
+                    <Button variant="link" size="sm"
                       onClick={() => handleRestore(p)}
                       style={{ color: "hsl(var(--admin-primary))" }}
                     >
                       Restore
-                    </button>
+                    </Button>
                   </span>
                 </div>
               );
@@ -530,48 +525,48 @@ export default function AdminPosts() {
                     setReviewPostId(p.id);
                   }
                 }}
-                className="grid grid-cols-[3fr_1fr_1fr_1fr_1fr] items-center bg-white px-6 py-4 text-[14px] transition-colors hover:bg-slate-50/80 cursor-pointer"
+                className="grid grid-cols-1 xl:grid-cols-[minmax(0,3fr)_minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(230px,1.5fr)] gap-3 items-start bg-card px-4 sm:px-6 py-4 text-[14px] transition-colors hover:bg-muted/80 cursor-pointer"
                 style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}
               >
-                <span className="truncate font-medium text-slate-900">{p.title}</span>
-                <span className="truncate text-slate-600">
-                  {author?.username ?? author?.name ?? "Unknown"}
-                  <VisibilityBadge isAnonymous={!!p.is_anonymous} />
+                <span className="min-w-0 break-words font-medium text-primary hover:underline">{p.title}</span>
+                <span className="flex min-w-0 flex-wrap items-center gap-2 text-primary">
+                  <span className="min-w-0 break-words">{getAuthorLabel(author)}</span>
+                  <PostVisibilityBadge isAnonymous={!!p.is_anonymous} />
                 </span>
                 <span>
                   <StatusPill status={tab === "reported" ? "reported" : ((p.status === "approved" ? "published" : (p.status as PostTab)) ?? "published")} />
                 </span>
-                <span className="text-slate-600">
+                <span className="text-muted-foreground">
                   {formatDistanceToNow(parseISO(p.created_at))} ago
                 </span>
                 <span
-                  className="flex items-center justify-end gap-4"
+                  className="flex flex-wrap items-center xl:justify-end gap-2"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <button
+                  <Button variant="link" size="sm"
                     onClick={() => setEditingPostId(p.id)}
-                    className="text-slate-600 hover:text-slate-900"
+                    className="px-1 text-primary"
                   >
                     Edit
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="link" size="sm" className="px-1"
                     onClick={() => handleApprove(p.id)}
                     style={{ color: "hsl(var(--admin-primary))" }}
                   >
                     Approve
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="link" size="sm" className="px-1"
                     onClick={() => handleReject(p.id)}
                     style={{ color: "hsl(var(--admin-danger))" }}
                   >
                     Reject
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="link" size="sm" className="px-1"
                     onClick={() => setDeletingPost(p)}
                     style={{ color: "hsl(var(--admin-danger))" }}
                   >
                     Delete
-                  </button>
+                  </Button>
                 </span>
               </div>
             );
@@ -579,13 +574,13 @@ export default function AdminPosts() {
         )}
 
         <div
-          className="flex items-center justify-between px-6 py-4 text-[13px]"
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-4 sm:px-6 py-4 text-[13px]"
           style={{ color: "hsl(var(--admin-fg-muted))" }}
         >
           <span>
             Showing {visibleStart}–{visibleEnd} of {total} {tab} posts
           </span>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
