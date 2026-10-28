@@ -20,7 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { logAdminAction } from "@/lib/auditLog";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import type { Tables } from "@/integrations/supabase/types";
-import { getAuthorLabel } from "@/lib/authorLabel";
+import { getAdminAuthorLabel } from "@/lib/authorLabel";
 
 type Post = Tables<"posts">;
 type Profile = Tables<"profiles">;
@@ -273,7 +273,7 @@ export default function AdminPostReviewDialog({
         ? "bg-red-100 text-red-800"
         : "bg-amber-100 text-amber-800";
 
-  const displayName = getAuthorLabel(author);
+  const displayName = getAdminAuthorLabel(author);
   const initials = (displayName || "?")
     .split(" ")
     .map((s) => s[0])

@@ -20,7 +20,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { logAdminAction } from "@/lib/auditLog";
-import { getAuthorLabel } from "@/lib/authorLabel";
+import { getAdminAuthorLabel } from "@/lib/authorLabel";
 import PostVisibilityBadge from "@/components/admin/PostVisibilityBadge";
 import { Button } from "@/components/ui/button";
 
@@ -150,7 +150,7 @@ export default function AdminPosts() {
     if (q) {
       rows = rows.filter((p) => {
         const a = authors.get(p.author_id);
-        const authorStr = getAuthorLabel(a).toLowerCase();
+        const authorStr = getAdminAuthorLabel(a).toLowerCase();
         return (p.title ?? "").toLowerCase().includes(q) || authorStr.includes(q);
       });
     }
@@ -161,7 +161,7 @@ export default function AdminPosts() {
       new Date(a ?? 0).getTime() - new Date(b ?? 0).getTime();
     const authorLabel = (p: Post) => {
       const a = authors.get(p.author_id);
-      return getAuthorLabel(a).toLowerCase();
+      return getAdminAuthorLabel(a).toLowerCase();
     };
 
     const sorted = [...rows];
@@ -487,7 +487,7 @@ export default function AdminPosts() {
                     {(p.topic_id && topicNames.get(p.topic_id)) || "-"}
                   </span>
                   <span className="flex min-w-0 flex-wrap items-center gap-2 text-muted-foreground">
-                    <span className="break-words min-w-0">{getAuthorLabel(author)}</span>
+                    <span className="break-words min-w-0">{getAdminAuthorLabel(author)}</span>
                     <PostVisibilityBadge isAnonymous={!!p.is_anonymous} />
                   </span>
                   <span className="text-muted-foreground">
@@ -496,7 +496,7 @@ export default function AdminPosts() {
                   </span>
                   <span className="min-w-0 break-words text-muted-foreground">
                     <span className="xl:hidden">Deleted by: </span>
-                    {getAuthorLabel(remover)}
+                    {getAdminAuthorLabel(remover)}
                   </span>
                   <span className="min-w-0 break-words text-muted-foreground" title={p.deleted_reason ?? ""}>
                     <span className="xl:hidden">Reason: </span>
@@ -530,7 +530,7 @@ export default function AdminPosts() {
               >
                 <span className="min-w-0 break-words font-medium text-primary hover:underline">{p.title}</span>
                 <span className="flex min-w-0 flex-wrap items-center gap-2 text-primary">
-                  <span className="min-w-0 break-words">{getAuthorLabel(author)}</span>
+                  <span className="min-w-0 break-words">{getAdminAuthorLabel(author)}</span>
                   <PostVisibilityBadge isAnonymous={!!p.is_anonymous} />
                 </span>
                 <span>
