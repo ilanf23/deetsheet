@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getAuthorLabel } from "@/lib/authorLabel";
+import { getAdminAuthorLabel, getAuthorLabel } from "@/lib/authorLabel";
 
 describe("contribution author privacy", () => {
   it("uses the username even when a real name exists", () => {
