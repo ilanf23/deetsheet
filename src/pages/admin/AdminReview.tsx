@@ -11,7 +11,7 @@ import AdminEditPostDialog from "@/components/admin/AdminEditPostDialog";
 import ReviewActionDialog, { type ReviewAction } from "@/components/admin/ReviewActionDialog";
 import { logAdminAction } from "@/lib/auditLog";
 import { Hash, FileText, ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
-import { getAuthorLabel } from "@/lib/authorLabel";
+import { getAdminAuthorLabel } from "@/lib/authorLabel";
 import PostVisibilityBadge from "@/components/admin/PostVisibilityBadge";
 import { Button } from "@/components/ui/button";
 
@@ -443,7 +443,7 @@ export default function AdminReview() {
         <div className="space-y-3">
           {visible.map((item) => {
             const author = item.author;
-            const authorLabel = getAuthorLabel(author);
+            const authorLabel = getAdminAuthorLabel(author);
             return (
               <div
                 key={`${item.kind}-${item.id}`}
@@ -624,7 +624,7 @@ export default function AdminReview() {
             : ""
         }
         authorId={reviewDialog?.item.author?.id ?? ""}
-        authorLabel={getAuthorLabel(reviewDialog?.item.author)}
+        authorLabel={getAdminAuthorLabel(reviewDialog?.item.author)}
         postId={reviewDialog && reviewDialog.item.kind === "post" ? reviewDialog.item.id : null}
         onConfirmed={async (meta) => {
           if (!reviewDialog) return;

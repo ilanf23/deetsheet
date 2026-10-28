@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
 import { AdminPageSkeleton } from "@/components/PageSkeletons";
-import { getAuthorLabel } from "@/lib/authorLabel";
+import { getAdminAuthorLabel } from "@/lib/authorLabel";
 
 type SortKey =
   | "newest"
@@ -135,10 +135,10 @@ export default function AdminAuditLog() {
         return {
           id: `post-${p.id}`,
           timestamp: p.created_at,
-          user: getAuthorLabel(author),
+          user: getAdminAuthorLabel(author),
           action: "Approved",
           details: `Approved post "${truncate(p.title, 40)}" by ${
-            getAuthorLabel(author)
+            getAdminAuthorLabel(author)
           }`,
           ip: deriveIp(p.author_id),
         };

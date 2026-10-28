@@ -5,7 +5,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
 import { AdminPageSkeleton } from "@/components/PageSkeletons";
 import MessageReportsPanel from "@/components/admin/MessageReportsPanel";
-import { getAuthorLabel } from "@/lib/authorLabel";
+import { getAdminAuthorLabel } from "@/lib/authorLabel";
 
 type Report = Tables<"reports">;
 type Post = Tables<"posts">;
@@ -303,7 +303,7 @@ export default function AdminReports() {
                       style={{ color: "hsl(var(--admin-fg))" }}
                     >
                       {`"${post?.title ?? "Unknown post"}"`} by{" "}
-                      {getAuthorLabel(author)}
+                      {getAdminAuthorLabel(author)}
                     </h3>
                     <div className="flex items-center gap-2 flex-wrap pt-1">
                       {Object.entries(g.reasons).map(([reason, count]) => (
@@ -344,7 +344,7 @@ export default function AdminReports() {
                     onClick={() =>
                       toast({
                         title: "Author warned",
-                        description: `${getAuthorLabel(author)} will receive a warning.`,
+                        description: `${getAdminAuthorLabel(author)} will receive a warning.`,
                       })
                     }
                   />
