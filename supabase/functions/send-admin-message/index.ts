@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendAppEmail } from "../_shared/transactional-email-templates/send-app-email.ts";
+import { canonicalTopicHref } from "../_shared/topicSlug.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -307,7 +308,7 @@ Deno.serve(async (req) => {
           const { data: built } = await admin.rpc("build_post_link", {
             _post_id: payload.post_id,
           });
-          if (typeof built === "string" && built) link = built;
+          if (typeof built === "string" && built) link = canonicalTopicHref(built);
         }
         await admin.from("notifications").insert({
           user_id: payload.user_id,
