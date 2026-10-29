@@ -1,15 +1,5 @@
-/** Canonical topic path segment; apostrophes disappear rather than split words. */
-export function topicSlug(name: string): string {
-  return name.toLowerCase().replace(/['’]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
-}
-
-export function decodeTopicParam(param: string): string {
-  try {
-    return decodeURIComponent(param);
-  } catch {
-    return param;
-  }
-}
+import { topicSlug, decodeTopicParam } from "../../supabase/functions/_shared/topicSlug.ts";
+export { topicSlug, decodeTopicParam, canonicalTopicHref } from "../../supabase/functions/_shared/topicSlug.ts";
 
 /** Preserve the post segment, query and hash verbatim during canonicalization. */
 export function canonicalTopicPath(pathname: string, name: string): string {

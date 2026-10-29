@@ -18,6 +18,7 @@ import TopicPaginationFooter, {
   type PageSize,
 } from "@/components/TopicPaginationFooter";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCanonicalTopicUrl } from "@/hooks/useCanonicalTopicUrl";
 import type { Post } from "@/data/seedData";
 import {
   useTopicByName,
@@ -35,6 +36,7 @@ const TopicPage = () => {
     isLoading: topicLoading,
     isError: topicError,
   } = useTopicByName(topicName);
+  useCanonicalTopicUrl(topic?.name);
   const { data: postsData } = usePostsByTopic(topic?.id);
   const posts = useMemo<Post[]>(
     () => ((postsData ?? []) as unknown) as Post[],

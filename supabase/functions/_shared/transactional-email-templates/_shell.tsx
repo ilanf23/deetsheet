@@ -27,6 +27,7 @@ import {
  */
 
 import { parseMarkdownLinks } from './markdownLinks.ts'
+import { canonicalTopicHref } from '../topicSlug.ts'
 
 export const SITE_URL = 'https://deetsheet.com'
 // Whitespace-trimmed wordmark so the logo optically aligns flush-left with the
@@ -176,7 +177,7 @@ export const MdLine = ({ text }: { text: string }) => (
   <>
     {parseMarkdownLinks(text).map((t, i) =>
       t.type === 'link' ? (
-        <Link key={i} href={t.href} style={bodyLink}>
+        <Link key={i} href={canonicalTopicHref(t.href)} style={bodyLink}>
           {t.text}
         </Link>
       ) : (
@@ -228,7 +229,7 @@ export const DeadlineStrip = ({ children }: { children: React.ReactNode }) => (
 
 export const Cta = ({ href, label }: { href: string; label: string }) => (
   <Section style={{ textAlign: 'center', margin: '28px 0 4px' }}>
-    <Link href={href} style={ctaButton}>
+    <Link href={canonicalTopicHref(href)} style={ctaButton}>
       {label}
     </Link>
   </Section>
