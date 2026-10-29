@@ -25,6 +25,7 @@ interface DbComment {
 interface DbProfile {
   id: string;
   username: string | null;
+  name: string | null;
   avatar_url: string | null;
 }
 
@@ -63,7 +64,7 @@ const fetchComments = async (postId: string): Promise<DisplayComment[]> => {
   const authorIds = Array.from(new Set(rows.map((r) => r.author_id).filter((x): x is string => !!x)));
   const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
-    .select("id, username, avatar_url")
+    .select("id, username, name, avatar_url")
     .in("id", authorIds);
   if (profilesError) throw profilesError;
 
