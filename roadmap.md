@@ -2,3 +2,5 @@
 - [x] Show usernames and Anonymous/Public badges in admin review and Posts.
 - [x] Stack admin Posts and review layouts cleanly at 375px.
 - [x] Send logged-out profile icon directly to /signup and verify the requested flows.
+- [ ] Separate admin user name and username columns and stack at 375px.
+- [ ] Enable Combobox typing and ranked filtering; run typecheck and tests.
