@@ -50,14 +50,8 @@ import LinkedInImportDialog from "@/components/LinkedInImportDialog";
 import AvatarCropDialog from "@/components/AvatarCropDialog";
 import type { LinkedInProfileData } from "@/types/linkedin";
 import { parseProfileCredentials } from "@/lib/profileCredentials";
+import { US_STATES } from "@/lib/usStates";
 import { cn } from "@/lib/utils";
-
-const US_STATES = [
-  "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
-  "KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
-  "NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT",
-  "VA","WA","WV","WI","WY",
-];
 
 const MONTHS = [
   "January","February","March","April","May","June",
@@ -474,7 +468,7 @@ const ProfileEdit = () => {
   const handleLinkedInImport = (data: LinkedInProfileData) => {
     if (data.name) form.setValue("name", data.name);
     if (data.city) form.setValue("city", data.city);
-    if (data.state && US_STATES.includes(data.state)) form.setValue("state", data.state);
+    if (data.state && US_STATES.some((s) => s.code === data.state)) form.setValue("state", data.state);
     if (data.country) form.setValue("country", data.country);
     if (data.bio) setBio(data.bio);
     if (data.education && EDUCATION_VALUES.includes(data.education)) setEducation(data.education);
@@ -836,7 +830,7 @@ const ProfileEdit = () => {
                               <Combobox
                                 value={field.value}
                                 onValueChange={field.onChange}
-                                options={US_STATES.map((s) => ({ value: s, label: s }))}
+                                options={US_STATES.map((s) => ({ value: s.code, label: s.code, description: s.name }))}
                                 placeholder="Select state..."
                                 searchPlaceholder="Search states…"
                                 emptyText="No state found."
