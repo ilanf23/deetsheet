@@ -9,7 +9,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { forwardRef, useMemo, useState } from "react";
+import { forwardRef, useMemo, useRef, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 export interface ComboboxOption<V extends string = string> {
@@ -30,6 +30,19 @@ interface ComboboxProps<V extends string> {
   className?: string;
   /** Width of the popover; defaults to the trigger's width. */
   contentClassName?: string;
+}
+
+/** Rank label prefixes before word prefixes and option codes. */
+export function comboboxFilter(value: string, search: string, keywords?: string[]): number {
+  const query = search.trim().toLowerCase();
+  if (!query) return 1;
+  const label = (keywords?.[0] ?? value).trim().toLowerCase();
+  if (label.startsWith(query)) return 1;
+  if (label.split(/\s+/).some((word) => word.startsWith(query))) return 0.8;
+  if (value.toLowerCase().startsWith(query)) return 0.6;
+  // Preserve searchable secondary descriptions for existing callers.
+  if (keywords?.slice(1).some((text) => text.toLowerCase().split(/\s+/).some((word) => word.startsWith(query)))) return 0.4;
+  return 0;
 }
 
 /**
@@ -54,13 +67,19 @@ function ComboboxInner<V extends string>(
   ref: React.Ref<HTMLButtonElement>,
 ) {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const changeOpen = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (!nextOpen) setSearch("");
+  };
   const selected = useMemo(
     () => options.find((o) => o.value === value),
     [options, value],
   );
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={changeOpen}>
       <PopoverTrigger asChild>
         <Button
           ref={ref}
@@ -69,6 +88,15 @@ function ComboboxInner<V extends string>(
           role="combobox"
           aria-expanded={open}
           disabled={disabled}
+          onKeyDown={(event) => {
+            if (disabled || event.ctrlKey || event.metaKey || event.altKey || event.nativeEvent.isComposing) return;
+            if (event.key.length === 1) {
+              event.preventDefault();
+              setSearch((current) => open ? current + event.key : event.key);
+              setOpen(true);
+              if (open) inputRef.current?.focus();
+            }
+          }}
           className={cn(
             "w-full justify-between font-normal px-3",
             !selected && "text-muted-foreground",
@@ -81,22 +109,25 @@ function ComboboxInner<V extends string>(
       </PopoverTrigger>
       <PopoverContent
         align="start"
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          inputRef.current?.focus();
+        }}
         className={cn("w-[--radix-popover-trigger-width] min-w-[200px] p-0", contentClassName)}
       >
-        <Command>
-          <CommandInput placeholder={searchPlaceholder} />
+        <Command filter={comboboxFilter}>
+          <CommandInput ref={inputRef} placeholder={searchPlaceholder} value={search} onValueChange={setSearch} />
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
               {options.map((o) => (
                 <CommandItem
                   key={o.value}
-                  // cmdk filters on this string, so include the description
-                  // (e.g. category name) to make it searchable too.
-                  value={o.description ? `${o.label} ${o.description}` : o.label}
+                  value={o.value}
+                  keywords={o.description ? [o.label, o.description] : [o.label]}
                   onSelect={() => {
                     onValueChange(o.value);
-                    setOpen(false);
+                    changeOpen(false);
                   }}
                 >
                   <Check
