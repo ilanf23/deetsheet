@@ -41,7 +41,7 @@ export function comboboxFilter(value: string, search: string, keywords?: string[
   if (label.split(/\s+/).some((word) => word.startsWith(query))) return 0.8;
   if (value.toLowerCase().startsWith(query)) return 0.6;
   // Preserve searchable secondary descriptions for existing callers.
-  if (keywords?.slice(1).some((text) => text.toLowerCase().includes(query))) return 0.4;
+  if (keywords?.slice(1).some((text) => text.toLowerCase().split(/\s+/).some((word) => word.startsWith(query)))) return 0.4;
   return 0;
 }
 
@@ -90,7 +90,7 @@ function ComboboxInner<V extends string>(
           disabled={disabled}
           onKeyDown={(event) => {
             if (disabled || event.ctrlKey || event.metaKey || event.altKey || event.nativeEvent.isComposing) return;
-            if (event.key.length === 1 && event.key !== " ") {
+            if (event.key.length === 1) {
               event.preventDefault();
               setSearch((current) => open ? current + event.key : event.key);
               setOpen(true);
