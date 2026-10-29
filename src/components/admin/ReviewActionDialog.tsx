@@ -1,3 +1,4 @@
+import { topicSlug } from "@/lib/topicSlug";
 import { ChevronDown } from "lucide-react";
 import Combobox from "@/components/Combobox";
 import { useToast } from "@/hooks/use-toast";
@@ -382,7 +383,7 @@ export default function ReviewActionDialog({
       const editUrl = postId ? `${profileUrl}?edit=${postId}` : profileUrl;
       const postUrl =
         topicName && postId
-          ? `https://deetsheet.com/topic/${encodeURIComponent(topicName)}/post/${buildPostSlug(postTitle, postId)}`
+          ? `https://deetsheet.com/topic/${topicSlug(topicName)}/post/${buildPostSlug(postTitle, postId)}`
           : profileUrl;
 
       // The in-app thread keeps site-relative links; email copy must not.

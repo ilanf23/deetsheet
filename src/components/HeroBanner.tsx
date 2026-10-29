@@ -1,3 +1,4 @@
+import { topicSlug } from "@/lib/topicSlug";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -56,7 +57,7 @@ const HeroBanner = () => {
   }, []);
 
   const handleSlideClick = (slide: typeof slides[0]) => {
-    navigate(`/topic/${encodeURIComponent(slide.topicSlug)}#post-${slide.postId}`);
+    navigate(`/topic/${topicSlug(slide.topicSlug)}#post-${slide.postId}`);
   };
 
   return (

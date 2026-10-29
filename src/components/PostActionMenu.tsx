@@ -1,3 +1,4 @@
+import { topicSlug } from "@/lib/topicSlug";
 import { useState, useEffect } from "react";
 import { MoreHorizontal, Share2, Facebook, Twitter, Instagram, Mail, Heart, Link2, Pencil } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
@@ -55,7 +56,7 @@ const PostActionMenu = ({ postId, topicName, onPostUpdated }: PostActionMenuProp
 
   const handleCopyLink = () => {
     const url = topicName
-      ? `${window.location.origin}/topic/${encodeURIComponent(topicName)}`
+      ? `${window.location.origin}/topic/${topicSlug(topicName)}`
       : window.location.href;
     navigator.clipboard.writeText(url);
     toast.success("Link copied to clipboard");
@@ -63,7 +64,7 @@ const PostActionMenu = ({ postId, topicName, onPostUpdated }: PostActionMenuProp
 
   const getShareUrl = () => {
     return topicName
-      ? `${window.location.origin}/topic/${encodeURIComponent(topicName)}`
+      ? `${window.location.origin}/topic/${topicSlug(topicName)}`
       : window.location.href;
   };
 

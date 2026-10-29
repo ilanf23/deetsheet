@@ -1,3 +1,4 @@
+import { topicSlug } from "@/lib/topicSlug";
 import { Link } from "react-router-dom";
 import { formatTitle } from "@/lib/formatTitle";
 import { useAuth } from "@/contexts/AuthContext";
@@ -115,7 +116,7 @@ const UserPostsList = ({ userId }: { userId: string }) => {
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-3">
                   <Link
-                    to={post.topic ? `/topic/${post.topic.slug}` : "#"}
+                    to={post.topic ? `/topic/${topicSlug(post.topic.name)}` : "#"}
                     className="flex-1 min-w-0 group"
                   >
                     <h4 className="text-sm font-semibold text-primary group-hover:underline truncate flex items-center gap-2">

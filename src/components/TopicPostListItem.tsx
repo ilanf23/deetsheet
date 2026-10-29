@@ -1,3 +1,4 @@
+import { topicSlug } from "@/lib/topicSlug";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import type { Post } from "@/data/seedData";
@@ -28,7 +29,7 @@ const TopicPostListItem = ({ post, rank, topicName, topicId, showRanking = true 
 
   const goToPost = () => {
     const slug = buildPostSlug(displayTitle, post.id) || String(rank);
-    navigate(`/topic/${encodeURIComponent(topicName)}/post/${slug}`);
+    navigate(`/topic/${topicSlug(topicName)}/post/${slug}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {

@@ -1,3 +1,4 @@
+import { topicSlug } from "@/lib/topicSlug";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Topic } from "@/data/seedData";
@@ -40,7 +41,7 @@ const TopicRecommendations = ({ currentTopic }: TopicRecommendationsProps) => {
         {recommended.map((topic) => (
           <Link
             key={topic.id}
-            to={`/topic/${encodeURIComponent(topic.name)}`}
+            to={`/topic/${topicSlug(topic.name)}`}
             className="block rounded-[var(--radius)] border bg-background overflow-hidden hover:bg-accent/40 transition-colors duration-150"
           >
             <div className="p-3">

@@ -1,3 +1,4 @@
+import { topicSlug } from "@/lib/topicSlug";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight, ChevronDown } from "lucide-react";
@@ -34,7 +35,7 @@ const CategoryRow = ({ category, expanded, onToggle }: CategoryRowProps) => {
           {catTopics.map((topic) => (
             <li key={topic.id}>
               <Link
-                to={`/topic/${encodeURIComponent(topic.name)}`}
+                to={`/topic/${topicSlug(topic.name)}`}
                 className="block px-3 py-0.5 text-sm rounded-md text-primary hover:bg-muted hover:underline truncate"
               >
                 {topic.name}

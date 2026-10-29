@@ -1,3 +1,4 @@
+import { topicSlug } from "@/lib/topicSlug";
 import { Link } from "react-router-dom";
 import PostRatingBox from "@/components/post/PostRatingBox";
 import FollowPostButton from "@/components/FollowPostButton";
@@ -26,7 +27,7 @@ const PostHeader = ({
   onRatingChanged,
 }: PostHeaderProps) => {
   const postSlug = buildPostSlug(title, postId) || postId;
-  const postHref = `/topic/${encodeURIComponent(topicName)}/post/${postSlug}`;
+  const postHref = `/topic/${topicSlug(topicName)}/post/${postSlug}`;
   return (
     <header className="flex flex-col md:flex-row md:items-start gap-4">
       <div className="flex-1 min-w-0 space-y-3">
