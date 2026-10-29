@@ -27,4 +27,10 @@ describe("Combobox filter ranking", () => {
     expect(comboboxFilter("FL", "fl", ["Florida"])).toBeGreaterThan(comboboxFilter("XX", "fl", ["West Florida"]));
     expect(comboboxFilter("XX", "fl", ["West Florida"])).toBeGreaterThan(comboboxFilter("FL", "fl", ["Other"]));
   });
+  it("supports existing State options with code labels and name descriptions", () => {
+    expect(comboboxFilter("FL", "Fl", ["FL", "Florida"])).toBeGreaterThan(0);
+    expect(comboboxFilter("DC", "Fl", ["DC", "District of Columbia"])).toBe(0);
+    expect(states.filter((state) => comboboxFilter(state.value, "new", [state.value, state.label]) > 0).map((state) => state.label))
+      .toEqual(["New Hampshire", "New Jersey", "New Mexico", "New York"]);
+  });
 });
