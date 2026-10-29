@@ -1,7 +1,9 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { buildPostImageUrl } from "@/lib/topicImageQueries";
 import { getAuthorLabel } from "@/lib/authorLabel";
+import { resolveTopic } from "@/lib/topicSlug";
 
 /**
  * Data hooks that replace the hardcoded seedData.ts imports on
@@ -29,6 +31,7 @@ export interface TopicRow {
   description: string | null;
   imageUrl: string | null;
   subtitleOverride: string | null;
+  createdAt: string;
 }
 
 /** Shape the UI expects for a post row (maps to legacy seedData.Post,
@@ -57,6 +60,7 @@ export interface PostRow {
 
 type DbTopicRaw = {
   id: string;
+  created_at: string;
   slug: string;
   name: string;
   category_name: string | null;
@@ -94,6 +98,7 @@ const mapTopic = (row: DbTopicRaw, postCount: number): TopicRow => ({
   description: row.description,
   imageUrl: row.image_url ?? null,
   subtitleOverride: row.subtitle_override ?? null,
+  createdAt: row.created_at,
 });
 
 const mapPost = (row: DbPostRaw): PostRow => {
@@ -132,7 +137,7 @@ export const useTopics = () => {
     queryFn: async (): Promise<TopicRow[]> => {
       const { data, error } = await supabase
         .from("topics")
-        .select("id, slug, name, category_name, description, image_url, subtitle_override, post_count")
+        .select("id, slug, name, category_name, description, image_url, subtitle_override, post_count, created_at")
         .order("name", { ascending: true });
 
       if (error) throw error;
@@ -146,31 +151,16 @@ export const useTopics = () => {
 };
 
 /**
- * Fetch a single topic by its display name (matches the legacy
- * getTopicByName helper's URL-param-driven lookup). The seed migration
- * uses slugified names, so we match on either `name` or `slug`.
+ * Resolve names and route slugs from the shared cached topic list. Approved,
+ * non-deleted post_count wins collisions, then the oldest topic's creation.
  */
 export const useTopicByName = (topicName: string | undefined) => {
-  return useQuery({
-    queryKey: ["topic", topicName],
-    enabled: !!topicName,
-    queryFn: async (): Promise<TopicRow | null> => {
-      if (!topicName) return null;
-      const decoded = decodeURIComponent(topicName);
-      const { data, error } = await supabase
-        .from("topics")
-        .select("id, slug, name, category_name, description, image_url, subtitle_override, post_count")
-        .or(`name.eq.${decoded},slug.eq.${decoded.toLowerCase()}`)
-        .limit(1)
-        .maybeSingle();
-
-      if (error) throw error;
-      if (!data) return null;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const row = data as any;
-      return mapTopic(row as DbTopicRaw, row.post_count ?? 0);
-    },
-  });
+  const query = useTopics();
+  const data = useMemo(
+    () => topicName && query.data ? resolveTopic(query.data, topicName) : null,
+    [query.data, topicName],
+  );
+  return { ...query, data };
 };
 
 /**

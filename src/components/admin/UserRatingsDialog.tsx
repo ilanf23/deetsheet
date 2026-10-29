@@ -1,3 +1,4 @@
+import { topicSlug } from "@/lib/topicSlug";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -127,7 +128,7 @@ export default function UserRatingsDialog({ open, onOpenChange, userId, userLabe
                 className="grid grid-cols-[3fr_1.5fr_0.7fr_1fr] items-center border-t px-4 py-3 text-sm"
               >
                 <a
-                  href={`/topic/${encodeURIComponent(r.topicName)}/post/${
+                  href={`/topic/${topicSlug(r.topicName)}/post/${
                     buildPostSlug(r.postTitle, r.postId) || r.postId
                   }`}
                   target="_blank"

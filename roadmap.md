@@ -4,3 +4,6 @@
 - [x] Send logged-out profile icon directly to /signup and verify the requested flows.
 - [x] Separate admin user name and username columns and stack at 375px. Live admin check unavailable: requesting account redirects out of admin.
 - [x] Enable Combobox typing and ranked filtering; run typecheck and tests. State typing/Enter verified; full suite has unrelated existing markdownLinks failure.
+- [x] Canonicalize all topic links, including email links, while retaining legacy topic resolution.
+- [x] Resolve duplicate slugs by approved-post count then oldest creation; only collision is North Carolina (both 0 approved, older April topic wins); no data changes.
+- [x] Verify legacy topic/post navigation and Back in browser, 21 new tests pass, automated build OK; full suite has the existing markdownLinks failure; nothing deployed.

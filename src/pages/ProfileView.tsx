@@ -1,3 +1,4 @@
+import { topicSlug } from "@/lib/topicSlug";
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams, Navigate, useSearchParams } from "react-router-dom";
 import { buildLoginPath } from "@/lib/authRedirect";
@@ -1160,7 +1161,7 @@ const ProfileView = () => {
                 ) : (
                   <div className="space-y-2">
                     {filteredPosts.map((post) => {
-                      const postHref = `/topic/${encodeURIComponent(post.topic_name)}/post/${buildPostSlug(post.title || post.content, post.id) || post.id}`;
+                      const postHref = `/topic/${topicSlug(post.topic_name)}/post/${buildPostSlug(post.title || post.content, post.id) || post.id}`;
                       // Prefer the story as the body; fall back to content only
                       // when it diverges from the title (legacy/admin-edited posts).
                       const trimmedStory = post.story?.trim();
@@ -1202,7 +1203,7 @@ const ProfileView = () => {
                                 )}
                                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground mb-1.5">
                                   <a
-                                    href={`/topic/${encodeURIComponent(post.topic_name)}`}
+                                    href={`/topic/${topicSlug(post.topic_name)}`}
                                     className="truncate max-w-[12rem] text-primary hover:underline"
                                   >
                                     {post.topic_name}
@@ -1338,7 +1339,7 @@ const ProfileView = () => {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
                                 <a
-                                  href={`/topic/${encodeURIComponent(topic.name)}`}
+                                  href={`/topic/${topicSlug(topic.name)}`}
                                   className="font-semibold text-sm hover:underline"
                                 >
                                   {topic.name}
@@ -1377,7 +1378,7 @@ const ProfileView = () => {
                 ) : (
                   <div className="space-y-2">
                     {filteredComments.map((comment) => {
-                      const commentHref = `/topic/${encodeURIComponent(comment.topicName)}/post/${buildPostSlug(comment.postTitle, comment.post_id) || comment.post_id}#comments`;
+                      const commentHref = `/topic/${topicSlug(comment.topicName)}/post/${buildPostSlug(comment.postTitle, comment.post_id) || comment.post_id}#comments`;
                       return (
                         <Card key={comment.id} className="bg-card hover:shadow-md transition-shadow">
                           <CardContent className="p-4">
@@ -1446,7 +1447,7 @@ const ProfileView = () => {
                   ) : (
                     <div className="space-y-2">
                       {filteredRankings.map((ranking) => {
-                        const href = `/topic/${encodeURIComponent(ranking.topicName)}/post/${buildPostSlug(ranking.postTitle, ranking.post_id) || ranking.post_id}`;
+                        const href = `/topic/${topicSlug(ranking.topicName)}/post/${buildPostSlug(ranking.postTitle, ranking.post_id) || ranking.post_id}`;
                         return (
                           <Card key={ranking.id} className="bg-card hover:shadow-md transition-shadow">
                             <CardContent className="p-4 flex items-start gap-3">
@@ -1555,7 +1556,7 @@ const ProfileView = () => {
                             <Card key={t.id} className="bg-card hover:shadow-md transition-shadow">
                               <CardContent className="py-3 px-4">
                                 <a
-                                  href={`/topic/${encodeURIComponent(t.name)}`}
+                                  href={`/topic/${topicSlug(t.name)}`}
                                   className="font-semibold text-sm text-primary hover:underline"
                                 >
                                   {t.name}
@@ -1584,7 +1585,7 @@ const ProfileView = () => {
                               <CardContent className="py-3 px-4">
                                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
                                   <a
-                                    href={`/topic/${encodeURIComponent(p.topicName)}`}
+                                    href={`/topic/${topicSlug(p.topicName)}`}
                                     className="text-primary hover:underline"
                                   >
                                     {p.topicName}
@@ -1604,7 +1605,7 @@ const ProfileView = () => {
                                   <span>followed {getTimeAgo(p.followedAt)}</span>
                                 </div>
                                 <a
-                                  href={`/topic/${encodeURIComponent(p.topicName)}/post/${buildPostSlug(p.title, p.id) || p.rank}`}
+                                  href={`/topic/${topicSlug(p.topicName)}/post/${buildPostSlug(p.title, p.id) || p.rank}`}
                                   className="font-semibold text-sm text-primary hover:underline"
                                 >
                                   {p.rank}. {p.title}

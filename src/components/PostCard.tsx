@@ -1,3 +1,4 @@
+import { topicSlug } from "@/lib/topicSlug";
 import { Link, useNavigate } from "react-router-dom";
 import type { MouseEvent } from "react";
 import { MessageSquare, Share2 } from "lucide-react";
@@ -16,10 +17,10 @@ const PostCard = ({ post }: PostCardProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const openTopic = () => navigate(`/topic/${encodeURIComponent(post.topicName)}`);
+  const openTopic = () => navigate(`/topic/${topicSlug(post.topicName)}`);
   const contentText = formatTitle(post.title || post.content);
   const postSlug = buildPostSlug(contentText, post.id) || post.id;
-  const postHref = `/topic/${encodeURIComponent(post.topicName)}/post/${postSlug}`;
+  const postHref = `/topic/${topicSlug(post.topicName)}/post/${postSlug}`;
   const authorId = (post as Post & { authorId?: string }).authorId;
   const avatarUrl = (post as Post & { avatarUrl?: string | null }).avatarUrl;
   const status = (post as Post & { status?: string }).status;

@@ -1,3 +1,4 @@
+import { topicSlug } from "@/lib/topicSlug";
 import { useState, useMemo, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import DeetHeader from "@/components/DeetHeader";
@@ -136,7 +137,7 @@ const TopicsDirectory = () => {
                         {visible.map((topic) => (
                           <li key={topic.id}>
                             <button
-                              onClick={() => navigate(`/topic/${encodeURIComponent(topic.name)}`)}
+                              onClick={() => navigate(`/topic/${topicSlug(topic.name)}`)}
                               className="text-sm text-muted-foreground hover:text-primary hover:underline transition-colors text-left"
                             >
                               {topic.name}

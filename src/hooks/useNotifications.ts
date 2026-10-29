@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { canonicalTopicHref } from "@/lib/topicSlug";
 
 export interface NotificationRow {
   id: string;
@@ -34,7 +35,10 @@ export function useNotifications() {
         .order("created_at", { ascending: false })
         .limit(30);
       if (error) throw error;
-      return (data ?? []) as NotificationRow[];
+      return ((data ?? []) as NotificationRow[]).map((row) => ({
+        ...row,
+        link: row.link ? canonicalTopicHref(row.link) : row.link,
+      }));
     },
   });
 }

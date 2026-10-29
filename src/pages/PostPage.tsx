@@ -24,6 +24,8 @@ import {
 } from "@/hooks/useSupabaseTopics";
 
 import { slugifyPostTitle, parsePostSlug } from "@/lib/postSlug";
+import { topicSlug, decodeTopicParam } from "@/lib/topicSlug";
+import { useCanonicalTopicUrl } from "@/hooks/useCanonicalTopicUrl";
 import type { Topic } from "@/data/seedData";
 
 const POST_ROUTE_SETTLE_DELAY_MS = 450;
@@ -34,10 +36,10 @@ const PostPage = () => {
   const location = useLocation();
   const queryClient = useQueryClient();
 
-  const backToTopicHref = `/topic/${encodeURIComponent(topicName ?? "")}`;
-
   const { data: topic, isLoading: topicLoading, isError: topicError } =
     useTopicByName(topicName);
+  useCanonicalTopicUrl(topic?.name);
+  const backToTopicHref = `/topic/${topicSlug(topic?.name ?? decodeTopicParam(topicName ?? ""))}`;
   const { data: postsData, isLoading: postsLoading } = usePostsByTopic(topic?.id);
   const posts = useMemo<PostRow[]>(
     () => postsData ?? [],

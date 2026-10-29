@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { sendAppEmail } from '../_shared/transactional-email-templates/send-app-email.ts'
+import { canonicalTopicHref } from '../_shared/topicSlug.ts'
 
 
 /**
@@ -102,7 +103,7 @@ Deno.serve(async (req) => {
   }
 
   const { data: link } = await admin.rpc('build_post_link', { _post_id: post.id })
-  const postUrl = link ? `https://deetsheet.com${link}` : 'https://deetsheet.com'
+  const postUrl = link ? canonicalTopicHref(`https://deetsheet.com${link}`) : 'https://deetsheet.com'
 
   // Strip any HTML the rich-text editor produced; the template renders plain text.
   const plainComment = String(comment.content ?? '')

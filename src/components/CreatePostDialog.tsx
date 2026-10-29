@@ -1,3 +1,4 @@
+import { topicSlug } from "@/lib/topicSlug";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ImagePlus, Pencil, X } from "lucide-react";
@@ -133,7 +134,7 @@ const CreatePostDialog = ({
     const title = formatTitle(post.title || post.content);
     const slug = buildPostSlug(title, post.id) || post.id;
     onDismiss?.();
-    navigate(`/topic/${encodeURIComponent(topicName)}/post/${slug}`);
+    navigate(`/topic/${topicSlug(topicName)}/post/${slug}`);
   };
 
   useEffect(() => {

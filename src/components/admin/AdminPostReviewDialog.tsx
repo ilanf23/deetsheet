@@ -1,3 +1,4 @@
+import { topicSlug } from "@/lib/topicSlug";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Check, ExternalLink, ImageOff, MapPin, Pencil, Upload, User as UserIcon, X } from "lucide-react";
@@ -58,7 +59,6 @@ export default function AdminPostReviewDialog({
   const [loading, setLoading] = useState(false);
   const [post, setPost] = useState<Post | null>(null);
   const [topicName, setTopicName] = useState<string | null>(null);
-  const [topicSlug, setTopicSlug] = useState<string | null>(null);
   const [author, setAuthor] = useState<Profile | null>(null);
   const [postLocation, setPostLocation] = useState<{ city: string; state: string } | null>(null);
   const [authorLocation, setAuthorLocation] = useState<{ city: string; state: string } | null>(null);
@@ -122,7 +122,6 @@ export default function AdminPostReviewDialog({
       if (cancelled) return;
       const topicData = topicRes.data as { name: string; slug: string } | null;
       setTopicName(topicData?.name ?? null);
-      setTopicSlug(topicData?.slug ?? null);
       const authorProfile = (authorRes.data as Profile) ?? null;
       setAuthor(authorProfile);
       const pl = postLocRes.data as { city: string; state: string } | null;
@@ -414,9 +413,9 @@ export default function AdminPostReviewDialog({
                       </div>
                     )}
 
-                    {topicSlug && (
+                    {topicName && (
                       <Link
-                        to={`/topic/${topicSlug}`}
+                        to={`/topic/${topicSlug(topicName)}`}
                         className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
                       >
                         View topic page <ExternalLink className="h-3 w-3" />

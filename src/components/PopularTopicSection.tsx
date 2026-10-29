@@ -1,3 +1,4 @@
+import { topicSlug } from "@/lib/topicSlug";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Topic, getPostsByTopic, getAverageRating } from "@/data/seedData";
@@ -35,7 +36,7 @@ const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
   return (
     <div
       className="border rounded-xl bg-card cursor-pointer hover:shadow-lg transition-all duration-200 px-5 py-4"
-      onClick={() => navigate(`/topic/${encodeURIComponent(topic.name)}`)}
+      onClick={() => navigate(`/topic/${topicSlug(topic.name)}`)}
     >
       {/* Header: title + subtitle (subtitle is desktop-only, see rule 2) */}
       <div className="mb-2 min-w-0">
@@ -83,7 +84,7 @@ const PopularTopicSection = ({ topic }: PopularTopicSectionProps) => {
                 onClick={(e) => {
                   e.stopPropagation();
                   const slug = buildPostSlug(post.content, post.id) || String(i + 1);
-                  navigate(`/topic/${encodeURIComponent(topic.name)}/post/${slug}`);
+                  navigate(`/topic/${topicSlug(topic.name)}/post/${slug}`);
                 }}
                 className="flex-1 min-w-0 text-left text-primary leading-snug line-clamp-2 break-words hover:underline"
               >

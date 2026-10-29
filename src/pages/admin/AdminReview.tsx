@@ -1,3 +1,4 @@
+import { topicSlug } from "@/lib/topicSlug";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -85,7 +86,7 @@ function AuthorPriorPosts({ authorId, excludePostId }: { authorId: string; exclu
               {posts.map((p) => (
                 <li key={p.id} className="text-[13px] flex items-center gap-2 flex-wrap">
                   <Link
-                    to={p.topic_name ? `/topic/${p.topic_name}` : "#"}
+                    to={p.topic_name ? `/topic/${topicSlug(p.topic_name)}` : "#"}
                     className="hover:underline"
                     style={{ color: "hsl(var(--admin-primary))" }}
                   >
@@ -504,7 +505,7 @@ export default function AdminReview() {
                         <div className="text-[12px]" style={{ color: "hsl(var(--admin-fg-muted))" }}>
                           In topic:{" "}
                           <Link
-                            to={`/topic/${item.topic_name}`}
+                            to={`/topic/${topicSlug(item.topic_name)}`}
                             style={{ color: "hsl(var(--admin-primary))" }}
                             className="hover:underline"
                           >

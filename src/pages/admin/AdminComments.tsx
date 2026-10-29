@@ -1,3 +1,4 @@
+import { topicSlug } from "@/lib/topicSlug";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -531,7 +532,7 @@ function getPlainCommentText(content: string) {
 function getPostHref(comment: Comment) {
   if (!comment.postTopicName) return `/admin/posts`;
   const slug = buildPostSlug(comment.postTitle, comment.post_id) || comment.post_id;
-  return `/topic/${encodeURIComponent(comment.postTopicName)}/post/${slug}#discussion`;
+  return `/topic/${topicSlug(comment.postTopicName)}/post/${slug}#discussion`;
 }
 
 function getPostTopicName(post: PostContextRow | undefined) {

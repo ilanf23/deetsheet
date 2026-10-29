@@ -1,3 +1,4 @@
+import { topicSlug } from "@/lib/topicSlug";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Clock, Hash, FileText, X } from "lucide-react";
@@ -98,7 +99,7 @@ const SearchBar = ({ placeholder = "Search topics or posts...", autoFocus, class
         type: "topic",
         label: t.name,
         sublabel: t.category_name,
-        href: `/topic/${encodeURIComponent(t.name)}`,
+        href: `/topic/${topicSlug(t.name)}`,
       }));
       type PostRow = { id: string; title: string; topics: { name: string } | { name: string }[] | null };
       const postSugs: Suggestion[] = ((postRes.data ?? []) as PostRow[]).map((p) => {
@@ -110,7 +111,7 @@ const SearchBar = ({ placeholder = "Search topics or posts...", autoFocus, class
           type: "post",
           label: p.title,
           sublabel: topicName ? `in ${topicName}` : undefined,
-          href: `/topic/${encodeURIComponent(topicName)}/post/${slug}`,
+          href: `/topic/${topicSlug(topicName)}/post/${slug}`,
         };
       });
       setTopics(topicSugs);
