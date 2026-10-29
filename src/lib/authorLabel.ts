@@ -1,6 +1,6 @@
-/** Real names are never a fallback for contribution authors. */
-export function getAuthorLabel(profile?: { username?: string | null } | null): string {
-  return profile?.username?.trim() || "DeetSheet Member";
+/** Public non-anonymous authors use username, then real name, then a generic member label. */
+export function getAuthorLabel(profile?: { username?: string | null; name?: string | null } | null): string {
+  return profile?.username?.trim() || profile?.name?.trim() || "DeetSheet Member";
 }
 
 /**
