@@ -290,22 +290,22 @@ export default function AdminUsers() {
       </div>
 
       <div
-        className="rounded-xl overflow-hidden shadow-sm"
+        className="min-w-0 rounded-lg overflow-hidden shadow-sm"
         style={{
           backgroundColor: "#ffffff",
           border: "1px solid hsl(var(--admin-border))",
         }}
       >
         <div
-          className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr] bg-slate-50 px-6 py-3 text-[11px] font-semibold uppercase tracking-wide"
+          className="hidden lg:grid lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1.6fr)_minmax(0,0.7fr)_minmax(0,1.4fr)] gap-4 bg-muted px-6 py-3 text-[11px] font-semibold uppercase tracking-wide"
           style={{
             color: "rgb(100 116 139)",
             borderBottom: "1px solid hsl(var(--admin-border))",
           }}
         >
           <span>Name</span>
+          <span>Username</span>
           <span>Email</span>
-          <span>Role</span>
           <span>Status</span>
           <span className="text-right">Actions</span>
         </div>
@@ -317,63 +317,84 @@ export default function AdminUsers() {
           pageRows.map((u) => {
             const role = (roles.get(u.id) ?? "user") as "admin" | "moderator" | "user";
             const status: "active" | "suspended" | "banned" = "active";
-            const displayName = u.name ?? u.username ?? "-";
+            const displayName = u.name?.trim() || "-";
+            const username = u.username?.trim() || "-";
             const email = u._email ?? "-";
             return (
               <div
                 key={u.id}
-                className="grid grid-cols-[2fr_2fr_1fr_1fr_1fr] items-center bg-white px-6 py-4 text-[14px] transition-colors hover:bg-slate-50/80"
+                className="grid min-w-0 grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_minmax(0,1.6fr)_minmax(0,0.7fr)_minmax(0,1.4fr)] lg:gap-4 items-center bg-card px-4 lg:px-6 py-4 text-[14px]"
                 style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}
               >
-                <span className="truncate font-medium text-slate-900">{displayName}</span>
-                <span className="truncate text-slate-600">{email}</span>
-                <span className="capitalize text-slate-900">{role}</span>
-                <span>
+                <div className="min-w-0">
+                  <span className="block lg:hidden text-xs text-muted-foreground">Name</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="min-w-0 break-words [overflow-wrap:anywhere] font-medium text-foreground">{displayName}</span>
+                    {role !== "user" && (
+                      <span className="rounded border border-border bg-muted px-2 py-0.5 text-xs text-foreground">
+                        {role === "admin" ? "Admin" : "Moderator"}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="min-w-0 [overflow-wrap:anywhere] text-foreground">
+                  <span className="block lg:hidden text-xs text-muted-foreground">Username</span>
+                  {username}
+                </div>
+                <div className="min-w-0 [overflow-wrap:anywhere] text-muted-foreground">
+                  <span className="block lg:hidden text-xs">Email</span>
+                  {email}
+                </div>
+                <span className="min-w-0">
+                  <span className="block lg:hidden text-xs text-muted-foreground">Status</span>
                   <StatusPill status={status} />
                 </span>
-                <span className="flex items-center justify-end gap-4">
-                  <button
+                <div className="min-w-0">
+                  <span className="block lg:hidden text-xs text-muted-foreground">Actions</span>
+                  <div className="flex flex-wrap items-center lg:justify-end gap-x-4 gap-y-2">
+                  <Button variant="link" size="sm"
                     onClick={() => setRatingsTarget({ id: u.id, name: displayName })}
-                    className="text-[14px]"
+                    className="h-auto p-0 text-[14px]"
                     style={{ color: "hsl(var(--admin-primary))" }}
                   >
                     Ratings
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="link" size="sm"
                     onClick={() => handleEdit(u.id)}
-                    className="text-[14px]"
+                    className="h-auto p-0 text-[14px]"
                     style={{ color: "hsl(var(--admin-primary))" }}
                   >
                     Edit
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="link" size="sm"
                     onClick={() => handleBan(displayName)}
-                    className="text-[14px]"
+                    className="h-auto p-0 text-[14px]"
                     style={{ color: "hsl(var(--admin-danger))" }}
                   >
                     Ban
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant="link" size="sm"
                     onClick={() => setDeleteTarget({ id: u.id, name: displayName })}
-                    className="text-[14px]"
+                    className="h-auto p-0 text-[14px]"
                     style={{ color: "hsl(var(--admin-danger))" }}
                   >
                     Delete
-                  </button>
-                </span>
+                  </Button>
+                  </div>
+                </div>
               </div>
             );
           })
         )}
 
         <div
-          className="flex items-center justify-between px-6 py-4 text-[13px]"
+          className="flex flex-wrap items-center justify-between gap-3 px-4 lg:px-6 py-4 text-[13px]"
           style={{ color: "hsl(var(--admin-fg-muted))" }}
         >
           <span>
             Showing {visibleStart}–{visibleEnd} of {total} users
           </span>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
