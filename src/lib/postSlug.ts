@@ -17,8 +17,8 @@ export function buildPostSlug(
 ): string {
   const titleSlug = slugifyPostTitle(title);
   const shortId = postId ? postId.slice(0, SHORT_ID_LEN).toLowerCase() : "";
-  if (titleSlug && shortId) return `${titleSlug}-${shortId}`;
-  return titleSlug || shortId || "";
+  if (titleSlug) return titleSlug;
+  return shortId || "";
 }
 
 export function parsePostSlug(
