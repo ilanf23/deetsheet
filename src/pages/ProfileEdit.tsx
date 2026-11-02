@@ -355,6 +355,11 @@ const ProfileEdit = () => {
       .eq("id", user.id);
     if (error) {
       setSaving(false);
+      if (isUniqueViolation(error)) {
+        setUsernameError("That username is taken");
+        document.getElementById("profile-username")?.focus();
+        return;
+      }
       toast({ title: "Error saving profile", description: error.message, variant: "destructive" });
       return;
     }
