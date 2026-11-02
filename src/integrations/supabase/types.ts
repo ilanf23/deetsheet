@@ -1494,6 +1494,7 @@ export type Database = {
       }
       is_blocked_pair: { Args: { _a: string; _b: string }; Returns: boolean }
       is_post_author: { Args: { _post_id: string }; Returns: boolean }
+      is_username_taken: { Args: { _username: string }; Returns: boolean }
       mark_post_needs_author_edit: {
         Args: { _post_id: string }
         Returns: undefined
