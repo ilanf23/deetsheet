@@ -202,7 +202,6 @@ const ProfileEdit = () => {
         });
         setUsername(data.username || "");
         setLoadedUsername(data.username || "");
-        setLoadedUsername(data.username || "");
         setBio(data.bio || "");
         setEducation(data.education || "");
         setHighSchool(data.high_school || "");
