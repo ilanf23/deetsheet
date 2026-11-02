@@ -129,6 +129,7 @@ const ProfileEdit = () => {
   const [cityBorn, setCityBorn] = useState("");
   const [emailFrequency, setEmailFrequency] = useState("weekly");
   const [username, setUsername] = useState<string>("");
+  const [loadedUsername, setLoadedUsername] = useState<string>("");
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const [hideAge, setHideAge] = useState(false);
   // Members can hide the "Rankings" tab (posts they've rated) from their profile.
@@ -200,6 +201,7 @@ const ProfileEdit = () => {
           country: data.country || "",
         });
         setUsername(data.username || "");
+        setLoadedUsername(data.username || "");
         setBio(data.bio || "");
         setEducation(data.education || "");
         setHighSchool(data.high_school || "");
@@ -297,7 +299,9 @@ const ProfileEdit = () => {
   const onSubmit = async (values: ProfileFormValues) => {
     if (!user) return;
     setSaving(true);
-    const nameProblem = await checkUsername(username).catch(() => null);
+    // Legacy usernames (e.g. with spaces) stay saveable while unchanged.
+    const usernameChanged = username.trim() !== loadedUsername.trim() || !loadedUsername.trim();
+    const nameProblem = usernameChanged ? await checkUsername(username).catch(() => null) : null;
     if (nameProblem) {
       setUsernameError(nameProblem);
       setSaving(false);
