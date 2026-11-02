@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLocation } from "@/contexts/LocationContext";
+import { currentUserHasUsername } from "@/lib/username";
 
 interface CreatePostInput {
   topicId: string;
@@ -24,6 +25,9 @@ export const useCreatePost = () => {
 
     mutationFn: async (input: CreatePostInput) => {
       if (!user) throw new Error("You must be signed in to post.");
+      if (!(await currentUserHasUsername(user.id))) {
+        throw new Error("Choose a username before posting.");
+      }
 
       // Default location: use author's saved location if available, otherwise national.
       let locationId: string | null = null;

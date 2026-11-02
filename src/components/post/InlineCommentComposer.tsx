@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { currentUserHasUsername } from "@/lib/username";
 
 interface InlineCommentComposerProps {
   postId: string;
@@ -120,6 +121,11 @@ const InlineCommentComposer = ({
   const handleSend = async () => {
     if (!hasContent || submitting || !user) return;
     setSubmitting(true);
+    if (!(await currentUserHasUsername(user.id))) {
+      setSubmitting(false);
+      toast({ title: "Username required", description: "Choose a username before commenting.", variant: "destructive" });
+      return;
+    }
     const { data: inserted, error } = await supabase
       .from("comments")
       .insert({
