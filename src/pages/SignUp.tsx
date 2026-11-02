@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { checkUsername } from "@/lib/username";
 
 import DeetHeader from "@/components/DeetHeader";
 import DeetFooter from "@/components/DeetFooter";
@@ -75,8 +76,9 @@ const SignUp = () => {
       toast.error("Passwords do not match");
       return;
     }
-    if (username.length < 3) {
-      toast.error("Username must be at least 3 characters");
+    const usernameError = await checkUsername(username).catch(() => null);
+    if (usernameError) {
+      toast.error(usernameError);
       return;
     }
     // Location is optional. Only validate if the user is providing one.
@@ -91,7 +93,7 @@ const SignUp = () => {
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/auth/callback`,
-        data: { username },
+        data: { username: username.trim() },
       },
     });
 

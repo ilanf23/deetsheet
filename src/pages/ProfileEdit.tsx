@@ -17,6 +17,7 @@ import {
   Check,
 } from "lucide-react";
 import DeetHeader from "@/components/DeetHeader";
+import { checkUsername, isUniqueViolation } from "@/lib/username";
 import DeetFooter from "@/components/DeetFooter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -128,6 +129,7 @@ const ProfileEdit = () => {
   const [cityBorn, setCityBorn] = useState("");
   const [emailFrequency, setEmailFrequency] = useState("weekly");
   const [username, setUsername] = useState<string>("");
+  const [usernameError, setUsernameError] = useState<string | null>(null);
   const [hideAge, setHideAge] = useState(false);
   // Members can hide the "Rankings" tab (posts they've rated) from their profile.
   const [showRatings, setShowRatings] = useState(true);
@@ -295,6 +297,13 @@ const ProfileEdit = () => {
   const onSubmit = async (values: ProfileFormValues) => {
     if (!user) return;
     setSaving(true);
+    const nameProblem = await checkUsername(username).catch(() => null);
+    if (nameProblem) {
+      setUsernameError(nameProblem);
+      setSaving(false);
+      document.getElementById("profile-username")?.focus();
+      return;
+    }
     // Plain UPDATE, not upsert: `authenticated` only has column-level SELECT on
     // profiles (intimate fields are hidden), and Postgres requires SELECT on every
     // column referenced as EXCLUDED.<col> in ON CONFLICT DO UPDATE — so upsert
@@ -311,6 +320,7 @@ const ProfileEdit = () => {
     const { error } = await supabase
       .from("profiles")
       .update({
+        username: username.trim(),
         avatar_url: avatarUrl,
         credentials: credentialsToSave,
         name: values.name,
@@ -345,6 +355,11 @@ const ProfileEdit = () => {
       .eq("id", user.id);
     if (error) {
       setSaving(false);
+      if (isUniqueViolation(error)) {
+        setUsernameError("That username is taken");
+        document.getElementById("profile-username")?.focus();
+        return;
+      }
       toast({ title: "Error saving profile", description: error.message, variant: "destructive" });
       return;
     }
@@ -648,6 +663,31 @@ const ProfileEdit = () => {
                       <p className="mt-2 text-sm text-muted-foreground">
                         Manage your profile details and public information.
                       </p>
+                    </div>
+
+                    <div className="mb-4 max-w-md space-y-1.5">
+                      <Label htmlFor="profile-username">
+                        Username <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="profile-username"
+                        value={username}
+                        required
+                        maxLength={30}
+                        placeholder="your_username"
+                        aria-invalid={!!usernameError}
+                        onChange={(e) => {
+                          setUsername(e.target.value);
+                          setUsernameError(null);
+                        }}
+                      />
+                      {usernameError ? (
+                        <p className="text-sm text-destructive">{usernameError}</p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          3–30 characters: letters, numbers, underscore, dot or dash.
+                        </p>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

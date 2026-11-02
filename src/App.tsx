@@ -3,6 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import UsernameGate from "@/components/UsernameGate";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { LocationProvider } from "@/contexts/LocationContext";
@@ -111,6 +112,7 @@ const App = () => (
           <AnalyticsTracker />
           <ScrollRestoration />
           <AuthProvider>
+            <UsernameGate />
             <LocationProvider>
             <AdminModeProvider>
             <Routes>
