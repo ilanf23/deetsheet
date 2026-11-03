@@ -20,14 +20,6 @@ const slides = [
     postId: "a2000000-0000-0000-0000-000000000001",
   },
   {
-    image: "/hero-restaurant.jpg",
-    headline: "SHARE DETAILS ABOUT YOUR FAVORITE RESTAURANT OR BAR",
-    quote: "I love posting hidden restaurant gems in my area on DeetSheet to show visitors where's the best place to eat.",
-    attribution: "Tracy, 43, Portland, OR",
-    topicSlug: "Cooking",
-    postId: "a2000000-0000-0000-0000-000000000002",
-  },
-  {
     image: "/hero-passions.jpg",
     headline: "SHARE DETAILS ABOUT YOUR PASSIONS, INTERESTS AND HOBBIES",
     quote: "I've been playing pickle for three years and DeetSheet showed me tips on how to play better.",
