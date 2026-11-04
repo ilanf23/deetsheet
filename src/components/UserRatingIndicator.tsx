@@ -35,6 +35,7 @@ const UserRatingIndicator = ({ postId, onRatingChanged, size = "sm" }: UserRatin
   const [loading, setLoading] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const starsRef = useRef<HTMLDivElement | null>(null);
+  const lastTouchX = useRef<number | null>(null);
 
   const valueFromPointer = (clientX: number): number | null => {
     const el = starsRef.current;
@@ -177,11 +178,26 @@ const UserRatingIndicator = ({ postId, onRatingChanged, size = "sm" }: UserRatin
         <div className="flex items-center gap-2">
           <div
             ref={starsRef}
+            style={{ touchAction: "none" }}
             className="flex cursor-pointer select-none"
             onMouseMove={(e) => setPreviewValue(valueFromPointer(e.clientX))}
             onMouseLeave={() => setPreviewValue(null)}
             onClick={(e) => {
               const v = valueFromPointer(e.clientX);
+              if (v !== null) saveRating(v);
+            }}
+            onTouchMove={(e) => {
+              e.preventDefault(); // stop page scroll while dragging
+              const x = e.touches[0].clientX;
+              lastTouchX.current = x;
+              setPreviewValue(valueFromPointer(x));
+            }}
+            onTouchEnd={(e) => {
+              e.preventDefault(); // stop the synthetic click that follows
+              const x = lastTouchX.current ?? e.changedTouches[0].clientX;
+              lastTouchX.current = null;
+              setPreviewValue(null);
+              const v = valueFromPointer(x);
               if (v !== null) saveRating(v);
             }}
             role="slider"
@@ -227,6 +243,10 @@ const UserRatingIndicator = ({ postId, onRatingChanged, size = "sm" }: UserRatin
               type="button"
               disabled={loading}
               onClick={clearRating}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                clearRating();
+              }}
               className="w-7 h-7 rounded flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
               aria-label="Clear rating"
             >
