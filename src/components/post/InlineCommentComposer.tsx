@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { currentUserHasUsername } from "@/lib/username";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 interface InlineCommentComposerProps {
   postId: string;
@@ -131,7 +132,7 @@ const InlineCommentComposer = ({
       .insert({
         post_id: postId,
         author_id: user.id,
-        content: text,
+        content: sanitizeHtml(text),
         parent_comment_id: parentCommentId ?? null,
         is_anonymous: postAnonymously,
       })

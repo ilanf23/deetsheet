@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import UserAvatar from "@/components/UserAvatar";
 import InlineCommentComposer from "@/components/post/InlineCommentComposer";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import JudgementReactionsRow from "@/components/post/JudgementReactionsRow";
 import { getTimeAgo } from "@/data/seedData";
 
@@ -259,7 +260,7 @@ const CommentItem = ({
             className={`text-[1.0125rem] text-card-foreground mt-2 leading-relaxed [&_p]:my-1 [&_a]:text-primary [&_a]:underline [&_img]:my-2 [&_img]:max-h-96 [&_img]:max-w-full [&_img]:rounded-lg [&_img]:object-contain ${
               expanded || hasImage ? "" : "line-clamp-3"
             }`}
-            dangerouslySetInnerHTML={{ __html: node.content }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(node.content) }}
           />
 
           <div className="mt-2 flex items-center justify-between gap-3">
