@@ -76,7 +76,7 @@ const TopicPostListItem = ({ post, rank, topicName, topicId, showRanking = true 
                 onRatingChanged={() => {
                   queryClient.invalidateQueries({ queryKey: ["posts-by-topic", topicId] });
                 }}
-                size="title"
+                size="sm"
               />
             </span>
           ) : (
