@@ -150,7 +150,7 @@ const UserRatingIndicator = ({ postId, onRatingChanged, size = "sm" }: UserRatin
                   ? "text-secondary font-bold tabular-nums text-4xl leading-none"
                   : size === "title"
                     ? "text-secondary font-semibold tabular-nums text-sm md:text-base font-heading leading-none"
-                  : "text-secondary font-medium tabular-nums text-xs leading-none"
+                  : "text-secondary font-medium tabular-nums text-sm"
               }
             >
               {userRating}
