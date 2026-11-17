@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Search, Menu, X, List, User, UserCircle2, Shield, Mail, ChevronDown } from "lucide-react";
+import { Search, X, List, User, UserCircle2, Shield, Mail, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
@@ -13,6 +13,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useThreadCounts } from "@/hooks/useUnreadMessages";
@@ -32,7 +33,6 @@ const DeetHeader = () => {
   const { data: threadCounts } = useThreadCounts();
   const unreadCount = (threadCounts?.unread ?? 0) + (threadCounts?.requests ?? 0);
   const unreadLabel = unreadCount > 99 ? "99+" : String(unreadCount);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   const username = user?.user_metadata?.username || user?.email?.split("@")[0] || "User";
@@ -200,21 +200,13 @@ const DeetHeader = () => {
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSearchOpen(!searchOpen)}>
             <Search className="h-4 w-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            aria-label="Menu"
-            onClick={() => setMobileMenuOpen((o) => !o)}
-          >
-            {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
           {user ? (
             <button
-              onClick={() => navigate("/profile")}
               className="rounded-full hover:opacity-80 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              title="View your profile"
-              aria-label="View your profile"
+              title="Account menu"
+              aria-label="Account menu"
             >
               {avatarUrl ? (
                 <Avatar className="h-7 w-7">
@@ -232,90 +224,51 @@ const DeetHeader = () => {
               variant="ghost"
               size="icon"
               className="h-8 w-8 text-primary"
-              title="Join"
-              aria-label="Join"
-              onClick={() => navigate("/signup")}
+              title="Account menu"
+              aria-label="Account menu"
             >
               <UserCircle2 className="h-6 w-6" strokeWidth={1.75} />
             </Button>
           )}
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              {user ? (
+                <>
+                  <DropdownMenuItem className="text-primary focus:text-primary" onSelect={() => navigate("/profile")}>Profile</DropdownMenuItem>
+                  <DropdownMenuItem className="justify-between text-primary focus:text-primary" onSelect={() => navigate("/inbox")}>
+                    Inbox
+                    {unreadCount > 0 && (
+                      <span className="ml-2 min-w-[18px] h-4 px-1 rounded-full bg-secondary text-secondary-foreground text-[10px] font-semibold flex items-center justify-center">
+                        {unreadLabel}
+                      </span>
+                    )}
+                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem className="text-primary focus:text-primary" onSelect={() => navigate("/admin")}>Admin Panel</DropdownMenuItem>
+                  )}
+                </>
+              ) : (
+                <>
+                  <DropdownMenuItem className="text-primary focus:text-primary" onSelect={() => navigate("/signup")}>Sign Up</DropdownMenuItem>
+                  <DropdownMenuItem className="text-primary focus:text-primary" onSelect={() => navigate("/login")}>Log In</DropdownMenuItem>
+                </>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-primary focus:text-primary" onSelect={() => navigate("/about")}>About</DropdownMenuItem>
+              <DropdownMenuItem className="text-primary focus:text-primary" onSelect={() => navigate("/contact")}>Contact</DropdownMenuItem>
+              <DropdownMenuItem className="text-primary focus:text-primary" onSelect={() => navigate("/investor")}>Become an Investor</DropdownMenuItem>
+              <DropdownMenuItem className="text-primary focus:text-primary" onSelect={() => navigate("/inspiration")}>Need Inspiration?</DropdownMenuItem>
+              <DropdownMenuItem className="text-primary focus:text-primary" onSelect={() => navigate("/rules")}>Rules &amp; Guidelines</DropdownMenuItem>
+              {user && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="text-primary focus:text-primary" onSelect={() => { void signOut(); }}>Log Out</DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
-
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t bg-card">
-          <nav className="flex flex-col p-2">
-            {[
-              ["/about", "About"],
-              ["/contact", "Contact"],
-              ["/investor", "Become an Investor"],
-              ["/inspiration", "Need inspiration?"],
-              ["/rules", "Rules & Guidelines"],
-            ].map(([to, label]) => (
-              <button
-                key={to}
-                type="button"
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  navigate(to);
-                }}
-                className="rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-accent"
-              >
-                {label}
-              </button>
-            ))}
-            {user ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    navigate("/inbox");
-                  }}
-                  className="rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-accent"
-                >
-                  Inbox{unreadCount > 0 ? ` (${unreadLabel})` : ""}
-                </button>
-                {isAdmin && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      navigate("/admin");
-                    }}
-                    className="rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-accent"
-                  >
-                    Admin Panel
-                  </button>
-                )}
-              </>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    navigate("/signup");
-                  }}
-                  className="rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-accent"
-                >
-                  Sign Up
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    navigate("/login");
-                  }}
-                  className="rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-accent"
-                >
-                  Log In
-                </button>
-              </>
-            )}
-          </nav>
-        </div>
-      )}
 
       {searchOpen && (
         <div className="md:hidden border-t p-3">
