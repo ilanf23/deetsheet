@@ -1,10 +1,18 @@
 import { topicSlug } from "@/lib/topicSlug";
 import { Link, useNavigate } from "react-router-dom";
 import type { MouseEvent } from "react";
-import { MessageSquare, Share2 } from "lucide-react";
+import { Facebook, Link as LinkIcon, MessageSquare, Share2 } from "lucide-react";
 import { Post, getTimeAgo } from "@/data/seedData";
 import UserRatingIndicator from "@/components/UserRatingIndicator";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import XLogo from "@/components/icons/XLogo";
 import { buildPostSlug } from "@/lib/postSlug";
 import { formatTitle } from "@/lib/formatTitle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -16,46 +24,84 @@ interface PostCardProps {
 const PostCard = ({ post }: PostCardProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const openTopic = () => navigate(`/topic/${topicSlug(post.topicName)}`);
   const contentText = formatTitle(post.title || post.content);
   const postSlug = buildPostSlug(contentText, post.id) || post.id;
   const postHref = `/topic/${topicSlug(post.topicName)}/post/${postSlug}`;
+  const shareUrl = `${window.location.origin}${postHref}`;
   const authorId = (post as Post & { authorId?: string }).authorId;
   const avatarUrl = (post as Post & { avatarUrl?: string | null }).avatarUrl;
   const status = (post as Post & { status?: string }).status;
   const isAnonymous = !!(post as Post & { isAnonymous?: boolean }).isAnonymous;
   const isPending = status === "pending";
   const profileHref = `/profile/${authorId ?? post.username}`;
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast({ title: "Link copied", description: shareUrl });
+    } catch {
+      toast({
+        title: "Couldn't copy link",
+        description: shareUrl,
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleShare = async (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    const url = `${window.location.origin}${postHref}`;
 
     if (typeof navigator.share === "function") {
       try {
-        await navigator.share({ title: contentText, url });
+        await navigator.share({ title: contentText, url: shareUrl });
         return;
       } catch (err) {
         if ((err as DOMException)?.name === "AbortError") return;
       }
     }
 
-    try {
-      await navigator.clipboard.writeText(url);
-      toast({ title: "Link copied", description: url });
-    } catch {
-      toast({
-        title: "Couldn't copy link",
-        description: url,
-        variant: "destructive",
-      });
-    }
+    await copyLink();
+  };
+
+  const openExternal = (url: string) => {
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  const shareToFacebook = () => {
+    openExternal(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`,
+    );
+  };
+
+  const shareToX = () => {
+    openExternal(
+      `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(contentText)}`,
+    );
   };
 
   const handleCardClick = (e: MouseEvent<HTMLDivElement>) => {
-    if ((e.target as HTMLElement).closest("a,button")) return;
+    const target = e.target as HTMLElement;
+    if (target.closest("a,button")) return;
+    // The share menu is portaled to <body>, so its clicks still bubble through
+    // React to this handler — ignore anything that came from inside the menu.
+    if (target.closest('[role="menu"]')) return;
     navigate(postHref);
   };
+
+  const shareTrigger = (onClick?: (e: MouseEvent<HTMLButtonElement>) => void) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-1 hover:text-foreground"
+      aria-label="Share this post"
+    >
+      <Share2 className="h-4 w-4 fill-current" />
+      <span>Share</span>
+    </button>
+  );
 
   return (
     <div
@@ -63,6 +109,7 @@ const PostCard = ({ post }: PostCardProps) => {
       tabIndex={0}
       onClick={handleCardClick}
       onKeyDown={(e) => {
+        if ((e.target as HTMLElement).closest('[role="menu"]')) return;
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
           navigate(postHref);
@@ -168,14 +215,31 @@ const PostCard = ({ post }: PostCardProps) => {
             <MessageSquare className="h-4 w-4 fill-current" />
             <span>{post.commentCount}</span>
           </button>
-          <button
-            type="button"
-            onClick={handleShare}
-            className="flex items-center gap-1 hover:text-foreground"
-          >
-            <Share2 className="h-4 w-4 fill-current" />
-            <span>Share</span>
-          </button>
+          {isMobile ? (
+            shareTrigger(handleShare)
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                {shareTrigger((e) => e.stopPropagation())}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-44">
+                <DropdownMenuItem onClick={shareToFacebook}>
+                  <Facebook className="mr-2 h-4 w-4" />
+                  <span>Facebook</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={shareToX}>
+                  <span className="mr-2 flex h-4 w-4 items-center justify-center">
+                    <XLogo />
+                  </span>
+                  <span>X</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={copyLink}>
+                  <LinkIcon className="mr-2 h-4 w-4" />
+                  <span>Copy link</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
         <span
           onClick={(e) => e.stopPropagation()}
