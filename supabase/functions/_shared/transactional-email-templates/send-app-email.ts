@@ -31,7 +31,7 @@ export type SendAppEmailResult =
 export async function sendAppEmail(
   templateName: string,
   recipientEmail: string,
-  options: { templateData?: Record<string, unknown>; idempotencyKey?: string } = {},
+  options: { templateData?: Record<string, unknown>; idempotencyKey?: string; preferenceCategory?: 'member_messages' } = {},
 ): Promise<SendAppEmailResult> {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -59,7 +59,7 @@ export async function sendAppEmail(
 
   // Respect the recipient's email preferences. Account/security emails
   // (welcome, auth) have no category and always send.
-  const category = TEMPLATE_CATEGORY[templateName]
+  const category = options.preferenceCategory ?? TEMPLATE_CATEGORY[templateName]
   if (category) {
     const { data: prefs } = await supabase
       .from('email_preferences')

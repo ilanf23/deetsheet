@@ -259,6 +259,11 @@ export default function ThreadConversation({
       toast({ title: "Reply failed", description: error.message, variant: "destructive" });
       return;
     }
+    if (senderRole !== "admin") {
+      void supabase.functions.invoke("send-dm-notification", {
+        body: { thread_id: thread.id },
+      }).catch(() => {});
+    }
     setReply("");
     await load();
     onChanged?.();
