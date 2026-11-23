@@ -6,8 +6,12 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trash2, Mail, MailOpen } from "lucide-react";
+import { Trash2, Mail, MailOpen, Reply } from "lucide-react";
 import AdminSortSelect from "@/components/admin/AdminSortSelect";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 type SortKey =
   | "newest"
@@ -44,6 +48,10 @@ export default function AdminContactMessages() {
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState<SortKey>("newest");
+  const [replyTarget, setReplyTarget] = useState<ContactMessage | null>(null);
+  const [subjectValue, setSubjectValue] = useState("");
+  const [replyBody, setReplyBody] = useState("");
+  const [sending, setSending] = useState(false);
 
   /** Keeps the sidebar "Contact Messages" badge in step with this list. */
   const refreshBadge = () =>
@@ -148,6 +156,66 @@ export default function AdminContactMessages() {
     else refreshBadge();
   };
 
+  const openReply = (msg: ContactMessage) => {
+    setSubjectValue(`Re: ${msg.subject || "Your message to DeetSheet"}`);
+    setReplyBody("");
+    setReplyTarget(msg);
+  };
+
+  const sendReply = async () => {
+    if (!replyTarget || sending || !replyBody.trim()) return;
+    if (replyTarget.user_id === null) {
+      toast({ title: "This visitor has no DeetSheet account — opening email client instead" });
+      window.location.href = `mailto:${replyTarget.email}?subject=${encodeURIComponent(subjectValue)}&body=${encodeURIComponent(replyBody)}`;
+      setReplyTarget(null);
+      return;
+    }
+
+    setSending(true);
+    try {
+      const { data: sess } = await supabase.auth.getSession();
+      const accessToken = sess.session?.access_token;
+      if (!accessToken) throw new Error("Please log in again before sending a reply.");
+      const escapedBody = replyBody
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;")
+        .replace(/\r?\n/g, "<br/>");
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-admin-message`,
+        {
+          method: "POST",
+          headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: replyTarget.user_id,
+            subject: subjectValue,
+            body_html: `<p>${escapedBody}</p>`,
+            send_email: true,
+          }),
+        },
+      );
+      const result = await response.json();
+      if (!response.ok || result.error) throw new Error(result.error || "Failed to send reply");
+      toast({ title: "Reply sent — delivered in-app and by email" });
+      if (!replyTarget.is_read) {
+        const { error } = await supabase.from("contact_messages").update({ is_read: true }).eq("id", replyTarget.id);
+        if (error) {
+          toast({ title: "Reply sent, but marking read failed", description: error.message, variant: "destructive" });
+        } else {
+          setMessages((prev) => prev.map((msg) => msg.id === replyTarget.id ? { ...msg, is_read: true } : msg));
+          refreshBadge();
+        }
+      }
+      setReplyTarget(null);
+    } catch (error) {
+      toast({ title: "Reply failed", description: error instanceof Error ? error.message : "Failed to send reply", variant: "destructive" });
+    } finally {
+      setSending(false);
+    }
+  };
+
 
   const unreadCount = messages.filter((m) => !m.is_read).length;
 
@@ -225,6 +293,10 @@ export default function AdminContactMessages() {
                 </p>
               </div>
               <div className="flex flex-col gap-2 shrink-0">
+                <Button variant="outline" size="sm" className="text-primary" onClick={() => openReply(msg)}>
+                  <Reply className="h-4 w-4" />
+                  Reply
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => toggleRead(msg)}>
                   {msg.is_read ? <Mail className="h-4 w-4" /> : <MailOpen className="h-4 w-4" />}
                   {msg.is_read ? "Mark unread" : "Mark read"}
@@ -238,6 +310,32 @@ export default function AdminContactMessages() {
           </div>
         ))}
       </div>
+      <Dialog open={replyTarget !== null} onOpenChange={(open) => { if (!open && !sending) setReplyTarget(null); }}>
+        <DialogContent aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle>Reply to contact message</DialogTitle>
+          </DialogHeader>
+          {replyTarget && (
+            <blockquote className="border-l-2 border-border pl-4 text-sm text-muted-foreground break-words">
+              <p className="font-semibold text-foreground">{replyTarget.name}</p>
+              {replyTarget.subject && <p className="font-medium text-foreground">{replyTarget.subject}</p>}
+              <p className="whitespace-pre-wrap">{replyTarget.message}</p>
+            </blockquote>
+          )}
+          <div className="space-y-2">
+            <Label htmlFor="contact-reply-subject">Subject</Label>
+            <Input id="contact-reply-subject" value={subjectValue} onChange={(e) => setSubjectValue(e.target.value)} disabled={sending} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="contact-reply-body">Reply</Label>
+            <Textarea id="contact-reply-body" placeholder="Write your reply…" value={replyBody} onChange={(e) => setReplyBody(e.target.value)} disabled={sending} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" className="text-primary" onClick={() => setReplyTarget(null)} disabled={sending}>Cancel</Button>
+            <Button onClick={sendReply} disabled={sending || !replyBody.trim()}>Send Reply</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
