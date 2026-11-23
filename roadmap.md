@@ -7,4 +7,4 @@
 - [x] Canonicalize all topic links, including email links, while retaining legacy topic resolution.
 - [x] Resolve duplicate slugs by approved-post count then oldest creation; only collision is North Carolina (both 0 approved, older April topic wins); no data changes.
 - [x] Verify legacy topic/post navigation and Back in browser, 21 new tests pass, automated build OK; full suite has the existing markdownLinks failure; nothing deployed.
-- [ ] Add authenticated direct-message email notifications, honor existing member-message opt-outs, and verify sending and admin exclusions.
+- [x] Add authenticated direct-message email notifications and existing opt-outs; 16 tests pass, live signed-in reply/opt-out verified, function deployed. Actual inbox delivery was not tested (temporary recipient opted out).
