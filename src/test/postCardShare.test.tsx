@@ -87,6 +87,7 @@ describe("PostCard share", () => {
 
     expect(screen.getByText("Facebook")).toBeInTheDocument();
     expect(screen.getByText("X")).toBeInTheDocument();
+    expect(screen.getByText("Instagram")).toBeInTheDocument();
     expect(screen.getByText("Copy link")).toBeInTheDocument();
   });
 
@@ -115,6 +116,23 @@ describe("PostCard share", () => {
       `https://twitter.com/intent/tweet?url=${encodeURIComponent(expectedUrl)}&text=${encodeURIComponent(contentText)}`,
     );
     expect(openSpy.mock.calls[0][1]).toBe("_blank");
+    expect(mocks.navigate).not.toHaveBeenCalled();
+  });
+
+  it("desktop Instagram item copies the post url and toasts the Instagram hint", async () => {
+    render(<PostCard post={post} />);
+    openShareMenu();
+    mocks.navigate.mockReset();
+    fireEvent.click(screen.getByText("Instagram"));
+
+    await waitFor(() =>
+      expect(mocks.toast).toHaveBeenCalledWith({
+        title: "Link copied",
+        description: "Paste it in your Instagram story or post.",
+      }),
+    );
+    expect(writeTextSpy).toHaveBeenCalledWith(expectedUrl);
+    expect(openSpy).not.toHaveBeenCalled();
     expect(mocks.navigate).not.toHaveBeenCalled();
   });
 

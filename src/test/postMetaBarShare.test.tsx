@@ -58,6 +58,7 @@ describe("PostMetaBar share", () => {
 
     expect(screen.getByText("Facebook")).toBeInTheDocument();
     expect(screen.getByText("X")).toBeInTheDocument();
+    expect(screen.getByText("Instagram")).toBeInTheDocument();
     expect(screen.getByText("Copy link")).toBeInTheDocument();
   });
 
@@ -83,6 +84,21 @@ describe("PostMetaBar share", () => {
       `https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(TITLE)}`,
     );
     expect(openSpy.mock.calls[0][1]).toBe("_blank");
+  });
+
+  it("desktop Instagram item copies the url and toasts the Instagram hint", async () => {
+    render(<PostMetaBar commentCount={3} postTitle={TITLE} />);
+    openShareMenu();
+    fireEvent.click(screen.getByText("Instagram"));
+
+    await waitFor(() =>
+      expect(mocks.toast).toHaveBeenCalledWith({
+        title: "Link copied",
+        description: "Paste it in your Instagram story or post.",
+      }),
+    );
+    expect(writeTextSpy).toHaveBeenCalledWith(window.location.href);
+    expect(openSpy).not.toHaveBeenCalled();
   });
 
   it("desktop Copy link copies the url and toasts Link copied without opening a tab", async () => {

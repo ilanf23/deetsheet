@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Facebook, Link, MessageSquare, Share2, Pencil } from "lucide-react";
+import { Facebook, Instagram, Link, MessageSquare, Share2, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -82,6 +82,19 @@ const PostMetaBar = ({
     );
   };
 
+  const shareToInstagram = async () => {
+    const url = window.location.href;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({
+        title: "Link copied",
+        description: "Paste it in your Instagram story or post.",
+      });
+    } catch {
+      toast({ title: "Could not copy link", variant: "destructive" });
+    }
+  };
+
   const shareTrigger = (onClick?: () => void) => (
     <button
       type="button"
@@ -120,6 +133,10 @@ const PostMetaBar = ({
                 <XLogo />
               </span>
               <span>X</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={shareToInstagram}>
+              <Instagram className="mr-2 h-4 w-4" />
+              <span>Instagram</span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={copyLink}>
               <Link className="mr-2 h-4 w-4" />

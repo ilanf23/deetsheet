@@ -1,7 +1,7 @@
 import { topicSlug } from "@/lib/topicSlug";
 import { Link, useNavigate } from "react-router-dom";
 import type { MouseEvent } from "react";
-import { Facebook, Link as LinkIcon, MessageSquare, Share2 } from "lucide-react";
+import { Facebook, Instagram, Link as LinkIcon, MessageSquare, Share2 } from "lucide-react";
 import { Post, getTimeAgo } from "@/data/seedData";
 import UserRatingIndicator from "@/components/UserRatingIndicator";
 import { useToast } from "@/hooks/use-toast";
@@ -80,6 +80,22 @@ const PostCard = ({ post }: PostCardProps) => {
     openExternal(
       `https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(contentText)}`,
     );
+  };
+
+  const shareToInstagram = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "Link copied",
+        description: "Paste it in your Instagram story or post.",
+      });
+    } catch {
+      toast({
+        title: "Couldn't copy link",
+        description: shareUrl,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCardClick = (e: MouseEvent<HTMLDivElement>) => {
@@ -232,6 +248,10 @@ const PostCard = ({ post }: PostCardProps) => {
                     <XLogo />
                   </span>
                   <span>X</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={shareToInstagram}>
+                  <Instagram className="mr-2 h-4 w-4" />
+                  <span>Instagram</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={copyLink}>
                   <LinkIcon className="mr-2 h-4 w-4" />
